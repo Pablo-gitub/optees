@@ -1,7 +1,7 @@
 import os
 import unittest
-from src.optees.utility.io_lpnetlib import load_lpnetlib_mat
-from src.optees.utility.lp_utils import solve_lp
+from optees.utility.data_adapters.lpnetlib_adapter import load_lpnetlib_mat
+from optees.utility.lp_utils import solve_lp
 
 AFIRO = "tests/data/lp/lpnetlib_mat/lp_afiro.mat"
 FV47 = "tests/data/lp/lpnetlib_mat/lp_25fv47.mat"

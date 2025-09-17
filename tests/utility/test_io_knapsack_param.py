@@ -3,8 +3,8 @@ import os
 import glob
 import unittest
 
-from src.optees.utility.io_knapsack import load_knapsack_burkardt
-from src.optees.utility.knapsack_utils import solve_knapsack_01
+from optees.utility.data_adapters.knapsack_burkardt_adapter import load_knapsack_burkardt
+from optees.utility.knapsack_utils import solve_knapsack_01
 # se preferisci il re-export:
 # from src.optees.utility.lp_utils import solve_knapsack as solve_knapsack_01
 

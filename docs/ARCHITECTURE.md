@@ -25,7 +25,7 @@ Optees is a desktop, open-source tool to help technical and non-technical staff 
   GUI (e.g., PyQt) – Views/Controllers. Only talks to Application Use Cases and maps DTOs ⇄ UI widgets.
 
 * **Core**
-  Project-specific shared utilities: logging, string management, config, global constants, error types.
+  Project-specific shared utilities: logging, string management, configuration & constants, error types.
 
 * **Utility**
   Generic, reusable helpers: numerical routines, small algorithms. No project coupling.
@@ -46,7 +46,19 @@ problem = {
 }
 ```
 
-### Suggested folders
+### Canonical Knapsack (0/1) schema
+
+```python
+knapsack = {
+  "values": [v1, v2, ...],     # floats
+  "weights": [w1, w2, ...],    # non-negative ints
+  "capacity": int,             # non-negative
+  # optional:
+  "var_names": ["i0","i1",...]
+}
+
+```
+### Actually folders
 
 ```
 assets/

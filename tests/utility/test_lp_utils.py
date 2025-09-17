@@ -3,8 +3,8 @@ import os
 import unittest
 import numpy as np
 
-from src.optees.utility.lp_utils import solve_lp
-from src.optees.utility.io_lpnetlib import load_lpnetlib_mat
+from optees.utility.lp_utils import solve_lp
+from optees.utility.data_adapters.lpnetlib_adapter import load_lpnetlib_mat
 
 
 # -----------------------------
@@ -83,25 +83,26 @@ class TestSolveLP(unittest.TestCase):
         self.assertIsNone(obj)
         self.assertEqual(x, {})
 
-def test_shape_pair_guard(self):
-    with self.assertRaises(ValueError):
-        solve_lp({"sense":"min","c":[1,2],"A_ub":[[1,0]], "bounds":[(0,None),(0,None)]})
-    with self.assertRaises(ValueError):
-        solve_lp({"sense":"min","c":[1,2],"b_ub":[1.0],      "bounds":[(0,None),(0,None)]})
+class TestSolveLPGuards(unittest.TestCase):
+    def test_shape_pair_guard(self):
+        with self.assertRaises(ValueError):
+            solve_lp({"sense":"min","c":[1,2],"A_ub":[[1,0]], "bounds":[(0,None),(0,None)]})
+        with self.assertRaises(ValueError):
+            solve_lp({"sense":"min","c":[1,2],"b_ub":[1.0],      "bounds":[(0,None),(0,None)]})
 
-def test_var_names_length_guard(self):
-    with self.assertRaises(ValueError):
-        solve_lp({"sense":"min","c":[1,2],"var_names":["x0"],"bounds":[(0,None),(0,None)]})
+    def test_var_names_length_guard(self):
+        with self.assertRaises(ValueError):
+            solve_lp({"sense":"min","c":[1,2],"var_names":["x0"],"bounds":[(0,None),(0,None)]})
 
-def test_bounds_length_guard(self):
-    with self.assertRaises(ValueError):
-        solve_lp({"sense":"min","c":[1,2],"bounds":[(0,None)]})
+    def test_bounds_length_guard(self):
+        with self.assertRaises(ValueError):
+            solve_lp({"sense":"min","c":[1,2],"bounds":[(0,None)]})
 
-def test_obj_offset_is_added(self):
-    problem = {"sense":"min","c":[1.0,0.0],"bounds":[(0,None),(0,None)],"obj_offset":5.0}
-    status, obj, x, _ = solve_lp(problem)
-    self.assertEqual(status,"Optimal")
-    self.assertAlmostEqual(obj, 5.0, places=9)  # x=0, so 1*0 + 5
+    def test_obj_offset_is_added(self):
+        problem = {"sense":"min","c":[1.0,0.0],"bounds":[(0,None),(0,None)],"obj_offset":5.0}
+        status, obj, x, _ = solve_lp(problem)
+        self.assertEqual(status,"Optimal")
+        self.assertAlmostEqual(obj, 5.0, places=9)  # x=0, so 1*0 + 5
 
 
 # ---------------------------------------

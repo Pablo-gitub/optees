@@ -1,6 +1,6 @@
 # tests/utility/test_knapsack_utils.py
 import unittest
-from src.optees.utility.knapsack_utils import solve_knapsack_01
+from optees.utility.knapsack_utils import solve_knapsack_01
 
 
 class TestKnapsack01(unittest.TestCase):
