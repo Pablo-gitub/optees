@@ -4,6 +4,12 @@ Optees is an open-source, cross-platform desktop application designed to make bu
 
 The goal is to provide a user-friendly tool that leverages powerful operational research algorithms to solve real-world business problems efficiently.
 
+## Documentation
+- [Architecture](docs/ARCHITECTURE.md)
+- [Testing](docs/TESTING.md)
+- [Datasets](docs/DATASETS.md)
+- [Algorithms](docs/ALGORITHMS.md)
+
 ## Key Features
 
 - **Interactive Chatbot:** A guided assistant that helps users select the most suitable optimization algorithm for their specific needs.
