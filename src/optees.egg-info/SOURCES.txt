@@ -11,7 +11,9 @@ src/optees/utility/ai_ml_utils.py
 src/optees/utility/graph_utils.py
 src/optees/utility/knapsack_utils.py
 src/optees/utility/lp_utils.py
+src/optees/utility/milp_utils.py
 src/optees/utility/non_linear_utils.py
 src/optees/utility/data_adapters/__init__.py
 src/optees/utility/data_adapters/knapsack_burkardt_adapter.py
 src/optees/utility/data_adapters/lpnetlib_adapter.py
+src/optees/utility/data_adapters/miplib_solu.py
