@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Optees — LP (Linear Programming) Icon</title>
+  <desc>Material-style monochrome icon: geometric constraint lines and optimal point representing a linear program.</desc>
+
+  <g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Rounded frame -->
+    <rect x="8" y="8" width="240" height="240" rx="28" ry="28"/>
+
+    <!-- Axes -->
+    <path d="M48 200 L200 200 M48 200 L48 56"/>
+
+    <!-- Constraint lines -->
+    <path d="M60 160 L190 100"/>
+    <path d="M90 180 L180 80"/>
+    <path d="M70 140 L160 180"/>
+
+    <!-- Feasible region outline (intersection zone) -->
+    <polygon points="90,180 110,160 160,180 140,200" fill="none"/>
+
+    <!-- Optimal point -->
+    <circle cx="142" cy="158" r="10" fill="currentColor" stroke="none"/>
+
+    <!-- Objective direction arrow -->
+    <path d="M100 80 L140 60" marker-end="url(#arrowhead)"/>
+  </g>
+
+  <!-- Arrowhead definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6 Z" fill="currentColor"/>
+    </marker>
+  </defs>
+</svg>

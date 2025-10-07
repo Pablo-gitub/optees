@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Optees — MILP (Mixed-Integer Linear Programming) Icon</title>
+  <desc>Material-style monochrome icon: lattice points, linear constraints, relaxed optimum (circle) and integer optimum (square).</desc>
+  <g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Rounded container -->
+    <rect x="8" y="8" width="240" height="240" rx="28" ry="28"/>
+    <!-- Lattice dots (integer grid) -->
+    <g fill="currentColor" stroke="none">
+      <!-- 4x4 lattice inside the frame -->
+      <circle cx="72"  cy="72"  r="4"/>
+      <circle cx="120" cy="72"  r="4"/>
+      <circle cx="168" cy="72"  r="4"/>
+      <circle cx="72"  cy="120" r="4"/>
+      <circle cx="120" cy="120" r="4"/>
+      <circle cx="168" cy="120" r="4"/>
+      <circle cx="72"  cy="168" r="4"/>
+      <circle cx="120" cy="168" r="4"/>
+      <circle cx="168" cy="168" r="4"/>
+    </g>
+
+    <!-- Constraint lines (feasible region boundaries) -->
+    <path d="M52 180 L204 84"/>
+    <path d="M52 116 L196 196"/>
+
+    <!-- Feasible wedge (hinted by two boundary segments) -->
+    <!-- Optional accent polygon (kept as stroke only for monochrome minimalism) -->
+    <!-- Relaxed LP optimum (on boundary, non-integer) -->
+    <circle cx="166" cy="106" r="10"/>
+
+    <!-- Integer optimum (nearest lattice point) -->
+    <rect x="160" y="152" width="20" height="20" fill="currentColor" stroke="none" rx="3"/>
+
+    <!-- Objective direction (isoprofit line) -->
+    <path d="M110 202 L210 150" />
+  </g>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Optees — Knapsack (0/1) Icon</title>
+  <desc>Material-style monochrome icon: zaino/knapsack con oggetti discreti e linea di capacità.</desc>
+
+  <!-- Stile generale -->
+  <g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Contenitore arrotondato -->
+    <rect x="8" y="8" width="240" height="240" rx="28" ry="28"/>
+
+    <!-- Corpo zaino (knapsack) -->
+    <rect x="64" y="56" width="128" height="144" rx="18" ry="18"/>
+    <!-- Patta superiore -->
+    <path d="M72 92 Q128 64 184 92"/>
+    <!-- Laccio centrale -->
+    <circle cx="128" cy="96" r="6" fill="currentColor" stroke="none"/>
+
+    <!-- Linea di capacità (dash) -->
+    <path d="M76 140 H180" stroke-dasharray="14 14"/>
+
+    <!-- Oggetti selezionati (dentro il limite) -->
+    <g stroke="none" fill="currentColor">
+      <!-- Quadrato -->
+      <rect x="88" y="112" width="18" height="18" rx="3"/>
+      <!-- Cerchio -->
+      <circle cx="128" cy="121" r="9"/>
+      <!-- Rombo -->
+      <path d="M156 112 L166 121 L156 130 L146 121 Z"/>
+    </g>
+
+    <!-- Oggetto escluso (fuori/oltre capacità) -->
+    <g>
+      <rect x="142" y="156" width="20" height="20" rx="3"/>
+      <path d="M142 156 L162 176 M162 156 L142 176"/>
+    </g>
+
+    <!-- Indicatore valore/obiettivo (freccia up-right) -->
+    <path d="M88 188 L120 172 L120 204"/>
+  </g>
+</svg>
