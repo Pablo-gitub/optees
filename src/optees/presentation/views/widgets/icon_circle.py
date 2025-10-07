@@ -66,15 +66,16 @@ class IconCircle(QFrame):
 
     # ---------- internals ----------
 
+    def _is_dark_theme(self) -> bool:
+        """Heuristica: tema scuro se la luminanza dello sfondo è bassa."""
+        bg = self.palette().color(QPalette.ColorRole.Window)
+        y = 0.2126 * bg.redF() + 0.7152 * bg.greenF() + 0.0722 * bg.blueF()
+        return y < 0.5
+
     def _current_tint_color(self) -> QColor:
         if self._tint_override is not None:
             return self._tint_override
-        pal = self.palette()
-        # Text tends to reflect label/foreground color better than WindowText on macOS
-        col = pal.color(QPalette.ColorRole.Text)
-        if not col.isValid():
-            col = pal.color(QPalette.ColorRole.WindowText)
-        return col
+        return QColor(255, 255, 255) if self._is_dark_theme() else QColor(20, 20, 20)
 
     def _circle_bg_color(self) -> QColor:
         c = self.palette().color(QPalette.ColorRole.Window)

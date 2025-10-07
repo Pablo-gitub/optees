@@ -112,7 +112,7 @@ class CardButton(QFrame):
         )
         # tell icon the tint explicitly (no guesswork)
         tint = QColor(255, 255, 255) if is_dark else QColor(20, 20, 20)
-        self._icon.set_tint_color(tint)
+        self._icon.refresh_theme()
 
     def changeEvent(self, ev):
         if ev.type() in (
