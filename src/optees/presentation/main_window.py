@@ -1,3 +1,4 @@
+# src/optees/presentation/main_window.py
 from __future__ import annotations
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QStackedWidget, QToolBar, QToolButton, QMenu,
@@ -15,6 +16,7 @@ from optees.presentation.views.lp_view import LPView
 from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.settings_view import SettingsView
+from optees.presentation.controllers.lp_controller import LPController
 
 
 class MainWindow(QMainWindow):
@@ -29,6 +31,8 @@ class MainWindow(QMainWindow):
 
         self.home_page = HomePage()
         self.lp_page = LPView()
+        self.lp_controller = LPController()
+        self.lp_page.set_controller(self.lp_controller)
         self.milp_page = MILPView()
         self.knap_page = KnapsackView()
         self.settings_page = SettingsView()

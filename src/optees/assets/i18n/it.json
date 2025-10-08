@@ -42,5 +42,24 @@
       "english": "Inglese",
       "italian": "Italiano"
     }
+  },
+  "lp": {
+    "header": {
+      "title": "Programmazione Lineare (LP)",
+      "description": "La Programmazione Lineare risolve problemi con obiettivo e vincoli lineari. Questa pagina consente di definire variabili, limiti, funzione obiettivo e vincoli, quindi risolvere con HiGHS (via SciPy).",
+      "buttons": {
+        "example": "Esempio",
+        "problem": "Descrizione problema"
+      }
+    },
+    "vars": {
+      "section": "Variabili",
+      "hint": "Descrivi a cosa si riferisce ogni variabile.",
+      "add": "Aggiungi variabile",
+      "remove": "Rimuovi",
+      "x": "X{idx}",
+      "name_placeholder": "Nome breve (1–2 parole)"
+    },
+    "actions": { "optimize": "Ottimizza" }
   }
 }

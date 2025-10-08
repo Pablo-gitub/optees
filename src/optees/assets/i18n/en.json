@@ -42,5 +42,24 @@
       "english": "English",
       "italian": "Italiano"
     }
+  },
+  "lp": {
+    "header": {
+      "title": "Linear Programming (LP)",
+      "description": "Linear Programming solves optimization problems with a linear objective and linear constraints. This page lets you define variables, bounds, the objective function, and constraints, then solve using HiGHS (via SciPy).",
+      "buttons": {
+        "example": "Example",
+        "problem": "Problem description"
+      }
+    },
+    "vars": {
+      "section": "Variables",
+      "hint": "Describe what each variable represents.",
+      "add": "Add variable",
+      "remove": "Remove",
+      "x": "X{idx}",
+      "name_placeholder": "Short name (1–2 words)"
+    },
+    "actions": { "optimize": "Optimize" }
   }
 }

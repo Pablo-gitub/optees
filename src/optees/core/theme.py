@@ -88,14 +88,10 @@ class ThemeManager(QObject):
     # ---------- Qt hook ----------
     def eventFilter(self, obj, ev):
         if ev.type() in (
-            QEvent.ApplicationPaletteChange,
-            QEvent.PaletteChange,
-            QEvent.StyleChange,
-            getattr(QEvent, "ThemeChange", QEvent.User),
+        QEvent.ApplicationPaletteChange,
+        getattr(QEvent, "ThemeChange", QEvent.User),
         ):
-            # notify listeners
             self.theme_changed.emit()
-        # Don't call super() here; return False to let Qt continue default handling
         return False
 
 
