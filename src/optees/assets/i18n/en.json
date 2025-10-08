@@ -1,0 +1,46 @@
+{
+  "app": { "title": "Optees" },
+  "home": {
+    "category": {
+      "linear": "Linear Programming",
+      "nlp": "Nonlinear Programming",
+      "graph": "Graph Theory",
+      "ml": "AI & Machine Learning"
+    },
+    "comingSoon": "Coming soon…"
+  },
+  "cards": {
+    "lp": {
+      "title": "Linear Programming (LP)",
+      "subtitle": "Solve continuous linear programs with HiGHS (SciPy)."
+    },
+    "milp": {
+      "title": "Mixed-Integer Linear Programming (MILP)",
+      "subtitle": "Integer/binary models via OR-Tools (CP-SAT / CBC)."
+    },
+    "knap": {
+      "title": "0/1 Knapsack",
+      "subtitle": "Exact DP solver; predictable and deterministic."
+    }
+  },
+  "badge": { "intbool": "int/bool" },
+  "nav": {
+    "toolbar": { "title": "Navigation" },
+    "home": "Home",
+    "linear_optimization": "Linear Optimization",
+    "settings":"Settings"
+  },
+  "alg": {
+    "lp": "Linear Programming (LP)",
+    "milp": "Mixed-Integer (MILP)",
+    "knap": "0/1 Knapsack"
+  },
+  "settings": {
+    "title": "Settings",
+    "choose_language": "Choose language",
+    "lang": {
+      "english": "English",
+      "italian": "Italiano"
+    }
+  }
+}

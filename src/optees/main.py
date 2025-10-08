@@ -4,10 +4,12 @@ from PySide6.QtGui import QIcon
 from optees.core.theme import is_dark_mode
 from optees.core.assets import asset
 from optees.presentation.main_window import MainWindow
+from optees.core.theme import theme
 import sys
 
 def main():
     app = QApplication(sys.argv)
+    theme.install_app_watcher()
     variant = "dark" if is_dark_mode() else "light"
     app.setWindowIcon(QIcon(str(asset(f"logo/{variant}/appicon_256.png"))))
     win = MainWindow()

@@ -1,0 +1,46 @@
+{
+  "app": { "title": "Optees" },
+  "home": {
+    "category": {
+      "linear": "Programmazione Lineare",
+      "nlp": "Programmazione Nonlineare",
+      "graph": "Teoria dei Grafi",
+      "ml": "AI & Machine Learning"
+    },
+    "comingSoon": "In arrivo…"
+  },
+  "cards": {
+    "lp": {
+      "title": "Linear Programming (LP)",
+      "subtitle": "Risolvi LP continui con HiGHS (SciPy)."
+    },
+    "milp": {
+      "title": "Mixed-Integer Linear Programming (MILP)",
+      "subtitle": "Modelli interi/binari via OR-Tools (CP-SAT / CBC)."
+    },
+    "knap": {
+      "title": "Zaino 0/1",
+      "subtitle": "DP esatto; prevedibile e deterministico."
+    }
+  },
+  "badge": { "intbool": "int/bool" },
+  "nav": {
+    "toolbar": { "title": "Navigazione" },
+    "home": "Home",
+    "linear_optimization": "Ottimizzazione lineare",
+    "settings":"Impostazioni"
+  },
+  "alg": {
+    "lp": "Programmazione Lineare (LP)",
+    "milp": "Mixed-Integer (MILP)",
+    "knap": "Zaino 0/1"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "choose_language": "Scegli la lingua",
+    "lang": {
+      "english": "Inglese",
+      "italian": "Italiano"
+    }
+  }
+}
