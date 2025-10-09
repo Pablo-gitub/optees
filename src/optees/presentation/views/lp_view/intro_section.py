@@ -1,3 +1,4 @@
+# src/optees/presentation/views/lp_view/intro_section.py
 from __future__ import annotations
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QPushButton
 from optees.core.string_manager import strings as S

@@ -68,6 +68,22 @@
       "errors": { "invalid": "Numero non valido", "order": "LB deve essere ≤ UB" },
       "inf": { "plus": "+inf", "minus": "-inf" }
     },
+    "obj": {
+        "section": "Obiettivo",
+        "sense": "Tipo",
+        "min": "Min",
+        "max": "Max",
+        "offset": "offset costante",
+        "offset_ph": "e.g. 0",
+        "coef_ph": "c{idx}"
+    },
+    "cons": {
+        "section": "Vincoli",
+        "header": "Aggiungi e modifica i vincoli",
+        "add": "Aggiungi vincolo",
+        "coef_ph": "a{idx}",
+        "rhs_ph": "RHS"
+    },
     "actions": { "optimize": "Ottimizza" }
   }
 }

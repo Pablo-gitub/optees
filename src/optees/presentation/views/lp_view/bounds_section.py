@@ -1,3 +1,4 @@
+# src/optees/presentation/views/lp_view/bounds_section.py
 from __future__ import annotations
 from typing import List, Optional
 from PySide6.QtCore import Signal

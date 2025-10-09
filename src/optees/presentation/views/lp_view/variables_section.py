@@ -1,3 +1,4 @@
+# src/optees/presentation/views/lp_view/variables_section.py
 from __future__ import annotations
 from typing import List
 from PySide6.QtCore import Signal

@@ -68,6 +68,22 @@
       "errors": { "invalid": "Invalid number", "order": "LB must be ≤ UB" },
       "inf": { "plus": "+inf", "minus": "-inf" }
     },
+    "obj": {
+      "section": "Objective",
+      "sense": "Sense",
+      "min": "Min",
+      "max": "Max",
+      "offset": "Constant offset",
+      "offset_ph": "e.g. 0",
+      "coef_ph": "c{idx}"
+    },
+    "cons": {
+      "section": "Constraints",
+      "header": "Add and edit constraints",
+      "add": "Add constraint",
+      "coef_ph": "a{idx}",
+      "rhs_ph": "RHS"
+    },
     "actions": { "optimize": "Optimize" }
   }
 }
