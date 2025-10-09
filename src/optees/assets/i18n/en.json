@@ -60,6 +60,14 @@
       "x": "X{idx}",
       "name_placeholder": "Short name (1–2 words)"
     },
+    "bounds": {
+      "section": "Bounds",
+      "columns": { "var": "Variable", "lb": "Lower bound", "ub": "Upper bound", "preset": "Preset" },
+      "presets": { "nonneg": "Non-neg.", "free": "Free", "fixed": "Fixed" },
+      "hint": "Empty = ±∞. You can type fractions (e.g., 1/2) or 'inf'.",
+      "errors": { "invalid": "Invalid number", "order": "LB must be ≤ UB" },
+      "inf": { "plus": "+inf", "minus": "-inf" }
+    },
     "actions": { "optimize": "Optimize" }
   }
 }

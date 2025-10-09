@@ -12,7 +12,7 @@ from optees.core.assets import asset
 from optees.core.string_manager import strings as S
 
 from optees.presentation.views.home_view import HomePage
-from optees.presentation.views.lp_view import LPView
+from optees.presentation.views.lp_view.lp_view import LPView
 from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.settings_view import SettingsView

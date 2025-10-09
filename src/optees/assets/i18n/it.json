@@ -60,6 +60,14 @@
       "x": "X{idx}",
       "name_placeholder": "Nome breve (1–2 parole)"
     },
+    "bounds": {
+      "section": "Limiti (Bounds)",
+      "columns": { "var": "Variabile", "lb": "Limite inf.", "ub": "Limite sup.", "preset": "Preset" },
+      "presets": { "nonneg": "Non-neg.", "free": "Libera", "fixed": "Fissata" },
+      "hint": "Vuoto = ±∞. Puoi inserire frazioni (es. 1/2) o 'inf'.",
+      "errors": { "invalid": "Numero non valido", "order": "LB deve essere ≤ UB" },
+      "inf": { "plus": "+inf", "minus": "-inf" }
+    },
     "actions": { "optimize": "Ottimizza" }
   }
 }
