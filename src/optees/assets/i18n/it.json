@@ -12,15 +12,15 @@
   "cards": {
     "lp": {
       "title": "Linear Programming (LP)",
-      "subtitle": "Risolvi LP continui con HiGHS (SciPy)."
+      "subtitle": "Usa questo metodo quando tutte le tue variabili di decisione possono essere frazionarie (es. 2.5 ore, 1.7 litri)."
     },
     "milp": {
       "title": "Mixed-Integer Linear Programming (MILP)",
-      "subtitle": "Modelli interi/binari via OR-Tools (CP-SAT / CBC)."
+      "subtitle": "Usa questo metodo quando alcune variabili devono essere numeri interi o booleani (1 o 0), mentre altre possono essere frazionarie."
     },
     "knap": {
-      "title": "Zaino 0/1",
-      "subtitle": "DP esatto; prevedibile e deterministico."
+      "title": "Knapsack",
+      "subtitle": "Scegli questo metodo quando devi decidere quali oggetti interi includere in un insieme per massimizzare il valore, senza superare una capacità massima."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -46,7 +46,7 @@
   "lp": {
     "header": {
       "title": "Programmazione Lineare (LP)",
-      "description": "La Programmazione Lineare risolve problemi con obiettivo e vincoli lineari. Questa pagina consente di definire variabili, limiti, funzione obiettivo e vincoli, quindi risolvere con HiGHS (via SciPy).",
+      "description": "La programmazione lineare continua ti permette di massimizzare o minimizzare un valore (come profitto o costo) vincolato da una serie di condizioni. Le soluzioni a cui puoi arrivare sono numeri decimali, perfette per problemi in cui le risorse possono essere divise.",
       "buttons": {
         "example": "Esempio",
         "problem": "Descrizione problema"
@@ -82,7 +82,8 @@
         "header": "Aggiungi e modifica i vincoli",
         "add": "Aggiungi vincolo",
         "coef_ph": "a{idx}",
-        "rhs_ph": "RHS"
+        "rhs_ph": "RHS",
+        "remove": "Rimuovi"
     },
     "actions": { "optimize": "Ottimizza" }
   }

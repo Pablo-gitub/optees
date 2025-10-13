@@ -12,15 +12,15 @@
   "cards": {
     "lp": {
       "title": "Linear Programming (LP)",
-      "subtitle": "Solve continuous linear programs with HiGHS (SciPy)."
+      "subtitle": "Use this method when all your decision variables can be fractional (e.g., 2.5 hours, 1.7 liters)"
     },
     "milp": {
       "title": "Mixed-Integer Linear Programming (MILP)",
-      "subtitle": "Integer/binary models via OR-Tools (CP-SAT / CBC)."
+      "subtitle": "Use this method when some variables must be integers or Boolean (1 or 0), while others can be fractional."
     },
     "knap": {
       "title": "0/1 Knapsack",
-      "subtitle": "Exact DP solver; predictable and deterministic."
+      "subtitle": "Choose this method when you need to decide which whole objects to include in a set to maximize value without exceeding a maximum capacity."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -46,7 +46,7 @@
   "lp": {
     "header": {
       "title": "Linear Programming (LP)",
-      "description": "Linear Programming solves optimization problems with a linear objective and linear constraints. This page lets you define variables, bounds, the objective function, and constraints, then solve using HiGHS (via SciPy).",
+      "description": "Linear programming helps you maximize or minimize a value (like profit or cost) subject to a set of conditions. Solutions are decimal numbers, perfect for problems where resources can be divided.",
       "buttons": {
         "example": "Example",
         "problem": "Problem description"
@@ -82,7 +82,8 @@
       "header": "Add and edit constraints",
       "add": "Add constraint",
       "coef_ph": "a{idx}",
-      "rhs_ph": "RHS"
+      "rhs_ph": "RHS",
+      "remove": "Remove"
     },
     "actions": { "optimize": "Optimize" }
   }

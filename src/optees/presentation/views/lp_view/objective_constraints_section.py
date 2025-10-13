@@ -34,6 +34,7 @@ class _ConstraintRowWidgets:
     rel_combo: QComboBox
     rhs_edit: QLineEdit
     layout: QHBoxLayout
+    remove_btn: QPushButton
 
 class ObjectiveConstraintsSection(Section):
     """
@@ -51,6 +52,7 @@ class ObjectiveConstraintsSection(Section):
     cons_rel_changed = Signal(int, str)             # (row, rel)
     cons_rhs_changed = Signal(int, object)          # (row, float|None)
     add_cons_clicked = Signal()                     # request to add new constraint
+    remove_cons_clicked = Signal(int)
 
     def __init__(self, parent: QWidget | None = None, max_width: int | None = None):
         super().__init__("", parent)
@@ -206,6 +208,17 @@ class ObjectiveConstraintsSection(Section):
         rhs.editingFinished.connect(lambda r=r_index, e=rhs: self._emit_cons_rhs(r, e))
         row_layout.addWidget(rhs, 1)
 
+        btn = QPushButton(S.t("lp.cons.remove"))
+        btn.setFixedHeight(28)
+        # cattura l'indice di riga corrente al momento della creazione
+        btn.clicked.connect(lambda _=False, r=r_index: self.remove_cons_clicked.emit(r))
+        row_layout.addWidget(btn)
+        
+        self._rows.append(_ConstraintRowWidgets(
+            coef_edits=coef_edits, rel_combo=rel_combo, rhs_edit=rhs,
+            layout=row_layout, remove_btn=btn
+        ))
+
         # push into container
         self._cons_container.addLayout(row_layout)
 
@@ -247,6 +260,17 @@ class ObjectiveConstraintsSection(Section):
         # Re-append relation and rhs at the end
         parent_layout.addWidget(row.rel_combo)
         parent_layout.addWidget(row.rhs_edit, 1)
+
+        parent_layout.addWidget(row.rel_combo)
+        parent_layout.addWidget(row.rhs_edit, 1)
+
+        # rebind remove button with current index
+        try:
+            row.remove_btn.clicked.disconnect()
+        except Exception:
+            pass
+        row.remove_btn.clicked.connect(lambda _=False, r=r_index: self.remove_cons_clicked.emit(r))
+        parent_layout.addWidget(row.remove_btn)
 
     def _delete_row(self, row: _ConstraintRowWidgets) -> None:
         """Remove a constraint row widgets from UI."""

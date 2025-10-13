@@ -167,6 +167,12 @@ class LPController(QObject):
         self._constraints.append(row)
         self.constraints_changed.emit(self.constraints())
         return len(self._constraints) - 1
+    
+    def remove_constraint(self, row: int) -> None:
+        if 0 <= row < len(self._constraints):
+            del self._constraints[row]
+            # Notifica: la view si riallineerà via constraints_changed
+            self.constraints_changed.emit(self.constraints())
 
     def set_constraint_coef(self, row: int, var_index: int, value: Optional[float]) -> None:
         if 0 <= row < len(self._constraints):

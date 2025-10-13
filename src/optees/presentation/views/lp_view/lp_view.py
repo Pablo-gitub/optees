@@ -93,6 +93,8 @@ class LPView(QWidget):
         self.obj_cons_sec.cons_rel_changed.connect(self._on_cons_rel_changed)
         self.obj_cons_sec.cons_rhs_changed.connect(self._on_cons_rhs_changed)
         self.obj_cons_sec.add_cons_clicked.connect(self._on_add_constraint_clicked)
+        self.obj_cons_sec.remove_cons_clicked.connect(self._on_remove_constraint_clicked)
+
 
     # -------- controller binding --------
     def set_controller(self, controller: LPController) -> None:
@@ -165,6 +167,10 @@ class LPView(QWidget):
     def _on_add_constraint_clicked(self) -> None:
         if self._ctrl:
             self._ctrl.add_constraint()
+
+    def _on_remove_constraint_clicked(self, row: int) -> None:
+        if self._ctrl:
+            self._ctrl.remove_constraint(row)
 
     def _on_constraints_changed(self, cons_snapshot) -> None:
         # cons_snapshot is List[LPConstraint]; we only need the count to sync rows
