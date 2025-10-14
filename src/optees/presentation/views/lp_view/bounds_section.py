@@ -74,7 +74,13 @@ class BoundsSection(Section):
     def set_variables(self, vars_list: List[LPVariable]) -> None:
         _clear_layout(self._rows_lay)
         for i, v in enumerate(vars_list):
-            row = BoundRow(index=i, var_name=v.name, display_label=v.label, lb=v.lb, ub=v.ub)
+            row = BoundRow(
+                index = i,
+                var_name = v.name,
+                display_label = v.label,
+                lb=(v.bounds.lb if hasattr(v, "bounds") else getattr(v, "lb", None)),
+                ub=(v.bounds.ub if hasattr(v, "bounds") else getattr(v, "ub", None)),
+            )
             row.refresh_strings()
             row.lb_changed.connect(self.lb_changed.emit)
             row.ub_changed.connect(self.ub_changed.emit)

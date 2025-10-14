@@ -137,7 +137,7 @@ class LPView(QWidget):
     def _on_lb_changed(self, index: int, lb_val) -> None:
         if not self._ctrl: return
         cur = self._ctrl.variables()[index]
-        ub_val = cur.ub
+        ub_val = cur.bounds.ub   # <-- PRIMA era cur.ub
         if (lb_val is not None) and (ub_val is not None) and (lb_val > ub_val):
             return
         self._ctrl.set_bounds(index, lb_val, ub_val)
@@ -145,7 +145,7 @@ class LPView(QWidget):
     def _on_ub_changed(self, index: int, ub_val) -> None:
         if not self._ctrl: return
         cur = self._ctrl.variables()[index]
-        lb_val = cur.lb
+        lb_val = cur.bounds.lb   # <-- PRIMA era cur.lb
         if (lb_val is not None) and (ub_val is not None) and (lb_val > ub_val):
             return
         self._ctrl.set_bounds(index, lb_val, ub_val)

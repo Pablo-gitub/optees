@@ -138,6 +138,7 @@ class ObjectiveConstraintsSection(Section):
             for i, e in enumerate(r.coef_edits):
                 e.setPlaceholderText(S.t("lp.cons.coef_ph", idx=i+1))
             r.rhs_edit.setPlaceholderText(S.t("lp.cons.rhs_ph"))
+            r.remove_btn.setText(S.t("lp.cons.remove"))
 
     def refresh_theme(self) -> None:
         super().refresh_theme()
@@ -214,18 +215,18 @@ class ObjectiveConstraintsSection(Section):
         btn.clicked.connect(lambda _=False, r=r_index: self.remove_cons_clicked.emit(r))
         row_layout.addWidget(btn)
         
-        self._rows.append(_ConstraintRowWidgets(
-            coef_edits=coef_edits, rel_combo=rel_combo, rhs_edit=rhs,
-            layout=row_layout, remove_btn=btn
-        ))
+        self._rows.append(
+            _ConstraintRowWidgets(
+                coef_edits = coef_edits, 
+                rel_combo = rel_combo, 
+                rhs_edit = rhs,
+                layout = row_layout, 
+                remove_btn = btn
+            )
+        )
 
         # push into container
         self._cons_container.addLayout(row_layout)
-
-        # book-keeping
-        if not hasattr(self, "_rows"):
-            self._rows: List[_ConstraintRowWidgets] = []
-        self._rows.append(_ConstraintRowWidgets(coef_edits=coef_edits, rel_combo=rel_combo, rhs_edit=rhs, layout=row_layout))
 
     def _reflow_constraint_row(self, r_index: int, row: _ConstraintRowWidgets, vars_list: List[LPVariable]) -> None:
         """Adjust one constraint row to the current number of variables."""
@@ -238,7 +239,7 @@ class ObjectiveConstraintsSection(Section):
         while parent_layout.count():
             it = parent_layout.takeAt(0)
             w = it.widget()
-            if w and w not in (row.rel_combo, row.rhs_edit):
+            if w and w not in (row.rel_combo, row.rhs_edit, row.remove_btn):
                 w.deleteLater()
 
         row.coef_edits.clear()
@@ -261,9 +262,6 @@ class ObjectiveConstraintsSection(Section):
         parent_layout.addWidget(row.rel_combo)
         parent_layout.addWidget(row.rhs_edit, 1)
 
-        parent_layout.addWidget(row.rel_combo)
-        parent_layout.addWidget(row.rhs_edit, 1)
-
         # rebind remove button with current index
         try:
             row.remove_btn.clicked.disconnect()
@@ -274,6 +272,11 @@ class ObjectiveConstraintsSection(Section):
 
     def _delete_row(self, row: _ConstraintRowWidgets) -> None:
         """Remove a constraint row widgets from UI."""
+        # find index in layout and remove it
+        for i in range(self._cons_container.count()):
+            if self._cons_container.itemAt(i).layout() is row.layout:
+                self._cons_container.takeAt(i) 
+                break
         # delete widgets and layout
         while row.layout.count():
             it = row.layout.takeAt(0)
