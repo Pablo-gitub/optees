@@ -95,6 +95,10 @@ class LPView(QWidget):
         self.obj_cons_sec.add_cons_clicked.connect(self._on_add_constraint_clicked)
         self.obj_cons_sec.remove_cons_clicked.connect(self._on_remove_constraint_clicked)
 
+        # optimize button
+        self._solve_uc = None
+        self.btn_optimize.clicked.connect(self._on_optimize_clicked)
+
 
     # -------- controller binding --------
     def set_controller(self, controller: LPController) -> None:
@@ -116,12 +120,27 @@ class LPView(QWidget):
         self._ctrl.bounds_changed.connect(lambda _: self.bounds_sec.set_variables(self._ctrl.variables()))
         self._ctrl.constraints_changed.connect(self._on_constraints_changed)
 
+        # keep optimize button state in sync
+        if hasattr(self._ctrl, "objective_changed"):
+            self._ctrl.objective_changed.connect(lambda *_: self._update_optimize_enabled())
+
+        self._update_optimize_enabled()
+
+    # solver usecase binding
+    def set_solve_usecase(self, usecase):
+        self._solve_uc = usecase
+
     def _on_vars_changed(self, vars_list: list[LPVariable]) -> None:
         self.vars_sec.set_variables(vars_list)
         self.bounds_sec.set_variables(vars_list)
         self.obj_cons_sec.set_variables(vars_list)
+        self._update_optimize_enabled()
 
     # -------- handlers --------
+    def _update_optimize_enabled(self) -> None:
+        has_vars = bool(self._ctrl and self._ctrl.variables())
+        self.btn_optimize.setEnabled(has_vars)
+
     def _on_add_var_clicked(self) -> None:
         if self._ctrl:
             self._ctrl.add_variable()
@@ -187,6 +206,14 @@ class LPView(QWidget):
     def _on_cons_rhs_changed(self, row: int, value) -> None:
         if self._ctrl:
             self._ctrl.set_constraint_rhs(row, value)
+
+    def _on_optimize_clicked(self):
+        if not self._ctrl or not self._solve_uc:
+            return
+        # serve che il controller esponga lo snapshot del modello
+        model = self._ctrl.model()   # vedi step 3
+        solution = self._solve_uc.execute(model, method="highs")
+        # TODO: apri LPSolutionView e passa `solution`
 
     # -------- refresh --------
     def refresh_strings(self) -> None:

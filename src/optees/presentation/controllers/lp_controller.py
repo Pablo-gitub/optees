@@ -145,3 +145,7 @@ class LPController(QObject):
         if self._model is not before:
             self.constraint_rhs_updated.emit(row, rhs)
             self.constraints_changed.emit(list(self._model.constraints))
+
+    def model(self) -> LPModel:
+        """Return an immutable snapshot of the current LPModel."""
+        return self._model

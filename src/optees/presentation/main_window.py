@@ -17,6 +17,8 @@ from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.settings_view import SettingsView
 from optees.presentation.controllers.lp_controller import LPController
+from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
+from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 
 
 class MainWindow(QMainWindow):
@@ -33,6 +35,8 @@ class MainWindow(QMainWindow):
         self.lp_page = LPView()
         self.lp_controller = LPController()
         self.lp_page.set_controller(self.lp_controller)
+        self.solver_port = LPSolverAdapter()
+        self.solve_lp_uc = SolveLPUseCase(self.solver_port)
         self.milp_page = MILPView()
         self.knap_page = KnapsackView()
         self.settings_page = SettingsView()
