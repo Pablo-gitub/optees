@@ -37,6 +37,7 @@ class MainWindow(QMainWindow):
         self.lp_page.set_controller(self.lp_controller)
         self.solver_port = LPSolverAdapter()
         self.solve_lp_uc = SolveLPUseCase(self.solver_port)
+        self.lp_page.set_solve_usecase(self.solve_lp_uc)
         self.milp_page = MILPView()
         self.knap_page = KnapsackView()
         self.settings_page = SettingsView()
