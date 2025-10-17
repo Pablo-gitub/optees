@@ -6,6 +6,8 @@ from optees.core.assets import asset
 from optees.presentation.main_window import MainWindow
 from optees.core.theme import theme
 import sys
+import logging, os
+logging.basicConfig(level=os.getenv("OPTEES_LOG", "WARNING").upper())
 
 def main():
     app = QApplication(sys.argv)

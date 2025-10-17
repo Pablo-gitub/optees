@@ -12,21 +12,8 @@ from .variables_section import VariablesSection
 from .bounds_section import BoundsSection
 from .objective_section import ObjectiveSection
 from .objective_constraints_section import ObjectiveConstraintsSection
-
-def _as_list_coefs(coefs, n):
-        # coefs può essere tuple/list/dict/None
-        if coefs is None:
-            return [None]*n
-        if isinstance(coefs, dict):
-            return [coefs.get(i) for i in range(n)]
-        try:
-            seq = list(coefs)
-            # pad/cut a lunghezza n per sicurezza
-            if len(seq) < n:
-                seq += [None]*(n-len(seq))
-            return seq[:n]
-        except Exception:
-            return [None]*n
+import logging
+log = logging.getLogger(__name__)
 
 class LPView(QWidget):
     solve_completed = Signal(object)
@@ -232,29 +219,34 @@ class LPView(QWidget):
     def _on_optimize_clicked(self):
         if not self._ctrl or not self._solve_uc:
             return
-        
-        # sync objective coefs from UI to controller
-        if self._ctrl:
-            for j, val in enumerate(self.obj_cons_sec.get_objective_coefs()):
-                self._ctrl.set_objective_coef(j, val)
+
+        # flush coefs dalla UI
+        for j, val in enumerate(self.obj_cons_sec.get_objective_coefs()):
+            self._ctrl.set_objective_coef(j, val)
 
         model = self._ctrl.model()
         n = len(model.variables)
 
-        c_list = _as_list_coefs(getattr(model.objective, "coefs", None), n)
-        cons_list = []
-        for con in model.constraints:
-            cons_list.append((
-                _as_list_coefs(getattr(con, "coefs", None), n),
-                con.relation.symbol(),
-                con.rhs
-            ))
+        if log.isEnabledFor(logging.DEBUG):
+            def _as_list_coefs(coefs, n):
+                if coefs is None: return [None]*n
+                if isinstance(coefs, dict): return [coefs.get(i) for i in range(n)]
+                try:
+                    seq = list(coefs)
+                    return (seq + [None]*max(0, n-len(seq)))[:n]
+                except Exception:
+                    return [None]*n
 
-        print("[DEBUG] sense:", getattr(model.objective.sense, "name", model.objective.sense))
-        print("[DEBUG] offset:", getattr(model.objective, "offset", None))
-        print("[DEBUG] c:", c_list)
-        print("[DEBUG] bounds:", [(v.bounds.lb, v.bounds.ub) for v in model.variables])
-        print("[DEBUG] cons:", cons_list)
+            c_list = _as_list_coefs(getattr(model.objective, "coefs", None), n)
+            cons_list = [(_as_list_coefs(getattr(c, "coefs", None), n), c.relation.symbol(), c.rhs)
+                        for c in model.constraints]
+
+            log.debug("sense=%s offset=%s c=%s bounds=%s cons=%s",
+                    getattr(model.objective.sense, "name", model.objective.sense),
+                    getattr(model.objective, "offset", None),
+                    c_list,
+                    [(v.bounds.lb, v.bounds.ub) for v in model.variables],
+                    cons_list)
 
         solution = self._solve_uc.execute(model, method="highs")
         self.solve_completed.emit(solution)

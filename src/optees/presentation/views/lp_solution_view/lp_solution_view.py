@@ -13,7 +13,8 @@ from optees.presentation.views.lp_solution_view.status_card import StatusCard
 from optees.presentation.views.lp_solution_view.solution_table import SolutionTable
 from optees.presentation.views.lp_solution_view.plot_widget import PlotWidget
 from optees.domain.entities.lp.solution import LPSolution
-
+import logging
+log = logging.getLogger(__name__)
 
 class LPSolutionView(QWidget):
     """
@@ -147,14 +148,14 @@ class LPSolutionView(QWidget):
         values = getattr(sol, "values", None) or getattr(sol, "x", None) or {}
         extras = self._extras_to_dict(getattr(sol, "extras", None))
 
+        log.debug("set_solution: status=%s objective=%s values=%s", status, objective, values)
+
         self.set_result({
             "status": status,
             "objective": objective,
             "values": values,
             "extras": extras,
         })
-
-        print("DEBUG set_solution:", status, objective, values)
 
     def set_result(self, result: Dict[str, Any]) -> None:
         """
