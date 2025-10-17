@@ -123,6 +123,8 @@ class ObjectiveConstraintsSection(Section):
                 row = self._rows.pop()
                 self._delete_row(row)
 
+    def get_objective_coefs(self) -> list[Optional[float]]:
+        return [_parse_number(e.text()) for e in self._obj_coef_edits]
     # (optional) paint helpers if you later want to set values programmatically:
     # set_objective_coefs(list[Optional[float]]), set_constraint_row(...)
 

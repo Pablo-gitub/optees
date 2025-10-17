@@ -1,7 +1,7 @@
 # src/optees/presentation/views/lp_view/lp_view.py
 from __future__ import annotations
 from typing import Optional
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QScrollArea, QHBoxLayout, QPushButton
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
@@ -13,7 +13,24 @@ from .bounds_section import BoundsSection
 from .objective_section import ObjectiveSection
 from .objective_constraints_section import ObjectiveConstraintsSection
 
+def _as_list_coefs(coefs, n):
+        # coefs può essere tuple/list/dict/None
+        if coefs is None:
+            return [None]*n
+        if isinstance(coefs, dict):
+            return [coefs.get(i) for i in range(n)]
+        try:
+            seq = list(coefs)
+            # pad/cut a lunghezza n per sicurezza
+            if len(seq) < n:
+                seq += [None]*(n-len(seq))
+            return seq[:n]
+        except Exception:
+            return [None]*n
+
 class LPView(QWidget):
+    solve_completed = Signal(object)
+
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
 
@@ -89,6 +106,7 @@ class LPView(QWidget):
         self.obj_sec.offset_changed.connect(self._on_obj_offset_changed)
 
         # delegate: Constraints (NEW, placeholder)
+        self.obj_cons_sec.obj_coef_changed.connect(self._on_obj_coef_changed)
         self.obj_cons_sec.cons_coef_changed.connect(self._on_cons_coef_changed)
         self.obj_cons_sec.cons_rel_changed.connect(self._on_cons_rel_changed)
         self.obj_cons_sec.cons_rhs_changed.connect(self._on_cons_rhs_changed)
@@ -174,6 +192,10 @@ class LPView(QWidget):
         self._ctrl.apply_preset(index, preset)
 
     # NEW: Objective handlers (no coefs)
+    def _on_obj_coef_changed(self, index: int, value) -> None:
+        if self._ctrl:
+            self._ctrl.set_objective_coef(index, value)
+
     def _on_obj_sense_changed(self, sense: str) -> None:
         if self._ctrl:
             self._ctrl.set_objective_sense(sense)
@@ -210,10 +232,33 @@ class LPView(QWidget):
     def _on_optimize_clicked(self):
         if not self._ctrl or not self._solve_uc:
             return
-        # serve che il controller esponga lo snapshot del modello
-        model = self._ctrl.model()   # vedi step 3
+        
+        # sync objective coefs from UI to controller
+        if self._ctrl:
+            for j, val in enumerate(self.obj_cons_sec.get_objective_coefs()):
+                self._ctrl.set_objective_coef(j, val)
+
+        model = self._ctrl.model()
+        n = len(model.variables)
+
+        c_list = _as_list_coefs(getattr(model.objective, "coefs", None), n)
+        cons_list = []
+        for con in model.constraints:
+            cons_list.append((
+                _as_list_coefs(getattr(con, "coefs", None), n),
+                con.relation.symbol(),
+                con.rhs
+            ))
+
+        print("[DEBUG] sense:", getattr(model.objective.sense, "name", model.objective.sense))
+        print("[DEBUG] offset:", getattr(model.objective, "offset", None))
+        print("[DEBUG] c:", c_list)
+        print("[DEBUG] bounds:", [(v.bounds.lb, v.bounds.ub) for v in model.variables])
+        print("[DEBUG] cons:", cons_list)
+
         solution = self._solve_uc.execute(model, method="highs")
-        # TODO: apri LPSolutionView e passa `solution`
+        self.solve_completed.emit(solution)
+
 
     # -------- refresh --------
     def refresh_strings(self) -> None:
