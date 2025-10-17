@@ -13,6 +13,7 @@ from optees.presentation.views.lp_solution_view.status_card import StatusCard
 from optees.presentation.views.lp_solution_view.solution_table import SolutionTable
 from optees.presentation.views.lp_solution_view.plot_widget import PlotWidget
 from optees.domain.entities.lp.solution import LPSolution
+from optees.domain.models.lp.lp_model import LPModel
 import logging
 log = logging.getLogger(__name__)
 
@@ -105,7 +106,8 @@ class LPSolutionView(QWidget):
 
         # keep last shown result (optional)
         self._result: Optional[Dict[str, Any]] = None
-
+        # problem context (names, objective coefficients, offset)
+        self._problem_ctx: Dict[str, Any] = {"names": [], "coefs": [], "offset": 0.0}
     # ------------------------------------------------------------------
     # Inner Helpers
     # ------------------------------------------------------------------
@@ -131,10 +133,50 @@ class LPSolutionView(QWidget):
         except Exception:
             return {}
         
+    def _coefs_to_list(self, coefs_obj, n: int) -> list:
+        """Normalize objective/constraint coefficients into a length-n list.
+        Accepts tuple/list/dict/None from domain. Pads with None if needed.
+        """
+        if coefs_obj is None:
+            return [None] * n
+        if isinstance(coefs_obj, dict):
+            return [coefs_obj.get(i) for i in range(n)]
+        try:
+            seq = list(coefs_obj)
+        except Exception:
+            return [None] * n
+        if len(seq) < n:
+            seq += [None] * (n - len(seq))
+        return seq[:n]
+        
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
     
+    def set_problem(self, model: LPModel) -> None:
+        """Provide problem context (variable names, objective coefficients, offset).
+        Called by MainController *before* set_solution(...)."""
+        try:
+            names = [v.name for v in getattr(model, "variables", [])]
+            n = len(names)
+            coefs_raw = getattr(getattr(model, "objective", None), "coefs", None)
+            coefs = self._coefs_to_list(coefs_raw, n)
+            offset = float(getattr(getattr(model, "objective", None), "offset", 0.0) or 0.0)
+        except Exception:
+            names, coefs, offset = [], [], 0.0
+
+        self._problem_ctx = {"names": names, "coefs": coefs, "offset": offset}
+
+        # Pass the context to the table (next patch will add set_context there)
+        if hasattr(self._tbl, "set_context"):
+            self._tbl.set_context(self._problem_ctx)
+
+        # If we already have a result on screen, refresh StatusCard to include context
+        if self._result is not None:
+            merged = {**self._result, **self._problem_ctx}
+            self._status.set_result(merged)
+
+
     def set_solution(self, sol: LPSolution) -> None:
         """
         Entry point called by MainController after solving.
@@ -148,6 +190,7 @@ class LPSolutionView(QWidget):
         values = getattr(sol, "values", None) or getattr(sol, "x", None) or {}
         extras = self._extras_to_dict(getattr(sol, "extras", None))
 
+        # Debug-friendly log (safe: no shadowing with 'result')
         log.debug("set_solution: status=%s objective=%s values=%s", status, objective, values)
 
         self.set_result({
@@ -163,7 +206,9 @@ class LPSolutionView(QWidget):
         mainly used internally by `set_solution`.
         """
         self._result = result or {}
-        self._status.set_result(self._result)
+        # Merge problem context into status so it can show formula hints
+        merged = {**self._result, **(self._problem_ctx or {})}
+        self._status.set_result(merged)
         self._tbl.set_result(self._result)
         self._plot.set_result(self._result)
 

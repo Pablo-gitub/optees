@@ -100,7 +100,19 @@
         "variables": {
             "section": "Variabili (soluzione)"
         },
-        "columns": { "var": "Variabile", "value": "Valore" },
+        "columns": {
+            "var" : "Variabile",
+            "qty": "Quantità",
+            "unit": "Valore unitario",
+            "subtotal": "Sub-totale"
+        },
+        "total": "Totale",
+        "offset": "offset: {value}",
+        "tip": {
+            "qty": "Valore ottimo della variabile xᵢ",
+            "unit": "Coefficiente cᵢ della funzione obiettivo (valore unitario)",
+            "subtotal": "Contributo cᵢ·xᵢ all’obiettivo"
+        },
         "plot": {
             "title": "Grafico della soluzione",
             "x_label": "Variabili",

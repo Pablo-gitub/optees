@@ -100,7 +100,19 @@
       "variables": {
         "section": "Variables (solution)"
       },
-      "columns": { "var": "Variable", "value": "Value" },
+      "columns": {
+        "var" : "Variable",
+        "qty": "Quantity",
+        "unit": "Unit value",
+        "subtotal": "Sub-total"
+      },
+      "total": "Total",
+      "offset": "offset: {value}",
+      "tip": {
+        "qty": "Optimal value of variable xᵢ",
+        "unit": "Objective coefficient cᵢ (unit value)",
+        "subtotal": "Contribution cᵢ·xᵢ to the objective"
+      },
       "plot": {
         "title": "Solution plot",
         "x_label": "Variables",
