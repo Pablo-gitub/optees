@@ -85,6 +85,33 @@
         "rhs_ph": "RHS",
         "remove": "Rimuovi"
     },
-    "actions": { "optimize": "Ottimizza" }
+    "actions": { "optimize": "Ottimizza" },
+    "sol": {
+        "status": {
+            "optimal": "Ottimale",
+            "infeasible": "Non fattibile",
+            "unbounded": "Illimitato",
+            "notsolved": "Non risolto"
+        },
+        "objective": "Valore obiettivo",
+        "method": "Metodo",
+        "iterations": "Iterazioni",
+        "msg": "Messaggio",
+        "variables": {
+            "section": "Variabili (soluzione)"
+        },
+        "columns": { "var": "Variabile", "value": "Valore" },
+        "plot": {
+            "title": "Grafico della soluzione",
+            "x_label": "Variabili",
+            "y_label": "Valore",
+            "no_data": "Nessun dato da visualizzare",
+            "placeholder": "Installa matplotlib per vedere il grafico."
+        },
+        "back": "Indietro",
+        "copy_report": "Copia report",
+        "export_csv": "Esporta CSV",
+        "export_json": "Esporta JSON"
+    }
   }
 }

@@ -85,6 +85,33 @@
       "rhs_ph": "RHS",
       "remove": "Remove"
     },
-    "actions": { "optimize": "Optimize" }
+    "actions": { "optimize": "Optimize" },
+    "sol": {
+      "status": {
+        "optimal": "Optimal",
+        "infeasible": "Infeasible",
+        "unbounded": "Unbounded",
+        "notsolved": "Not solved"
+      },
+      "objective": "Objective",
+      "method": "Method",
+      "iterations": "Iterations",
+      "msg": "Message",
+      "variables": {
+        "section": "Variables (solution)"
+      },
+      "columns": { "var": "Variable", "value": "Value" },
+      "plot": {
+        "title": "Solution plot",
+        "x_label": "Variables",
+        "y_label": "Value",
+        "no_data": "No data to plot",
+        "placeholder": "Install matplotlib to see the chart."
+      },
+      "back": "Back",
+      "copy_report": "Copy report",
+      "export_csv": "Export CSV",
+      "export_json": "Export JSON"
+    }
   }
 }
