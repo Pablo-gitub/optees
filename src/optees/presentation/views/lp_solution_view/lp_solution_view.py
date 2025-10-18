@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QScrollArea, QHBoxLayout, QPushButton, QStyle, QSizePolicy
+    QWidget, QVBoxLayout, QScrollArea, QHBoxLayout, QPushButton, QStyle, QSizePolicy, QLayout
 )
 
 from optees.core.string_manager import strings as S
@@ -13,6 +13,7 @@ from optees.presentation.views.lp_solution_view.status_card import StatusCard
 from optees.presentation.views.lp_solution_view.solution_table import SolutionTable
 from optees.presentation.views.lp_solution_view.plot_widget import PlotWidget
 from optees.presentation.views.widgets.stretch_flow_layout import StretchFlowLayout
+from optees.presentation.views.lp_solution_view.feasible_region_widget import FeasibleRegionWidget
 from optees.domain.entities.lp.solution import LPSolution
 from optees.domain.models.lp.lp_model import LPModel
 import logging
@@ -54,6 +55,11 @@ class LPSolutionView(QWidget):
         root = QVBoxLayout(page)
         root.setContentsMargins(16, 12, 16, 16)
         root.setSpacing(12)
+
+        # Make the scrolled page prefer its minimum size so vertical scrollbars appear
+        page.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        # Let the layout advertise its minimum size to the scroll area
+        root.setSizeConstraint(QLayout.SetMinimumSize)
 
         # === Header: Back button ======================================
         # Header row with a Back button (icon + text)
@@ -97,6 +103,11 @@ class LPSolutionView(QWidget):
         wrap.addWidget(self._tbl)
         wrap.addWidget(self._plot)
         root.addLayout(wrap)
+
+        # === Section 2.5: Feasible Region Plot ==========================
+        # Feasible region (only shown meaningfully for 2 variables)
+        self._feasible = FeasibleRegionWidget()
+        root.addWidget(self._feasible)
 
         # === Section 3: Footer actions ================================
         footer = QHBoxLayout()
@@ -178,28 +189,63 @@ class LPSolutionView(QWidget):
     # ------------------------------------------------------------------
     
     def set_problem(self, model: LPModel) -> None:
-        """Provide problem context (variable names, objective coefficients, offset).
-        Called by MainController *before* set_solution(...)."""
+        """Provide full problem context to children (names, coefs, offset, bounds, constraints)."""
         try:
+            # Variable names
             names = [v.name for v in getattr(model, "variables", [])]
             n = len(names)
+
+            # Objective coefs + offset
             coefs_raw = getattr(getattr(model, "objective", None), "coefs", None)
             coefs = self._coefs_to_list(coefs_raw, n)
             offset = float(getattr(getattr(model, "objective", None), "offset", 0.0) or 0.0)
+
+            # Bounds as (lb, ub) per variable
+            bounds = []
+            for v in getattr(model, "variables", []):
+                lb = getattr(getattr(v, "bounds", None), "lb", None)
+                ub = getattr(getattr(v, "bounds", None), "ub", None)
+                bounds.append((lb, ub))
+
+            # Constraints as ([a_i], rel_str, rhs)
+            constraints = []
+            for c in getattr(model, "constraints", []) or []:
+                a_list = self._coefs_to_list(getattr(c, "coefs", None), n)
+                rel = getattr(getattr(c, "relation", None), "symbol", lambda: None)() or "<="
+                rhs = getattr(c, "rhs", None)
+                constraints.append((a_list, rel, rhs))
+
+            # Sense (optional, used in 2D arrow)
+            sense = getattr(getattr(model, "objective", None), "sense", None)
+            sense_name = getattr(sense, "name", None) or str(sense or "max").lower()
+            if sense_name not in ("min", "max"):
+                sense_name = "max"
+
         except Exception:
-            names, coefs, offset = [], [], 0.0
+            names, coefs, offset, bounds, constraints, sense_name = [], [], 0.0, [], [], "max"
 
-        self._problem_ctx = {"names": names, "coefs": coefs, "offset": offset}
+        # Store global context used by StatusCard and Table
+        self._problem_ctx = {
+            "names": names,
+            "coefs": coefs,
+            "offset": offset,
+            "bounds": bounds,
+            "constraints": constraints,
+            "sense": sense_name,
+        }
 
-        # Pass the context to the table (next patch will add set_context there)
+        # Push to table if it supports context
         if hasattr(self._tbl, "set_context"):
             self._tbl.set_context(self._problem_ctx)
 
-        # If we already have a result on screen, refresh StatusCard to include context
+        # Push to feasible-region widget if present
+        if hasattr(self, "_feasible") and hasattr(self._feasible, "set_context"):
+            self._feasible.set_context(self._problem_ctx)
+
+        # If we already have a result, refresh the StatusCard to include formula hints
         if self._result is not None:
             merged = {**self._result, **self._problem_ctx}
             self._status.set_result(merged)
-
 
     def set_solution(self, sol: LPSolution) -> None:
         """
@@ -235,6 +281,9 @@ class LPSolutionView(QWidget):
         self._status.set_result(merged)
         self._tbl.set_result(self._result)
         self._plot.set_result(self._result)
+        # Feasible region widget also needs the solution (to mark the optimal point)
+        if hasattr(self, "_feasible") and hasattr(self._feasible, "set_solution"):
+            self._feasible.set_solution(self._result)
 
     def refresh_strings(self) -> None:
         """Refreshes all localized texts."""
@@ -245,12 +294,14 @@ class LPSolutionView(QWidget):
         self._status.refresh_strings()
         self._tbl.refresh_strings()
         self._plot.refresh_strings()
+        self._feasible.refresh_strings()
 
     def refresh_theme(self) -> None:
         """Propagates theme change to child widgets."""
         self._status.refresh_theme()
         self._tbl.refresh_theme()
         self._plot.refresh_theme()
+        self._feasible.refresh_theme()
 
     # ------------------------------------------------------------------
     # Actions (currently no-op, to be implemented later)

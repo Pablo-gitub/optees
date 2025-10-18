@@ -126,6 +126,12 @@
             "no_data": "Nessun dato da visualizzare",
             "placeholder": "Installa matplotlib per vedere il grafico."
         },
+        "feasible": {
+            "title": "Regione ammissibile grafico",
+            "subtitle": "Insieme ammissibile e soluzione ottima",
+            "placeholder": "Installa matplotlib per vedere la regione ammissibile.",
+            "only2d": "Il grafico della regione ammissibile è disponibile solo per 2 variabili (3D in arrivo)."
+        },
         "back": "Indietro",
         "copy_report": "Copia report",
         "export_csv": "Esporta CSV",
