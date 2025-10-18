@@ -30,6 +30,11 @@ class MainController(QObject):
         lp: LPView = self.window.page("lp")  # type: ignore[assignment]
         lp.solve_completed.connect(self._on_lp_solved)
 
+        # Solution -> Back to LP
+        sol_view = self.window.page("lp_solution")
+        if hasattr(sol_view, "back_requested"):
+            sol_view.back_requested.connect(lambda: self.window.goto("lp"))
+
     def _on_lp_solved(self, solution) -> None:
         # 1) Recover the Solution page
         sol_view = self.window.page("lp_solution")
@@ -53,6 +58,6 @@ class MainController(QObject):
                     getattr(solution, "objective", None))
         except Exception:
             pass
-        
+
         # 4) Navigate to the solution page
         self.window.goto("lp_solution")

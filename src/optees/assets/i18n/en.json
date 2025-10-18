@@ -93,6 +93,12 @@
         "unbounded": "Unbounded",
         "notsolved": "Not solved"
       },
+      "check": {
+        "ok": "Consistent",
+        "mismatch": "Computed total {calc} differs from objective {obj}",
+        "calc": "Computed total {calc}"
+      },
+      "formula_hint": "z = Σ(cᵢ·xᵢ) + offset",
       "objective": "Objective",
       "method": "Method",
       "iterations": "Iterations",

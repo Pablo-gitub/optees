@@ -93,6 +93,12 @@
             "unbounded": "Illimitato",
             "notsolved": "Non risolto"
         },
+        "check": {
+            "ok": "Coerente",
+            "mismatch": "Il totale calcolato {calc} differisce dall’obiettivo {obj}",
+            "calc": "Totale calcolato {calc}"
+        },
+        "formula_hint": "z = Σ(cᵢ·xᵢ) + offset",
         "objective": "Valore obiettivo",
         "method": "Metodo",
         "iterations": "Iterazioni",

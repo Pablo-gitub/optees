@@ -2,7 +2,7 @@
 from __future__ import annotations
 from typing import Dict, Any, Optional
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QLabel
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QTableView, QLabel, QSizePolicy, QHeaderView
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtCore import Qt
 
@@ -54,10 +54,15 @@ class SolutionTable(QWidget):
         self._tv.setEditTriggers(QTableView.NoEditTriggers)
         self._tv.setSortingEnabled(False)
         root.addWidget(self._tv, 1)
+        self._tv.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # === Internal model ===============================================
         self._model = QStandardItemModel(self)
         self._tv.setModel(self._model)
+        hdr = self._tv.horizontalHeader()
+        hdr.setSectionResizeMode(QHeaderView.Stretch)   # each column stretches equally
+        hdr.setMinimumSectionSize(90) # minimum column width
 
         # === Problem context ===============================================
         # Problem context: variable names, objective unit values (coefs), and offset
@@ -198,4 +203,3 @@ class SolutionTable(QWidget):
 
         # Adjust table layout
         self._tv.resizeColumnsToContents()
-        self._tv.horizontalHeader().setStretchLastSection(True)

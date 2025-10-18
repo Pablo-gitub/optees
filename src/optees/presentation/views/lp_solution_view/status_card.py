@@ -68,7 +68,10 @@ class StatusCard(QWidget):
         self._meta.setObjectName("solverMsg")  # required by tests
         self._meta.setWordWrap(True)
         root.addWidget(self._meta)
-
+        # Detailed formula line (e.g., "z = 2 × 3 + 1 × 2 = 8")
+        self._formula_detail = QLabel("")
+        self._formula_detail.setWordWrap(True)
+        root.addWidget(self._formula_detail)
         # Initialize look and language
         self.refresh_theme()
         self.refresh_strings()
@@ -89,7 +92,8 @@ class StatusCard(QWidget):
         """Adjust text and background colors based on current theme."""
         base_fg = "rgba(255,255,255,0.95)" if theme.is_dark() else "rgba(0,0,0,0.90)"
         self._objective.setStyleSheet(f"font-size: 20px; font-weight: 700; color: {base_fg};")
-        self._meta.setStyleSheet(theme.secondary_text_css(self))
+        self._meta.setStyleSheet(f"color: {base_fg};")
+        self._formula_detail.setStyleSheet(f"color: {base_fg};")
         self._repaint()
 
     # ------------------------------------------------------------------
@@ -137,11 +141,42 @@ class StatusCard(QWidget):
         # --- Objective value -------------------------------------------
         if obj is None:
             obj_text = f"{S.t('lp.sol.objective')}: —"
+            obj_f = None
         else:
-            obj_text = f"{S.t('lp.sol.objective')}: <span style='font-weight:800;'>{obj:.6g}</span>"
+            try:
+                obj_f = float(obj)
+                obj_text = f"{S.t('lp.sol.objective')}: <span style='font-weight:800;'>{obj_f:.6g}</span>"
+            except Exception:
+                obj_f = None
+                obj_text = f"{S.t('lp.sol.objective')}: <span style='font-weight:800;'>{obj}</span>"
         self._objective.setText(obj_text)
 
-        # --- Metadata / extras -----------------------------------------
+        # --- Formula hint (if possible) -------------------------------
+        # Formula hint + consistency check: z ?= Σ (cᵢ·xᵢ) + offset
+        values = (self._result or {}).get("values") or (self._result or {}).get("x") or {}
+        coefs = (self._result or {}).get("coefs", None)  # injected via LPSolutionView.set_result merge
+        offset = float((self._result or {}).get("offset", 0.0) or 0.0)
+
+        def _to_float(x):
+            try: 
+                return float(x)
+            except Exception: 
+                return None
+
+        # compute Σ cᵢ·xᵢ only if we have coefs + matching names
+        names = list(values.keys())
+        subtotal_sum = None
+        if isinstance(coefs, (list, tuple)) and len(coefs) >= len(names):
+            subtotal_sum = 0.0
+            for i, name in enumerate(names):
+                xi = _to_float(values.get(name))
+                ci = _to_float(coefs[i])
+                if xi is None or ci is None:
+                    subtotal_sum = None
+                    break
+                subtotal_sum += xi * ci
+
+        # build meta line(s)
         method = extras.get("method", "highs")
         nit = extras.get("nit", None)
         msg = extras.get("message", None)
@@ -151,4 +186,49 @@ class StatusCard(QWidget):
             bits.append(f"{S.t('lp.sol.iterations')}: {nit}")
         if msg:
             bits.append(f"{S.t('lp.sol.msg')}: {msg}")
-        self._meta.setText("  •  ".join(bits))
+
+        # Show compact formula hint
+        bits.append(S.t("lp.sol.formula_hint"))
+
+        # Consistency check (✓ if objective ≈ Σ cᵢ·xᵢ + offset)
+        if subtotal_sum is not None:
+            total_calc = subtotal_sum + offset
+            if obj_f is not None:
+                diff = abs(total_calc - obj_f)
+                if diff <= 1e-6:
+                    bits.append(f"✓ {S.t('lp.sol.check.ok')}")
+                else:
+                    # show warning with both numbers for didactic clarity
+                    bits.append(f"⚠ {S.t('lp.sol.check.mismatch', calc=f'{total_calc:.6g}', obj=f'{obj_f:.6g}')}")
+            else:
+                bits.append(f"• {S.t('lp.sol.check.calc', calc=f'{total_calc:.6g}')}")
+        self._meta.setText('  •  '.join(bits))
+
+        # Build expanded equation like: z = 2 × 3 + 1 × 2 (+ 0.5) = 8.5
+        def _fmt(x):
+            try:
+                return f"{float(x):.6g}"
+            except Exception:
+                return "—"
+
+        detail_line = ""
+        if subtotal_sum is not None:
+            # Recompute detailed terms in the same order (names list)
+            detailed_terms = []
+            for i, name in enumerate(names):
+                xi = _to_float(values.get(name))
+                ci = _to_float(coefs[i]) if isinstance(coefs, (list, tuple)) and i < len(coefs) else None
+                if xi is None or ci is None:
+                    detailed_terms = []
+                    break
+                detailed_terms.append(f"{_fmt(xi)} × {_fmt(ci)}")
+
+            if detailed_terms:
+                total_calc = subtotal_sum + offset
+                # Append offset if nonzero (within a small tolerance)
+                if abs(offset) > 1e-12:
+                    detailed_terms.append(_fmt(offset))
+                detail_line = f"z = {' + '.join(detailed_terms)} = {_fmt(total_calc)}"
+
+        # Show / clear the detail label
+        self._formula_detail.setText(detail_line)

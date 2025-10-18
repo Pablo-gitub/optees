@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QScrollArea, QHBoxLayout, QPushButton
+    QWidget, QVBoxLayout, QScrollArea, QHBoxLayout, QPushButton, QStyle, QSizePolicy
 )
 
 from optees.core.string_manager import strings as S
@@ -12,6 +12,7 @@ from optees.core.theme import theme
 from optees.presentation.views.lp_solution_view.status_card import StatusCard
 from optees.presentation.views.lp_solution_view.solution_table import SolutionTable
 from optees.presentation.views.lp_solution_view.plot_widget import PlotWidget
+from optees.presentation.views.widgets.stretch_flow_layout import StretchFlowLayout
 from optees.domain.entities.lp.solution import LPSolution
 from optees.domain.models.lp.lp_model import LPModel
 import logging
@@ -54,32 +55,55 @@ class LPSolutionView(QWidget):
         root.setContentsMargins(16, 12, 16, 16)
         root.setSpacing(12)
 
+        # === Header: Back button ======================================
+        # Header row with a Back button (icon + text)
+        hdr = QHBoxLayout()
+        hdr.setContentsMargins(0, 0, 0, 0)
+        hdr.setSpacing(8)
+
+        self.btn_back = QPushButton()
+        self.btn_back.setObjectName("btnBack")
+        self.btn_back.setIcon(self.style().standardIcon(QStyle.SP_ArrowBack))
+        self.btn_back.setFlat(True)  # looks like a toolbar button
+        self.btn_back.setCursor(Qt.PointingHandCursor)
+        self.btn_back.clicked.connect(self.back_requested.emit)
+
+        hdr.addWidget(self.btn_back)
+        hdr.addStretch(1)
+        root.addLayout(hdr)
+
         # === Section 1: Hero / StatusCard =============================
         self._status = StatusCard()
         root.addWidget(self._status)
 
         # === Section 2: Table + Plot side by side =====================
-        row = QHBoxLayout()
-        row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(16)
+        wrap = StretchFlowLayout(hspacing=16, vspacing=16)
 
         self._tbl = SolutionTable()
         self._plot = PlotWidget()
 
-        row.addWidget(self._tbl, 1)
-        row.addWidget(self._plot, 1)
-        root.addLayout(row)
+        # size policies: allow both to expand when there is room
+        self._tbl.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self._plot.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        # width minima: comode per il wrapping 2-up → 1-up
+        self._tbl.setMinimumWidth(380)
+        self._plot.setMinimumWidth(380)
+
+        # height minima: più alte per leggibilità (soprattutto la tabella)
+        self._tbl.setMinimumHeight(340)
+        self._plot.setMinimumHeight(260)
+
+        wrap.addWidget(self._tbl)
+        wrap.addWidget(self._plot)
+        root.addLayout(wrap)
 
         # === Section 3: Footer actions ================================
         footer = QHBoxLayout()
-        self.btn_back = QPushButton(S.t("lp.sol.back"))
         self.btn_copy = QPushButton(S.t("lp.sol.copy_report"))
         self.btn_export_csv = QPushButton(S.t("lp.sol.export_csv"))
         self.btn_export_json = QPushButton(S.t("lp.sol.export_json"))
 
-        self.btn_back.clicked.connect(self.back_requested.emit)
-
-        footer.addWidget(self.btn_back)
         footer.addStretch(1)
         footer.addWidget(self.btn_copy)
         footer.addWidget(self.btn_export_csv)
