@@ -31,6 +31,8 @@ class PlotWidget(QWidget):
         super().__init__(parent)
 
         self._result: Optional[Dict[str, Any]] = None
+        self._ctx_names = []
+        self._ctx_labels = []
 
         # ---- Layout skeleton -------------------------------------------------
         self._root = QVBoxLayout(self)
@@ -93,6 +95,10 @@ class PlotWidget(QWidget):
         self._title.setStyleSheet(f"font-weight:700; color:{fg};")
         self._repaint()
 
+    def set_context(self, ctx: Dict[str, Any]) -> None:
+        """Receive names/labels to label the bars correctly."""
+        self._ctx_names = ctx.get("names", []) or []
+        self._ctx_labels = ctx.get("labels", []) or []
     # ----------------------------------------------------------------------
     # Internal helpers
     # ----------------------------------------------------------------------
@@ -100,40 +106,52 @@ class PlotWidget(QWidget):
         """(Re)draw the chart or update the placeholder."""
         status = (self._result or {}).get("status", "NotSolved")
 
+        # If matplotlib is not available, keep the placeholder visible
         if not self._matplotlib_ok or self._ax is None or self._fig is None:
             if self._placeholder:
                 self._placeholder.setVisible(True)
             return
 
+        # Build values map and choose order from context if available
         vals_map = (self._result or {}).get("values") or (self._result or {}).get("x") or {}
-        names = list(vals_map.keys())
-        try:
-            vals = [float(v) for v in vals_map.values()]
-        except Exception:
-            names, vals = [], []
+        names = list(self._ctx_names) if self._ctx_names else list(vals_map.keys())
 
-        #  If not solved or no data, show placeholder
+        # Early exit: not solved or no variables
         if status == "NotSolved" or not names:
             if self._canvas:
                 self._canvas.setVisible(False)
             if self._placeholder:
                 self._placeholder.setVisible(True)
-            if names and self._matplotlib_ok:
-                pass
             return
 
-        self._ax.clear()
+        # Extract numeric values in the chosen order (fallback to 0.0)
+        vals = []
+        for n in names:
+            v = vals_map.get(n, 0.0)
+            try:
+                vals.append(float(v))
+            except Exception:
+                vals.append(0.0)
 
-        if names:
-            self._ax.bar(names, vals)
-            self._ax.set_xlabel(S.t("lp.sol.plot.x_label"))
-            self._ax.set_ylabel(S.t("lp.sol.plot.y_label"))
-            self._ax.tick_params(axis='x', rotation=0)
-        else:
-            self._ax.text(
-                0.5, 0.5, S.t("lp.sol.plot.no_data"),
-                ha='center', va='center', transform=self._ax.transAxes
-            )
+        # Human-facing X labels (prefer context labels)
+        x_labels = list(self._ctx_labels) if (self._ctx_labels and len(self._ctx_labels) == len(names)) else names
+
+        # Draw
+        self._ax.clear()
+        xs = list(range(len(names)))
+        self._ax.bar(xs, vals)
+        self._ax.set_xticks(xs)
+        self._ax.set_xticklabels(x_labels)
+        self._ax.set_xlabel(S.t("lp.sol.plot.x_label"))
+        self._ax.set_ylabel(S.t("lp.sol.plot.y_label"))
+        self._ax.tick_params(axis='x', rotation=0)
+
+        # Optional: keep Y axis starting at 0 for readability
+        try:
+            ymin, ymax = self._ax.get_ylim()
+            self._ax.set_ylim(bottom=0, top=max(ymax, 1.0))
+        except Exception:
+            pass
 
         self._fig.tight_layout()
 

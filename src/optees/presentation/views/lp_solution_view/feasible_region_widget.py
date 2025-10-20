@@ -116,31 +116,82 @@ class FeasibleRegionWidget(QWidget):
     # ----------------------------------------------------------------------
     # Internal rendering dispatcher
     # ----------------------------------------------------------------------
+
+    def _current_axis_labels(self, want: int) -> List[str]:
+        """Return labels to show on axes (human-facing, e.g. 'mele', 'pere').
+        Priority: context.labels -> context.names -> values.keys() -> generic."""
+        labels = list(self._ctx.get("labels", []) or [])
+        if len(labels) >= want:
+            return labels[:want]
+
+        names = list(self._ctx.get("names", []) or [])
+        if len(names) >= want:
+            return names[:want]
+
+        vals_map = (self._result or {}).get("values") or (self._result or {}).get("x") or {}
+        if vals_map:
+            vnames = list(vals_map.keys())
+            if len(vnames) >= want:
+                return vnames[:want]
+
+        return [f"X{i+1}" for i in range(want)]
+
+    def _current_names(self, want: int) -> List[str]:
+        """Return internal variable identifiers (used to look up values).
+        Priority: context.names -> values.keys() -> generic."""
+        names = list(self._ctx.get("names", []) or [])
+        if len(names) >= want:
+            return names[:want]
+
+        vals_map = (self._result or {}).get("values") or (self._result or {}).get("x") or {}
+        if vals_map:
+            vnames = list(vals_map.keys())
+            if len(vnames) >= want:
+                return vnames[:want]
+
+        return [f"X{i+1}" for i in range(want)]
+    
     def _repaint(self) -> None:
-        """Render the widget according to dimension and available backends."""
+        """Render the widget according to the *actual* problem dimension."""
         if not self._matplotlib_ok or self._ax is None or self._fig is None:
             return
 
-        names: List[str] = self._ctx.get("names", []) or []
-        n = len(names)
+        # 1) Detect true dimension from context (preferred), else bounds, else values
+        n = 0
+        ctx_names = self._ctx.get("names", []) or []
+        if ctx_names:
+            n = len(ctx_names)
+        if n == 0:
+            bounds = self._ctx.get("bounds", []) or []
+            if bounds:
+                n = len(bounds)
+        if n == 0:
+            vals_map = (self._result or {}).get("values") or (self._result or {}).get("x") or {}
+            if vals_map:
+                n = len(vals_map)
 
-        # Clear axes; we may also swap projections if 3D is needed
+        # Safety clamp (only 2D/3D supported didactically)
+        if n < 2:
+            n = 2
+        elif n > 3:
+            n = 4  # sentinel to go to the "not supported" message
+
+        # 2) Resolve the labels for exactly n axes
+        names: List[str] = self._current_names(2 if n == 2 else 3) if n in (2, 3) else []
+
+        # 3) Clear and dispatch
         self._fig.clear()
-        # Decide which plot to draw based on the number of variables
         if n == 2:
             self._ax = self._fig.add_subplot(111)  # 2D axes
             self._draw_2d()
-        elif n == 3:
-            if _HAS_MPL_3D:
-                self._ax = self._fig.add_subplot(111, projection="3d")
-                self._draw_3d()
-            else:
-                # 3D not available: fallback text
-                ax = self._fig.add_subplot(111)
-                ax.text(0.5, 0.5, "Matplotlib 3D backend not available.",
-                        ha="center", va="center", transform=ax.transAxes)
+        elif n == 3 and _HAS_MPL_3D:
+            self._ax = self._fig.add_subplot(111, projection="3d")
+            self._draw_3d()
+        elif n == 3 and not _HAS_MPL_3D:
+            ax = self._fig.add_subplot(111)
+            ax.text(0.5, 0.5, "Matplotlib 3D backend not available.",
+                    ha="center", va="center", transform=ax.transAxes)
         else:
-            # Not supported dimensions: show a compact message
             ax = self._fig.add_subplot(111)
             ax.text(0.5, 0.5, S.t("lp.sol.feasible.only2d"),
                     ha="center", va="center", transform=ax.transAxes)
@@ -157,7 +208,8 @@ class FeasibleRegionWidget(QWidget):
         import numpy as np
 
         ax = self._ax
-        names: List[str] = self._ctx.get("names", [])
+        names:  List[str] = self._current_names(2)        # for value lookup
+        labels: List[str] = self._current_axis_labels(2)  # for axis labels
         cons: List[Tuple[List[Optional[float]], str, Optional[float]]] = self._ctx.get("constraints", [])
         bounds: List[Tuple[Optional[float], Optional[float]]] = self._ctx.get("bounds", [(0.0, None), (0.0, None)])
 
@@ -227,8 +279,8 @@ class FeasibleRegionWidget(QWidget):
                         xy=(p0, p1), xytext=(6, 6), textcoords="offset points")
 
         # Axes styling
-        ax.set_xlabel(names[0])
-        ax.set_ylabel(names[1])
+        ax.set_xlabel(labels[0])
+        ax.set_ylabel(labels[1])
         ax.set_title(S.t("lp.sol.feasible.subtitle"))
         ax.set_xlim([x0_min, x0_max])
         ax.set_ylim([x1_min, x1_max])
@@ -244,7 +296,8 @@ class FeasibleRegionWidget(QWidget):
         import numpy as np
 
         ax = self._ax
-        names: List[str] = self._ctx.get("names", [])
+        names:  List[str] = self._current_names(3)         # for value lookup
+        labels: List[str] = self._current_axis_labels(3)   # for axis labels
         cons: List[Tuple[List[Optional[float]], str, Optional[float]]] = self._ctx.get("constraints", [])
         bounds: List[Tuple[Optional[float], Optional[float]]] = self._ctx.get(
             "bounds", [(0.0, None), (0.0, None), (0.0, None)]
@@ -350,7 +403,7 @@ class FeasibleRegionWidget(QWidget):
             ax.text(pt[0], pt[1], pt[2], f"({pt[0]:.3g}, {pt[1]:.3g}, {pt[2]:.3g})")
 
         # Axes labels/limits: now tight around the interesting range
-        ax.set_xlabel(names[0]); ax.set_ylabel(names[1]); ax.set_zlabel(names[2])
+        ax.set_xlabel(labels[0]); ax.set_ylabel(labels[1]); ax.set_zlabel(labels[2])
         ax.set_xlim(mins[0], maxs[0]); ax.set_ylim(mins[1], maxs[1]); ax.set_zlim(mins[2], maxs[2])
         try:
             ax.ticklabel_format(style="plain", axis="x")

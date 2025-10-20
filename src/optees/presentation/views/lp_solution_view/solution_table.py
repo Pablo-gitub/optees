@@ -33,7 +33,8 @@ class SolutionTable(QWidget):
         super().__init__(parent)
 
         self._result: Optional[Dict[str, Any]] = None
-
+        self._name_to_label = {}
+    
         # ------------------------------------------------------------------
         # Layout structure
         # ------------------------------------------------------------------
@@ -78,11 +79,15 @@ class SolutionTable(QWidget):
     def set_context(self, ctx: Dict[str, Any]) -> None:
         """
         Provide problem context coming from the LP model:
-        - names: List[str]        -> variable names
-        - coefs: List[float|None] -> objective unit values (cᵢ)
-        - offset: float            -> objective constant term
+        - names: internal variable keys (used in solution dict)
+        - labels: user-facing names to display (optional)
+        - coefs, offset: for unit value and total
         """
         self._context = ctx or {"names": [], "coefs": [], "offset": 0.0}
+        names = self._context.get("names", []) or []
+        labels = self._context.get("labels", []) or []
+        # Build name->label mapping (fallback to name if label missing)
+        self._name_to_label = {n: (labels[i] if i < len(labels) else n) for i, n in enumerate(names)}
         self._rebuild()
 
     def set_result(self, result: Dict[str, Any]) -> None:
@@ -172,8 +177,9 @@ class SolutionTable(QWidget):
                 subtotal = qty_f * unit
                 total += subtotal
 
+            display_name = self._name_to_label.get(name, name)
             row_items = [
-                QStandardItem(str(name)),
+                QStandardItem(str(display_name)),
                 QStandardItem(fmt(qty_f)),
                 QStandardItem(fmt(unit)),
                 QStandardItem(fmt(subtotal)),

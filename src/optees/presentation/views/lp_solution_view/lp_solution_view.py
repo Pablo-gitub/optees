@@ -189,10 +189,13 @@ class LPSolutionView(QWidget):
     # ------------------------------------------------------------------
     
     def set_problem(self, model: LPModel) -> None:
-        """Provide full problem context to children (names, coefs, offset, bounds, constraints)."""
+        """Provide full problem context to children (names, *display* labels, coefs, offset, bounds, constraints)."""
         try:
-            # Variable names
-            names = [v.name for v in getattr(model, "variables", [])]
+            vars_ = list(getattr(model, "variables", []))
+
+            # Internal names (keys used in solution map) and display labels (what user typed).
+            names = [getattr(v, "name", f"X{i+1}") for i, v in enumerate(vars_)]
+            labels = [getattr(v, "label", None) or getattr(v, "name", f"X{i+1}") for i, v in enumerate(vars_)]
             n = len(names)
 
             # Objective coefs + offset
@@ -200,12 +203,11 @@ class LPSolutionView(QWidget):
             coefs = self._coefs_to_list(coefs_raw, n)
             offset = float(getattr(getattr(model, "objective", None), "offset", 0.0) or 0.0)
 
-            # Bounds as (lb, ub) per variable
+            # Bounds as (lb, ub)
             bounds = []
-            for v in getattr(model, "variables", []):
-                lb = getattr(getattr(v, "bounds", None), "lb", None)
-                ub = getattr(getattr(v, "bounds", None), "ub", None)
-                bounds.append((lb, ub))
+            for v in vars_:
+                b = getattr(v, "bounds", None)
+                bounds.append((getattr(b, "lb", None), getattr(b, "ub", None)))
 
             # Constraints as ([a_i], rel_str, rhs)
             constraints = []
@@ -215,18 +217,19 @@ class LPSolutionView(QWidget):
                 rhs = getattr(c, "rhs", None)
                 constraints.append((a_list, rel, rhs))
 
-            # Sense (optional, used in 2D arrow)
+            # Sense
             sense = getattr(getattr(model, "objective", None), "sense", None)
-            sense_name = getattr(sense, "name", None) or str(sense or "max").lower()
+            sense_name = (getattr(sense, "name", None) or str(sense or "max")).lower()
             if sense_name not in ("min", "max"):
                 sense_name = "max"
 
         except Exception:
-            names, coefs, offset, bounds, constraints, sense_name = [], [], 0.0, [], [], "max"
+            names, labels, coefs, offset, bounds, constraints, sense_name = [], [], [], 0.0, [], [], "max"
 
-        # Store global context used by StatusCard and Table
+        # Save and broadcast context (now includes 'labels')
         self._problem_ctx = {
-            "names": names,
+            "names": names,          # internal keys
+            "labels": labels,        # user-facing labels
             "coefs": coefs,
             "offset": offset,
             "bounds": bounds,
@@ -234,15 +237,13 @@ class LPSolutionView(QWidget):
             "sense": sense_name,
         }
 
-        # Push to table if it supports context
         if hasattr(self._tbl, "set_context"):
             self._tbl.set_context(self._problem_ctx)
-
-        # Push to feasible-region widget if present
+        if hasattr(self._plot, "set_context"):
+            self._plot.set_context(self._problem_ctx)
         if hasattr(self, "_feasible") and hasattr(self._feasible, "set_context"):
             self._feasible.set_context(self._problem_ctx)
 
-        # If we already have a result, refresh the StatusCard to include formula hints
         if self._result is not None:
             merged = {**self._result, **self._problem_ctx}
             self._status.set_result(merged)
