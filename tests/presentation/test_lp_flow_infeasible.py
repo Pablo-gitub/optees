@@ -15,7 +15,6 @@ def test_infeasible_shows_badge_and_empty_table(window, qtbot):
 
     # enoudh to have some variables for clicking optimize
     ctrl = window.lp_controller
-    ctrl.add_variable(); ctrl.add_variable()
 
     with qtbot.waitSignal(window.lp_page.solve_completed, timeout=1000):
         qtbot.mouseClick(window.lp_page.btn_optimize, Qt.LeftButton)
@@ -28,6 +27,12 @@ def test_infeasible_shows_badge_and_empty_table(window, qtbot):
           or getattr(getattr(window.lp_solution_page, "status", None), "badge", None))
     assert badge is not None
     # alternatively, read one text label with localized status
-    # table empty
+    # table shows 2 variable rows + 1 "Total" row, with dash placeholders
     table = window.lp_solution_page.solution_table
-    assert table.model().rowCount() == 0
+    model = table.model()
+    assert model.rowCount() == 3
+
+    # quantities should be "—" (no values for infeasible)
+    qty_col = 1
+    assert model.data(model.index(0, qty_col)) == "—"
+    assert model.data(model.index(1, qty_col)) == "—"

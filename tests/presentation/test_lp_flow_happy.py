@@ -19,7 +19,6 @@ def test_happy_flow_optimize_navigates_and_populates(window, qtbot):
 
     # We build a model with 2 variables and 3 constraints
     ctrl = window.lp_controller
-    ctrl.add_variable(); ctrl.add_variable()
     ctrl.set_objective_sense("max")
     ctrl.set_objective_coef(0, 3.0)   # 3 * x1
     ctrl.set_objective_coef(1, 2.0)   # + 2 * x2
@@ -58,7 +57,7 @@ def test_happy_flow_optimize_navigates_and_populates(window, qtbot):
     # Assert 3: la solution view show two rows 
     table = window.lp_solution_page.solution_table
     model = table.model()
-    assert model.rowCount() == 2
+    assert model.rowCount() == 3
     # optional: check first row content
     idx0 = model.index(0, 0)
     idx1 = model.index(0, 1)
