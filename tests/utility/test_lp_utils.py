@@ -1,5 +1,6 @@
 # tests/utility/test_lp_utils.py
 import os
+import math
 import unittest
 import numpy as np
 
@@ -105,6 +106,106 @@ class TestSolveLPGuards(unittest.TestCase):
         self.assertAlmostEqual(obj, 5.0, places=9)  # x=0, so 1*0 + 5
 
 
+class TestLPPreprocessingSafety(unittest.TestCase):
+    def test_dependent_equalities_with_inconsistent_rhs_remain_infeasible(self):
+        # x = 1 and 2x = 3 have dependent left-hand sides but incompatible RHS.
+        # A safe preprocessor must not drop the second row as merely redundant.
+        problem = {
+            "sense": "min",
+            "c": [0.0],
+            "A_eq": [[1.0], [2.0]],
+            "b_eq": [1.0, 3.0],
+            "bounds": [(None, None)],
+        }
+        status, obj, x, extras = solve_lp(problem, method="highs")
+        self.assertEqual(status, "Infeasible")
+        self.assertIsNone(obj)
+        self.assertEqual(x, {})
+
+    def test_opposite_inequality_normals_are_not_deduplicated(self):
+        # x <= 1 and -x <= -2 mean x <= 1 and x >= 2, hence infeasible.
+        # Opposite normals are not duplicates for <= constraints.
+        problem = {
+            "sense": "min",
+            "c": [0.0],
+            "A_ub": [[1.0], [-1.0]],
+            "b_ub": [1.0, -2.0],
+            "bounds": [(None, None)],
+        }
+        status, obj, x, extras = solve_lp(problem, method="highs")
+        self.assertEqual(status, "Infeasible")
+        self.assertIsNone(obj)
+        self.assertEqual(x, {})
+
+
+class TestLPOptimalRanges(unittest.TestCase):
+    def test_unique_optimum_has_zero_width_ranges(self):
+        problem = {
+            "sense": "max",
+            "c": [3.0, 2.0],
+            "A_ub": [[1.0, 1.0], [1.0, 0.0], [0.0, 1.0]],
+            "b_ub": [4.0, 2.0, 3.0],
+            "bounds": [(0.0, None), (0.0, None)],
+            "var_names": ["x", "y"],
+        }
+        status, obj, x, extras = solve_lp(problem, method="highs")
+        self.assertEqual(status, "Optimal")
+        alt = extras["alt_opt"]
+        self.assertFalse(alt["has_alternate_optimum"])
+        self.assertEqual(alt["dimension"], 0)
+        self.assertAlmostEqual(alt["ranges"]["x"]["min"], 2.0, places=7)
+        self.assertAlmostEqual(alt["ranges"]["x"]["max"], 2.0, places=7)
+        self.assertAlmostEqual(alt["ranges"]["y"]["min"], 2.0, places=7)
+        self.assertAlmostEqual(alt["ranges"]["y"]["max"], 2.0, places=7)
+
+    def test_segment_of_optimal_solutions_reports_variable_ranges(self):
+        # max x1 + x2 over x1 + x2 <= 3, x >= 0 has the whole segment
+        # from (0,3) to (3,0) as optimal face.
+        problem = {
+            "sense": "max",
+            "c": [1.0, 1.0],
+            "A_ub": [[1.0, 1.0]],
+            "b_ub": [3.0],
+            "bounds": [(0.0, None), (0.0, None)],
+            "var_names": ["X1", "X2"],
+        }
+        status, obj, x, extras = solve_lp(problem, method="highs")
+        self.assertEqual(status, "Optimal")
+        self.assertAlmostEqual(obj, 3.0, places=7)
+
+        alt = extras["alt_opt"]
+        self.assertTrue(alt["has_alternate_optimum"])
+        self.assertEqual(alt["dimension"], 1)
+        self.assertEqual(set(alt["varying_variables"]), {"X1", "X2"})
+        self.assertAlmostEqual(alt["ranges"]["X1"]["min"], 0.0, places=7)
+        self.assertAlmostEqual(alt["ranges"]["X1"]["max"], 3.0, places=7)
+        self.assertAlmostEqual(alt["ranges"]["X2"]["min"], 0.0, places=7)
+        self.assertAlmostEqual(alt["ranges"]["X2"]["max"], 3.0, places=7)
+        self.assertIn("A", alt["extreme_points"])
+        self.assertIn("B", alt["extreme_points"])
+
+    def test_unbounded_optimal_face_reports_infinite_range(self):
+        # min x with x >= 0 and y free has optimum x=0, while y can take any
+        # real value without changing the objective.
+        problem = {
+            "sense": "min",
+            "c": [1.0, 0.0],
+            "bounds": [(0.0, None), (None, None)],
+            "var_names": ["x", "y"],
+        }
+        status, obj, x, extras = solve_lp(problem, method="highs")
+        self.assertEqual(status, "Optimal")
+        alt = extras["alt_opt"]
+        self.assertTrue(alt["has_alternate_optimum"])
+        self.assertEqual(alt["dimension"], 1)
+        self.assertEqual(alt["ranges"]["x"]["min"], 0.0)
+        self.assertEqual(alt["ranges"]["x"]["max"], 0.0)
+        self.assertTrue(math.isinf(alt["ranges"]["y"]["min"]))
+        self.assertLess(alt["ranges"]["y"]["min"], 0.0)
+        self.assertTrue(math.isinf(alt["ranges"]["y"]["max"]))
+        self.assertGreater(alt["ranges"]["y"]["max"], 0.0)
+
+
 # ---------------------------------------
 # Smoke tests from LPnetlib (.mat files)
 # ---------------------------------------
@@ -120,6 +221,7 @@ class TestLPNetlibMAT(unittest.TestCase):
     @unittest.skipUnless(os.path.exists(AFIRO), "lp_afiro.mat not found")
     def test_afiro_from_mat(self):
         problem = load_lpnetlib_mat(AFIRO)  # returns canonical dict (min, c, A_eq/A_ub, bounds, obj_offset?)
+        problem["compute_optimal_ranges"] = "never"
         status, obj, x, extras = solve_lp(problem, method="highs")
         self.assertEqual(status, "Optimal")
         self.assertIsInstance(obj, float)
@@ -127,8 +229,10 @@ class TestLPNetlibMAT(unittest.TestCase):
         self._assert_objective_consistency(problem, obj, x, tol=1e-7)
 
     @unittest.skipUnless(os.path.exists(FV47), "lp_25fv47.mat not found")
+    @unittest.skipUnless(os.getenv("OPTEES_RUN_SLOW_LPNETLIB") == "1", "set OPTEES_RUN_SLOW_LPNETLIB=1 to run lp_25fv47")
     def test_25fv47_from_mat(self):
         problem = load_lpnetlib_mat(FV47)
+        problem["compute_optimal_ranges"] = "never"
         status, obj, x, extras = solve_lp(problem, method="highs")
         self.assertEqual(status, "Optimal")
         self.assertIsInstance(obj, float)

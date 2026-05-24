@@ -31,7 +31,7 @@ class SolveLPUseCase:
         status = raw.get("status")
         objective = raw.get("objective")
         x = raw.get("x", {})
-        extras = raw.get("extras", {})
+        extras = dict(raw.get("extras", {}))
         return LPSolution.from_utility_tuple(status, objective, x, extras)
 
     # --- Mapping LPModel -> canonical dict (solver-friendly) ---
