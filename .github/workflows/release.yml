@@ -31,7 +31,7 @@ jobs:
 
           - os: macos-14
             label: macOS Apple Silicon
-            artifact: optees-macos-arm64.zip
+            artifact: optees-macos-arm64.dmg
 
     steps:
       # ── Source ────────────────────────────────────────────────────────────
@@ -121,24 +121,156 @@ jobs:
         run: |
           Compress-Archive -Path dist\optees -DestinationPath optees-windows-x64.zip
 
-      # ── macOS: ad-hoc sign all binaries inside the .app ──────────────────
-      # Uses "-" as identity (no Apple Developer account required).
-      # Without this step Gatekeeper hard-blocks the app entirely;
-      # with it, users see "unidentified developer" and can bypass via
-      # right-click → Open  or  System Settings → Privacy → Allow Anyway.
-      - name: Ad-hoc sign .app (macOS)
+      # ── macOS: Developer ID signing + notarization when secrets exist ─────
+      # Apple Gatekeeper accepts apps distributed outside the Mac App Store only
+      # when they are signed with a Developer ID certificate and notarized.
+      # If the secrets below are absent, CI falls back to ad-hoc signing for
+      # contributor/test builds; those builds still show the Gatekeeper warning.
+      - name: Configure macOS signing mode
         if: runner.os == 'macOS'
         shell: bash
+        env:
+          MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
         run: |
-          codesign --force --deep --sign - dist/optees.app
+          if [[ -n "${MACOS_CERTIFICATE_BASE64}" &&
+                -n "${MACOS_CERTIFICATE_PASSWORD}" &&
+                -n "${APPLE_ID}" &&
+                -n "${APPLE_TEAM_ID}" &&
+                -n "${APPLE_APP_SPECIFIC_PASSWORD}" ]]; then
+            echo "MACOS_NOTARIZE=true" >> "${GITHUB_ENV}"
+          else
+            echo "MACOS_NOTARIZE=false" >> "${GITHUB_ENV}"
+          fi
 
-      # ── Package: macOS → zip preserving .app bundle ───────────────────────
-      - name: Package macOS build
+      - name: Import Developer ID certificate (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          MACOS_CERTIFICATE_BASE64: ${{ secrets.MACOS_CERTIFICATE_BASE64 }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          if [[ "${MACOS_NOTARIZE}" != "true" ]]; then
+            echo "Developer ID secrets not configured; using ad-hoc signing."
+            exit 0
+          fi
+
+          CERTIFICATE_PATH="${RUNNER_TEMP}/developer-id.p12"
+          KEYCHAIN_PATH="${RUNNER_TEMP}/optees-signing.keychain-db"
+          KEYCHAIN_PASSWORD="${MACOS_KEYCHAIN_PASSWORD:-temporary-ci-keychain-password}"
+
+          CERTIFICATE_PATH="${CERTIFICATE_PATH}" python3 - <<'PY'
+          import base64
+          import os
+          from pathlib import Path
+
+          cert_path = Path(os.environ["CERTIFICATE_PATH"])
+          cert_data = base64.b64decode(os.environ["MACOS_CERTIFICATE_BASE64"])
+          cert_path.write_bytes(cert_data)
+          PY
+          security create-keychain -p "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
+          security set-keychain-settings -lut 21600 "${KEYCHAIN_PATH}"
+          security unlock-keychain -p "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
+          security import "${CERTIFICATE_PATH}" \
+            -P "${MACOS_CERTIFICATE_PASSWORD}" \
+            -A -t cert -f pkcs12 \
+            -k "${KEYCHAIN_PATH}"
+          security list-keychains -d user -s "${KEYCHAIN_PATH}"
+          security set-key-partition-list \
+            -S apple-tool:,apple:,codesign: \
+            -s -k "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
+
+          if [[ -z "${APPLE_SIGNING_IDENTITY}" ]]; then
+            APPLE_SIGNING_IDENTITY="$(
+              security find-identity -v -p codesigning "${KEYCHAIN_PATH}" |
+              sed -n 's/.*"\(Developer ID Application:.*\)"/\1/p' |
+              head -n 1
+            )"
+          fi
+
+          if [[ -z "${APPLE_SIGNING_IDENTITY}" ]]; then
+            echo "Could not find a Developer ID Application signing identity." >&2
+            exit 1
+          fi
+
+          echo "APPLE_SIGNING_IDENTITY=${APPLE_SIGNING_IDENTITY}" >> "${GITHUB_ENV}"
+
+      - name: Sign .app (macOS)
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          # ditto preserves symlinks and resource forks inside the .app
-          ditto -c -k --keepParent dist/optees.app optees-macos-arm64.zip
+          if [[ "${MACOS_NOTARIZE}" == "true" ]]; then
+            while IFS= read -r -d '' file_path; do
+              if file "${file_path}" | grep -q "Mach-O"; then
+                codesign --force \
+                  --timestamp \
+                  --options runtime \
+                  --sign "${APPLE_SIGNING_IDENTITY}" \
+                  "${file_path}"
+              fi
+            done < <(find dist/optees.app -type f -print0)
+
+            codesign --force \
+              --timestamp \
+              --options runtime \
+              --entitlements build/macos/entitlements.plist \
+              --sign "${APPLE_SIGNING_IDENTITY}" \
+              dist/optees.app
+
+            codesign --verify --deep --strict --verbose=2 dist/optees.app
+          else
+            codesign --force --deep --sign - dist/optees.app
+          fi
+
+      - name: Notarize .app (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+        run: |
+          if [[ "${MACOS_NOTARIZE}" != "true" ]]; then
+            echo "Skipping notarization for ad-hoc signed build."
+            exit 0
+          fi
+
+          NOTARY_ZIP="${RUNNER_TEMP}/optees-notary.zip"
+          ditto -c -k --keepParent dist/optees.app "${NOTARY_ZIP}"
+
+          xcrun notarytool submit "${NOTARY_ZIP}" \
+            --apple-id "${APPLE_ID}" \
+            --team-id "${APPLE_TEAM_ID}" \
+            --password "${APPLE_APP_SPECIFIC_PASSWORD}" \
+            --wait
+
+          xcrun stapler staple dist/optees.app
+          xcrun stapler validate dist/optees.app
+          spctl -a -vvv -t exec dist/optees.app
+
+      # ── Package: macOS → DMG with Applications shortcut ───────────────────
+      - name: Package macOS DMG
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          rm -rf dmg-root
+          mkdir -p dmg-root
+
+          # ditto preserves symlinks and resource forks inside the .app bundle.
+          ditto dist/optees.app dmg-root/optees.app
+          ln -s /Applications dmg-root/Applications
+
+          hdiutil create \
+            -volname "Optees" \
+            -srcfolder dmg-root \
+            -ov \
+            -format UDZO \
+            optees-macos-arm64.dmg
 
       # ── Upload artifact for the release job ───────────────────────────────
       - name: Upload artifact
@@ -173,15 +305,16 @@ jobs:
 
             | Platform | File | Notes |
             |---|---|---|
-            | macOS 14+ (Apple Silicon) | `optees-macos-arm64.zip` | Unzip → right-click → Open (first launch) |
+            | macOS 14+ (Apple Silicon) | `optees-macos-arm64.dmg` | Open DMG → drag `optees.app` to Applications |
             | Windows 10/11 (x64) | `optees-windows-x64.zip` | Unzip → run `optees.exe` |
             | Linux (x86_64) | `optees-linux-x86_64.AppImage` | See instructions below |
 
             ### macOS
-            The app is ad-hoc signed but not notarized (no Apple Developer account).
-            On first launch macOS shows *"unidentified developer"*:
-            **right-click `optees.app` → Open → Open** to confirm.
-            Alternatively: System Settings → Privacy & Security → **Allow Anyway**.
+            Open the DMG and drag `optees.app` to `Applications`.
+            Official release artifacts are Developer ID signed and notarized
+            when the repository has Apple signing secrets configured.
+            Contributor/test builds without those secrets are ad-hoc signed and
+            may still require **right-click `optees.app` → Open** on first launch.
 
             ### Windows
             Windows Defender SmartScreen may warn about an unrecognised publisher.
