@@ -52,6 +52,48 @@
         "problem": "Descrizione problema"
       }
     },
+    "info": {
+      "example": {
+        "title": "Esempi LP",
+        "intro": "Usa questi esempi come piccoli modelli di riferimento quando costruisci un problema di ottimizzazione lineare continua.",
+        "block1": {
+          "title": "Mix produttivo",
+          "body": "Un laboratorio produce sedie e tavoli. Sia X1 il numero di sedie e X2 il numero di tavoli. Se ogni sedia rende 30 e ogni tavolo rende 50, massimizza z = 30 X1 + 50 X2. I vincoli possono essere 2 X1 + 4 X2 <= 80 per le ore macchina e X1 + X2 <= 30 per lo spazio. I bounds X1, X2 >= 0 indicano che le variabili sono continue."
+        },
+        "block2": {
+          "title": "Dieta o miscelazione",
+          "body": "Un esempio di dieta minimizza il costo rispettando nutrienti minimi. Siano X1 e X2 i chilogrammi di due ingredienti. Minimizza z = 4 X1 + 7 X2 con vincoli come 3 X1 + X2 >= 12 proteine e X1 + 2 X2 >= 10 vitamine. Usa vincoli >= quando un requisito deve superare una soglia."
+        },
+        "block3": {
+          "title": "Soluzioni ottime multiple",
+          "body": "Per max z = X1 + X2 con X1 + X2 <= 6 e X1, X2 >= 0, ogni punto del segmento X1 + X2 = 6 e' ottimo. Il solver riporta z* = 6 e intervalli X1 in [0, 6], X2 in [0, 6]."
+        },
+        "block4": {
+          "title": "Caso di test 3D",
+          "body": "Prova questo modello a 3 variabili: max z = X1 + X2 + X3, soggetto a X1 + X2 + X3 <= 6 e X1, X2, X3 >= 0. La faccia ottima e' un triangolo: z* = 6, ogni variabile varia in [0, 6], ed esistono infiniti ottimi."
+        }
+      },
+      "problem": {
+        "title": "Descrizione del problema LP",
+        "intro": "La programmazione lineare risolve problemi di ottimizzazione in cui obiettivo e vincoli sono funzioni lineari di variabili decisionali continue.",
+        "block1": {
+          "title": "Forma matematica",
+          "body": "Un LP canonico si puo' scrivere come min o max c^T x + offset soggetto a A_ub x <= b_ub, A_eq x = b_eq e limiti inferiori/superiori sulle variabili. Il vettore x contiene le decisioni; c contiene i coefficienti dell'obiettivo; A e b codificano i vincoli."
+        },
+        "block2": {
+          "title": "Regione ammissibile e ottimo",
+          "body": "I vincoli definiscono un poliedro convesso. Un obiettivo lineare raggiunge l'ottimo su una faccia di quel poliedro: spesso un singolo vertice, a volte uno spigolo, un piano o una faccia di dimensione superiore. Se la faccia ottima ha dimensione positiva, esistono infiniti ottimi."
+        },
+        "block3": {
+          "title": "Comportamento algoritmico",
+          "body": "Optees chiama SciPy/HiGHS tramite linprog. I modelli di massimizzazione sono convertiti in minimizzazione cambiando segno a c. Dopo la risoluzione, gli stati sono mappati in Optimal, Infeasible, Unbounded o NotSolved, e le diagnostiche HiGHS sono conservate per la UI."
+        },
+        "block4": {
+          "title": "Intervalli ottimi",
+          "body": "Dopo aver trovato un ottimo z*, Optees aggiunge l'uguaglianza c^T x = z* e risolve LP ausiliari min x_i e max x_i per ogni variabile. Cosi' ottiene l'intervallo esatto dei valori ottimi di ogni variabile. Pseudocodice: risolvi LP originale; aggiungi c^T x = z*; per ogni i risolvi min x_i e max x_i."
+        }
+      }
+    },
     "vars": {
       "section": "Variabili",
       "hint": "Descrivi a cosa si riferisce ogni variabile.",

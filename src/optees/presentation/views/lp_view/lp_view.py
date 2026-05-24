@@ -17,6 +17,8 @@ log = logging.getLogger(__name__)
 
 class LPView(QWidget):
     solve_completed = Signal(object)
+    example_requested = Signal()
+    problem_description_requested = Signal()
 
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
@@ -103,6 +105,8 @@ class LPView(QWidget):
         # optimize button
         self._solve_uc = None
         self.btn_optimize.clicked.connect(self._on_optimize_clicked)
+        self.intro.example_clicked.connect(self.example_requested.emit)
+        self.intro.problem_clicked.connect(self.problem_description_requested.emit)
 
 
     # -------- controller binding --------

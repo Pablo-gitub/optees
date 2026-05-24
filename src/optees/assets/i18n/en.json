@@ -52,6 +52,48 @@
         "problem": "Problem description"
       }
     },
+    "info": {
+      "example": {
+        "title": "LP examples",
+        "intro": "Use these examples as small templates when you model a continuous linear optimization problem.",
+        "block1": {
+          "title": "Production mix",
+          "body": "A workshop produces chairs and tables. Let X1 be chairs and X2 be tables. If each chair earns 30 and each table earns 50, maximize z = 30 X1 + 50 X2. Capacity constraints can be 2 X1 + 4 X2 <= 80 for machine hours and X1 + X2 <= 30 for storage. Bounds X1, X2 >= 0 mean fractional production is allowed."
+        },
+        "block2": {
+          "title": "Diet or blending",
+          "body": "A nutrition example minimizes cost while satisfying minimum nutrients. Let X1 and X2 be kilograms of two ingredients. Minimize z = 4 X1 + 7 X2 with constraints such as 3 X1 + X2 >= 12 proteins and X1 + 2 X2 >= 10 vitamins. Use >= constraints when a requirement must be at least a threshold."
+        },
+        "block3": {
+          "title": "Multiple optimal solutions",
+          "body": "For max z = X1 + X2 with X1 + X2 <= 6 and X1, X2 >= 0, every point on the segment X1 + X2 = 6 is optimal. The solver reports z* = 6 and ranges X1 in [0, 6], X2 in [0, 6]."
+        },
+        "block4": {
+          "title": "3D test case",
+          "body": "Try this small 3-variable model: max z = X1 + X2 + X3, subject to X1 + X2 + X3 <= 6 and X1, X2, X3 >= 0. The optimal face is a triangle: z* = 6, each variable ranges in [0, 6], and there are infinitely many optimal solutions."
+        }
+      },
+      "problem": {
+        "title": "LP problem description",
+        "intro": "Linear programming solves optimization problems whose objective and constraints are linear functions of continuous decision variables.",
+        "block1": {
+          "title": "Mathematical form",
+          "body": "A canonical LP can be written as min or max c^T x + offset subject to A_ub x <= b_ub, A_eq x = b_eq, and lower/upper bounds on x. The vector x contains the decision variables; c contains objective coefficients; A and b encode the constraints."
+        },
+        "block2": {
+          "title": "Feasible region and optimum",
+          "body": "The constraints define a convex polyhedron. A linear objective reaches its optimum at a face of that polyhedron: often a single vertex, sometimes an edge, a plane, or a higher-dimensional face. When the optimal face has positive dimension, the model has infinitely many optimal solutions."
+        },
+        "block3": {
+          "title": "Algorithmic behavior",
+          "body": "Optees calls SciPy/HiGHS through linprog. Maximization models are converted to minimization by changing the sign of c. After solving, statuses are mapped to Optimal, Infeasible, Unbounded, or NotSolved, and HiGHS diagnostics are preserved for the UI."
+        },
+        "block4": {
+          "title": "Optimal ranges",
+          "body": "After an optimum z* is found, Optees adds the equality c^T x = z* and solves auxiliary LPs min x_i and max x_i for each variable. This gives the exact interval of optimal values for each variable. Pseudocode: solve original LP; add c^T x = z*; for every i solve min x_i and max x_i."
+        }
+      }
+    },
     "vars": {
       "section": "Variables",
       "hint": "Describe what each variable represents.",

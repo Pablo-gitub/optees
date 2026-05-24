@@ -29,6 +29,15 @@ class MainController(QObject):
         # LP -> Solution
         lp: LPView = self.window.page("lp")  # type: ignore[assignment]
         lp.solve_completed.connect(self._on_lp_solved)
+        if hasattr(lp, "example_requested"):
+            lp.example_requested.connect(lambda: self.window.goto("lp_example"))
+        if hasattr(lp, "problem_description_requested"):
+            lp.problem_description_requested.connect(lambda: self.window.goto("lp_problem"))
+
+        for name in ("lp_example", "lp_problem"):
+            info_view = self.window.page(name)
+            if hasattr(info_view, "back_requested"):
+                info_view.back_requested.connect(lambda _=False: self.window.goto("lp"))
 
         # Solution -> Back to LP
         sol_view = self.window.page("lp_solution")

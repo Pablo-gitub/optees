@@ -16,6 +16,7 @@ from optees.presentation.views.lp_view.lp_view import LPView
 from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.settings_view import SettingsView
+from optees.presentation.views.lp_info_view import LPExampleView, LPProblemDescriptionView
 from optees.presentation.controllers.lp_controller import LPController
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
@@ -47,6 +48,8 @@ class MainWindow(QMainWindow):
         self.milp_page = MILPView()
         self.knap_page = KnapsackView()
         self.settings_page = SettingsView()
+        self.lp_example_page = LPExampleView()
+        self.lp_problem_page = LPProblemDescriptionView()
 
         # (NEW) solution page placeholder
         self.lp_solution_page = LPSolutionView()
@@ -54,6 +57,8 @@ class MainWindow(QMainWindow):
         # register pages
         self.register_page("home", self.home_page)
         self.register_page("lp", self.lp_page)
+        self.register_page("lp_example", self.lp_example_page)
+        self.register_page("lp_problem", self.lp_problem_page)
         self.register_page("lp_solution", self.lp_solution_page)
         self.register_page("milp", self.milp_page)
         self.register_page("knapsack", self.knap_page)
@@ -139,7 +144,8 @@ class MainWindow(QMainWindow):
 
     def _on_theme_changed(self) -> None:
         self._apply_window_icon()
-        for page in (self.home_page, self.lp_page, self.lp_solution_page,  # <-- aggiungi qui
+        for page in (self.home_page, self.lp_page, self.lp_example_page, self.lp_problem_page,
+                    self.lp_solution_page,
                     self.milp_page, self.knap_page, self.settings_page):
             if hasattr(page, "refresh_theme"):
                 try: page.refresh_theme()
@@ -157,7 +163,8 @@ class MainWindow(QMainWindow):
         self.act_settings.setToolTip(S.t("nav.settings"))
 
         # retranslate pages
-        for page in (self.home_page, self.lp_page, self.lp_solution_page,  # <-- e qui
+        for page in (self.home_page, self.lp_page, self.lp_example_page, self.lp_problem_page,
+                 self.lp_solution_page,
                  self.milp_page, self.knap_page, self.settings_page):
             if hasattr(page, "refresh_strings"):
                 try: page.refresh_strings()

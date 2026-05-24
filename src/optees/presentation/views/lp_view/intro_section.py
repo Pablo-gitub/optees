@@ -1,5 +1,6 @@
 # src/optees/presentation/views/lp_view/intro_section.py
 from __future__ import annotations
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QPushButton
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
@@ -7,6 +8,9 @@ from .section import Section
 
 class IntroSection(Section):
     """Static intro: description + two buttons (Example, Problem)."""
+    example_clicked = Signal()
+    problem_clicked = Signal()
+
     def __init__(self, parent: QWidget | None = None):
         super().__init__("", parent)
 
@@ -25,6 +29,9 @@ class IntroSection(Section):
         btns.addWidget(self.btn_example)
         btns.addWidget(self.btn_problem)
         self.body.addLayout(btns)
+
+        self.btn_example.clicked.connect(self.example_clicked.emit)
+        self.btn_problem.clicked.connect(self.problem_clicked.emit)
 
         self.refresh_strings()
 
