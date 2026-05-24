@@ -6,6 +6,8 @@ from typing import Any, Dict, Optional
 
 from PySide6.QtCore import QObject, Signal, QSettings
 
+from optees.core.assets import asset
+
 
 class StringManager(QObject):
     """Tiny i18n helper with JSON files and a Qt signal for live updates."""
@@ -83,5 +85,5 @@ class StringManager(QObject):
 
 
 # Instantiate a shared singleton
-_LOCALES_DIR = Path(__file__).resolve().parents[1] / "assets" / "i18n"
+_LOCALES_DIR = Path(asset("i18n"))
 strings = StringManager(_LOCALES_DIR)
