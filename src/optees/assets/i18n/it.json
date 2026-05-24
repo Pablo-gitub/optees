@@ -119,6 +119,14 @@
             "unit": "Coefficiente cᵢ della funzione obiettivo (valore unitario)",
             "subtotal": "Contributo cᵢ·xᵢ all’obiettivo"
         },
+        "opt": {
+            "unique": "La soluzione ottima è unica.",
+            "multiple": "Esistono infiniti ottimi (più soluzioni ottime con lo stesso valore di z).",
+            "segment": "Esistono infiniti ottimi: tutte le soluzioni tra {A} e {B} sono ottimali.",
+            "range": "Esistono infiniti ottimi. Intervalli ottimi delle variabili: {ranges}.",
+            "varying": "Variabili che possono variare all'ottimo: {vars}",
+            "not_computed": "L'analisi degli intervalli ottimi è stata saltata per la dimensione del modello."
+        },
         "plot": {
             "title": "Grafico della soluzione",
             "x_label": "Variabili",

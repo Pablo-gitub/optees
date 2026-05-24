@@ -1,6 +1,7 @@
 # src/optees/presentation/views/lp_solution_view/status_card.py
 from __future__ import annotations
 from typing import Optional, Dict, Any
+import math
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout
 from PySide6.QtCore import Qt
@@ -72,6 +73,11 @@ class StatusCard(QWidget):
         self._formula_detail = QLabel("")
         self._formula_detail.setWordWrap(True)
         root.addWidget(self._formula_detail)
+        # --- Optimality multiplicity note (unique vs multiple optima) ---
+        self._opt_note = QLabel("")            # NEW: short sentence about uniqueness / multiple optima
+        self._opt_note.setObjectName("optNote")
+        self._opt_note.setWordWrap(True)
+        root.addWidget(self._opt_note)
         # Initialize look and language
         self.refresh_theme()
         self.refresh_strings()
@@ -92,8 +98,17 @@ class StatusCard(QWidget):
         """Adjust text and background colors based on current theme."""
         base_fg = "rgba(255,255,255,0.95)" if theme.is_dark() else "rgba(0,0,0,0.90)"
         self._objective.setStyleSheet(f"font-size: 20px; font-weight: 700; color: {base_fg};")
-        self._meta.setStyleSheet(f"color: {base_fg};")
-        self._formula_detail.setStyleSheet(f"color: {base_fg};")
+        self._meta.setTextFormat(Qt.RichText)
+        self._formula_detail.setTextFormat(Qt.RichText)
+        self._meta.setStyleSheet(
+            f"color: {base_fg}; margin-top: 8px; margin-bottom: 8px; line-height: 160%;"
+        )
+        self._formula_detail.setStyleSheet(
+            f"color: {base_fg}; margin-top: 6px; margin-bottom: 8px; line-height: 160%;"
+        )
+        self._opt_note.setStyleSheet(
+            f"color: {base_fg}; font-weight: 600; margin-top: 8px; line-height: 160%;"
+        )
         self._repaint()
 
     # ------------------------------------------------------------------
@@ -151,6 +166,104 @@ class StatusCard(QWidget):
                 obj_text = f"{S.t('lp.sol.objective')}: <span style='font-weight:800;'>{obj}</span>"
         self._objective.setText(obj_text)
 
+        # --- Multiplicity of the optimal solution (unique vs multiple) ---
+        # extras["alt_opt"]["ranges"] contains the mathematically meaningful
+        # result: for each variable x_i, min/max values over the optimal face
+        # F* = {x feasible | c^T x = z*}.  Positive width means x_i can move
+        # while preserving the same optimal objective value.
+        def _fmt_point_from_mapping(m: Dict[str, Any]) -> str:
+            """
+            Render a compact [x1, x2, ...] using the variable order from extras['var_names']
+            if available. Falls back to the mapping's iteration order.
+            """
+            var_order = extras.get("var_names")
+            try:
+                if isinstance(var_order, (list, tuple)):
+                    vals = []
+                    for name in var_order:
+                        if name in m:
+                            vals.append(float(m[name]))
+                        else:
+                            # missing -> show as placeholder
+                            vals.append(float("nan"))
+                    s = "[" + ", ".join(f"{v:.6g}" for v in vals) + "]"
+                else:
+                    vals = [float(v) for v in m.values()]
+                    s = "[" + ", ".join(f"{v:.6g}" for v in vals) + "]"
+                # Compact if too long (e.g., high dimension)
+                if len(vals) > 6:
+                    s = "[" + ", ".join(f"{vals[i]:.6g}" for i in range(3)) + ", …, " + \
+                        ", ".join(f"{vals[-2+i]:.6g}" for i in range(2)) + "]"
+                return s
+            except Exception:
+                parts = []
+                order_items = ((k, m[k]) for k in var_order if k in m) if isinstance(var_order, (list, tuple)) else m.items()
+                for k, v in order_items:
+                    try:
+                        parts.append(f"{k}:{float(v):.6g}")
+                    except Exception:
+                        parts.append(f"{k}:{v}")
+                return "{ " + ", ".join(parts) + " }"
+
+        def _fmt_range_value(v: Any) -> str:
+            try:
+                vf = float(v)
+            except Exception:
+                return "?"
+            if math.isinf(vf):
+                return "inf" if vf > 0 else "-inf"
+            return f"{vf:.6g}"
+
+        def _fmt_ranges(ranges: Dict[str, Any]) -> str:
+            if not isinstance(ranges, dict) or not ranges:
+                return ""
+            var_order = extras.get("var_names")
+            names_for_ranges = list(var_order) if isinstance(var_order, (list, tuple)) else list(ranges.keys())
+            parts = []
+            for name in names_for_ranges:
+                info = ranges.get(name)
+                if not isinstance(info, dict):
+                    continue
+                lo = info.get("min")
+                hi = info.get("max")
+                if lo is None or hi is None:
+                    continue
+                parts.append(f"{name} in [{_fmt_range_value(lo)}, {_fmt_range_value(hi)}]")
+                if len(parts) >= 4:
+                    break
+            if not parts:
+                return ""
+            remaining = max(0, len(ranges) - len(parts))
+            suffix = "" if remaining == 0 else f", +{remaining}"
+            return "; ".join(parts) + suffix
+
+
+        alt = extras.get("alt_opt") or {}
+        has_alt = bool(alt.get("has_alternate_optimum", False))
+        ranges_text = _fmt_ranges(alt.get("ranges") or {})
+        A_map = (alt.get("extreme_points") or {}).get("A")
+        B_map = (alt.get("extreme_points") or {}).get("B")
+
+        # Only show this note for Optimal problems
+        if st == "Optimal":
+            if alt.get("range_skipped"):
+                self._opt_note.setText(S.t("lp.sol.opt.not_computed"))
+            elif has_alt:
+                if ranges_text:
+                    self._opt_note.setText(S.t("lp.sol.opt.range", ranges=ranges_text))
+                elif isinstance(A_map, dict) and isinstance(B_map, dict):
+                    A_str = _fmt_point_from_mapping(A_map)
+                    B_str = _fmt_point_from_mapping(B_map)
+                    self._opt_note.setText(S.t('lp.sol.opt.segment', A=A_str, B=B_str))
+                else:
+                    self._opt_note.setText(S.t('lp.sol.opt.multiple'))
+            else:
+                self._opt_note.setText(S.t('lp.sol.opt.unique'))
+        else:
+            # For non-optimal statuses, hide/clear the note
+            self._opt_note.setText("")
+
+
         # --- Formula hint (if possible) -------------------------------
         # Formula hint + consistency check: z ?= Σ (cᵢ·xᵢ) + offset
         values = (self._result or {}).get("values") or (self._result or {}).get("x") or {}
@@ -179,31 +292,23 @@ class StatusCard(QWidget):
         # build meta line(s)
         method = extras.get("method", "highs")
         nit = extras.get("nit", None)
-        msg = extras.get("message", None)
 
         bits = [f"{S.t('lp.sol.method')}: {method}"]
         if nit is not None:
             bits.append(f"{S.t('lp.sol.iterations')}: {nit}")
-        if msg:
-            bits.append(f"{S.t('lp.sol.msg')}: {msg}")
+        
+        # Optional: add a short meta chip for multiple optima
+        if st == "Optimal" and has_alt:
+            varying = alt.get("varying_variables") or alt.get("zero_reduced_cost_vars") or []
+            if varying:
+                vars_str = ", ".join(map(str, varying[:4]))
+                tail = "" if len(varying) <= 4 else "…"
+                bits.append(S.t("lp.sol.opt.varying", vars=f"{vars_str}{tail}"))
 
         # Show compact formula hint
         bits.append(S.t("lp.sol.formula_hint"))
-
-        # Consistency check (✓ if objective ≈ Σ cᵢ·xᵢ + offset)
-        if subtotal_sum is not None:
-            total_calc = subtotal_sum + offset
-            if obj_f is not None:
-                diff = abs(total_calc - obj_f)
-                if diff <= 1e-6:
-                    bits.append(f"✓ {S.t('lp.sol.check.ok')}")
-                else:
-                    # show warning with both numbers for didactic clarity
-                    bits.append(f"⚠ {S.t('lp.sol.check.mismatch', calc=f'{total_calc:.6g}', obj=f'{obj_f:.6g}')}")
-            else:
-                bits.append(f"• {S.t('lp.sol.check.calc', calc=f'{total_calc:.6g}')}")
-        self._meta.setText('  •  '.join(bits))
-
+        # render meta on multiple lines
+        self._meta.setText("<br/>".join(bits))
         # Build expanded equation like: z = 2 × 3 + 1 × 2 (+ 0.5) = 8.5
         def _fmt(x):
             try:
@@ -212,6 +317,8 @@ class StatusCard(QWidget):
                 return "—"
 
         detail_line = ""
+        coherence_line = ""  # appended below the numeric formula if we can check it
+
         if subtotal_sum is not None:
             # Recompute detailed terms in the same order (names list)
             detailed_terms = []
@@ -225,10 +332,17 @@ class StatusCard(QWidget):
 
             if detailed_terms:
                 total_calc = subtotal_sum + offset
-                # Append offset if nonzero (within a small tolerance)
                 if abs(offset) > 1e-12:
                     detailed_terms.append(_fmt(offset))
                 detail_line = f"z = {' + '.join(detailed_terms)} = {_fmt(total_calc)}"
 
-        # Show / clear the detail label
-        self._formula_detail.setText(detail_line)
+                # Consistency check shown right under the numeric formula
+                if obj_f is not None:
+                    diff = abs(total_calc - obj_f)
+                    if diff <= 1e-6:
+                        coherence_line = f"<br/>✓ {S.t('lp.sol.check.ok')}"
+                    else:
+                        coherence_line = f"<br/>⚠ {S.t('lp.sol.check.mismatch', calc=f'{total_calc:.6g}', obj=f'{obj_f:.6g}')}"
+
+        # Render numeric formula (+ optional coherence line)
+        self._formula_detail.setText(detail_line + coherence_line)

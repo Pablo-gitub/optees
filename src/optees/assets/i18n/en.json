@@ -119,6 +119,14 @@
         "unit": "Objective coefficient cᵢ (unit value)",
         "subtotal": "Contribution cᵢ·xᵢ to the objective"
       },
+      "opt": {
+        "unique": "Optimal solution is unique.",
+        "multiple": "There are infinitely many optimal solutions (multiple optima with the same objective value).",
+        "segment": "There are infinitely many optimal solutions: all points between {A} and {B} are optimal.",
+        "range": "There are infinitely many optimal solutions. Optimal variable ranges: {ranges}.",
+        "varying": "Varying optimal variables: {vars}",
+        "not_computed": "Optimal range analysis was skipped for this model size."
+      },
       "plot": {
         "title": "Solution plot",
         "x_label": "Variables",
