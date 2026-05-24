@@ -12,8 +12,17 @@ dependencies = [
     "markdown",
 ]
 
+[project.optional-dependencies]
+plot = ["matplotlib", "numpy"]
+
+[project.gui-scripts]
+optees = "optees.main:main"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"optees.assets" = ["**/*"]

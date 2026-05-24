@@ -1,0 +1,193 @@
+name: Build & Release
+
+# Triggered by pushing a version tag, e.g.:
+#   git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write   # needed to create the GitHub Release
+
+# ---------------------------------------------------------------------------
+# Build job — runs in parallel on all three platforms
+# ---------------------------------------------------------------------------
+jobs:
+  build:
+    name: Build · ${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            label: Linux (AppImage)
+            artifact: optees-linux-x86_64.AppImage
+
+          - os: windows-latest
+            label: Windows (x64)
+            artifact: optees-windows-x64.zip
+
+          - os: macos-14
+            label: macOS Apple Silicon
+            artifact: optees-macos-arm64.zip
+
+    steps:
+      # ── Source ────────────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Python ────────────────────────────────────────────────────────────
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      # ── System libraries needed by Qt on Linux ───────────────────────────
+      - name: Install Qt system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            libgl1-mesa-glx libegl1 \
+            libxcb-xinerama0 libxkbcommon-x11-0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-randr0 libxcb-render-util0 \
+            libxcb-shape0 libxcb-xfixes0
+
+      # ── Python dependencies ───────────────────────────────────────────────
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install ".[plot]" pyinstaller pyinstaller-hooks-contrib
+
+      # ── Build ─────────────────────────────────────────────────────────────
+      - name: Build with PyInstaller
+        run: pyinstaller optees.spec --noconfirm
+
+      # ── Package: Linux → AppImage ─────────────────────────────────────────
+      - name: Create AppDir (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          mkdir -p AppDir
+          # Copy the entire PyInstaller onedir into AppDir
+          cp -r dist/optees/. AppDir/
+
+          # AppRun: entry point for AppImage runtime
+          cat > AppDir/AppRun << 'APPRUN'
+          #!/bin/bash
+          HERE="$(dirname "$(readlink -f "${0}")")"
+          exec "${HERE}/optees" "$@"
+          APPRUN
+          chmod +x AppDir/AppRun
+
+          # .desktop file (required by appimagetool)
+          cat > AppDir/optees.desktop << 'DESKTOP'
+          [Desktop Entry]
+          Name=Optees
+          Exec=optees
+          Icon=optees
+          Type=Application
+          Categories=Science;Math;Education;
+          Comment=Linear and combinatorial optimization solver
+          DESKTOP
+
+          # Application icon (must match Icon= value in .desktop)
+          cp src/optees/assets/logo/dark/appicon_256.png AppDir/optees.png
+
+      - name: Download appimagetool (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          wget -q -O appimagetool.AppImage \
+            https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          chmod +x appimagetool.AppImage
+
+      - name: Build AppImage (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          # APPIMAGE_EXTRACT_AND_RUN avoids needing FUSE on the CI runner
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 \
+            ./appimagetool.AppImage AppDir optees-linux-x86_64.AppImage
+
+      # ── Package: Windows → zip ────────────────────────────────────────────
+      - name: Package Windows build
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist\optees -DestinationPath optees-windows-x64.zip
+
+      # ── Package: macOS → zip preserving .app bundle ───────────────────────
+      - name: Package macOS build
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          # ditto preserves symlinks and resource forks inside the .app
+          ditto -c -k --keepParent dist/optees.app optees-macos-arm64.zip
+
+      # ── Upload artifact for the release job ───────────────────────────────
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+
+# ---------------------------------------------------------------------------
+# Release job — runs after all builds succeed
+# ---------------------------------------------------------------------------
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Optees ${{ github.ref_name }}"
+          body: |
+            ## Optees ${{ github.ref_name }}
+
+            ### Downloads
+
+            | Platform | File | Notes |
+            |---|---|---|
+            | macOS 14+ (Apple Silicon) | `optees-macos-arm64.zip` | Unzip → right-click → Open (first launch) |
+            | Windows 10/11 (x64) | `optees-windows-x64.zip` | Unzip → run `optees.exe` |
+            | Linux (x86_64) | `optees-linux-x86_64.AppImage` | See instructions below |
+
+            ### macOS
+            macOS will block an unsigned app on first launch.
+            Right-click `optees.app` → **Open** → confirm in the dialog.
+
+            ### Windows
+            Windows Defender SmartScreen may warn about an unrecognised publisher.
+            Click **More info → Run anyway**.
+
+            ### Linux
+            ```bash
+            chmod +x optees-linux-x86_64.AppImage
+            ./optees-linux-x86_64.AppImage
+            ```
+            FUSE is not required (extracted mode).
+            If the app fails to start, install: `sudo apt install libgl1 libegl1`
+
+          files: artifacts/*
+          draft: false
+          prerelease: >-
+            ${{
+              contains(github.ref_name, 'alpha') ||
+              contains(github.ref_name, 'beta')  ||
+              contains(github.ref_name, 'rc')
+            }}
+          generate_release_notes: false
