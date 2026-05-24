@@ -121,6 +121,17 @@ jobs:
         run: |
           Compress-Archive -Path dist\optees -DestinationPath optees-windows-x64.zip
 
+      # ── macOS: ad-hoc sign all binaries inside the .app ──────────────────
+      # Uses "-" as identity (no Apple Developer account required).
+      # Without this step Gatekeeper hard-blocks the app entirely;
+      # with it, users see "unidentified developer" and can bypass via
+      # right-click → Open  or  System Settings → Privacy → Allow Anyway.
+      - name: Ad-hoc sign .app (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          codesign --force --deep --sign - dist/optees.app
+
       # ── Package: macOS → zip preserving .app bundle ───────────────────────
       - name: Package macOS build
         if: runner.os == 'macOS'
@@ -167,8 +178,10 @@ jobs:
             | Linux (x86_64) | `optees-linux-x86_64.AppImage` | See instructions below |
 
             ### macOS
-            macOS will block an unsigned app on first launch.
-            Right-click `optees.app` → **Open** → confirm in the dialog.
+            The app is ad-hoc signed but not notarized (no Apple Developer account).
+            On first launch macOS shows *"unidentified developer"*:
+            **right-click `optees.app` → Open → Open** to confirm.
+            Alternatively: System Settings → Privacy & Security → **Allow Anyway**.
 
             ### Windows
             Windows Defender SmartScreen may warn about an unrecognised publisher.
