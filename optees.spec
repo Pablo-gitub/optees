@@ -42,7 +42,8 @@ a = Analysis(
         "scipy.linalg",
         "scipy.linalg.cython_blas",
         "scipy.linalg.cython_lapack",
-        "scipy.optimize._highs._highs_wrapper",
+        "scipy.optimize._highspy",
+        "scipy.optimize._linprog_highs",
         # Markdown extensions loaded by name at runtime
         "markdown.extensions.tables",
         "markdown.extensions.fenced_code",
