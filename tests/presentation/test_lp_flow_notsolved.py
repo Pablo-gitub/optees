@@ -1,4 +1,7 @@
 # tests/presentation/test_lp_flow_notsolved.py
+import pytest
+pytest.importorskip("PySide6")
+
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
 from _utils.fakes import FakeSolver
 from PySide6.QtWidgets import QWidget, QLabel

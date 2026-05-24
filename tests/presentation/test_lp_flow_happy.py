@@ -1,5 +1,7 @@
 # tests/presentation/test_lp_flow_happy.py
 import pytest
+pytest.importorskip("PySide6")
+
 from optees.domain.models.lp.lp_model import LPModel
 from optees.domain.value_objects.lp.objective_sense import ObjectiveSense
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase

@@ -52,8 +52,14 @@ Notes
 from __future__ import annotations
 from typing import Any, Dict, List, Optional, Tuple
 
-from ortools.sat.python import cp_model
-from ortools.linear_solver import pywraplp
+try:
+    from ortools.sat.python import cp_model
+    from ortools.linear_solver import pywraplp
+    _ortools_import_error = None
+except Exception as e:
+    cp_model = None
+    pywraplp = None
+    _ortools_import_error = e
 
 __all__ = ["solve_milp"]
 
@@ -91,6 +97,12 @@ def solve_milp(
     ValueError
         On malformed input (shape mismatch, unknown tokens, etc.).
     """
+    if cp_model is None or pywraplp is None:
+        return "NotSolved", None, {}, {
+            "error": f"OR-Tools not available: {_ortools_import_error}",
+            "backend": None,
+        }
+
     P = _normalize(problem)
 
     # If any continuous variable or any non-integer coefficient -> CBC
