@@ -6,6 +6,11 @@ build-backend = "setuptools.build_meta"
 name = "optees"
 version = "0.1.0"
 requires-python = ">=3.12"
+dependencies = [
+    "PySide6",
+    "scipy",
+    "markdown",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
