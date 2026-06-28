@@ -77,6 +77,15 @@ class ObjectiveSection(Section):
         super().refresh_theme()
         # eventuali stili aggiuntivi con theme.* se servono
 
+    def set_values(self, sense_str: str, offset: Optional[float]) -> None:
+        """Populate sense and offset fields from code without emitting signals."""
+        self.combo_sense.blockSignals(True)
+        self.combo_sense.setCurrentIndex(0 if sense_str == "min" else 1)
+        self.combo_sense.blockSignals(False)
+        self.edit_offset.blockSignals(True)
+        self.edit_offset.setText("" if offset is None else str(offset))
+        self.edit_offset.blockSignals(False)
+
     # ---- handlers ----
     def _on_sense_changed(self, idx: int) -> None:
         self.sense_changed.emit("min" if idx == 0 else "max")

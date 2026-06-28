@@ -46,11 +46,21 @@
   "lp": {
     "header": {
       "title": "Programmazione Lineare (LP)",
+
       "description": "La programmazione lineare continua ti permette di massimizzare o minimizzare un valore (come profitto o costo) vincolato da una serie di condizioni. Le soluzioni a cui puoi arrivare sono numeri decimali, perfette per problemi in cui le risorse possono essere divise.",
       "buttons": {
         "example": "Esempio",
         "problem": "Descrizione problema"
       }
+    },
+    "import": {
+      "button":        "Importa JSON",
+      "dialog_title":  "Apri problema LP",
+      "error_title":   "Errore di importazione",
+      "error_body":    "Impossibile caricare il file:\n{detail}",
+      "schema_title":  "Formato JSON",
+      "schema_intro":  "Il file deve essere un oggetto JSON con la seguente struttura. Usa null per variabili illimitate (−∞ / +∞).",
+      "schema_close":  "Chiudi"
     },
     "info": {
       "example": {

@@ -1,8 +1,14 @@
 # src/optees/presentation/views/lp_view/lp_view.py
 from __future__ import annotations
+import logging
 from typing import Optional
+
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QScrollArea, QHBoxLayout, QPushButton
+from PySide6.QtWidgets import (
+    QWidget, QVBoxLayout, QLabel, QScrollArea, QHBoxLayout, QPushButton,
+    QFileDialog, QMessageBox,
+)
+
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
 from optees.presentation.controllers.lp_controller import LPController, LPVariable
@@ -12,7 +18,7 @@ from .variables_section import VariablesSection
 from .bounds_section import BoundsSection
 from .objective_section import ObjectiveSection
 from .objective_constraints_section import ObjectiveConstraintsSection
-import logging
+
 log = logging.getLogger(__name__)
 
 class LPView(QWidget):
@@ -107,6 +113,7 @@ class LPView(QWidget):
         self.btn_optimize.clicked.connect(self._on_optimize_clicked)
         self.intro.example_clicked.connect(self.example_requested.emit)
         self.intro.problem_clicked.connect(self.problem_description_requested.emit)
+        self.intro.import_clicked.connect(self._on_import_json)
 
 
     # -------- controller binding --------
@@ -129,9 +136,10 @@ class LPView(QWidget):
         self._ctrl.bounds_changed.connect(lambda _: self.bounds_sec.set_variables(self._ctrl.variables()))
         self._ctrl.constraints_changed.connect(self._on_constraints_changed)
 
-        # keep optimize button state in sync
+        # keep optimize button state in sync + repaint objective fields
         if hasattr(self._ctrl, "objective_changed"):
             self._ctrl.objective_changed.connect(lambda *_: self._update_optimize_enabled())
+            self._ctrl.objective_changed.connect(self._on_objective_changed)
 
         self._update_optimize_enabled()
 
@@ -204,9 +212,24 @@ class LPView(QWidget):
         if self._ctrl:
             self._ctrl.remove_constraint(row)
 
+    def _on_objective_changed(self, objective) -> None:
+        """Push objective sense, offset, and coefs into the UI after a model load."""
+        sense = getattr(getattr(objective, "sense", None), "name", "max").lower()
+        offset_raw = getattr(objective, "offset", None)
+        offset = float(offset_raw) if offset_raw is not None else None
+        coefs = list(getattr(objective, "coefs", None) or [])
+        self.obj_sec.set_values(sense, offset)
+        self.obj_cons_sec.set_objective_coefs(coefs)
+
     def _on_constraints_changed(self, cons_snapshot) -> None:
-        # cons_snapshot is List[LPConstraint]; we only need the count to sync rows
-        self.obj_cons_sec.set_constraints_count(len(cons_snapshot), self._ctrl.variables())
+        """Sync row count AND fill values after a model load."""
+        vars_now = self._ctrl.variables() if self._ctrl else []
+        self.obj_cons_sec.set_constraints_count(len(cons_snapshot), vars_now)
+        for r_idx, c in enumerate(cons_snapshot):
+            coefs = list(getattr(c, "coefs", None) or [])
+            rel_str = getattr(getattr(c, "relation", None), "symbol", lambda: "<=")()
+            rhs = getattr(c, "rhs", None)
+            self.obj_cons_sec.set_constraint_values(r_idx, coefs, rel_str, rhs)
 
     def _on_cons_coef_changed(self, row: int, index: int, value) -> None:
         if self._ctrl:
@@ -219,6 +242,28 @@ class LPView(QWidget):
     def _on_cons_rhs_changed(self, row: int, value) -> None:
         if self._ctrl:
             self._ctrl.set_constraint_rhs(row, value)
+
+    def _on_import_json(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            S.t("lp.import.dialog_title"),
+            "",
+            "JSON (*.json);;All files (*)",
+        )
+        if not path:
+            return
+        try:
+            from optees.utility.lp_json_io import lp_model_from_file
+            model = lp_model_from_file(path)
+        except ValueError as exc:
+            QMessageBox.warning(
+                self,
+                S.t("lp.import.error_title"),
+                S.t("lp.import.error_body", detail=str(exc)),
+            )
+            return
+        if self._ctrl:
+            self._ctrl.load_model(model)
 
     def _on_optimize_clicked(self):
         if not self._ctrl or not self._solve_uc:

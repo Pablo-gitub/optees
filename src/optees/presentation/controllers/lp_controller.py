@@ -149,3 +149,11 @@ class LPController(QObject):
     def model(self) -> LPModel:
         """Return an immutable snapshot of the current LPModel."""
         return self._model
+
+    def load_model(self, model: LPModel) -> None:
+        """Replace the entire model and broadcast all bulk signals so the UI repaints."""
+        self._model = model
+        self.variables_changed.emit(list(self._model.variables))
+        self.bounds_changed.emit([(v.bounds.lb, v.bounds.ub) for v in self._model.variables])
+        self.objective_changed.emit(self._model.objective)
+        self.constraints_changed.emit(list(self._model.constraints))

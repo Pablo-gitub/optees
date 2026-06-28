@@ -125,8 +125,33 @@ class ObjectiveConstraintsSection(Section):
 
     def get_objective_coefs(self) -> list[Optional[float]]:
         return [_parse_number(e.text()) for e in self._obj_coef_edits]
-    # (optional) paint helpers if you later want to set values programmatically:
-    # set_objective_coefs(list[Optional[float]]), set_constraint_row(...)
+
+    def set_objective_coefs(self, coefs: list) -> None:
+        """Fill objective coefficient edits from code without emitting signals."""
+        for i, edit in enumerate(self._obj_coef_edits):
+            val = coefs[i] if i < len(coefs) else None
+            edit.blockSignals(True)
+            edit.setText("" if val is None else str(int(val) if isinstance(val, float) and val == int(val) else val))
+            edit.blockSignals(False)
+
+    _REL_INDEX = {"<=": 0, "≤": 0, "=": 1, ">=": 2, "≥": 2}
+
+    def set_constraint_values(self, r_idx: int, coefs: list, rel_str: str, rhs: Optional[float]) -> None:
+        """Fill one constraint row from code without emitting signals."""
+        if r_idx >= len(self._rows):
+            return
+        row = self._rows[r_idx]
+        for i, edit in enumerate(row.coef_edits):
+            val = coefs[i] if i < len(coefs) else None
+            edit.blockSignals(True)
+            edit.setText("" if val is None else str(int(val) if isinstance(val, float) and val == int(val) else val))
+            edit.blockSignals(False)
+        row.rel_combo.blockSignals(True)
+        row.rel_combo.setCurrentIndex(self._REL_INDEX.get(rel_str, 0))
+        row.rel_combo.blockSignals(False)
+        row.rhs_edit.blockSignals(True)
+        row.rhs_edit.setText("" if rhs is None else str(int(rhs) if isinstance(rhs, float) and rhs == int(rhs) else rhs))
+        row.rhs_edit.blockSignals(False)
 
     def refresh_strings(self) -> None:
         # card title split into two logical parts; we keep Section title generic 'Constraints' or custom

@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import Optional, Dict, Any
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QScrollArea, QHBoxLayout, QPushButton, QStyle, QSizePolicy, QLayout
+    QWidget, QVBoxLayout, QScrollArea, QHBoxLayout, QPushButton,
+    QStyle, QSizePolicy, QLayout, QFileDialog,
 )
 
 from optees.core.string_manager import strings as S
@@ -143,6 +145,8 @@ class LPSolutionView(QWidget):
         self._result: Optional[Dict[str, Any]] = None
         # problem context (names, objective coefficients, offset)
         self._problem_ctx: Dict[str, Any] = {"names": [], "coefs": [], "offset": 0.0}
+        # raw domain model — used for JSON export
+        self._lp_model: Optional[LPModel] = None
     # ------------------------------------------------------------------
     # Inner Helpers
     # ------------------------------------------------------------------
@@ -189,6 +193,7 @@ class LPSolutionView(QWidget):
     # ------------------------------------------------------------------
     
     def set_problem(self, model: LPModel) -> None:
+        self._lp_model = model
         """Provide full problem context to children (names, *display* labels, coefs, offset, bounds, constraints)."""
         try:
             vars_ = list(getattr(model, "variables", []))
@@ -308,13 +313,63 @@ class LPSolutionView(QWidget):
     # Actions (currently no-op, to be implemented later)
     # ------------------------------------------------------------------
     def _copy_report(self) -> None:
-        """Copy textual report of the solution to clipboard (TODO)."""
-        pass
+        """Copy a plain-text summary of the solution to the clipboard."""
+        if not self._result or not self._problem_ctx:
+            return
+        lines: list[str] = []
+        sense = self._problem_ctx.get("sense", "max").upper()
+        lines.append(f"Status:    {self._result.get('status', '')}")
+        lines.append(f"Objective: {sense}  z = {self._result.get('objective', '')}")
+        lines.append("")
+        names  = self._problem_ctx.get("names", [])
+        values = self._result.get("values", {})
+        coefs  = self._problem_ctx.get("coefs", [])
+        for i, name in enumerate(names):
+            val  = values.get(name, "")
+            coef = coefs[i] if i < len(coefs) else ""
+            lines.append(f"  {name}: {val}  (coef: {coef})")
+        offset = self._problem_ctx.get("offset", 0.0)
+        if offset:
+            lines.append(f"  offset: {offset}")
+        QGuiApplication.clipboard().setText("\n".join(lines))
 
     def _export_csv(self) -> None:
-        """Export variable values to CSV (TODO)."""
-        pass
+        """Export variable values to CSV."""
+        if not self._result or not self._problem_ctx:
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self, S.t("lp.sol.export_csv"), "solution.csv",
+            "CSV (*.csv);;All files (*)",
+        )
+        if not path:
+            return
+        import csv, io
+        names  = self._problem_ctx.get("names", [])
+        labels = self._problem_ctx.get("labels", names)
+        coefs  = self._problem_ctx.get("coefs", [])
+        values = self._result.get("values", {})
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(["variable", "label", "coefficient", "value"])
+        for i, name in enumerate(names):
+            writer.writerow([
+                name,
+                labels[i] if i < len(labels) else "",
+                coefs[i]  if i < len(coefs)  else "",
+                values.get(name, ""),
+            ])
+        from pathlib import Path
+        Path(path).write_text(buf.getvalue(), encoding="utf-8")
 
     def _export_json(self) -> None:
-        """Export entire solution to JSON (TODO)."""
-        pass
+        """Export the problem (importable schema v1) + solution to JSON."""
+        if self._lp_model is None:
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self, S.t("lp.sol.export_json"), "problem.json",
+            "JSON (*.json);;All files (*)",
+        )
+        if not path:
+            return
+        from optees.utility.lp_json_io import lp_model_to_file
+        lp_model_to_file(self._lp_model, path)

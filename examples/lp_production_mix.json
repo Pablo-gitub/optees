@@ -1,0 +1,16 @@
+{
+  "version": "1",
+  "variables": [
+    { "name": "X1", "label": "sedie/giorno", "lb": 0, "ub": null },
+    { "name": "X2", "label": "tavoli/giorno", "lb": 0, "ub": null }
+  ],
+  "objective": {
+    "sense": "max",
+    "coefficients": [30, 50],
+    "offset": 100
+  },
+  "constraints": [
+    { "coefficients": [2, 4], "relation": "<=", "rhs": 80 },
+    { "coefficients": [1, 1], "relation": "<=", "rhs": 30 }
+  ]
+}

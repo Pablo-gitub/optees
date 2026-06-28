@@ -52,6 +52,15 @@
         "problem": "Problem description"
       }
     },
+    "import": {
+      "button":        "Import JSON",
+      "dialog_title":  "Open LP problem",
+      "error_title":   "Import error",
+      "error_body":    "Could not load the file:\n{detail}",
+      "schema_title":  "JSON Format",
+      "schema_intro":  "The file must be a JSON object with the following structure. Use null for unbounded variables (−∞ / +∞).",
+      "schema_close":  "Close"
+    },
     "info": {
       "example": {
         "title": "LP examples",
