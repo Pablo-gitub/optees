@@ -1,0 +1,23 @@
+{
+  "version": "1",
+  "variables": [
+    { "name": "x11", "label": "worker 1 -> task 1", "lb": 0, "ub": 1, "integrality": "B" },
+    { "name": "x12", "label": "worker 1 -> task 2", "lb": 0, "ub": 1, "integrality": "B" },
+    { "name": "x21", "label": "worker 2 -> task 1", "lb": 0, "ub": 1, "integrality": "B" },
+    { "name": "x22", "label": "worker 2 -> task 2", "lb": 0, "ub": 1, "integrality": "B" }
+  ],
+  "objective": {
+    "sense": "min",
+    "coefficients": [1, 2, 2, 1],
+    "offset": 0
+  },
+  "constraints": [
+    { "coefficients": [1, 1, 0, 0], "relation": "=", "rhs": 1 },
+    { "coefficients": [0, 0, 1, 1], "relation": "=", "rhs": 1 },
+    { "coefficients": [1, 0, 1, 0], "relation": "=", "rhs": 1 },
+    { "coefficients": [0, 1, 0, 1], "relation": "=", "rhs": 1 }
+  ],
+  "solver": {
+    "time_limit": 5.0
+  }
+}

@@ -8,6 +8,28 @@ mixed-integer.
 
 ## Stato attuale
 
+### Implementato nella prima fase
+
+- Domain model MILP minimale:
+  - `MILPVariable` con bounds e integrality;
+  - `MILPModel` con objective, constraints e opzioni solver;
+  - `MILPSolution` con stato `Feasible` e diagnostiche MILP.
+- Application layer:
+  - `MILPSolverPort`;
+  - `SolveMILPUseCase`;
+  - `MILPSolverAdapter`.
+- JSON import/export:
+  - `src/optees/utility/milp_json_io.py`;
+  - esempio `examples/milp_assignment_2x2.json`.
+- Solver utility:
+  - `solve_milp` distingue `Feasible` da `NotSolved`;
+  - gli extras espongono backend, best bound e gap relativo quando disponibili;
+  - `mip_gap` viene inoltrato al backend CP-SAT.
+- Test:
+  - JSON round-trip e validazione;
+  - mapping use case verso dizionario canonico;
+  - solve reale di un assignment binario quando OR-Tools e' installato.
+
 ### Gia' presente
 
 - Solver utility: `src/optees/utility/milp_utils.py`
@@ -27,15 +49,12 @@ mixed-integer.
 
 ### Mancante
 
-- Domain model MILP esplicito.
-- `MILPController`, `SolveMILPUseCase`, `MILPSolverPort` e adapter applicativo.
+- `MILPController`.
 - UI completa di formulazione MILP.
 - UI completa di visualizzazione soluzione MILP.
-- Import/export MILP JSON.
 - Adapter MPS riusabile fuori dai test.
 - Test presentation per flusso MILP.
-- Gestione esplicita dello stato "Feasible incumbent" quando il solver trova
-  una soluzione ammissibile ma non prova l'ottimalita' entro il time limit.
+- Pagine informative `Esempio` e `Descrizione problema` per MILP.
 
 ## Modello matematico
 
