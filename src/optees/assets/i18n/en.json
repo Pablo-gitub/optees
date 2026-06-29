@@ -43,6 +43,57 @@
       "italian": "Italiano"
     }
   },
+  "milp": {
+    "header": {
+      "title": "Mixed-Integer Linear Programming (MILP)",
+      "section": "Problem setup",
+      "description": "Build a linear model where some variables can be continuous, integer, or binary/Boolean. The feasible set is no longer only a convex polyhedron: integrality restricts admissible points to a discrete lattice, so the solver searches a branch-and-bound tree over LP relaxations.",
+      "buttons": {
+        "example": "Example",
+        "problem": "Problem description"
+      }
+    },
+    "import": {
+      "button": "Import JSON",
+      "dialog_title": "Open MILP problem",
+      "error_title": "Import error",
+      "error_body": "Could not load the file:\n{detail}",
+      "info_tooltip": "MILP JSON format",
+      "info_title": "MILP JSON format",
+      "info_body": "A MILP JSON file extends the LP schema with variables[].integrality. Use C for continuous, I for integer, and B for binary/Boolean variables. Binary variables are normalized to bounds [0, 1]. Optional solver settings can include time_limit and mip_gap."
+    },
+    "vars": {
+      "section": "Variables",
+      "hint": "Choose the mathematical domain of each decision variable: continuous, integer, or binary.",
+      "columns": {
+        "var": "Variable",
+        "label": "Description",
+        "type": "Type"
+      },
+      "type": {
+        "continuous": "Continuous",
+        "integer": "Integer",
+        "binary": "Binary / Boolean (0/1)"
+      },
+      "add": "Add variable",
+      "remove": "Remove",
+      "name_placeholder": "Short name (1-2 words)"
+    },
+    "solver": {
+      "section": "Solver options",
+      "hint": "MILP solve time can grow quickly. Use an optional time limit or relative MIP gap when a good incumbent is enough.",
+      "info_tooltip": "Solver options",
+      "info_title": "MILP solver options",
+      "info_body": "Time limit stops the search after the given number of seconds. If the solver has an incumbent, status can be Feasible: the solution satisfies all constraints but is not proven optimal. MIP gap is the relative distance between the incumbent and the best bound; smaller values require stronger proof and can take longer.",
+      "time_limit": "Time limit (s)",
+      "time_limit_ph": "blank = none",
+      "mip_gap": "MIP gap",
+      "mip_gap_ph": "e.g. 0.01"
+    },
+    "actions": {
+      "optimize": "Optimize MILP"
+    }
+  },
   "lp": {
     "header": {
       "title": "Linear Programming (LP)",
@@ -140,6 +191,7 @@
     "sol": {
       "status": {
         "optimal": "Optimal",
+        "feasible": "Feasible",
         "infeasible": "Infeasible",
         "unbounded": "Unbounded",
         "notsolved": "Not solved"

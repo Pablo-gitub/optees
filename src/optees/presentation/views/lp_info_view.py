@@ -254,3 +254,13 @@ class LPExampleView(LPInfoView):
 class LPProblemDescriptionView(LPInfoView):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__("lp_problem", parent=parent)
+
+
+class MILPExampleView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("milp_example", parent=parent)
+
+
+class MILPProblemDescriptionView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("milp_problem", parent=parent)

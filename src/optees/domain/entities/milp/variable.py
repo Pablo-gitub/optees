@@ -22,6 +22,10 @@ class MILPVariable:
         return MILPVariable(self.name, new_label, self.bounds, self.integrality)
 
     def with_bounds(self, lb: Optional[float], ub: Optional[float]) -> "MILPVariable":
+        # A binary variable is x in {0, 1}: operationally this is modeled as
+        # an integer variable with canonical bounds 0 <= x <= 1.
+        if self.integrality is Integrality.BINARY:
+            return MILPVariable(self.name, self.label, Bounds(0.0, 1.0), self.integrality)
         return MILPVariable(self.name, self.label, Bounds(lb, ub), self.integrality)
 
     def with_integrality(self, integrality: Integrality | str | None) -> "MILPVariable":

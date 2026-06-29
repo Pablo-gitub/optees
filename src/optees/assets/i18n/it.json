@@ -43,6 +43,57 @@
       "italian": "Italiano"
     }
   },
+  "milp": {
+    "header": {
+      "title": "Mixed-Integer Linear Programming (MILP)",
+      "section": "Formulazione del problema",
+      "description": "Costruisci un modello lineare in cui alcune variabili possono essere continue, intere o binarie/booleane. L'insieme ammissibile non e' piu' solo un poliedro convesso: l'integralita' restringe i punti ammessi a una griglia discreta, quindi il solver esplora un albero branch-and-bound di rilassamenti LP.",
+      "buttons": {
+        "example": "Esempio",
+        "problem": "Descrizione problema"
+      }
+    },
+    "import": {
+      "button": "Importa JSON",
+      "dialog_title": "Apri problema MILP",
+      "error_title": "Errore di importazione",
+      "error_body": "Impossibile caricare il file:\n{detail}",
+      "info_tooltip": "Formato JSON MILP",
+      "info_title": "Formato JSON MILP",
+      "info_body": "Un file JSON MILP estende lo schema LP con variables[].integrality. Usa C per variabili continue, I per variabili intere e B per variabili binarie/booleane. Le variabili binarie vengono normalizzate ai bounds [0, 1]. Le opzioni solver possono includere time_limit e mip_gap."
+    },
+    "vars": {
+      "section": "Variabili",
+      "hint": "Scegli il dominio matematico di ogni variabile decisionale: continua, intera o binaria.",
+      "columns": {
+        "var": "Variabile",
+        "label": "Descrizione",
+        "type": "Tipo"
+      },
+      "type": {
+        "continuous": "Continua",
+        "integer": "Intera",
+        "binary": "Binaria / booleana (0/1)"
+      },
+      "add": "Aggiungi variabile",
+      "remove": "Rimuovi",
+      "name_placeholder": "Nome breve (1-2 parole)"
+    },
+    "solver": {
+      "section": "Opzioni solver",
+      "hint": "Il tempo di risoluzione MILP puo' crescere rapidamente. Usa un limite di tempo o un MIP gap relativo quando basta una buona soluzione ammissibile.",
+      "info_tooltip": "Opzioni solver",
+      "info_title": "Opzioni solver MILP",
+      "info_body": "Il limite di tempo interrompe la ricerca dopo il numero di secondi indicato. Se il solver ha trovato un incumbent, lo stato puo' essere Feasible: la soluzione rispetta tutti i vincoli ma non e' provata ottima. Il MIP gap misura la distanza relativa tra incumbent e best bound; valori piu' piccoli richiedono una prova piu' forte e possono richiedere piu' tempo.",
+      "time_limit": "Limite tempo (s)",
+      "time_limit_ph": "vuoto = nessuno",
+      "mip_gap": "MIP gap",
+      "mip_gap_ph": "es. 0.01"
+    },
+    "actions": {
+      "optimize": "Ottimizza MILP"
+    }
+  },
   "lp": {
     "header": {
       "title": "Programmazione Lineare (LP)",
@@ -141,6 +192,7 @@
     "sol": {
         "status": {
             "optimal": "Ottimale",
+            "feasible": "Ammissibile",
             "infeasible": "Non fattibile",
             "unbounded": "Illimitato",
             "notsolved": "Non risolto"

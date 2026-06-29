@@ -6,6 +6,7 @@ if TYPE_CHECKING:
     from optees.presentation.main_window import MainWindow
 
 from optees.presentation.views.lp_view.lp_view import LPView
+from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.home_view import HomePage  # usa lo stesso nome che usi nel MainWindow
 import logging
 log = logging.getLogger(__name__)
@@ -44,6 +45,24 @@ class MainController(QObject):
         if hasattr(sol_view, "back_requested"):
             sol_view.back_requested.connect(lambda: self.window.goto("lp"))
 
+        # MILP -> Solution
+        milp: MILPView = self.window.page("milp")  # type: ignore[assignment]
+        if hasattr(milp, "solve_completed"):
+            milp.solve_completed.connect(self._on_milp_solved)
+        if hasattr(milp, "example_requested"):
+            milp.example_requested.connect(lambda: self.window.goto("milp_example"))
+        if hasattr(milp, "problem_description_requested"):
+            milp.problem_description_requested.connect(lambda: self.window.goto("milp_problem"))
+
+        for name in ("milp_example", "milp_problem"):
+            info_view = self.window.page(name)
+            if hasattr(info_view, "back_requested"):
+                info_view.back_requested.connect(lambda _=False: self.window.goto("milp"))
+
+        milp_sol_view = self.window.page("milp_solution")
+        if hasattr(milp_sol_view, "back_requested"):
+            milp_sol_view.back_requested.connect(lambda: self.window.goto("milp"))
+
     def _on_lp_solved(self, solution) -> None:
         # 1) Recover the Solution page
         sol_view = self.window.page("lp_solution")
@@ -70,3 +89,25 @@ class MainController(QObject):
 
         # 4) Navigate to the solution page
         self.window.goto("lp_solution")
+
+    def _on_milp_solved(self, solution) -> None:
+        sol_view = self.window.page("milp_solution")
+
+        try:
+            model_snapshot = self.window.milp_controller.model()
+            if hasattr(sol_view, "set_problem"):
+                sol_view.set_problem(model_snapshot)  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
+        if hasattr(sol_view, "set_solution"):
+            sol_view.set_solution(solution)  # type: ignore[attr-defined]
+
+        try:
+            log.debug("MILP solution received: status=%s objective=%s",
+                    getattr(solution, "status", None),
+                    getattr(solution, "objective", None))
+        except Exception:
+            pass
+
+        self.window.goto("milp_solution")

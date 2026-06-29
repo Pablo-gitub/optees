@@ -261,7 +261,8 @@ class LPSolutionView(QWidget):
         a canonical dict structure expected by the subwidgets.
         """
         # Defensive access: not all fields may exist depending on domain version
-        status = getattr(sol, "status", "NotSolved")
+        status_obj = getattr(sol, "status", "NotSolved")
+        status = getattr(status_obj, "value", status_obj)
         objective = getattr(sol, "objective", None)
         values = getattr(sol, "values", None) or getattr(sol, "x", None) or {}
         extras = self._extras_to_dict(getattr(sol, "extras", None))
@@ -371,5 +372,16 @@ class LPSolutionView(QWidget):
         )
         if not path:
             return
-        from optees.utility.lp_json_io import lp_model_to_file
-        lp_model_to_file(self._lp_model, path)
+        if _looks_like_milp_model(self._lp_model):
+            from optees.utility.milp_json_io import milp_model_to_file
+
+            milp_model_to_file(self._lp_model, path)
+        else:
+            from optees.utility.lp_json_io import lp_model_to_file
+
+            lp_model_to_file(self._lp_model, path)
+
+
+def _looks_like_milp_model(model: object) -> bool:
+    variables = getattr(model, "variables", None) or []
+    return any(hasattr(v, "integrality") for v in variables)

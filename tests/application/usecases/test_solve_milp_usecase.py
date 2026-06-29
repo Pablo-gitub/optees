@@ -70,6 +70,14 @@ def test_maps_model_to_canonical_problem_and_result():
     assert solution.diagnostics.backend == "stub"
 
 
+def test_binary_variable_keeps_canonical_bounds_after_bound_update():
+    variable = MILPVariable("x").with_integrality("B").with_bounds(2, 5)
+
+    assert variable.integrality is Integrality.BINARY
+    assert variable.bounds.lb == pytest.approx(0.0)
+    assert variable.bounds.ub == pytest.approx(1.0)
+
+
 @pytest.mark.skipif(importlib.util.find_spec("ortools") is None, reason="ortools not installed")
 def test_adapter_solves_assignment_model():
     usecase = SolveMILPUseCase(MILPSolverAdapter())

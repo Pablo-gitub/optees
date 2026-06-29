@@ -11,6 +11,8 @@ class Integrality(str, Enum):
 
     @staticmethod
     def from_token(token: object) -> "Integrality":
+        if isinstance(token, Integrality):
+            return token
         value = "C" if token is None else str(token).strip().upper()
         aliases = {
             "": Integrality.CONTINUOUS,

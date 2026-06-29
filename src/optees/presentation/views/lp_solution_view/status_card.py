@@ -13,6 +13,7 @@ from optees.core.theme import theme
 # ----------------------------------------------------------------------
 _STATUS_COLORS = {
     "Optimal":    {"bg": "rgba(46, 160, 67, 0.12)", "fg": "rgba(46,160,67,0.95)"},   # green
+    "Feasible":   {"bg": "rgba(46, 160, 67, 0.10)", "fg": "rgba(46,160,67,0.95)"},   # green
     "Infeasible": {"bg": "rgba(255, 0, 0, 0.10)",   "fg": "rgba(220, 53, 69, 0.95)"}, # red
     "Unbounded":  {"bg": "rgba(255, 165, 0, 0.12)", "fg": "rgba(255,140,0,0.95)"},   # orange
     "NotSolved":  {"bg": "rgba(128,128,128,0.10)",  "fg": "rgba(108,117,125,0.95)"}, # gray
@@ -119,7 +120,8 @@ class StatusCard(QWidget):
         Internal helper: refresh displayed values according to _result.
         Safe to call multiple times.
         """
-        st = (self._result or {}).get("status", "NotSolved")
+        st_obj = (self._result or {}).get("status", "NotSolved")
+        st = getattr(st_obj, "value", st_obj)
         obj = (self._result or {}).get("objective", None)
         extras = (self._result or {}).get("extras", {}) or {}
 
@@ -140,6 +142,7 @@ class StatusCard(QWidget):
         # --- Status badge text (localized) ------------------------------
         badge_text = {
             "Optimal": S.t("lp.sol.status.optimal"),
+            "Feasible": S.t("lp.sol.status.feasible"),
             "Infeasible": S.t("lp.sol.status.infeasible"),
             "Unbounded": S.t("lp.sol.status.unbounded"),
             "NotSolved": S.t("lp.sol.status.notsolved"),
