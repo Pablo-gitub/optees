@@ -11,6 +11,21 @@
 ### 0/1 Knapsack
 - `solve_knapsack_01(values, weights, capacity)` baseline DP (`O(n·capacity)`).
   - Deterministic reconstruction; good for teaching & tests.
+  - Current model chooses whether each item is selected once (`x_i in {0, 1}`).
+
+### Knapsack variants to add later
+- Add a variant selector in the Knapsack formulation UI, with dedicated input fields,
+  validation rules, solver choice, explanation page, and solution view per variant.
+- Planned variants:
+  - 0/1 Knapsack: each item can be excluded or selected once.
+  - Bounded Knapsack: each item has an integer quantity limit (`0 <= x_i <= u_i`).
+  - Unbounded Knapsack: each item can be selected any non-negative integer number of times.
+  - Fractional Knapsack: fractions of items are allowed; this is continuous and greedy-solvable.
+  - Multi-dimensional Knapsack: several capacities are enforced at once.
+  - Multiple-choice Knapsack: items are grouped and the model selects at most/exactly one item per group.
+- Solution pages should expose the meaning of the decision variable for the selected
+  variant: selected/not selected, chosen quantity, chosen fraction, capacity usage per
+  dimension, and group-level decisions where relevant.
 
 ## Near-term roadmap
 ### MILP / Branch-and-Bound
