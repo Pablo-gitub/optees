@@ -1,15 +1,17 @@
 # src/optees/presentation/main_window.py
 from __future__ import annotations
+import os
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QStackedWidget, QToolBar, QToolButton, QMenu,
     QStatusBar, QSizePolicy
 )
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QTimer
 
 from optees.core.theme import theme
 from optees.core.assets import asset
 from optees.core.string_manager import strings as S
+from optees.core.version import get_app_version
 
 from optees.presentation.views.home_view import HomePage
 from optees.presentation.views.lp_view.lp_view import LPView
@@ -31,11 +33,15 @@ from optees.presentation.controllers.knapsack_controller import KnapsackControll
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
 from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
+from optees.application.usecases.check_for_updates_usecase import CheckForUpdatesUseCase
+from optees.application.usecases.download_update_usecase import DownloadUpdateUseCase
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
 from optees.data.adapters.knapsack.knapsack_solver_adapter import KnapsackSolverAdapter
+from optees.data.adapters.github.update_provider_adapter import GitHubUpdateProvider
 from optees.presentation.views.lp_solution_view.lp_solution_view import LPSolutionView
 from optees.presentation.controllers.main_controller import MainController
+from optees.presentation.controllers.update_controller import UpdateController
 
 
 class MainWindow(QMainWindow):
@@ -109,8 +115,23 @@ class MainWindow(QMainWindow):
         theme.theme_changed.connect(self._on_theme_changed)
         S.language_changed.connect(self._retranslate_toolbar)
 
+        self.update_provider = GitHubUpdateProvider()
+        self.check_updates_uc = CheckForUpdatesUseCase(
+            self.update_provider,
+            current_version=get_app_version(),
+        )
+        self.download_update_uc = DownloadUpdateUseCase(self.update_provider)
+        self.update_controller = UpdateController(
+            self.check_updates_uc,
+            self.download_update_uc,
+            self,
+        )
+        self.settings_page.set_update_checking(get_app_version())
+
         # (NEW) create MainController here
         self.main_controller = MainController(self)
+        if os.getenv("OPTEES_DISABLE_UPDATE_CHECK") != "1":
+            QTimer.singleShot(900, self.update_controller.check_for_updates)
 
     # --- page registry ---
     def register_page(self, name: str, widget: QWidget) -> None:

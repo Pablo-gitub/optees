@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QComboBox, QFormLayo
 
 from PySide6.QtCore import QLocale
 
+from optees.core.version import get_app_version
 from optees.core.string_manager import strings as S
 
 
@@ -17,6 +18,10 @@ class SettingsView(QWidget):
         super().__init__(parent)
 
         self.combo_lang = QComboBox(self)
+        self._current_version = get_app_version()
+        self._latest_version: str | None = None
+        self._update_state = "checking"
+        self._update_message = ""
 
         # code map -> label user-friendly
         self._langs = [("en", "English"), ("it", "Italiano")]
@@ -44,6 +49,13 @@ class SettingsView(QWidget):
         form = QFormLayout()
         self.lbl_choose = QLabel("Choose language")
         form.addRow(self.lbl_choose, self.combo_lang)
+        self.lbl_version = QLabel()
+        self.lbl_update = QLabel()
+        self.value_version = QLabel()
+        self.value_update = QLabel()
+        self.value_update.setWordWrap(True)
+        form.addRow(self.lbl_version, self.value_version)
+        form.addRow(self.lbl_update, self.value_update)
         root.addLayout(form)
         root.addStretch(1)
 
@@ -70,6 +82,8 @@ class SettingsView(QWidget):
     def refresh_strings(self) -> None:
         self.title.setText(f"<h2>{S.t('settings.title')}</h2>")
         self.lbl_choose.setText(S.t("settings.choose_language"))
+        self.lbl_version.setText(S.t("settings.version_label"))
+        self.lbl_update.setText(S.t("settings.update_label"))
         # update combo labels according to current language
         labels = {
             "en": S.t("settings.lang.english"),
@@ -77,7 +91,66 @@ class SettingsView(QWidget):
         }
         for i, (code, _) in enumerate(self._langs):
             self.combo_lang.setItemText(i, labels.get(code, code))
+        self._refresh_update_text()
 
     def refresh_theme(self) -> None:
         # if needed, apply theme-related changes here
         pass
+
+    def set_update_checking(self, current_version: str | None = None) -> None:
+        if current_version:
+            self._current_version = current_version
+        self._update_state = "checking"
+        self._update_message = ""
+        self._refresh_update_text()
+
+    def set_update_status(self, result) -> None:
+        self._current_version = getattr(result, "current_version", self._current_version)
+        self._latest_version = getattr(result, "latest_version", None)
+        self._update_message = getattr(result, "message", "") or ""
+        if getattr(result, "update_available", False):
+            self._update_state = "available"
+        elif self._latest_version:
+            self._update_state = "latest" if not self._update_message else "unsupported"
+        else:
+            self._update_state = "unknown"
+        self._refresh_update_text()
+
+    def set_update_error(self, message: str) -> None:
+        self._update_state = "error"
+        self._update_message = message
+        self._refresh_update_text()
+
+    def set_update_downloading(self, version: str | None = None) -> None:
+        if version:
+            self._latest_version = version
+        self._update_state = "downloading"
+        self._refresh_update_text()
+
+    def set_update_launching(self, path: str) -> None:
+        self._update_state = "launching"
+        self._update_message = path
+        self._refresh_update_text()
+
+    def _refresh_update_text(self) -> None:
+        current = self._current_version or "-"
+        latest = self._latest_version or "-"
+        self.value_version.setText(S.t("settings.version_value", version=current))
+
+        if self._update_state == "checking":
+            text = S.t("settings.update_checking")
+        elif self._update_state == "available":
+            text = S.t("settings.update_available", version=latest)
+        elif self._update_state == "latest":
+            text = S.t("settings.update_latest")
+        elif self._update_state == "unsupported":
+            text = S.t("settings.update_unsupported", version=latest)
+        elif self._update_state == "downloading":
+            text = S.t("settings.update_downloading", version=latest)
+        elif self._update_state == "launching":
+            text = S.t("settings.update_launching")
+        elif self._update_state == "error":
+            text = S.t("settings.update_error", detail=self._update_message or "-")
+        else:
+            text = S.t("settings.update_unknown")
+        self.value_update.setText(text)

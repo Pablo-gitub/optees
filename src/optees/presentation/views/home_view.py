@@ -4,7 +4,7 @@ from typing import Optional
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QFrame, QScrollArea,
-    QHBoxLayout, QSizePolicy
+    QHBoxLayout, QSizePolicy, QPushButton
 )
 
 from optees.core.assets import asset
@@ -53,6 +53,7 @@ class HomePage(QWidget):
     go_lp = Signal()
     go_milp = Signal()
     go_knap = Signal()
+    update_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -70,6 +71,35 @@ class HomePage(QWidget):
         root = QVBoxLayout(container)
         root.setContentsMargins(24, 24, 24, 24)
         root.setSpacing(24)
+
+        self._update_result = None
+        self._update_downloading = False
+        self.update_banner = QPushButton()
+        self.update_banner.setObjectName("updateBannerButton")
+        self.update_banner.setCursor(Qt.PointingHandCursor)
+        self.update_banner.setVisible(False)
+        self.update_banner.setStyleSheet(
+            """
+            QPushButton#updateBannerButton {
+                text-align: left;
+                padding: 14px 18px;
+                border-radius: 8px;
+                border: 1px solid rgba(44, 123, 229, 0.55);
+                background: rgba(44, 123, 229, 0.18);
+                font-weight: 700;
+            }
+            QPushButton#updateBannerButton:hover {
+                background: rgba(44, 123, 229, 0.28);
+            }
+            QPushButton#updateBannerButton:disabled {
+                color: rgba(255,255,255,0.55);
+                border-color: rgba(255,255,255,0.20);
+                background: rgba(255,255,255,0.08);
+            }
+            """
+        )
+        self.update_banner.clicked.connect(self.update_requested.emit)
+        root.addWidget(self.update_banner)
 
         # --- Categories ---
         self.cat_lin = Category(S.t("home.category.linear"))
@@ -151,7 +181,37 @@ class HomePage(QWidget):
         cs = S.t("home.comingSoon")
         for ph in self._coming_labels:
             ph.setText(cs)
+        self._refresh_update_banner_text()
 
     # kept for future: theme-related tweaks
     def refresh_theme(self) -> None:
         pass
+
+    def set_update_available(self, result) -> None:
+        self._update_result = result
+        self._update_downloading = False
+        self.update_banner.setEnabled(True)
+        self.update_banner.setVisible(True)
+        self._refresh_update_banner_text()
+
+    def set_update_download_in_progress(self, result=None) -> None:
+        if result is not None:
+            self._update_result = result
+        self._update_downloading = True
+        self.update_banner.setEnabled(False)
+        self.update_banner.setVisible(True)
+        self._refresh_update_banner_text()
+
+    def hide_update_banner(self) -> None:
+        self._update_downloading = False
+        self._update_result = None
+        self.update_banner.setVisible(False)
+
+    def _refresh_update_banner_text(self) -> None:
+        if not self.update_banner.isVisible() and self._update_result is None:
+            return
+        version = getattr(self._update_result, "latest_version", None) or "-"
+        if self._update_downloading:
+            self.update_banner.setText(S.t("updates.banner.downloading", version=version))
+        else:
+            self.update_banner.setText(S.t("updates.banner.available", version=version))

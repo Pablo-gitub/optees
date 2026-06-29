@@ -1,6 +1,8 @@
 # src/optees/presentation/controllers/main_controller.py
 from __future__ import annotations
-from PySide6.QtCore import QObject
+from PySide6.QtCore import QObject, QTimer, QUrl
+from PySide6.QtGui import QDesktopServices
+from PySide6.QtWidgets import QApplication
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from optees.presentation.main_window import MainWindow
@@ -82,6 +84,8 @@ class MainController(QObject):
         if hasattr(knap_sol_view, "back_requested"):
             knap_sol_view.back_requested.connect(lambda: self.window.goto("knapsack"))
 
+        self._wire_updates()
+
     def _on_lp_solved(self, solution) -> None:
         # 1) Recover the Solution page
         sol_view = self.window.page("lp_solution")
@@ -154,3 +158,69 @@ class MainController(QObject):
             pass
 
         self.window.goto("knapsack_solution")
+
+    def _wire_updates(self) -> None:
+        update_controller = getattr(self.window, "update_controller", None)
+        if update_controller is None:
+            return
+
+        home = self.window.page("home")
+        if hasattr(home, "update_requested"):
+            home.update_requested.connect(update_controller.download_and_launch_update)
+
+        update_controller.check_completed.connect(self._on_update_check_completed)
+        update_controller.check_failed.connect(self._on_update_check_failed)
+        update_controller.download_started.connect(self._on_update_download_started)
+        update_controller.download_completed.connect(self._on_update_download_completed)
+        update_controller.download_failed.connect(self._on_update_download_failed)
+
+    def _on_update_check_completed(self, result) -> None:
+        home = self.window.page("home")
+        settings = self.window.page("settings")
+        if hasattr(settings, "set_update_status"):
+            settings.set_update_status(result)
+        if getattr(result, "update_available", False):
+            if hasattr(home, "set_update_available"):
+                home.set_update_available(result)
+        elif hasattr(home, "hide_update_banner"):
+            home.hide_update_banner()
+
+    def _on_update_check_failed(self, message: str) -> None:
+        home = self.window.page("home")
+        settings = self.window.page("settings")
+        if hasattr(home, "hide_update_banner"):
+            home.hide_update_banner()
+        if hasattr(settings, "set_update_error"):
+            settings.set_update_error(message)
+
+    def _on_update_download_started(self, result) -> None:
+        home = self.window.page("home")
+        settings = self.window.page("settings")
+        if hasattr(home, "set_update_download_in_progress"):
+            home.set_update_download_in_progress(result)
+        if hasattr(settings, "set_update_downloading"):
+            settings.set_update_downloading(getattr(result, "latest_version", None))
+
+    def _on_update_download_failed(self, message: str) -> None:
+        home = self.window.page("home")
+        settings = self.window.page("settings")
+        update_controller = getattr(self.window, "update_controller", None)
+        result = update_controller.latest_result() if update_controller is not None else None
+        if result is not None and getattr(result, "update_available", False):
+            if hasattr(home, "set_update_available"):
+                home.set_update_available(result)
+        if hasattr(settings, "set_update_error"):
+            settings.set_update_error(message)
+
+    def _on_update_download_completed(self, path: str) -> None:
+        settings = self.window.page("settings")
+        if hasattr(settings, "set_update_launching"):
+            settings.set_update_launching(path)
+
+        opened = QDesktopServices.openUrl(QUrl.fromLocalFile(path))
+        if opened:
+            app = QApplication.instance()
+            if app is not None:
+                QTimer.singleShot(500, app.quit)
+        elif hasattr(settings, "set_update_error"):
+            settings.set_update_error(f"Could not open update installer: {path}")
