@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
@@ -7,6 +8,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -23,8 +25,10 @@ from PySide6.QtWidgets import (
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
 from optees.domain.entities.knapsack.item import KnapsackItem
+from optees.domain.models.knapsack.knapsack_model import KnapsackModel
 from optees.presentation.controllers.knapsack_controller import KnapsackController
 from optees.presentation.views.lp_view.section import Section
+from optees.utility.data_adapters.knapsack_burkardt_adapter import load_knapsack_burkardt
 
 
 def _make_info_button(tooltip: str, parent: Optional[QWidget] = None) -> QPushButton:
@@ -241,7 +245,12 @@ class _ItemsSection(Section):
             self._rows.addWidget(row)
 
     def rows(self) -> list[_ItemRow]:
-        return self.findChildren(_ItemRow)
+        rows: list[_ItemRow] = []
+        for i in range(self._rows.count()):
+            widget = self._rows.itemAt(i).widget()
+            if isinstance(widget, _ItemRow):
+                rows.append(widget)
+        return rows
 
     def refresh_strings(self) -> None:
         self.set_title(S.t("knapsack.items.section"))
@@ -287,6 +296,12 @@ class KnapsackView(QWidget):
         root.addWidget(self.page_title)
 
         self.intro = Section()
+        self.btn_import_burkardt = QPushButton()
+        self.btn_import_burkardt.setObjectName("knapsackImportBurkardtButton")
+        self.btn_import_burkardt.setCursor(Qt.PointingHandCursor)
+        self.btn_import_burkardt.clicked.connect(self._on_import_burkardt)
+        self.intro.set_header_action(self.btn_import_burkardt)
+
         self.intro_text = QLabel()
         self.intro_text.setWordWrap(True)
         self.intro_text.setStyleSheet(theme.secondary_text_css(self))
@@ -458,6 +473,40 @@ class KnapsackView(QWidget):
         solution = self._solve_uc.execute(self._ctrl.model())
         self.solve_completed.emit(solution)
 
+    def _on_import_burkardt(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self,
+            S.t("knapsack.import.dialog_title"),
+            "",
+            "Burkardt knapsack (*.txt);;All files (*)",
+        )
+        if not path:
+            return
+
+        try:
+            file_path = Path(path)
+            instance = _infer_burkardt_instance(file_path)
+            data = load_knapsack_burkardt(str(file_path.parent), instance)
+            items = tuple(
+                KnapsackItem(
+                    f"{instance}_item_{i + 1}",
+                    value,
+                    weight,
+                )
+                for i, (value, weight) in enumerate(zip(data["values"], data["weights"]))
+            )
+            model = KnapsackModel.from_parts(items, capacity=data["capacity"])
+        except Exception as exc:
+            QMessageBox.warning(
+                self,
+                S.t("knapsack.import.error_title"),
+                S.t("knapsack.import.error_body", detail=str(exc)),
+            )
+            return
+
+        if self._ctrl:
+            self._ctrl.load_model(model)
+
     def _show_capacity_info(self) -> None:
         _InfoDialog(
             S.t("knapsack.capacity.info_title"),
@@ -487,6 +536,8 @@ class KnapsackView(QWidget):
             f"<span style='font-size:20px; font-weight:700'>{S.t('knapsack.header.title')}</span>"
         )
         self.intro.set_title(S.t("knapsack.header.section"))
+        self.btn_import_burkardt.setText(S.t("knapsack.import.burkardt_button"))
+        self.btn_import_burkardt.setToolTip(S.t("knapsack.import.burkardt_tooltip"))
         self.intro_text.setText(S.t("knapsack.header.description"))
         self.btn_example.setText(S.t("knapsack.header.buttons.example"))
         self.btn_problem.setText(S.t("knapsack.header.buttons.problem"))
@@ -514,3 +565,11 @@ class KnapsackView(QWidget):
 
 def _fmt_number(value: float) -> str:
     return str(int(value)) if float(value).is_integer() else f"{value:.6g}"
+
+
+def _infer_burkardt_instance(path: Path) -> str:
+    stem = path.stem
+    for suffix in ("_c", "_w", "_p", "_s"):
+        if stem.lower().endswith(suffix):
+            return stem[: -len(suffix)].lower()
+    raise ValueError("Select a Burkardt file named <instance>_c.txt, _w.txt, _p.txt or _s.txt.")

@@ -104,6 +104,13 @@
         "problem": "Problem description"
       }
     },
+    "import": {
+      "burkardt_button": "Import Burkardt",
+      "burkardt_tooltip": "Import a Burkardt KNAPSACK_01 text instance",
+      "dialog_title": "Open Burkardt knapsack file",
+      "error_title": "Import error",
+      "error_body": "Could not load the Burkardt instance:\n{detail}"
+    },
     "capacity": {
       "section": "Capacity",
       "label": "Maximum capacity",
@@ -160,6 +167,14 @@
       "message": "Method: {method} · {message}",
       "yes": "Yes",
       "no": "No",
+      "charts": {
+        "section": "Charts",
+        "capacity_title": "Capacity usage",
+        "items_title": "Value and weight by item",
+        "capacity_text": "Used {used} of {capacity}; remaining {remaining}",
+        "legend": "Blue = value, orange = weight; green outline = selected item",
+        "no_data": "No chart data yet."
+      },
       "columns": {
         "selected": "Selected",
         "item": "Item",

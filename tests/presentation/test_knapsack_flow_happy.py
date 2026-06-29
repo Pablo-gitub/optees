@@ -2,13 +2,17 @@ import pytest
 
 pytest.importorskip("PySide6")
 
+from pathlib import Path
+
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QWidget
 
 from _utils.fakes import FakeSolver
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
 from optees.domain.entities.knapsack.item import KnapsackItem
 from optees.domain.models.knapsack.knapsack_model import KnapsackModel
 from optees.domain.value_objects.knapsack.solve_status import KnapsackSolveStatus
+from optees.utility.data_adapters.knapsack_burkardt_adapter import load_knapsack_burkardt
 
 
 def test_knapsack_flow_solves_and_navigates_to_solution(window, qtbot):
@@ -57,4 +61,25 @@ def test_knapsack_flow_solves_and_navigates_to_solution(window, qtbot):
     }
     assert window.stack.currentWidget() is window.knapsack_solution_page
     assert window.knapsack_solution_page.solution_table.model().rowCount() == 3
+    assert window.knapsack_solution_page.findChild(QWidget, "knapsackCapacityChart") is not None
+    assert window.knapsack_solution_page.findChild(QWidget, "knapsackItemBars") is not None
 
+
+def test_knapsack_imports_burkardt_instance(window, qtbot, monkeypatch):
+    path = Path("tests/data/knapsack/p01/p01_c.txt").resolve()
+    expected = load_knapsack_burkardt(str(path.parent), "p01")
+
+    monkeypatch.setattr(
+        "optees.presentation.views.knapsack_view.QFileDialog.getOpenFileName",
+        lambda *args, **kwargs: (str(path), ""),
+    )
+
+    qtbot.mouseClick(window.knap_page.btn_import_burkardt, Qt.LeftButton)
+
+    model = window.knapsack_controller.model()
+    assert model.capacity == expected["capacity"]
+    assert len(model.items) == len(expected["values"])
+    assert model.items[0].name == "p01_item_1"
+    assert model.items[0].value == pytest.approx(expected["values"][0])
+    assert model.items[0].weight == expected["weights"][0]
+    assert len(window.knap_page.items_sec.rows()) == len(expected["values"])

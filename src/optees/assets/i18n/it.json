@@ -104,6 +104,13 @@
         "problem": "Descrizione problema"
       }
     },
+    "import": {
+      "burkardt_button": "Importa Burkardt",
+      "burkardt_tooltip": "Importa un'istanza testuale Burkardt KNAPSACK_01",
+      "dialog_title": "Apri file knapsack Burkardt",
+      "error_title": "Errore di importazione",
+      "error_body": "Impossibile caricare l'istanza Burkardt:\n{detail}"
+    },
     "capacity": {
       "section": "Capacita'",
       "label": "Capacita' massima",
@@ -160,6 +167,14 @@
       "message": "Metodo: {method} · {message}",
       "yes": "Si",
       "no": "No",
+      "charts": {
+        "section": "Grafici",
+        "capacity_title": "Uso capacita'",
+        "items_title": "Valore e peso per oggetto",
+        "capacity_text": "Usato {used} di {capacity}; residuo {remaining}",
+        "legend": "Blu = valore, arancione = peso; bordo verde = oggetto selezionato",
+        "no_data": "Nessun dato grafico disponibile."
+      },
       "columns": {
         "selected": "Scelto",
         "item": "Oggetto",
