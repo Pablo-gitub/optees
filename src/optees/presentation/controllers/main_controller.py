@@ -68,6 +68,15 @@ class MainController(QObject):
         knap: KnapsackView = self.window.page("knapsack")  # type: ignore[assignment]
         if hasattr(knap, "solve_completed"):
             knap.solve_completed.connect(self._on_knapsack_solved)
+        if hasattr(knap, "example_requested"):
+            knap.example_requested.connect(lambda: self.window.goto("knapsack_example"))
+        if hasattr(knap, "problem_description_requested"):
+            knap.problem_description_requested.connect(lambda: self.window.goto("knapsack_problem"))
+
+        for name in ("knapsack_example", "knapsack_problem"):
+            info_view = self.window.page(name)
+            if hasattr(info_view, "back_requested"):
+                info_view.back_requested.connect(lambda _=False: self.window.goto("knapsack"))
 
         knap_sol_view = self.window.page("knapsack_solution")
         if hasattr(knap_sol_view, "back_requested"):

@@ -98,12 +98,20 @@
     "header": {
       "title": "Zaino 0/1",
       "section": "Formulazione del problema",
-      "description": "Scegli quali oggetti includere. Ogni oggetto viene preso oppure escluso; l'obiettivo e' massimizzare il valore totale senza superare la capacita'."
+      "description": "Scegli quali oggetti includere. Ogni oggetto viene preso oppure escluso; l'obiettivo e' massimizzare il valore totale senza superare la capacita'.",
+      "buttons": {
+        "example": "Esempio",
+        "problem": "Descrizione problema"
+      }
     },
     "capacity": {
       "section": "Capacita'",
       "label": "Capacita' massima",
-      "placeholder": "es. 50"
+      "placeholder": "es. 50",
+      "info_tooltip": "Informazioni sulla capacita'",
+      "info_title": "Capacita' dello zaino",
+      "info_body": "La capacita' e' il peso totale massimo che gli oggetti selezionati possono occupare.",
+      "info_html": "<h3>Regola</h3><p>Il solver impone <code>sum peso_i x_i <= capacita'</code>.</p><h3>Input</h3><p>La capacita' deve essere un intero non negativo perche' l'algoritmo esatto di programmazione dinamica indicizza le capacita' da 0 a C.</p><h3>Scala</h3><p>Il tempo cresce con <code>numero_oggetti * capacita'</code>. Capacita' molto grandi possono richiedere una formulazione MILP o un altro algoritmo per knapsack.</p>"
     },
     "items": {
       "section": "Oggetti",
@@ -117,11 +125,22 @@
       "value_placeholder": "es. 10",
       "weight_placeholder": "es. 3",
       "add": "Aggiungi oggetto",
-      "remove": "Rimuovi oggetto"
+      "remove": "Rimuovi oggetto",
+      "info_tooltip": "Informazioni sugli oggetti",
+      "info_title": "Oggetti dello zaino",
+      "info_body": "Ogni riga descrive un oggetto che puo' essere selezionato al massimo una volta.",
+      "info_html": "<h3>Variabile decisionale</h3><p>Per ogni oggetto Optees crea una variabile binaria <code>x_i</code>: 1 significa scelto, 0 significa escluso.</p><h3>Valore</h3><p>Il valore e' il contributo all'obiettivo. Optees massimizza il valore totale selezionato.</p><h3>Peso</h3><p>Il peso consuma capacita' e deve essere intero nel solver DP attuale.</p>"
     },
     "formula": {
       "section": "Modello matematico",
-      "body": "max Σ valoreᵢ xᵢ soggetto a Σ pesoᵢ xᵢ ≤ capacita' e xᵢ ∈ {0, 1}. Il solver di programmazione dinamica e' esatto per questo modello 0/1, ma pseudo-polinomiale nella capacita'."
+      "body": "max Σ valoreᵢ xᵢ soggetto a Σ pesoᵢ xᵢ ≤ capacita' e xᵢ ∈ {0, 1}. Il solver di programmazione dinamica e' esatto per questo modello 0/1, ma pseudo-polinomiale nella capacita'.",
+      "info_tooltip": "Informazioni sull'algoritmo",
+      "info_title": "Programmazione dinamica",
+      "info_body": "Optees risolve la prima implementazione Knapsack con un algoritmo esatto di programmazione dinamica.",
+      "info_html": "<h3>Stato</h3><p><code>dp[i][w]</code> memorizza il miglior valore raggiungibile usando i primi i oggetti e capacita' w.</p><h3>Transizione</h3><p>Per ogni oggetto l'algoritmo confronta il caso in cui lo esclude con il caso in cui lo include, se entra nello zaino.</p><h3>Garanzia</h3><p>Con pesi e capacita' interi, il risultato e' una soluzione ottima provata per il modello 0/1.</p>"
+    },
+    "info": {
+      "close": "Chiudi"
     },
     "actions": {
       "optimize": "Ottimizza zaino"

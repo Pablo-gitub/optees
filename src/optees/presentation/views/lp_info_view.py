@@ -264,3 +264,13 @@ class MILPExampleView(LPInfoView):
 class MILPProblemDescriptionView(LPInfoView):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__("milp_problem", parent=parent)
+
+
+class KnapsackExampleView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("knapsack_example", parent=parent)
+
+
+class KnapsackProblemDescriptionView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("knapsack_problem", parent=parent)

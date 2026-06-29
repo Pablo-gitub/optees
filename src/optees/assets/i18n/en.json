@@ -98,12 +98,20 @@
     "header": {
       "title": "0/1 Knapsack",
       "section": "Problem setup",
-      "description": "Choose which items to include. Each item is either selected or excluded; the objective is to maximize total value without exceeding the capacity."
+      "description": "Choose which items to include. Each item is either selected or excluded; the objective is to maximize total value without exceeding the capacity.",
+      "buttons": {
+        "example": "Example",
+        "problem": "Problem description"
+      }
     },
     "capacity": {
       "section": "Capacity",
       "label": "Maximum capacity",
-      "placeholder": "e.g. 50"
+      "placeholder": "e.g. 50",
+      "info_tooltip": "Capacity information",
+      "info_title": "Knapsack capacity",
+      "info_body": "Capacity is the maximum total weight that the selected items may use.",
+      "info_html": "<h3>Rule</h3><p>The solver enforces <code>sum weight_i x_i <= capacity</code>.</p><h3>Input</h3><p>Capacity must be a non-negative integer because the current exact dynamic-programming algorithm indexes capacities from 0 to C.</p><h3>Scale</h3><p>The running time grows with <code>number_of_items * capacity</code>. Large capacities may require a MILP or another knapsack algorithm.</p>"
     },
     "items": {
       "section": "Items",
@@ -117,11 +125,22 @@
       "value_placeholder": "e.g. 10",
       "weight_placeholder": "e.g. 3",
       "add": "Add item",
-      "remove": "Remove item"
+      "remove": "Remove item",
+      "info_tooltip": "Item data information",
+      "info_title": "Knapsack items",
+      "info_body": "Each row describes one item that can be selected at most once.",
+      "info_html": "<h3>Decision variable</h3><p>For every item Optees creates a binary variable <code>x_i</code>: 1 means selected, 0 means excluded.</p><h3>Value</h3><p>The value is the contribution to the objective. Optees maximizes total selected value.</p><h3>Weight</h3><p>The weight consumes capacity and must be an integer in the current DP solver.</p>"
     },
     "formula": {
       "section": "Mathematical model",
-      "body": "max Σ valueᵢ xᵢ subject to Σ weightᵢ xᵢ ≤ capacity and xᵢ ∈ {0, 1}. The dynamic-programming solver is exact for this 0/1 model, but pseudo-polynomial in capacity."
+      "body": "max Σ valueᵢ xᵢ subject to Σ weightᵢ xᵢ ≤ capacity and xᵢ ∈ {0, 1}. The dynamic-programming solver is exact for this 0/1 model, but pseudo-polynomial in capacity.",
+      "info_tooltip": "Algorithm information",
+      "info_title": "Dynamic programming",
+      "info_body": "Optees solves the first Knapsack implementation with an exact dynamic-programming algorithm.",
+      "info_html": "<h3>State</h3><p><code>dp[i][w]</code> stores the best value reachable with the first i items and capacity w.</p><h3>Transition</h3><p>For each item, the algorithm compares excluding it with including it if it fits.</p><h3>Guarantee</h3><p>For integer weights and capacity, this gives a proven optimal 0/1 solution.</p>"
+    },
+    "info": {
+      "close": "Close"
     },
     "actions": {
       "optimize": "Optimize knapsack"

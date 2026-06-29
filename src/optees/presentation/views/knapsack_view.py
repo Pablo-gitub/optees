@@ -5,6 +5,8 @@ from typing import Optional
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
+    QDialog,
+    QDialogButtonBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -12,6 +14,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QScrollArea,
     QSizePolicy,
+    QTextBrowser,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -22,6 +25,42 @@ from optees.core.theme import theme
 from optees.domain.entities.knapsack.item import KnapsackItem
 from optees.presentation.controllers.knapsack_controller import KnapsackController
 from optees.presentation.views.lp_view.section import Section
+
+
+def _make_info_button(tooltip: str, parent: Optional[QWidget] = None) -> QPushButton:
+    button = QPushButton("i", parent)
+    button.setObjectName("btnSchemaInfo")
+    button.setCursor(Qt.PointingHandCursor)
+    button.setFixedSize(24, 24)
+    button.setToolTip(tooltip)
+    return button
+
+
+class _InfoDialog(QDialog):
+    def __init__(self, title: str, intro: str, html: str, parent: Optional[QWidget] = None):
+        super().__init__(parent)
+        self.setMinimumSize(520, 380)
+        self.setWindowTitle(title)
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(8)
+
+        intro_label = QLabel(intro)
+        intro_label.setWordWrap(True)
+        layout.addWidget(intro_label)
+
+        browser = QTextBrowser()
+        browser.setReadOnly(True)
+        browser.setOpenExternalLinks(False)
+        browser.setHtml(html)
+        layout.addWidget(browser)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.Close)
+        close_btn = buttons.button(QDialogButtonBox.Close)
+        if close_btn:
+            close_btn.setText(S.t("knapsack.info.close"))
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
 
 
 def _parse_float(text: str, *, default: float = 0.0) -> float:
@@ -223,6 +262,8 @@ class KnapsackView(QWidget):
     """Editable 0/1 knapsack formulation page."""
 
     solve_completed = Signal(object)
+    example_requested = Signal()
+    problem_description_requested = Signal()
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
@@ -250,9 +291,23 @@ class KnapsackView(QWidget):
         self.intro_text.setWordWrap(True)
         self.intro_text.setStyleSheet(theme.secondary_text_css(self))
         self.intro.body.addWidget(self.intro_text)
+
+        info_actions = QHBoxLayout()
+        info_actions.setContentsMargins(0, 0, 0, 0)
+        info_actions.addStretch(1)
+        self.btn_example = QPushButton()
+        self.btn_problem = QPushButton()
+        self.btn_example.clicked.connect(self.example_requested.emit)
+        self.btn_problem.clicked.connect(self.problem_description_requested.emit)
+        info_actions.addWidget(self.btn_example)
+        info_actions.addWidget(self.btn_problem)
+        self.intro.body.addLayout(info_actions)
         root.addWidget(self.intro)
 
         self.capacity_sec = Section()
+        self.btn_capacity_info = _make_info_button(S.t("knapsack.capacity.info_tooltip"), self)
+        self.btn_capacity_info.clicked.connect(self._show_capacity_info)
+        self.capacity_sec.set_header_action(self.btn_capacity_info)
         cap_row = QHBoxLayout()
         cap_row.setContentsMargins(0, 0, 0, 0)
         cap_row.setSpacing(8)
@@ -269,9 +324,15 @@ class KnapsackView(QWidget):
         root.addWidget(self.capacity_sec)
 
         self.items_sec = _ItemsSection()
+        self.btn_items_info = _make_info_button(S.t("knapsack.items.info_tooltip"), self)
+        self.btn_items_info.clicked.connect(self._show_items_info)
+        self.items_sec.set_header_action(self.btn_items_info)
         root.addWidget(self.items_sec)
 
         self.formula_sec = Section()
+        self.btn_algorithm_info = _make_info_button(S.t("knapsack.formula.info_tooltip"), self)
+        self.btn_algorithm_info.clicked.connect(self._show_algorithm_info)
+        self.formula_sec.set_header_action(self.btn_algorithm_info)
         self.formula = QLabel()
         self.formula.setWordWrap(True)
         self.formula.setTextFormat(Qt.RichText)
@@ -397,17 +458,46 @@ class KnapsackView(QWidget):
         solution = self._solve_uc.execute(self._ctrl.model())
         self.solve_completed.emit(solution)
 
+    def _show_capacity_info(self) -> None:
+        _InfoDialog(
+            S.t("knapsack.capacity.info_title"),
+            S.t("knapsack.capacity.info_body"),
+            S.t("knapsack.capacity.info_html"),
+            self,
+        ).exec()
+
+    def _show_items_info(self) -> None:
+        _InfoDialog(
+            S.t("knapsack.items.info_title"),
+            S.t("knapsack.items.info_body"),
+            S.t("knapsack.items.info_html"),
+            self,
+        ).exec()
+
+    def _show_algorithm_info(self) -> None:
+        _InfoDialog(
+            S.t("knapsack.formula.info_title"),
+            S.t("knapsack.formula.info_body"),
+            S.t("knapsack.formula.info_html"),
+            self,
+        ).exec()
+
     def refresh_strings(self) -> None:
         self.page_title.setText(
             f"<span style='font-size:20px; font-weight:700'>{S.t('knapsack.header.title')}</span>"
         )
         self.intro.set_title(S.t("knapsack.header.section"))
         self.intro_text.setText(S.t("knapsack.header.description"))
+        self.btn_example.setText(S.t("knapsack.header.buttons.example"))
+        self.btn_problem.setText(S.t("knapsack.header.buttons.problem"))
         self.capacity_sec.set_title(S.t("knapsack.capacity.section"))
+        self.btn_capacity_info.setToolTip(S.t("knapsack.capacity.info_tooltip"))
         self.lbl_capacity.setText(S.t("knapsack.capacity.label"))
         self.edit_capacity.setPlaceholderText(S.t("knapsack.capacity.placeholder"))
+        self.btn_items_info.setToolTip(S.t("knapsack.items.info_tooltip"))
         self.items_sec.refresh_strings()
         self.formula_sec.set_title(S.t("knapsack.formula.section"))
+        self.btn_algorithm_info.setToolTip(S.t("knapsack.formula.info_tooltip"))
         self.formula.setText(S.t("knapsack.formula.body"))
         self.btn_optimize.setText(S.t("knapsack.actions.optimize"))
 

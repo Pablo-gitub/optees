@@ -22,6 +22,8 @@ from optees.presentation.views.lp_info_view import (
     LPProblemDescriptionView,
     MILPExampleView,
     MILPProblemDescriptionView,
+    KnapsackExampleView,
+    KnapsackProblemDescriptionView,
 )
 from optees.presentation.controllers.lp_controller import LPController
 from optees.presentation.controllers.milp_controller import MILPController
@@ -75,6 +77,8 @@ class MainWindow(QMainWindow):
         self.lp_problem_page = LPProblemDescriptionView()
         self.milp_example_page = MILPExampleView()
         self.milp_problem_page = MILPProblemDescriptionView()
+        self.knapsack_example_page = KnapsackExampleView()
+        self.knapsack_problem_page = KnapsackProblemDescriptionView()
 
         # (NEW) solution page placeholder
         self.lp_solution_page = LPSolutionView()
@@ -88,6 +92,8 @@ class MainWindow(QMainWindow):
         self.register_page("lp_problem", self.lp_problem_page)
         self.register_page("milp_example", self.milp_example_page)
         self.register_page("milp_problem", self.milp_problem_page)
+        self.register_page("knapsack_example", self.knapsack_example_page)
+        self.register_page("knapsack_problem", self.knapsack_problem_page)
         self.register_page("lp_solution", self.lp_solution_page)
         self.register_page("milp", self.milp_page)
         self.register_page("milp_solution", self.milp_solution_page)
@@ -177,6 +183,7 @@ class MainWindow(QMainWindow):
         self._apply_window_icon()
         for page in (self.home_page, self.lp_page, self.lp_example_page, self.lp_problem_page,
                     self.milp_example_page, self.milp_problem_page,
+                    self.knapsack_example_page, self.knapsack_problem_page,
                     self.lp_solution_page, self.milp_solution_page, self.knapsack_solution_page,
                     self.milp_page, self.knap_page, self.settings_page):
             if hasattr(page, "refresh_theme"):
@@ -197,6 +204,7 @@ class MainWindow(QMainWindow):
         # retranslate pages
         for page in (self.home_page, self.lp_page, self.lp_example_page, self.lp_problem_page,
                  self.milp_example_page, self.milp_problem_page,
+                 self.knapsack_example_page, self.knapsack_problem_page,
                  self.lp_solution_page, self.milp_solution_page, self.knapsack_solution_page,
                  self.milp_page, self.knap_page, self.settings_page):
             if hasattr(page, "refresh_strings"):
