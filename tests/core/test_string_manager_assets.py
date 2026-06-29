@@ -1,7 +1,13 @@
 import json
+import os
+from pathlib import Path
 import subprocess
 import sys
 import textwrap
+
+import pytest
+
+pytest.importorskip("PySide6")
 
 
 def test_string_manager_loads_i18n_from_pyinstaller_meipass(tmp_path):
@@ -23,8 +29,15 @@ def test_string_manager_loads_i18n_from_pyinstaller_meipass(tmp_path):
         """
     )
 
+    env = os.environ.copy()
+    src_path = str(Path(__file__).resolve().parents[2] / "src")
+    env["PYTHONPATH"] = (
+        src_path if not env.get("PYTHONPATH") else f"{src_path}{os.pathsep}{env['PYTHONPATH']}"
+    )
+
     subprocess.run(
         [sys.executable, "-c", script],
         check=True,
         cwd=str(tmp_path),
+        env=env,
     )
