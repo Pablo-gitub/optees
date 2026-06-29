@@ -8,7 +8,7 @@ mixed-integer.
 
 ## Stato attuale
 
-### Implementato nella prima fase
+### Implementato finora
 
 - Domain model MILP minimale:
   - `MILPVariable` con bounds e integrality;
@@ -29,6 +29,14 @@ mixed-integer.
   - JSON round-trip e validazione;
   - mapping use case verso dizionario canonico;
   - solve reale di un assignment binario quando OR-Tools e' installato.
+- Presentation:
+  - `MILPController`;
+  - prima `MILPView` completa per formulazione manuale;
+  - selezione tipo variabile continua/intera/binaria-booleana;
+  - opzioni solver `time_limit` e `mip_gap`;
+  - import JSON MILP;
+  - pagine informative `Esempio` e `Descrizione problema`;
+  - test presentation happy path.
 
 ### Gia' presente
 
@@ -38,7 +46,7 @@ mixed-integer.
     integer-like.
   - Backend OR-Tools CBC per modelli misti o con coefficienti non interi.
   - Output: `(status, objective, x_dict, extras)`.
-- View MILP placeholder: `src/optees/presentation/views/milp_view.py`.
+- View MILP: `src/optees/presentation/views/milp_view.py`.
 - Test solver base: `tests/utility/test_milp_utils.py`.
 - Test E2E MIPLIB: `tests/utility/test_miplib_milp_e2e.py`.
 - Parser `.solu` MIPLIB: `src/optees/utility/data_adapters/miplib_solu.py`.
@@ -49,12 +57,10 @@ mixed-integer.
 
 ### Mancante
 
-- `MILPController`.
-- UI completa di formulazione MILP.
 - UI completa di visualizzazione soluzione MILP.
 - Adapter MPS riusabile fuori dai test.
-- Test presentation per flusso MILP.
-- Pagine informative `Esempio` e `Descrizione problema` per MILP.
+- Wizard per modelli a soglie/piecewise lineari.
+- Import MPS dalla GUI.
 
 ## Modello matematico
 
