@@ -7,6 +7,7 @@ if TYPE_CHECKING:
 
 from optees.presentation.views.lp_view.lp_view import LPView
 from optees.presentation.views.milp_view import MILPView
+from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.home_view import HomePage  # usa lo stesso nome che usi nel MainWindow
 import logging
 log = logging.getLogger(__name__)
@@ -63,6 +64,15 @@ class MainController(QObject):
         if hasattr(milp_sol_view, "back_requested"):
             milp_sol_view.back_requested.connect(lambda: self.window.goto("milp"))
 
+        # Knapsack -> Solution
+        knap: KnapsackView = self.window.page("knapsack")  # type: ignore[assignment]
+        if hasattr(knap, "solve_completed"):
+            knap.solve_completed.connect(self._on_knapsack_solved)
+
+        knap_sol_view = self.window.page("knapsack_solution")
+        if hasattr(knap_sol_view, "back_requested"):
+            knap_sol_view.back_requested.connect(lambda: self.window.goto("knapsack"))
+
     def _on_lp_solved(self, solution) -> None:
         # 1) Recover the Solution page
         sol_view = self.window.page("lp_solution")
@@ -111,3 +121,27 @@ class MainController(QObject):
             pass
 
         self.window.goto("milp_solution")
+
+    def _on_knapsack_solved(self, solution) -> None:
+        sol_view = self.window.page("knapsack_solution")
+
+        try:
+            model_snapshot = self.window.knapsack_controller.model()
+            if hasattr(sol_view, "set_problem"):
+                sol_view.set_problem(model_snapshot)  # type: ignore[attr-defined]
+        except Exception:
+            pass
+
+        if hasattr(sol_view, "set_solution"):
+            sol_view.set_solution(solution)  # type: ignore[attr-defined]
+
+        try:
+            log.debug(
+                "Knapsack solution received: status=%s objective=%s",
+                getattr(solution, "status", None),
+                getattr(solution, "objective", None),
+            )
+        except Exception:
+            pass
+
+        self.window.goto("knapsack_solution")

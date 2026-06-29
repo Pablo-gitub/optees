@@ -94,6 +94,62 @@
       "optimize": "Optimize MILP"
     }
   },
+  "knapsack": {
+    "header": {
+      "title": "0/1 Knapsack",
+      "section": "Problem setup",
+      "description": "Choose which items to include. Each item is either selected or excluded; the objective is to maximize total value without exceeding the capacity."
+    },
+    "capacity": {
+      "section": "Capacity",
+      "label": "Maximum capacity",
+      "placeholder": "e.g. 50"
+    },
+    "items": {
+      "section": "Items",
+      "hint": "Enter one row per item. Value can be decimal; weight and capacity must be non-negative integers.",
+      "columns": {
+        "name": "Item",
+        "value": "Value",
+        "weight": "Weight"
+      },
+      "name_placeholder": "Item name",
+      "value_placeholder": "e.g. 10",
+      "weight_placeholder": "e.g. 3",
+      "add": "Add item",
+      "remove": "Remove item"
+    },
+    "formula": {
+      "section": "Mathematical model",
+      "body": "max Σ valueᵢ xᵢ subject to Σ weightᵢ xᵢ ≤ capacity and xᵢ ∈ {0, 1}. The dynamic-programming solver is exact for this 0/1 model, but pseudo-polynomial in capacity."
+    },
+    "actions": {
+      "optimize": "Optimize knapsack"
+    },
+    "errors": {
+      "invalid_title": "Invalid data",
+      "invalid_body": "Check capacity, values, and weights. Weights and capacity must be integer numbers."
+    },
+    "sol": {
+      "back": "Back",
+      "status_section": "Solution summary",
+      "table_section": "Items",
+      "empty": "No solution yet.",
+      "status_line": "Status: <b>{status}</b> · best value: <b>{objective}</b>",
+      "summary": "Total weight: {total_weight} / {capacity} · remaining capacity: {remaining} · selected items: {selected}",
+      "method": "Method: {method}",
+      "message": "Method: {method} · {message}",
+      "yes": "Yes",
+      "no": "No",
+      "columns": {
+        "selected": "Selected",
+        "item": "Item",
+        "value": "Value",
+        "weight": "Weight",
+        "ratio": "Value/weight"
+      }
+    }
+  },
   "lp": {
     "header": {
       "title": "Linear Programming (LP)",

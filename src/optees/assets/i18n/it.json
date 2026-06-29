@@ -94,6 +94,62 @@
       "optimize": "Ottimizza MILP"
     }
   },
+  "knapsack": {
+    "header": {
+      "title": "Zaino 0/1",
+      "section": "Formulazione del problema",
+      "description": "Scegli quali oggetti includere. Ogni oggetto viene preso oppure escluso; l'obiettivo e' massimizzare il valore totale senza superare la capacita'."
+    },
+    "capacity": {
+      "section": "Capacita'",
+      "label": "Capacita' massima",
+      "placeholder": "es. 50"
+    },
+    "items": {
+      "section": "Oggetti",
+      "hint": "Inserisci una riga per ogni oggetto. Il valore puo' essere decimale; peso e capacita' devono essere interi non negativi.",
+      "columns": {
+        "name": "Oggetto",
+        "value": "Valore",
+        "weight": "Peso"
+      },
+      "name_placeholder": "Nome oggetto",
+      "value_placeholder": "es. 10",
+      "weight_placeholder": "es. 3",
+      "add": "Aggiungi oggetto",
+      "remove": "Rimuovi oggetto"
+    },
+    "formula": {
+      "section": "Modello matematico",
+      "body": "max Σ valoreᵢ xᵢ soggetto a Σ pesoᵢ xᵢ ≤ capacita' e xᵢ ∈ {0, 1}. Il solver di programmazione dinamica e' esatto per questo modello 0/1, ma pseudo-polinomiale nella capacita'."
+    },
+    "actions": {
+      "optimize": "Ottimizza zaino"
+    },
+    "errors": {
+      "invalid_title": "Dati non validi",
+      "invalid_body": "Controlla capacita', valori e pesi. Pesi e capacita' devono essere numeri interi."
+    },
+    "sol": {
+      "back": "Indietro",
+      "status_section": "Riepilogo soluzione",
+      "table_section": "Oggetti",
+      "empty": "Nessuna soluzione ancora calcolata.",
+      "status_line": "Stato: <b>{status}</b> · valore migliore: <b>{objective}</b>",
+      "summary": "Peso totale: {total_weight} / {capacity} · capacita' residua: {remaining} · oggetti selezionati: {selected}",
+      "method": "Metodo: {method}",
+      "message": "Metodo: {method} · {message}",
+      "yes": "Si",
+      "no": "No",
+      "columns": {
+        "selected": "Scelto",
+        "item": "Oggetto",
+        "value": "Valore",
+        "weight": "Peso",
+        "ratio": "Valore/peso"
+      }
+    }
+  },
   "lp": {
     "header": {
       "title": "Programmazione Lineare (LP)",

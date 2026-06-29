@@ -15,6 +15,7 @@ from optees.presentation.views.home_view import HomePage
 from optees.presentation.views.lp_view.lp_view import LPView
 from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
+from optees.presentation.views.knapsack_solution_view import KnapsackSolutionView
 from optees.presentation.views.settings_view import SettingsView
 from optees.presentation.views.lp_info_view import (
     LPExampleView,
@@ -24,10 +25,13 @@ from optees.presentation.views.lp_info_view import (
 )
 from optees.presentation.controllers.lp_controller import LPController
 from optees.presentation.controllers.milp_controller import MILPController
+from optees.presentation.controllers.knapsack_controller import KnapsackController
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
 from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
+from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
+from optees.data.adapters.knapsack.knapsack_solver_adapter import KnapsackSolverAdapter
 from optees.presentation.views.lp_solution_view.lp_solution_view import LPSolutionView
 from optees.presentation.controllers.main_controller import MainController
 
@@ -61,6 +65,11 @@ class MainWindow(QMainWindow):
         self.milp_page.set_solve_usecase(self.solve_milp_uc)
 
         self.knap_page = KnapsackView()
+        self.knapsack_controller = KnapsackController()
+        self.knap_page.set_controller(self.knapsack_controller)
+        self.knapsack_solver_port = KnapsackSolverAdapter()
+        self.solve_knapsack_uc = SolveKnapsackUseCase(self.knapsack_solver_port)
+        self.knap_page.set_solve_usecase(self.solve_knapsack_uc)
         self.settings_page = SettingsView()
         self.lp_example_page = LPExampleView()
         self.lp_problem_page = LPProblemDescriptionView()
@@ -70,6 +79,7 @@ class MainWindow(QMainWindow):
         # (NEW) solution page placeholder
         self.lp_solution_page = LPSolutionView()
         self.milp_solution_page = LPSolutionView()
+        self.knapsack_solution_page = KnapsackSolutionView()
 
         # register pages
         self.register_page("home", self.home_page)
@@ -82,6 +92,7 @@ class MainWindow(QMainWindow):
         self.register_page("milp", self.milp_page)
         self.register_page("milp_solution", self.milp_solution_page)
         self.register_page("knapsack", self.knap_page)
+        self.register_page("knapsack_solution", self.knapsack_solution_page)
         self.register_page("settings", self.settings_page)
 
         self.stack.setCurrentWidget(self.home_page)
@@ -166,7 +177,7 @@ class MainWindow(QMainWindow):
         self._apply_window_icon()
         for page in (self.home_page, self.lp_page, self.lp_example_page, self.lp_problem_page,
                     self.milp_example_page, self.milp_problem_page,
-                    self.lp_solution_page, self.milp_solution_page,
+                    self.lp_solution_page, self.milp_solution_page, self.knapsack_solution_page,
                     self.milp_page, self.knap_page, self.settings_page):
             if hasattr(page, "refresh_theme"):
                 try: page.refresh_theme()
@@ -186,7 +197,7 @@ class MainWindow(QMainWindow):
         # retranslate pages
         for page in (self.home_page, self.lp_page, self.lp_example_page, self.lp_problem_page,
                  self.milp_example_page, self.milp_problem_page,
-                 self.lp_solution_page, self.milp_solution_page,
+                 self.lp_solution_page, self.milp_solution_page, self.knapsack_solution_page,
                  self.milp_page, self.knap_page, self.settings_page):
             if hasattr(page, "refresh_strings"):
                 try: page.refresh_strings()
