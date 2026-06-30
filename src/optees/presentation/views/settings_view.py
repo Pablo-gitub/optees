@@ -104,6 +104,20 @@ class SettingsView(QWidget):
         self._update_message = ""
         self._refresh_update_text()
 
+    def set_update_development_build(self, current_version: str | None = None) -> None:
+        if current_version:
+            self._current_version = current_version
+        self._update_state = "development"
+        self._update_message = ""
+        self._refresh_update_text()
+
+    def set_update_disabled(self, current_version: str | None = None) -> None:
+        if current_version:
+            self._current_version = current_version
+        self._update_state = "disabled"
+        self._update_message = ""
+        self._refresh_update_text()
+
     def set_update_status(self, result) -> None:
         self._current_version = getattr(result, "current_version", self._current_version)
         self._latest_version = getattr(result, "latest_version", None)
@@ -139,6 +153,10 @@ class SettingsView(QWidget):
 
         if self._update_state == "checking":
             text = S.t("settings.update_checking")
+        elif self._update_state == "development":
+            text = S.t("settings.update_development")
+        elif self._update_state == "disabled":
+            text = S.t("settings.update_disabled")
         elif self._update_state == "available":
             text = S.t("settings.update_available", version=latest)
         elif self._update_state == "latest":

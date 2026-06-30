@@ -11,7 +11,7 @@ from PySide6.QtCore import Qt, QSize, QTimer
 from optees.core.theme import theme
 from optees.core.assets import asset
 from optees.core.string_manager import strings as S
-from optees.core.version import get_app_version
+from optees.core.version import get_app_version, is_packaged_app
 
 from optees.presentation.views.home_view import HomePage
 from optees.presentation.views.lp_view.lp_view import LPView
@@ -126,11 +126,18 @@ class MainWindow(QMainWindow):
             self.download_update_uc,
             self,
         )
-        self.settings_page.set_update_checking(get_app_version())
+        packaged = is_packaged_app()
+        updates_disabled = os.getenv("OPTEES_DISABLE_UPDATE_CHECK") == "1"
+        if not packaged:
+            self.settings_page.set_update_development_build(get_app_version())
+        elif updates_disabled:
+            self.settings_page.set_update_disabled(get_app_version())
+        else:
+            self.settings_page.set_update_checking(get_app_version())
 
         # (NEW) create MainController here
         self.main_controller = MainController(self)
-        if os.getenv("OPTEES_DISABLE_UPDATE_CHECK") != "1":
+        if packaged and not updates_disabled:
             QTimer.singleShot(900, self.update_controller.check_for_updates)
 
     # --- page registry ---

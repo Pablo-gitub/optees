@@ -42,6 +42,8 @@
     "update_label": "Updates",
     "version_value": "Optees {version}",
     "update_checking": "Checking for updates...",
+    "update_development": "Development run: release update checks are disabled. Packaged builds check GitHub Releases automatically.",
+    "update_disabled": "Update checks are disabled.",
     "update_latest": "You are using the latest available version.",
     "update_available": "Version {version} is available.",
     "update_unsupported": "Version {version} is available, but this platform has no compatible installer asset.",
@@ -113,12 +115,37 @@
   },
   "knapsack": {
     "header": {
-      "title": "0/1 Knapsack",
+      "title": "Knapsack",
       "section": "Problem setup",
-      "description": "Choose which items to include. Each item is either selected or excluded; the objective is to maximize total value without exceeding the capacity.",
+      "description": "Choose the knapsack variant, then describe items, capacities, and decision limits. The current executable variant is 0/1 Knapsack; the switch prepares the UI for the next variants.",
       "buttons": {
         "example": "Example",
         "problem": "Problem description"
+      }
+    },
+    "variant": {
+      "section": "Variant",
+      "hint": "Select the mathematical meaning of each decision variable. The 0/1 variant is fully implemented; the other modes define the next formulation panels.",
+      "labels": {
+        "zero_one": "0/1",
+        "bounded": "Bounded",
+        "unbounded": "Unbounded",
+        "fractional": "Fractional",
+        "multi_dimensional": "Multi-dimensional"
+      },
+      "descriptions": {
+        "zero_one": "Each item can be selected once or excluded: x_i is binary.",
+        "bounded": "Each item can be selected an integer quantity up to a maximum limit: 0 <= x_i <= u_i.",
+        "unbounded": "Each item can be selected any non-negative integer quantity, limited only by capacity.",
+        "fractional": "A fraction of each item can be selected: x_i is continuous between 0 and 1.",
+        "multi_dimensional": "Each selected item consumes several resources at once, such as weight, volume, time, or budget."
+      },
+      "placeholder_title": "{variant} formulation",
+      "placeholders": {
+        "bounded": "Next step: add a quantity-limit column per item and solve x_i as an integer quantity between 0 and its maximum.",
+        "unbounded": "Next step: reuse item value/weight rows but solve quantities x_i in the non-negative integers without per-item upper bounds.",
+        "fractional": "Next step: keep value and weight rows, then solve fractions greedily by value/weight ratio and display selected percentages.",
+        "multi_dimensional": "Next step: add a resource table with one capacity per dimension and item consumption columns for each resource."
       }
     },
     "import": {

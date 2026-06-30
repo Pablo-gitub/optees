@@ -61,9 +61,11 @@ class CardButton(QFrame):
         self._title = QLabel(f"<span style='font-weight:700'>{title}</span>")
         self._title.setTextFormat(Qt.RichText)
         self._title.setWordWrap(True)
+        self._title.setStyleSheet("color: rgba(255,255,255,0.95);")
 
         self._sub = QLabel(subtitle)
         self._sub.setWordWrap(True)
+        self._sub.setStyleSheet("color: rgba(255,255,255,0.75);")
 
         title_row = QHBoxLayout()
         title_row.addWidget(self._title, 1)
@@ -105,13 +107,10 @@ class CardButton(QFrame):
     def _apply_theme(self) -> None:
         if not self._constructed:
             return
-        is_dark = self._is_dark()
-        # description color via stylesheet (for readability)
-        self._sub.setStyleSheet(
-            "color: rgba(255,255,255,0.75);" if is_dark else "color: rgba(0,0,0,0.70);"
-        )
-        # tell icon the tint explicitly (no guesswork)
-        tint = QColor(255, 255, 255) if is_dark else QColor(20, 20, 20)
+        # Home cards are rendered on a dark translucent surface, so keep their
+        # text white regardless of the system palette.
+        self._title.setStyleSheet("color: rgba(255,255,255,0.95);")
+        self._sub.setStyleSheet("color: rgba(255,255,255,0.75);")
         self._icon.refresh_theme()
 
     def changeEvent(self, ev):

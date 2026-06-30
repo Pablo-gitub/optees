@@ -50,3 +50,10 @@ def test_settings_shows_update_status(window):
     window.settings_page.set_update_error("offline")
 
     assert "offline" in window.settings_page.value_update.text()
+
+
+def test_source_run_marks_update_check_as_development(window):
+    assert window.home_page.findChild(QPushButton, "updateBannerButton").isVisible() is False
+    assert "Development" in window.settings_page.value_update.text() or (
+        "sviluppo" in window.settings_page.value_update.text().lower()
+    )

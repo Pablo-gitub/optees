@@ -42,6 +42,8 @@
     "update_label": "Aggiornamenti",
     "version_value": "Optees {version}",
     "update_checking": "Verifica aggiornamenti in corso...",
+    "update_development": "Esecuzione di sviluppo: il controllo release e' disattivato. Le build pacchettizzate controllano automaticamente GitHub Releases.",
+    "update_disabled": "Il controllo aggiornamenti e' disattivato.",
     "update_latest": "Stai usando l'ultima versione disponibile.",
     "update_available": "E' disponibile la versione {version}.",
     "update_unsupported": "E' disponibile la versione {version}, ma non c'e' un installer compatibile con questa piattaforma.",
@@ -113,12 +115,37 @@
   },
   "knapsack": {
     "header": {
-      "title": "Zaino 0/1",
+      "title": "Knapsack",
       "section": "Formulazione del problema",
-      "description": "Scegli quali oggetti includere. Ogni oggetto viene preso oppure escluso; l'obiettivo e' massimizzare il valore totale senza superare la capacita'.",
+      "description": "Scegli la variante di knapsack, poi descrivi oggetti, capacita' e limiti decisionali. La variante eseguibile in questa build e' lo zaino 0/1; lo switch prepara la UI per le prossime formulazioni.",
       "buttons": {
         "example": "Esempio",
         "problem": "Descrizione problema"
+      }
+    },
+    "variant": {
+      "section": "Variante",
+      "hint": "Seleziona il significato matematico di ogni variabile decisionale. La variante 0/1 e' completamente implementata; le altre modalita' definiscono i prossimi pannelli di formulazione.",
+      "labels": {
+        "zero_one": "0/1",
+        "bounded": "Bounded",
+        "unbounded": "Unbounded",
+        "fractional": "Fractional",
+        "multi_dimensional": "Multi-dimensionale"
+      },
+      "descriptions": {
+        "zero_one": "Ogni oggetto puo' essere scelto una volta oppure escluso: x_i e' binaria.",
+        "bounded": "Ogni oggetto puo' essere scelto in quantita' intera fino a un limite massimo: 0 <= x_i <= u_i.",
+        "unbounded": "Ogni oggetto puo' essere scelto in qualunque quantita' intera non negativa, limitata solo dalla capacita'.",
+        "fractional": "Puoi scegliere una frazione di ogni oggetto: x_i e' continua tra 0 e 1.",
+        "multi_dimensional": "Ogni oggetto selezionato consuma piu' risorse contemporaneamente, ad esempio peso, volume, tempo o budget."
+      },
+      "placeholder_title": "Formulazione {variant}",
+      "placeholders": {
+        "bounded": "Prossimo step: aggiungere una colonna di quantita' massima per oggetto e risolvere x_i come quantita' intera tra 0 e il suo massimo.",
+        "unbounded": "Prossimo step: riusare righe valore/peso ma risolvere quantita' x_i intere non negative senza limite superiore per oggetto.",
+        "fractional": "Prossimo step: mantenere righe valore/peso, risolvere le frazioni con greedy per rapporto valore/peso e mostrare le percentuali selezionate.",
+        "multi_dimensional": "Prossimo step: aggiungere una tabella risorse con una capacita' per dimensione e colonne di consumo per ogni risorsa."
       }
     },
     "import": {

@@ -6,6 +6,7 @@ from typing import Optional
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
+    QButtonGroup,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
@@ -26,6 +27,7 @@ from optees.core.string_manager import strings as S
 from optees.core.theme import theme
 from optees.domain.entities.knapsack.item import KnapsackItem
 from optees.domain.models.knapsack.knapsack_model import KnapsackModel
+from optees.domain.value_objects.knapsack.variant import KnapsackVariant
 from optees.presentation.controllers.knapsack_controller import KnapsackController
 from optees.presentation.views.lp_view.section import Section
 from optees.utility.data_adapters.knapsack_burkardt_adapter import load_knapsack_burkardt
@@ -268,7 +270,7 @@ class _ItemsSection(Section):
 
 
 class KnapsackView(QWidget):
-    """Editable 0/1 knapsack formulation page."""
+    """Editable knapsack formulation page with variant selection."""
 
     solve_completed = Signal(object)
     example_requested = Signal()
@@ -294,6 +296,7 @@ class KnapsackView(QWidget):
         self.page_title = QLabel()
         self.page_title.setTextFormat(Qt.RichText)
         root.addWidget(self.page_title)
+        self._variant = KnapsackVariant.ZERO_ONE
 
         self.intro = Section()
         self.btn_import_burkardt = QPushButton()
@@ -318,6 +321,45 @@ class KnapsackView(QWidget):
         info_actions.addWidget(self.btn_problem)
         self.intro.body.addLayout(info_actions)
         root.addWidget(self.intro)
+
+        self.variant_sec = Section()
+        self.variant_sec.setObjectName("knapsackVariantSection")
+        self.variant_hint = QLabel()
+        self.variant_hint.setWordWrap(True)
+        self.variant_hint.setStyleSheet(theme.secondary_text_css(self))
+        self.variant_sec.body.addWidget(self.variant_hint)
+
+        self.variant_group = QButtonGroup(self)
+        self.variant_group.setExclusive(True)
+        self.variant_buttons: dict[KnapsackVariant, QPushButton] = {}
+        variant_row = QHBoxLayout()
+        variant_row.setContentsMargins(0, 0, 0, 0)
+        variant_row.setSpacing(8)
+        for variant in KnapsackVariant:
+            button = QPushButton()
+            button.setCheckable(True)
+            button.setObjectName(f"knapsackVariant_{variant.value}")
+            button.setCursor(Qt.PointingHandCursor)
+            button.clicked.connect(lambda _checked=False, v=variant: self._set_variant(v))
+            self.variant_group.addButton(button)
+            self.variant_buttons[variant] = button
+            variant_row.addWidget(button)
+        variant_row.addStretch(1)
+        self.variant_sec.body.addLayout(variant_row)
+
+        self.variant_description = QLabel()
+        self.variant_description.setWordWrap(True)
+        self.variant_description.setStyleSheet(theme.secondary_text_css(self))
+        self.variant_sec.body.addWidget(self.variant_description)
+        root.addWidget(self.variant_sec)
+
+        self.variant_placeholder_sec = Section()
+        self.variant_placeholder_sec.setObjectName("knapsackVariantPlaceholder")
+        self.variant_placeholder_text = QLabel()
+        self.variant_placeholder_text.setWordWrap(True)
+        self.variant_placeholder_text.setStyleSheet(theme.secondary_text_css(self))
+        self.variant_placeholder_sec.body.addWidget(self.variant_placeholder_text)
+        root.addWidget(self.variant_placeholder_sec)
 
         self.capacity_sec = Section()
         self.btn_capacity_info = _make_info_button(S.t("knapsack.capacity.info_tooltip"), self)
@@ -374,6 +416,7 @@ class KnapsackView(QWidget):
 
         S.language_changed.connect(self.refresh_strings)
         theme.theme_changed.connect(self.refresh_theme)
+        self._apply_variant()
         self.refresh_strings()
         self.refresh_theme()
 
@@ -400,7 +443,7 @@ class KnapsackView(QWidget):
 
     def _on_items_changed(self, items: list[KnapsackItem]) -> None:
         self.items_sec.set_items(items)
-        self.btn_optimize.setEnabled(bool(items))
+        self._update_optimize_enabled()
 
     def _on_capacity_edited(self) -> None:
         if not self._ctrl:
@@ -468,12 +511,16 @@ class KnapsackView(QWidget):
     def _on_optimize_clicked(self) -> None:
         if not self._ctrl or not self._solve_uc:
             return
+        if self._variant is not KnapsackVariant.ZERO_ONE:
+            return
         if not self._sync_rows_to_controller():
             return
         solution = self._solve_uc.execute(self._ctrl.model())
         self.solve_completed.emit(solution)
 
     def _on_import_burkardt(self) -> None:
+        if self._variant is not KnapsackVariant.ZERO_ONE:
+            return
         path, _ = QFileDialog.getOpenFileName(
             self,
             S.t("knapsack.import.dialog_title"),
@@ -541,6 +588,10 @@ class KnapsackView(QWidget):
         self.intro_text.setText(S.t("knapsack.header.description"))
         self.btn_example.setText(S.t("knapsack.header.buttons.example"))
         self.btn_problem.setText(S.t("knapsack.header.buttons.problem"))
+        self.variant_sec.set_title(S.t("knapsack.variant.section"))
+        self.variant_hint.setText(S.t("knapsack.variant.hint"))
+        for variant, button in self.variant_buttons.items():
+            button.setText(S.t(f"knapsack.variant.labels.{variant.value}"))
         self.capacity_sec.set_title(S.t("knapsack.capacity.section"))
         self.btn_capacity_info.setToolTip(S.t("knapsack.capacity.info_tooltip"))
         self.lbl_capacity.setText(S.t("knapsack.capacity.label"))
@@ -551,16 +602,63 @@ class KnapsackView(QWidget):
         self.btn_algorithm_info.setToolTip(S.t("knapsack.formula.info_tooltip"))
         self.formula.setText(S.t("knapsack.formula.body"))
         self.btn_optimize.setText(S.t("knapsack.actions.optimize"))
+        self._apply_variant()
 
     def refresh_theme(self) -> None:
         title_fg = "rgba(255,255,255,0.95)" if theme.is_dark() else "rgba(0,0,0,0.90)"
         self.page_title.setStyleSheet(f"color: {title_fg}; margin-top: 8px; margin-bottom: 8px;")
         self.intro.refresh_theme()
         self.intro_text.setStyleSheet(theme.secondary_text_css(self))
+        self.variant_sec.refresh_theme()
+        self.variant_hint.setStyleSheet(theme.secondary_text_css(self))
+        self.variant_description.setStyleSheet(theme.secondary_text_css(self))
+        self.variant_placeholder_sec.refresh_theme()
+        self.variant_placeholder_text.setStyleSheet(theme.secondary_text_css(self))
         self.capacity_sec.refresh_theme()
         self.items_sec.refresh_theme()
         self.formula_sec.refresh_theme()
         self.formula.setStyleSheet(theme.secondary_text_css(self))
+
+    def current_variant(self) -> KnapsackVariant:
+        return self._variant
+
+    def _set_variant(self, variant: KnapsackVariant) -> None:
+        if self._variant is variant:
+            self._apply_variant()
+            return
+        self._variant = variant
+        self._apply_variant()
+
+    def _apply_variant(self) -> None:
+        is_zero_one = self._variant is KnapsackVariant.ZERO_ONE
+        button = self.variant_buttons.get(self._variant)
+        if button is not None and not button.isChecked():
+            button.setChecked(True)
+
+        self.variant_description.setText(
+            S.t(f"knapsack.variant.descriptions.{self._variant.value}")
+        )
+        self.variant_placeholder_sec.setVisible(not is_zero_one)
+        self.capacity_sec.setVisible(is_zero_one)
+        self.items_sec.setVisible(is_zero_one)
+        self.formula_sec.setVisible(is_zero_one)
+        self.btn_import_burkardt.setEnabled(is_zero_one)
+
+        if not is_zero_one:
+            self.variant_placeholder_sec.set_title(
+                S.t(
+                    "knapsack.variant.placeholder_title",
+                    variant=S.t(f"knapsack.variant.labels.{self._variant.value}"),
+                )
+            )
+            self.variant_placeholder_text.setText(
+                S.t(f"knapsack.variant.placeholders.{self._variant.value}")
+            )
+        self._update_optimize_enabled()
+
+    def _update_optimize_enabled(self) -> None:
+        items = self._ctrl.items() if self._ctrl else []
+        self.btn_optimize.setEnabled(self._variant is KnapsackVariant.ZERO_ONE and bool(items))
 
 
 def _fmt_number(value: float) -> str:
