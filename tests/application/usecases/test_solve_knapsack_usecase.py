@@ -4,7 +4,7 @@ import pytest
 
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
 from optees.domain.entities.knapsack.item import KnapsackItem
-from optees.domain.models.knapsack.knapsack_model import KnapsackModel
+from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 from optees.domain.value_objects.knapsack.solve_status import KnapsackSolveStatus
 
 
@@ -28,8 +28,8 @@ class RecordingKnapsackPort:
         }
 
 
-def _small_model() -> KnapsackModel:
-    return KnapsackModel.from_parts(
+def _small_model() -> Knapsack01Model:
+    return Knapsack01Model.from_parts(
         (
             KnapsackItem("A", 3, 2),
             KnapsackItem("B", 4, 3),
@@ -74,7 +74,7 @@ def test_model_is_immutable_when_updating_items():
 
 def test_domain_rejects_invalid_capacity_and_weight():
     with pytest.raises(ValueError):
-        KnapsackModel.from_parts([], capacity=2.5)
+        Knapsack01Model.from_parts([], capacity=2.5)
 
     with pytest.raises(ValueError):
         KnapsackItem("bad", 1.0, 2.5)

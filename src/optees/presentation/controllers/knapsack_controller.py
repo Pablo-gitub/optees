@@ -3,7 +3,7 @@ from __future__ import annotations
 from PySide6.QtCore import QObject, Signal
 
 from optees.domain.entities.knapsack.item import KnapsackItem
-from optees.domain.models.knapsack.knapsack_model import KnapsackModel
+from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 
 
 class KnapsackController(QObject):
@@ -15,7 +15,7 @@ class KnapsackController(QObject):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._model = KnapsackModel.empty(0, capacity=0)
+        self._model = Knapsack01Model.empty(0, capacity=0)
 
     def capacity(self) -> int:
         return self._model.capacity
@@ -23,7 +23,7 @@ class KnapsackController(QObject):
     def items(self) -> list[KnapsackItem]:
         return list(self._model.items)
 
-    def model(self) -> KnapsackModel:
+    def model(self) -> Knapsack01Model:
         return self._model
 
     def set_capacity(self, value: int) -> None:
@@ -72,7 +72,7 @@ class KnapsackController(QObject):
         if self._model is not before:
             self.item_updated.emit(index, self._model.items[index])
 
-    def load_model(self, model: KnapsackModel) -> None:
+    def load_model(self, model: Knapsack01Model) -> None:
         self._model = model
         self.capacity_changed.emit(self._model.capacity)
         self.items_changed.emit(list(self._model.items))

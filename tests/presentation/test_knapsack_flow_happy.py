@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QPushButton, QWidget
 from _utils.fakes import FakeSolver
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
 from optees.domain.entities.knapsack.item import KnapsackItem
-from optees.domain.models.knapsack.knapsack_model import KnapsackModel
+from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 from optees.domain.value_objects.knapsack.variant import KnapsackVariant
 from optees.domain.value_objects.knapsack.solve_status import KnapsackSolveStatus
 from optees.utility.data_adapters.knapsack_burkardt_adapter import load_knapsack_burkardt
@@ -33,7 +33,7 @@ def test_knapsack_flow_solves_and_navigates_to_solution(window, qtbot):
     window.knap_page.set_solve_usecase(SolveKnapsackUseCase(fake))
 
     window.knapsack_controller.load_model(
-        KnapsackModel.from_parts(
+        Knapsack01Model.from_parts(
             (
                 KnapsackItem("A", 3, 2),
                 KnapsackItem("B", 4, 3),

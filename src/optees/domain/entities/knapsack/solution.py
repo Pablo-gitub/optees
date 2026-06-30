@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 
-from optees.domain.models.knapsack.knapsack_model import KnapsackModel
+from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 from optees.domain.value_objects.knapsack.solve_status import KnapsackSolveStatus
 from optees.domain.value_objects.knapsack.solver_diagnostics import (
     KnapsackSolverDiagnostics,
@@ -26,7 +26,7 @@ class KnapsackSolution:
 
     @staticmethod
     def from_model_result(
-        model: KnapsackModel,
+        model: Knapsack01Model,
         *,
         status: object,
         objective: Optional[float],

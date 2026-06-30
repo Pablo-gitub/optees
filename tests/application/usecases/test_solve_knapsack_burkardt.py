@@ -7,7 +7,7 @@ import pytest
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
 from optees.data.adapters.knapsack.knapsack_solver_adapter import KnapsackSolverAdapter
 from optees.domain.entities.knapsack.item import KnapsackItem
-from optees.domain.models.knapsack.knapsack_model import KnapsackModel
+from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 from optees.domain.value_objects.knapsack.solve_status import KnapsackSolveStatus
 from optees.utility.data_adapters.knapsack_burkardt_adapter import (
     load_knapsack_burkardt,
@@ -16,13 +16,13 @@ from optees.utility.data_adapters.knapsack_burkardt_adapter import (
 DATA_ROOT = Path("tests/data/knapsack")
 
 
-def _model_from_burkardt(instance: str) -> tuple[KnapsackModel, list[int]]:
+def _model_from_burkardt(instance: str) -> tuple[Knapsack01Model, list[int]]:
     data = load_knapsack_burkardt(str(DATA_ROOT / instance), instance)
     items = tuple(
         KnapsackItem(f"{instance}_item_{i + 1}", value, weight)
         for i, (value, weight) in enumerate(zip(data["values"], data["weights"]))
     )
-    return KnapsackModel.from_parts(items, capacity=data["capacity"]), data["opt_selection"]
+    return Knapsack01Model.from_parts(items, capacity=data["capacity"]), data["opt_selection"]
 
 
 @pytest.mark.parametrize("instance", ["p01", "p02"])

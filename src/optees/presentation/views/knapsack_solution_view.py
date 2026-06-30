@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
 from optees.domain.entities.knapsack.solution import KnapsackSolution
-from optees.domain.models.knapsack.knapsack_model import KnapsackModel
+from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 from optees.presentation.views.lp_view.section import Section
 
 
@@ -30,12 +30,12 @@ class _CapacityUsageWidget(QWidget):
         self.setObjectName("knapsackCapacityChart")
         self.setMinimumHeight(130)
         self.setMinimumWidth(320)
-        self._problem: Optional[KnapsackModel] = None
+        self._problem: Optional[Knapsack01Model] = None
         self._solution: Optional[KnapsackSolution] = None
 
     def set_data(
         self,
-        problem: Optional[KnapsackModel],
+        problem: Optional[Knapsack01Model],
         solution: Optional[KnapsackSolution],
     ) -> None:
         self._problem = problem
@@ -102,12 +102,12 @@ class _ItemBarsWidget(QWidget):
         self.setObjectName("knapsackItemBars")
         self.setMinimumHeight(240)
         self.setMinimumWidth(420)
-        self._problem: Optional[KnapsackModel] = None
+        self._problem: Optional[Knapsack01Model] = None
         self._solution: Optional[KnapsackSolution] = None
 
     def set_data(
         self,
-        problem: Optional[KnapsackModel],
+        problem: Optional[Knapsack01Model],
         solution: Optional[KnapsackSolution],
     ) -> None:
         self._problem = problem
@@ -284,7 +284,7 @@ class KnapsackSolutionView(QWidget):
         root.addStretch(1)
 
         self.solution_table = self.table
-        self._problem: Optional[KnapsackModel] = None
+        self._problem: Optional[Knapsack01Model] = None
         self._solution: Optional[KnapsackSolution] = None
 
         S.language_changed.connect(self.refresh_strings)
@@ -292,7 +292,7 @@ class KnapsackSolutionView(QWidget):
         self.refresh_strings()
         self.refresh_theme()
 
-    def set_problem(self, model: KnapsackModel) -> None:
+    def set_problem(self, model: Knapsack01Model) -> None:
         self._problem = model
         self._rebuild()
 

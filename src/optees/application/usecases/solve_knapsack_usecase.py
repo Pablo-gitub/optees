@@ -4,16 +4,16 @@ from typing import Any, Dict
 
 from optees.application.ports.knapsack_solver_port import KnapsackSolverPort
 from optees.domain.entities.knapsack.solution import KnapsackSolution
-from optees.domain.models.knapsack.knapsack_model import KnapsackModel
+from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 
 
 class SolveKnapsackUseCase:
-    """Orchestrates KnapsackModel -> canonical dict -> solver port -> solution."""
+    """Orchestrates Knapsack01Model -> canonical dict -> solver port -> solution."""
 
     def __init__(self, solver_port: KnapsackSolverPort):
         self._solver = solver_port
 
-    def execute(self, model: KnapsackModel) -> KnapsackSolution:
+    def execute(self, model: Knapsack01Model) -> KnapsackSolution:
         problem = self._map_model_to_problem(model)
         raw = self._solver.solve(problem)
         return KnapsackSolution.from_model_result(
@@ -24,7 +24,7 @@ class SolveKnapsackUseCase:
             extras=dict(raw.get("extras", {})),
         )
 
-    def _map_model_to_problem(self, model: KnapsackModel) -> Dict[str, Any]:
+    def _map_model_to_problem(self, model: Knapsack01Model) -> Dict[str, Any]:
         return {
             "values": [float(v) for v in model.values()],
             "weights": [int(w) for w in model.weights()],

@@ -11,7 +11,7 @@ def _drop_index[T](seq: Sequence[T], idx: int) -> Tuple[T, ...]:
 
 
 @dataclass(frozen=True)
-class KnapsackModel:
+class Knapsack01Model:
     """Aggregate root for a 0/1 knapsack problem.
 
     Each item can be selected once or excluded. The objective is to maximize the
@@ -29,20 +29,20 @@ class KnapsackModel:
     items: Tuple[KnapsackItem, ...]
 
     @staticmethod
-    def empty(n: int = 0, capacity: int = 0) -> "KnapsackModel":
+    def empty(n: int = 0, capacity: int = 0) -> "Knapsack01Model":
         items = tuple(
             KnapsackItem(name=f"Item {i}", value=0.0, weight=0)
             for i in range(1, n + 1)
         )
-        return KnapsackModel(capacity=capacity, items=items)
+        return Knapsack01Model(capacity=capacity, items=items)
 
     @staticmethod
     def from_parts(
         items: Iterable[KnapsackItem],
         *,
         capacity: int,
-    ) -> "KnapsackModel":
-        return KnapsackModel(capacity=capacity, items=tuple(items))
+    ) -> "Knapsack01Model":
+        return Knapsack01Model(capacity=capacity, items=tuple(items))
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "capacity", _normalize_capacity(self.capacity))
@@ -63,38 +63,38 @@ class KnapsackModel:
     def item_names(self) -> Tuple[str, ...]:
         return tuple(item.name for item in self.items)
 
-    def set_capacity(self, capacity: int) -> "KnapsackModel":
-        return KnapsackModel(capacity=capacity, items=self.items)
+    def set_capacity(self, capacity: int) -> "Knapsack01Model":
+        return Knapsack01Model(capacity=capacity, items=self.items)
 
-    def add_item(self, item: Optional[KnapsackItem] = None) -> "KnapsackModel":
+    def add_item(self, item: Optional[KnapsackItem] = None) -> "Knapsack01Model":
         new_item = item or KnapsackItem(_next_default_name(self.items), 0.0, 0)
-        return KnapsackModel(self.capacity, self.items + (new_item,))
+        return Knapsack01Model(self.capacity, self.items + (new_item,))
 
-    def remove_item(self, index: int) -> "KnapsackModel":
+    def remove_item(self, index: int) -> "Knapsack01Model":
         if not (0 <= index < self.n_items()):
             return self
-        return KnapsackModel(self.capacity, _drop_index(self.items, index))
+        return Knapsack01Model(self.capacity, _drop_index(self.items, index))
 
-    def set_item_name(self, index: int, name: str) -> "KnapsackModel":
+    def set_item_name(self, index: int, name: str) -> "Knapsack01Model":
         if not (0 <= index < self.n_items()):
             return self
         items = list(self.items)
         items[index] = items[index].rename(name)
-        return KnapsackModel(self.capacity, tuple(items))
+        return Knapsack01Model(self.capacity, tuple(items))
 
-    def set_item_value(self, index: int, value: float) -> "KnapsackModel":
+    def set_item_value(self, index: int, value: float) -> "Knapsack01Model":
         if not (0 <= index < self.n_items()):
             return self
         items = list(self.items)
         items[index] = items[index].with_value(value)
-        return KnapsackModel(self.capacity, tuple(items))
+        return Knapsack01Model(self.capacity, tuple(items))
 
-    def set_item_weight(self, index: int, weight: int) -> "KnapsackModel":
+    def set_item_weight(self, index: int, weight: int) -> "Knapsack01Model":
         if not (0 <= index < self.n_items()):
             return self
         items = list(self.items)
         items[index] = items[index].with_weight(weight)
-        return KnapsackModel(self.capacity, tuple(items))
+        return Knapsack01Model(self.capacity, tuple(items))
 
 
 def _normalize_capacity(value: object) -> int:
@@ -118,4 +118,3 @@ def _next_default_name(items: Sequence[KnapsackItem]) -> str:
     while f"Item {i}" in used:
         i += 1
     return f"Item {i}"
-

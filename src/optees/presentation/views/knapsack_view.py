@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
 from optees.domain.entities.knapsack.item import KnapsackItem
-from optees.domain.models.knapsack.knapsack_model import KnapsackModel
+from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 from optees.domain.value_objects.knapsack.variant import KnapsackVariant
 from optees.presentation.controllers.knapsack_controller import KnapsackController
 from optees.presentation.views.lp_view.section import Section
@@ -542,7 +542,7 @@ class KnapsackView(QWidget):
                 )
                 for i, (value, weight) in enumerate(zip(data["values"], data["weights"]))
             )
-            model = KnapsackModel.from_parts(items, capacity=data["capacity"])
+            model = Knapsack01Model.from_parts(items, capacity=data["capacity"])
         except Exception as exc:
             QMessageBox.warning(
                 self,
