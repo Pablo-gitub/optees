@@ -7,6 +7,7 @@ Public API
 - solve_knapsack_01(values, weights, capacity) -> (best_value, selected_indices)
 - solve_bounded_knapsack(values, weights, max_quantities, capacity)
   -> (best_value, quantities)
+- solve_unbounded_knapsack(values, weights, capacity) -> (best_value, quantities)
 
 Design
 ------
@@ -27,7 +28,11 @@ from __future__ import annotations
 from typing import List, Tuple
 
 
-__all__ = ["solve_knapsack_01", "solve_bounded_knapsack"]
+__all__ = [
+    "solve_knapsack_01",
+    "solve_bounded_knapsack",
+    "solve_unbounded_knapsack",
+]
 
 
 def solve_knapsack_01(
@@ -212,6 +217,64 @@ def solve_bounded_knapsack(
         cap -= quantity * weights_int[i - 1]
 
     return float(dp[n][capacity_int]), quantities
+
+
+def solve_unbounded_knapsack(
+    values: List[float],
+    weights: List[int],
+    capacity: int,
+) -> Tuple[float, List[int]]:
+    """Solve the unbounded knapsack problem via dynamic programming.
+
+    The model is:
+
+        max sum_i value_i * x_i
+        s.t. sum_i weight_i * x_i <= capacity
+             x_i in {0, 1, 2, ...}
+
+    With positive weights the problem is finite and can be solved by a 1D DP:
+    ``dp[c]`` stores the best value attainable with capacity ``c``. Because the
+    same item may be reused, transitions read from the current DP row:
+    ``dp[c - weight_i] + value_i``. If an item has zero weight and positive
+    value, the mathematical objective is unbounded.
+    """
+    if len(values) != len(weights):
+        raise ValueError("values and weights must have the same length.")
+
+    capacity_int = _normalize_non_negative_int(capacity, "capacity")
+    weights_int = [
+        _normalize_non_negative_int(weight, "weights")
+        for weight in weights
+    ]
+    values_float = [float(value) for value in values]
+
+    n = len(values_float)
+    if n == 0:
+        return 0.0, []
+
+    if any(weight == 0 and value > 0 for value, weight in zip(values_float, weights_int)):
+        raise ValueError("problem is unbounded: zero-weight item with positive value")
+
+    dp = [0.0] * (capacity_int + 1)
+    choice = [-1] * (capacity_int + 1)
+
+    for cap in range(0, capacity_int + 1):
+        for index, (value_i, weight_i) in enumerate(zip(values_float, weights_int)):
+            if weight_i <= 0 or weight_i > cap:
+                continue
+            candidate = dp[cap - weight_i] + value_i
+            if candidate > dp[cap]:
+                dp[cap] = candidate
+                choice[cap] = index
+
+    quantities = [0] * n
+    cap = capacity_int
+    while cap > 0 and choice[cap] != -1:
+        index = choice[cap]
+        quantities[index] += 1
+        cap -= weights_int[index]
+
+    return float(dp[capacity_int]), quantities
 
 
 def _normalize_non_negative_int(value: object, label: str) -> int:

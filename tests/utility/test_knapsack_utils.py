@@ -1,7 +1,11 @@
 # tests/utility/test_knapsack_utils.py
 import unittest
 
-from optees.utility.knapsack_utils import solve_bounded_knapsack, solve_knapsack_01
+from optees.utility.knapsack_utils import (
+    solve_bounded_knapsack,
+    solve_knapsack_01,
+    solve_unbounded_knapsack,
+)
 
 
 class TestKnapsack01(unittest.TestCase):
@@ -91,6 +95,64 @@ class TestBoundedKnapsack(unittest.TestCase):
             solve_bounded_knapsack([5], [1], [2], 3.5)
 
         best, quantities = solve_bounded_knapsack([5], [1], [2], 2.0)
+        self.assertEqual(best, 10.0)
+        self.assertEqual(quantities, [2])
+
+
+class TestUnboundedKnapsack(unittest.TestCase):
+    def test_small_example_optimal_quantities(self):
+        # Best is one copy of B and one copy of D:
+        # value = 40 + 70 = 110, weight = 3 + 5 = 8.
+        best, quantities = solve_unbounded_knapsack(
+            values=[10, 40, 50, 70],
+            weights=[1, 3, 4, 5],
+            capacity=8,
+        )
+
+        self.assertAlmostEqual(best, 110.0, places=9)
+        self.assertEqual(quantities, [0, 1, 0, 1])
+
+    def test_zero_capacity_returns_zero_quantities(self):
+        best, quantities = solve_unbounded_knapsack(
+            values=[10, 20],
+            weights=[1, 2],
+            capacity=0,
+        )
+
+        self.assertEqual(best, 0.0)
+        self.assertEqual(quantities, [0, 0])
+
+    def test_zero_weight_positive_value_is_mathematically_unbounded(self):
+        with self.assertRaises(ValueError):
+            solve_unbounded_knapsack(
+                values=[5, 10],
+                weights=[0, 2],
+                capacity=10,
+            )
+
+    def test_zero_weight_zero_value_is_ignored(self):
+        best, quantities = solve_unbounded_knapsack(
+            values=[0, 3],
+            weights=[0, 2],
+            capacity=5,
+        )
+
+        self.assertAlmostEqual(best, 6.0, places=9)
+        self.assertEqual(quantities, [0, 2])
+
+    def test_length_mismatch_raises(self):
+        with self.assertRaises(ValueError):
+            solve_unbounded_knapsack([1, 2], [1], 10)
+
+    def test_negative_weight_raises(self):
+        with self.assertRaises(ValueError):
+            solve_unbounded_knapsack([5], [-1], 10)
+
+    def test_non_integer_capacity_raises(self):
+        with self.assertRaises(ValueError):
+            solve_unbounded_knapsack([5], [1], 3.5)
+
+        best, quantities = solve_unbounded_knapsack([5], [1], 2.0)
         self.assertEqual(best, 10.0)
         self.assertEqual(quantities, [2])
 

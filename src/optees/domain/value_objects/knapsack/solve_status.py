@@ -7,6 +7,7 @@ class KnapsackSolveStatus(str, Enum):
     OPTIMAL = "Optimal"
     FEASIBLE = "Feasible"
     INFEASIBLE = "Infeasible"
+    UNBOUNDED = "Unbounded"
     NOT_SOLVED = "NotSolved"
 
     @staticmethod
@@ -15,4 +16,3 @@ class KnapsackSolveStatus(str, Enum):
             return KnapsackSolveStatus(str(value))
         except Exception:
             return KnapsackSolveStatus.NOT_SOLVED
-
