@@ -5,6 +5,8 @@
 Public API
 ----------
 - solve_knapsack_01(values, weights, capacity) -> (best_value, selected_indices)
+- solve_bounded_knapsack(values, weights, max_quantities, capacity)
+  -> (best_value, quantities)
 
 Design
 ------
@@ -25,7 +27,7 @@ from __future__ import annotations
 from typing import List, Tuple
 
 
-__all__ = ["solve_knapsack_01"]
+__all__ = ["solve_knapsack_01", "solve_bounded_knapsack"]
 
 
 def solve_knapsack_01(
@@ -139,3 +141,89 @@ def solve_knapsack_01(
     selected.reverse()
 
     return float(best_value), selected
+
+
+def solve_bounded_knapsack(
+    values: List[float],
+    weights: List[int],
+    max_quantities: List[int],
+    capacity: int,
+) -> Tuple[float, List[int]]:
+    """Solve the bounded knapsack problem via dynamic programming.
+
+    The model is:
+
+        max sum_i value_i * x_i
+        s.t. sum_i weight_i * x_i <= capacity
+             x_i in {0, 1, ..., max_quantity_i}
+
+    Returns the optimal value and one deterministic optimal quantity vector.
+    Tie-breaking keeps the first quantity that reaches the best value, so lower
+    quantities are preferred when alternatives are exactly tied.
+    """
+    if len(values) != len(weights) or len(values) != len(max_quantities):
+        raise ValueError("values, weights and max_quantities must have the same length.")
+
+    capacity_int = _normalize_non_negative_int(capacity, "capacity")
+    weights_int = [
+        _normalize_non_negative_int(weight, "weights")
+        for weight in weights
+    ]
+    quantities_int = [
+        _normalize_non_negative_int(quantity, "max_quantities")
+        for quantity in max_quantities
+    ]
+
+    n = len(values)
+    if n == 0:
+        return 0.0, []
+
+    dp = [[0.0] * (capacity_int + 1) for _ in range(n + 1)]
+    choice = [[0] * (capacity_int + 1) for _ in range(n + 1)]
+
+    for i in range(1, n + 1):
+        value_i = float(values[i - 1])
+        weight_i = weights_int[i - 1]
+        max_q_i = quantities_int[i - 1]
+
+        for cap in range(0, capacity_int + 1):
+            best = dp[i - 1][cap]
+            best_q = 0
+
+            if weight_i == 0:
+                max_feasible_q = max_q_i
+            else:
+                max_feasible_q = min(max_q_i, cap // weight_i)
+
+            for quantity in range(1, max_feasible_q + 1):
+                candidate = dp[i - 1][cap - quantity * weight_i] + quantity * value_i
+                if candidate > best:
+                    best = candidate
+                    best_q = quantity
+
+            dp[i][cap] = best
+            choice[i][cap] = best_q
+
+    quantities = [0] * n
+    cap = capacity_int
+    for i in range(n, 0, -1):
+        quantity = choice[i][cap]
+        quantities[i - 1] = quantity
+        cap -= quantity * weights_int[i - 1]
+
+    return float(dp[n][capacity_int]), quantities
+
+
+def _normalize_non_negative_int(value: object, label: str) -> int:
+    if isinstance(value, bool):
+        raise ValueError(f"{label} must be a non-negative integer")
+    if isinstance(value, int):
+        normalized = value
+    elif isinstance(value, float) and value.is_integer():
+        normalized = int(value)
+    else:
+        raise ValueError(f"{label} must be a non-negative integer")
+
+    if normalized < 0:
+        raise ValueError(f"{label} must be a non-negative integer")
+    return normalized
