@@ -117,7 +117,7 @@
     "header": {
       "title": "Knapsack",
       "section": "Problem setup",
-      "description": "Choose the knapsack variant, then describe items, capacities, and decision limits. The executable variants in this build are 0/1 and Bounded; the switch prepares the UI for the next variants.",
+      "description": "Choose the knapsack variant, then describe items, capacities, and decision limits. The executable variants in this build are 0/1, Bounded, Unbounded, and Fractional; the switch prepares the UI for the next variants.",
       "buttons": {
         "example": "Example",
         "problem": "Problem description"
@@ -125,7 +125,7 @@
     },
     "variant": {
       "section": "Variant",
-      "hint": "Select the mathematical meaning of each decision variable. The 0/1 and Bounded variants are implemented; the other modes define the next formulation panels.",
+      "hint": "Select the mathematical meaning of each decision variable. The 0/1, Bounded, Unbounded, and Fractional variants are implemented; the other modes define the next formulation panels.",
       "labels": {
         "zero_one": "0/1",
         "bounded": "Bounded",
@@ -143,8 +143,8 @@
       "placeholder_title": "{variant} formulation",
       "placeholders": {
         "bounded": "Each row adds a maximum quantity u_i. The solver chooses an integer quantity x_i between 0 and u_i to maximize total value within capacity.",
-        "unbounded": "Next step: reuse item value/weight rows but solve quantities x_i in the non-negative integers without per-item upper bounds.",
-        "fractional": "Next step: keep value and weight rows, then solve fractions greedily by value/weight ratio and display selected percentages.",
+        "unbounded": "Each row describes an item type that can be selected in any non-negative integer quantity, limited only by capacity.",
+        "fractional": "Each item can also be selected partially. The solver sorts by value/weight ratio and chooses fractions between 0 and 1.",
         "multi_dimensional": "Next step: add a resource table with one capacity per dimension and item consumption columns for each resource."
       }
     },
@@ -167,6 +167,7 @@
     "items": {
       "section": "Items",
       "hint": "Enter one row per item. Value can be decimal; weight and capacity must be non-negative integers.",
+      "fractional_hint": "Enter one row per item. Value, weight, and capacity can be decimal; weight must be positive.",
       "columns": {
         "variable": "Var.",
         "name": "Item",
@@ -189,6 +190,8 @@
       "section": "Mathematical model",
       "body": "max Σ valueᵢ xᵢ subject to Σ weightᵢ xᵢ ≤ capacity and xᵢ ∈ {0, 1}. The dynamic-programming solver is exact for this 0/1 model, but pseudo-polynomial in capacity.",
       "bounded_body": "max Σ valueᵢ xᵢ subject to Σ weightᵢ xᵢ ≤ capacity and xᵢ ∈ {0, 1, ..., uᵢ}. The solver tests admissible quantities for each item and reconstructs one optimal combination.",
+      "unbounded_body": "max Σ valueᵢ xᵢ subject to Σ weightᵢ xᵢ ≤ capacity and xᵢ ∈ {0, 1, 2, ...}. The solver uses dynamic programming while allowing the same item to be reused multiple times.",
+      "fractional_body": "max Σ valueᵢ xᵢ subject to Σ weightᵢ xᵢ ≤ capacity and 0 ≤ xᵢ ≤ 1. Since variables are continuous, greedy selection by value/weight density is exact.",
       "info_tooltip": "Algorithm information",
       "info_title": "Dynamic programming",
       "info_body": "Optees solves the first Knapsack implementation with an exact dynamic-programming algorithm.",
@@ -202,7 +205,7 @@
     },
     "errors": {
       "invalid_title": "Invalid data",
-      "invalid_body": "Check capacity, values, weights, and maximum quantities. Weights, capacity, and quantities must be non-negative integer numbers."
+      "invalid_body": "Check capacity, values, weights, and maximum quantities. Integer variants require non-negative integer weights, capacity, and quantities; fractional weight must be positive."
     },
     "sol": {
       "back": "Back",
@@ -229,6 +232,7 @@
         "value": "Value",
         "weight": "Weight",
         "quantity": "Quantity",
+        "fraction": "Fraction",
         "max_quantity": "Max quantity",
         "ratio": "Value/weight"
       }

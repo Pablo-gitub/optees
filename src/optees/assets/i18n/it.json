@@ -117,7 +117,7 @@
     "header": {
       "title": "Knapsack",
       "section": "Formulazione del problema",
-      "description": "Scegli la variante di knapsack, poi descrivi oggetti, capacita' e limiti decisionali. Le varianti eseguibili in questa build sono 0/1 e Bounded; lo switch prepara la UI per le prossime formulazioni.",
+      "description": "Scegli la variante di knapsack, poi descrivi oggetti, capacita' e limiti decisionali. Le varianti eseguibili in questa build sono 0/1, Bounded, Unbounded e Fractional; lo switch prepara la UI per le prossime formulazioni.",
       "buttons": {
         "example": "Esempio",
         "problem": "Descrizione problema"
@@ -125,7 +125,7 @@
     },
     "variant": {
       "section": "Variante",
-      "hint": "Seleziona il significato matematico di ogni variabile decisionale. Le varianti 0/1 e Bounded sono implementate; le altre modalita' definiscono i prossimi pannelli di formulazione.",
+      "hint": "Seleziona il significato matematico di ogni variabile decisionale. Le varianti 0/1, Bounded, Unbounded e Fractional sono implementate; le altre modalita' definiscono i prossimi pannelli di formulazione.",
       "labels": {
         "zero_one": "0/1",
         "bounded": "Bounded",
@@ -143,8 +143,8 @@
       "placeholder_title": "Formulazione {variant}",
       "placeholders": {
         "bounded": "Ogni riga aggiunge una quantita' massima u_i. Il solver sceglie una quantita' intera x_i tra 0 e u_i per massimizzare il valore totale entro la capacita'.",
-        "unbounded": "Prossimo step: riusare righe valore/peso ma risolvere quantita' x_i intere non negative senza limite superiore per oggetto.",
-        "fractional": "Prossimo step: mantenere righe valore/peso, risolvere le frazioni con greedy per rapporto valore/peso e mostrare le percentuali selezionate.",
+        "unbounded": "Ogni riga descrive un tipo di oggetto che puo' essere scelto in qualunque quantita' intera non negativa, limitata solo dalla capacita'.",
+        "fractional": "Ogni oggetto puo' essere selezionato anche parzialmente. Il solver ordina per rapporto valore/peso e sceglie frazioni tra 0 e 1.",
         "multi_dimensional": "Prossimo step: aggiungere una tabella risorse con una capacita' per dimensione e colonne di consumo per ogni risorsa."
       }
     },
@@ -167,6 +167,7 @@
     "items": {
       "section": "Oggetti",
       "hint": "Inserisci una riga per ogni oggetto. Il valore puo' essere decimale; peso e capacita' devono essere interi non negativi.",
+      "fractional_hint": "Inserisci una riga per ogni oggetto. Valore, peso e capacita' possono essere decimali; il peso deve essere positivo.",
       "columns": {
         "variable": "Var.",
         "name": "Oggetto",
@@ -189,6 +190,8 @@
       "section": "Modello matematico",
       "body": "max Σ valoreᵢ xᵢ soggetto a Σ pesoᵢ xᵢ ≤ capacita' e xᵢ ∈ {0, 1}. Il solver di programmazione dinamica e' esatto per questo modello 0/1, ma pseudo-polinomiale nella capacita'.",
       "bounded_body": "max Σ valoreᵢ xᵢ soggetto a Σ pesoᵢ xᵢ ≤ capacita' e xᵢ ∈ {0, 1, ..., uᵢ}. Il solver prova per ogni oggetto le quantita' ammissibili e ricostruisce una combinazione ottima.",
+      "unbounded_body": "max Σ valoreᵢ xᵢ soggetto a Σ pesoᵢ xᵢ ≤ capacita' e xᵢ ∈ {0, 1, 2, ...}. Il solver usa programmazione dinamica consentendo di riutilizzare lo stesso oggetto piu' volte.",
+      "fractional_body": "max Σ valoreᵢ xᵢ soggetto a Σ pesoᵢ xᵢ ≤ capacita' e 0 ≤ xᵢ ≤ 1. Poiche' le variabili sono continue, il greedy per densita' valore/peso e' esatto.",
       "info_tooltip": "Informazioni sull'algoritmo",
       "info_title": "Programmazione dinamica",
       "info_body": "Optees risolve la prima implementazione Knapsack con un algoritmo esatto di programmazione dinamica.",
@@ -202,7 +205,7 @@
     },
     "errors": {
       "invalid_title": "Dati non validi",
-      "invalid_body": "Controlla capacita', valori, pesi e quantita' massime. Pesi, capacita' e quantita' devono essere numeri interi non negativi."
+      "invalid_body": "Controlla capacita', valori, pesi e quantita' massime. Nelle varianti intere pesi, capacita' e quantita' devono essere interi non negativi; nel fractional il peso deve essere positivo."
     },
     "sol": {
       "back": "Indietro",
@@ -229,6 +232,7 @@
         "value": "Valore",
         "weight": "Peso",
         "quantity": "Quantita'",
+        "fraction": "Frazione",
         "max_quantity": "Quantita' max",
         "ratio": "Valore/peso"
       }

@@ -322,6 +322,7 @@ class KnapsackSolutionView(QWidget):
         self.capacity_chart.set_data(self._problem, self._solution)
         self.item_bars.set_data(self._problem, self._solution)
         has_quantities = self._solution is not None and hasattr(self._solution, "quantities")
+        has_fractions = self._solution is not None and hasattr(self._solution, "fractions")
         has_max_quantity = (
             self._problem is not None
             and bool(getattr(self._problem, "items", ()))
@@ -330,6 +331,8 @@ class KnapsackSolutionView(QWidget):
         headers = [S.t("knapsack.sol.columns.selected")]
         if has_quantities:
             headers.append(S.t("knapsack.sol.columns.quantity"))
+        if has_fractions:
+            headers.append(S.t("knapsack.sol.columns.fraction"))
         headers.extend(
             [
                 S.t("knapsack.sol.columns.item"),
@@ -383,6 +386,7 @@ class KnapsackSolutionView(QWidget):
 
         selected = set(self._solution.selected_indices)
         quantities = getattr(self._solution, "quantities", None)
+        fractions = getattr(self._solution, "fractions", None)
         for index, item in enumerate(self._problem.items):
             ratio = None if item.weight == 0 else item.value / item.weight
             row = [
@@ -391,6 +395,9 @@ class KnapsackSolutionView(QWidget):
             if quantities is not None:
                 quantity = quantities[index] if index < len(quantities) else 0
                 row.append(QStandardItem(_fmt(quantity)))
+            if fractions is not None:
+                fraction = fractions[index] if index < len(fractions) else 0.0
+                row.append(QStandardItem(_fmt(fraction)))
             row.extend(
                 [
                     QStandardItem(item.name),

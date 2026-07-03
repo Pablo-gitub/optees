@@ -33,13 +33,17 @@ from optees.presentation.controllers.knapsack_controller import KnapsackControll
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
 from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
 from optees.application.usecases.solve_bounded_knapsack_usecase import SolveBoundedKnapsackUseCase
+from optees.application.usecases.solve_fractional_knapsack_usecase import SolveFractionalKnapsackUseCase
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
+from optees.application.usecases.solve_unbounded_knapsack_usecase import SolveUnboundedKnapsackUseCase
 from optees.application.usecases.check_for_updates_usecase import CheckForUpdatesUseCase
 from optees.application.usecases.download_update_usecase import DownloadUpdateUseCase
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
 from optees.data.adapters.knapsack.bounded_knapsack_solver_adapter import BoundedKnapsackSolverAdapter
+from optees.data.adapters.knapsack.fractional_knapsack_solver_adapter import FractionalKnapsackSolverAdapter
 from optees.data.adapters.knapsack.knapsack_solver_adapter import KnapsackSolverAdapter
+from optees.data.adapters.knapsack.unbounded_knapsack_solver_adapter import UnboundedKnapsackSolverAdapter
 from optees.data.adapters.github.update_provider_adapter import GitHubUpdateProvider
 from optees.presentation.views.lp_solution_view.lp_solution_view import LPSolutionView
 from optees.presentation.controllers.main_controller import MainController
@@ -85,6 +89,16 @@ class MainWindow(QMainWindow):
             self.bounded_knapsack_solver_port,
         )
         self.knap_page.set_bounded_solve_usecase(self.solve_bounded_knapsack_uc)
+        self.unbounded_knapsack_solver_port = UnboundedKnapsackSolverAdapter()
+        self.solve_unbounded_knapsack_uc = SolveUnboundedKnapsackUseCase(
+            self.unbounded_knapsack_solver_port,
+        )
+        self.knap_page.set_unbounded_solve_usecase(self.solve_unbounded_knapsack_uc)
+        self.fractional_knapsack_solver_port = FractionalKnapsackSolverAdapter()
+        self.solve_fractional_knapsack_uc = SolveFractionalKnapsackUseCase(
+            self.fractional_knapsack_solver_port,
+        )
+        self.knap_page.set_fractional_solve_usecase(self.solve_fractional_knapsack_uc)
         self.settings_page = SettingsView()
         self.lp_example_page = LPExampleView()
         self.lp_problem_page = LPProblemDescriptionView()
