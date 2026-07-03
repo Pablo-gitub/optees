@@ -9,6 +9,8 @@ Public API
   -> (best_value, quantities)
 - solve_unbounded_knapsack(values, weights, capacity) -> (best_value, quantities)
 - solve_fractional_knapsack(values, weights, capacity) -> (best_value, fractions)
+- solve_multi_dimensional_knapsack(values, usage_matrix, capacities)
+  -> (best_value, selected_indices)
 
 Design
 ------
@@ -35,6 +37,7 @@ __all__ = [
     "solve_bounded_knapsack",
     "solve_unbounded_knapsack",
     "solve_fractional_knapsack",
+    "solve_multi_dimensional_knapsack",
 ]
 
 
@@ -335,6 +338,104 @@ def solve_fractional_knapsack(
         remaining -= weight * fraction
 
     return float(objective), fractions
+
+
+def solve_multi_dimensional_knapsack(
+    values: List[float],
+    usage_matrix: List[List[float]],
+    capacities: List[float],
+) -> Tuple[float, List[int]]:
+    """Solve a multi-dimensional 0/1 knapsack problem exactly.
+
+    The model is:
+
+        max sum_i value_i * x_i
+        s.t. sum_i usage_{i,r} * x_i <= capacity_r   for every resource r
+             x_i in {0, 1}
+
+    The implementation uses depth-first branch-and-bound. A branch is discarded
+    as soon as one resource capacity is exceeded. Another branch is discarded
+    when even adding all remaining item values cannot improve the best incumbent
+    solution. This keeps the algorithm exact while avoiding a dense
+    multi-dimensional DP table, which would require discretizing continuous
+    capacities and usages.
+    """
+    capacities_float = [
+        _normalize_non_negative_float(capacity, "capacities")
+        for capacity in capacities
+    ]
+    if not capacities_float:
+        raise ValueError("capacities must contain at least one resource")
+
+    values_float = [
+        _normalize_non_negative_float(value, "values")
+        for value in values
+    ]
+    usage_rows = [list(row) for row in usage_matrix]
+    if len(values_float) != len(usage_rows):
+        raise ValueError("values and usage_matrix must have the same length.")
+
+    resource_count = len(capacities_float)
+    usage_float: List[List[float]] = []
+    for row in usage_rows:
+        if len(row) != resource_count:
+            raise ValueError("each usage row must match the number of capacities")
+        usage_float.append([
+            _normalize_non_negative_float(amount, "usage_matrix")
+            for amount in row
+        ])
+
+    n = len(values_float)
+    if n == 0:
+        return 0.0, []
+
+    suffix_values = [0.0] * (n + 1)
+    for index in range(n - 1, -1, -1):
+        suffix_values[index] = suffix_values[index + 1] + values_float[index]
+
+    best_value = 0.0
+    best_selected: List[int] = []
+
+    def can_fit(usage: List[float], item_index: int) -> bool:
+        return all(
+            usage[resource_index] + usage_float[item_index][resource_index]
+            <= capacities_float[resource_index]
+            for resource_index in range(resource_count)
+        )
+
+    def search(
+        index: int,
+        current_value: float,
+        current_usage: List[float],
+        selected: List[int],
+    ) -> None:
+        nonlocal best_value, best_selected
+
+        if current_value + suffix_values[index] <= best_value:
+            return
+
+        if index == n:
+            if current_value > best_value:
+                best_value = current_value
+                best_selected = list(selected)
+            return
+
+        if can_fit(current_usage, index):
+            next_usage = [
+                current_usage[resource_index] + usage_float[index][resource_index]
+                for resource_index in range(resource_count)
+            ]
+            search(
+                index + 1,
+                current_value + values_float[index],
+                next_usage,
+                selected + [index],
+            )
+
+        search(index + 1, current_value, current_usage, selected)
+
+    search(0, 0.0, [0.0] * resource_count, [])
+    return float(best_value), best_selected
 
 
 def _normalize_non_negative_int(value: object, label: str) -> int:
