@@ -1,6 +1,6 @@
 # src/optees/utility/knapsack_utils.py
 """
-0/1 Knapsack utilities.
+Knapsack utilities.
 
 Public API
 ----------
@@ -8,6 +8,7 @@ Public API
 - solve_bounded_knapsack(values, weights, max_quantities, capacity)
   -> (best_value, quantities)
 - solve_unbounded_knapsack(values, weights, capacity) -> (best_value, quantities)
+- solve_fractional_knapsack(values, weights, capacity) -> (best_value, fractions)
 
 Design
 ------
@@ -25,6 +26,7 @@ Caveats
 """
 
 from __future__ import annotations
+from math import isfinite
 from typing import List, Tuple
 
 
@@ -32,6 +34,7 @@ __all__ = [
     "solve_knapsack_01",
     "solve_bounded_knapsack",
     "solve_unbounded_knapsack",
+    "solve_fractional_knapsack",
 ]
 
 
@@ -277,6 +280,63 @@ def solve_unbounded_knapsack(
     return float(dp[capacity_int]), quantities
 
 
+def solve_fractional_knapsack(
+    values: List[float],
+    weights: List[float],
+    capacity: float,
+) -> Tuple[float, List[float]]:
+    """Solve the classic single-capacity fractional knapsack problem.
+
+    The model is:
+
+        max sum_i value_i * x_i
+        s.t. sum_i weight_i * x_i <= capacity
+             0 <= x_i <= 1
+
+    Because the decision variables are continuous fractions, the exchange
+    argument from operations research applies: an optimal solution takes items
+    in non-increasing value density ``value_i / weight_i`` and, if needed,
+    takes one final fractional item to exactly fill the remaining capacity.
+    """
+    if len(values) != len(weights):
+        raise ValueError("values and weights must have the same length.")
+
+    capacity_float = _normalize_non_negative_float(capacity, "capacity")
+    values_float = [
+        _normalize_non_negative_float(value, "values")
+        for value in values
+    ]
+    weights_float = [
+        _normalize_positive_float(weight, "weights")
+        for weight in weights
+    ]
+
+    n = len(values_float)
+    if n == 0:
+        return 0.0, []
+
+    fractions = [0.0] * n
+    objective = 0.0
+    remaining = capacity_float
+    ordered = sorted(
+        range(n),
+        key=lambda i: (-(values_float[i] / weights_float[i]), i),
+    )
+
+    for index in ordered:
+        if remaining <= 0:
+            break
+
+        weight = weights_float[index]
+        value = values_float[index]
+        fraction = 1.0 if weight <= remaining else remaining / weight
+        fractions[index] = fraction
+        objective += value * fraction
+        remaining -= weight * fraction
+
+    return float(objective), fractions
+
+
 def _normalize_non_negative_int(value: object, label: str) -> int:
     if isinstance(value, bool):
         raise ValueError(f"{label} must be a non-negative integer")
@@ -289,4 +349,28 @@ def _normalize_non_negative_int(value: object, label: str) -> int:
 
     if normalized < 0:
         raise ValueError(f"{label} must be a non-negative integer")
+    return normalized
+
+
+def _normalize_non_negative_float(value: object, label: str) -> float:
+    if isinstance(value, bool):
+        raise ValueError(f"{label} must be a finite non-negative number")
+    try:
+        normalized = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} must be a finite non-negative number") from exc
+    if not isfinite(normalized) or normalized < 0:
+        raise ValueError(f"{label} must be a finite non-negative number")
+    return normalized
+
+
+def _normalize_positive_float(value: object, label: str) -> float:
+    if isinstance(value, bool):
+        raise ValueError(f"{label} must be a finite positive number")
+    try:
+        normalized = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} must be a finite positive number") from exc
+    if not isfinite(normalized) or normalized <= 0:
+        raise ValueError(f"{label} must be a finite positive number")
     return normalized

@@ -3,6 +3,9 @@ from __future__ import annotations
 from optees.domain.entities.knapsack.bounded_item import BoundedKnapsackItem
 from optees.domain.entities.knapsack.bounded_solution import BoundedKnapsackSolution
 from optees.domain.entities.knapsack.fractional_item import FractionalKnapsackItem
+from optees.domain.entities.knapsack.fractional_solution import (
+    FractionalKnapsackSolution,
+)
 from optees.domain.entities.knapsack.item import KnapsackItem
 from optees.domain.entities.knapsack.multi_dimensional_item import (
     MultiDimensionalKnapsackItem,
@@ -19,6 +22,7 @@ __all__ = [
     "BoundedKnapsackItem",
     "BoundedKnapsackSolution",
     "FractionalKnapsackItem",
+    "FractionalKnapsackSolution",
     "MultiDimensionalKnapsackItem",
     "MultiDimensionalKnapsackResource",
     "UnboundedKnapsackItem",

@@ -3,6 +3,7 @@ import unittest
 
 from optees.utility.knapsack_utils import (
     solve_bounded_knapsack,
+    solve_fractional_knapsack,
     solve_knapsack_01,
     solve_unbounded_knapsack,
 )
@@ -155,6 +156,61 @@ class TestUnboundedKnapsack(unittest.TestCase):
         best, quantities = solve_unbounded_knapsack([5], [1], 2.0)
         self.assertEqual(best, 10.0)
         self.assertEqual(quantities, [2])
+
+
+class TestFractionalKnapsack(unittest.TestCase):
+    def test_classic_example_optimal_fractions(self):
+        # Greedy by density:
+        # A: 60/10 = 6, B: 100/20 = 5, C: 120/30 = 4.
+        # Capacity 50 takes A and B fully, then 2/3 of C.
+        best, fractions = solve_fractional_knapsack(
+            values=[60, 100, 120],
+            weights=[10, 20, 30],
+            capacity=50,
+        )
+
+        self.assertAlmostEqual(best, 240.0, places=9)
+        self.assertAlmostEqual(fractions[0], 1.0, places=9)
+        self.assertAlmostEqual(fractions[1], 1.0, places=9)
+        self.assertAlmostEqual(fractions[2], 2.0 / 3.0, places=9)
+
+    def test_ties_are_deterministic_by_input_order(self):
+        best, fractions = solve_fractional_knapsack(
+            values=[10, 20],
+            weights=[1, 2],
+            capacity=2,
+        )
+
+        self.assertAlmostEqual(best, 20.0, places=9)
+        self.assertEqual(fractions, [1.0, 0.5])
+
+    def test_zero_capacity_returns_zero_fractions(self):
+        best, fractions = solve_fractional_knapsack(
+            values=[10, 20],
+            weights=[1, 2],
+            capacity=0,
+        )
+
+        self.assertEqual(best, 0.0)
+        self.assertEqual(fractions, [0.0, 0.0])
+
+    def test_empty_problem(self):
+        best, fractions = solve_fractional_knapsack([], [], 5.5)
+
+        self.assertEqual(best, 0.0)
+        self.assertEqual(fractions, [])
+
+    def test_length_mismatch_raises(self):
+        with self.assertRaises(ValueError):
+            solve_fractional_knapsack([1, 2], [1], 10)
+
+    def test_non_positive_weight_raises(self):
+        with self.assertRaises(ValueError):
+            solve_fractional_knapsack([5], [0], 10)
+
+    def test_non_finite_capacity_raises(self):
+        with self.assertRaises(ValueError):
+            solve_fractional_knapsack([5], [1], float("inf"))
 
 
 if __name__ == "__main__":
