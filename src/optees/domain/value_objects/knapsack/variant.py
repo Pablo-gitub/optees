@@ -12,4 +12,10 @@ class KnapsackVariant(str, Enum):
 
     @staticmethod
     def implemented() -> set["KnapsackVariant"]:
-        return {KnapsackVariant.ZERO_ONE}
+        return {
+            KnapsackVariant.ZERO_ONE,
+            KnapsackVariant.BOUNDED,
+            KnapsackVariant.UNBOUNDED,
+            KnapsackVariant.FRACTIONAL,
+            KnapsackVariant.MULTI_DIMENSIONAL,
+        }

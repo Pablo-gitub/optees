@@ -117,7 +117,7 @@
     "header": {
       "title": "Knapsack",
       "section": "Problem setup",
-      "description": "Choose the knapsack variant, then describe items, capacities, and decision limits. The executable variants in this build are 0/1, Bounded, Unbounded, and Fractional; the switch prepares the UI for the next variants.",
+      "description": "Choose the knapsack variant, then describe items, capacities, and decision limits. The executable variants in this build are 0/1, Bounded, Unbounded, Fractional, and Multi-dimensional.",
       "buttons": {
         "example": "Example",
         "problem": "Problem description"
@@ -125,7 +125,7 @@
     },
     "variant": {
       "section": "Variant",
-      "hint": "Select the mathematical meaning of each decision variable. The 0/1, Bounded, Unbounded, and Fractional variants are implemented; the other modes define the next formulation panels.",
+      "hint": "Select the mathematical meaning of each decision variable. Each variant changes the domain of x_i and therefore the structure of the solved model.",
       "labels": {
         "zero_one": "0/1",
         "bounded": "Bounded",
@@ -145,15 +145,19 @@
         "bounded": "Each row adds a maximum quantity u_i. The solver chooses an integer quantity x_i between 0 and u_i to maximize total value within capacity.",
         "unbounded": "Each row describes an item type that can be selected in any non-negative integer quantity, limited only by capacity.",
         "fractional": "Each item can also be selected partially. The solver sorts by value/weight ratio and chooses fractions between 0 and 1.",
-        "multi_dimensional": "Next step: add a resource table with one capacity per dimension and item consumption columns for each resource."
+        "multi_dimensional": "Each item consumes several resources: weight, volume, time, budget, or other capacities. The solver chooses a 0/1 subset that satisfies every limit."
       }
     },
     "import": {
-      "burkardt_button": "Import Burkardt",
-      "burkardt_tooltip": "Import a Burkardt KNAPSACK_01 text instance",
-      "dialog_title": "Open Burkardt knapsack file",
+      "json_button": "Import JSON",
+      "json_tooltip": "Import a Knapsack problem in Optees JSON format",
+      "json_dialog_title": "Open Knapsack JSON problem",
+      "json_info_tooltip": "Knapsack JSON format information",
+      "json_info_title": "Knapsack JSON format",
+      "json_info_body": "The JSON file describes the problem variant, capacities, and items. Optees automatically selects the matching form panel.",
+      "json_info_html": "<h3>Main fields</h3><p>Use <code>version</code> = <code>1</code>, <code>problem_type</code> = <code>knapsack</code>, <code>variant</code>, and an <code>items</code> array. Accepted variants are <code>zero_one</code>, <code>bounded</code>, <code>unbounded</code>, <code>fractional</code>, and <code>multi_dimensional</code>.</p><h3>Single resource</h3><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"knapsack\",\n  \"variant\": \"bounded\",\n  \"capacity\": 7,\n  \"items\": [\n    {\"name\": \"A\", \"value\": 6, \"weight\": 2, \"max_quantity\": 3},\n    {\"name\": \"B\", \"value\": 10, \"weight\": 3, \"max_quantity\": 2}\n  ]\n}</pre><h3>Multi-dimensional</h3><p>Add <code>domain</code> to specify the quantity domain: <code>zero_one</code>, <code>bounded</code>, <code>unbounded</code>, or <code>fractional</code>. Each item uses a <code>usage</code> vector with the same length as the <code>resources</code> array.</p><pre>{\n  \"version\": \"1\",\n  \"variant\": \"multi_dimensional\",\n  \"domain\": \"fractional\",\n  \"resources\": [\n    {\"name\": \"weight\", \"capacity\": 10},\n    {\"name\": \"volume\", \"capacity\": 6}\n  ],\n  \"items\": [\n    {\"name\": \"A\", \"value\": 8, \"usage\": [4, 1.5], \"max_quantity\": 1},\n    {\"name\": \"B\", \"value\": 9, \"usage\": [5, 2], \"max_quantity\": \"inf\"}\n  ]\n}</pre><h3>Numeric rules</h3><p>For 0/1, bounded, and unbounded, weight and capacity must be non-negative integers. In fractional mode, weight and capacity may be decimal numbers. Use <code>inf</code> in upper limits when the domain allows it.</p>",
       "error_title": "Import error",
-      "error_body": "Could not load the Burkardt instance:\n{detail}"
+      "error_body": "Could not load the file:\n{detail}"
     },
     "capacity": {
       "section": "Capacity",
@@ -186,12 +190,66 @@
       "info_body": "Each row describes one item that can be selected at most once.",
       "info_html": "<h3>Decision variable</h3><p>For every item Optees creates a binary variable <code>x_i</code>: 1 means selected, 0 means excluded.</p><h3>Value</h3><p>The value is the contribution to the objective. Optees maximizes total selected value.</p><h3>Weight</h3><p>The weight consumes capacity and must be an integer in the current DP solver.</p>"
     },
+    "resources": {
+      "section": "Resources",
+      "hint": "Define one capacity for each problem dimension, such as weight, volume, time, or budget.",
+      "columns": {
+        "variable": "Res.",
+        "name": "Resource",
+        "capacity": "Capacity"
+      },
+      "name_placeholder": "Resource name",
+      "capacity_placeholder": "e.g. 10",
+      "add": "Add resource",
+      "remove": "Remove resource",
+      "info_tooltip": "Resource information",
+      "info_title": "Multi-dimensional resources",
+      "info_body": "Each resource adds an independent capacity constraint.",
+      "info_html": "<h3>Constraints</h3><p>For every resource r, the model enforces <code>sum usage_{i,r} x_i <= capacity_r</code>.</p><h3>Interpretation</h3><p>An item may have high value but consume too much weight, volume, or budget. A solution must satisfy all resources at the same time.</p>"
+    },
+    "multi_domain": {
+      "section": "Quantity domain",
+      "hint": "Choose what the variable x_i means in the multi-dimensional model.",
+      "labels": {
+        "zero_one": "0/1",
+        "bounded": "Bounded integer",
+        "unbounded": "Unbounded integer",
+        "fractional": "Fractional"
+      },
+      "descriptions": {
+        "zero_one": "Each item can be selected once or excluded: x_i ∈ {0, 1}.",
+        "bounded": "Each item can be selected an integer quantity up to a maximum limit: x_i ∈ {0, ..., u_i}.",
+        "unbounded": "Each item can be selected a non-negative integer quantity, with no explicit limit beyond resources.",
+        "fractional": "Each item can be selected as a continuous quantity. Blank limit means 1; use inf for no explicit upper bound."
+      }
+    },
+    "multi_items": {
+      "section": "Multi-dimensional items",
+      "hint": "Enter one row per item. Resource columns state how much the item consumes if selected.",
+      "columns": {
+        "variable": "Var.",
+        "name": "Item",
+        "value": "Value",
+        "quantity_limit": "Max limit"
+      },
+      "name_placeholder": "Item name",
+      "value_placeholder": "e.g. 10",
+      "quantity_limit_placeholder": "e.g. 3 or inf",
+      "usage_placeholder": "e.g. 2",
+      "add": "Add item",
+      "remove": "Remove item",
+      "info_tooltip": "Multi-dimensional item information",
+      "info_title": "Multi-dimensional items",
+      "info_body": "Each item has a binary variable and one usage vector, with one amount for every resource.",
+      "info_html": "<h3>Decision variable</h3><p><code>x_i = 1</code> means selected, <code>x_i = 0</code> excluded.</p><h3>Usage vector</h3><p>The item row contains the vector <code>(weight usage, volume usage, ...)</code>. The selection is feasible only when total usage of selected items stays below every capacity.</p>"
+    },
     "formula": {
       "section": "Mathematical model",
       "body": "max Σ valueᵢ xᵢ subject to Σ weightᵢ xᵢ ≤ capacity and xᵢ ∈ {0, 1}. The dynamic-programming solver is exact for this 0/1 model, but pseudo-polynomial in capacity.",
       "bounded_body": "max Σ valueᵢ xᵢ subject to Σ weightᵢ xᵢ ≤ capacity and xᵢ ∈ {0, 1, ..., uᵢ}. The solver tests admissible quantities for each item and reconstructs one optimal combination.",
       "unbounded_body": "max Σ valueᵢ xᵢ subject to Σ weightᵢ xᵢ ≤ capacity and xᵢ ∈ {0, 1, 2, ...}. The solver uses dynamic programming while allowing the same item to be reused multiple times.",
       "fractional_body": "max Σ valueᵢ xᵢ subject to Σ weightᵢ xᵢ ≤ capacity and 0 ≤ xᵢ ≤ 1. Since variables are continuous, greedy selection by value/weight density is exact.",
+      "multi_dimensional_body": "max Σ valueᵢ xᵢ subject to Σ usageᵢᵣ xᵢ ≤ capacityᵣ for every resource r. The domain of xᵢ depends on the choice above: binary, bounded integer, unbounded integer, or continuous fractional.",
       "info_tooltip": "Algorithm information",
       "info_title": "Dynamic programming",
       "info_body": "Optees solves the first Knapsack implementation with an exact dynamic-programming algorithm.",
@@ -205,7 +263,7 @@
     },
     "errors": {
       "invalid_title": "Invalid data",
-      "invalid_body": "Check capacity, values, weights, and maximum quantities. Integer variants require non-negative integer weights, capacity, and quantities; fractional weight must be positive."
+      "invalid_body": "Check capacity, values, weights, maximum quantities, and resource usage. Integer variants require non-negative integer weights, capacity, and quantities; fractional weight must be positive; multi-dimensional usage values must be non-negative numbers."
     },
     "sol": {
       "back": "Back",
@@ -214,6 +272,7 @@
       "empty": "No solution yet.",
       "status_line": "Status: <b>{status}</b> · best value: <b>{objective}</b>",
       "summary": "Total weight: {total_weight} / {capacity} · remaining capacity: {remaining} · selected items: {selected}",
+      "multi_summary": "Resource usage: {resources} · selected items: {selected}",
       "method": "Method: {method}",
       "message": "Method: {method} · {message}",
       "yes": "Yes",
@@ -221,9 +280,11 @@
       "charts": {
         "section": "Charts",
         "capacity_title": "Capacity usage",
+        "resource_title": "Resource usage",
         "items_title": "Value and weight by item",
         "capacity_text": "Used {used} of {capacity}; remaining {remaining}",
         "legend": "Blue = value, orange = weight; green outline = selected item",
+        "multi_legend": "Blue = value, orange = total resource usage; green outline = selected item",
         "no_data": "No chart data yet."
       },
       "columns": {
@@ -234,7 +295,8 @@
         "quantity": "Quantity",
         "fraction": "Fraction",
         "max_quantity": "Max quantity",
-        "ratio": "Value/weight"
+        "ratio": "Value/weight",
+        "value_usage": "Value/usage"
       }
     }
   },

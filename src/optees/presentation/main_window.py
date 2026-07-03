@@ -35,6 +35,9 @@ from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
 from optees.application.usecases.solve_bounded_knapsack_usecase import SolveBoundedKnapsackUseCase
 from optees.application.usecases.solve_fractional_knapsack_usecase import SolveFractionalKnapsackUseCase
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
+from optees.application.usecases.solve_multi_dimensional_knapsack_usecase import (
+    SolveMultiDimensionalKnapsackUseCase,
+)
 from optees.application.usecases.solve_unbounded_knapsack_usecase import SolveUnboundedKnapsackUseCase
 from optees.application.usecases.check_for_updates_usecase import CheckForUpdatesUseCase
 from optees.application.usecases.download_update_usecase import DownloadUpdateUseCase
@@ -43,6 +46,9 @@ from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
 from optees.data.adapters.knapsack.bounded_knapsack_solver_adapter import BoundedKnapsackSolverAdapter
 from optees.data.adapters.knapsack.fractional_knapsack_solver_adapter import FractionalKnapsackSolverAdapter
 from optees.data.adapters.knapsack.knapsack_solver_adapter import KnapsackSolverAdapter
+from optees.data.adapters.knapsack.multi_dimensional_knapsack_solver_adapter import (
+    MultiDimensionalKnapsackSolverAdapter,
+)
 from optees.data.adapters.knapsack.unbounded_knapsack_solver_adapter import UnboundedKnapsackSolverAdapter
 from optees.data.adapters.github.update_provider_adapter import GitHubUpdateProvider
 from optees.presentation.views.lp_solution_view.lp_solution_view import LPSolutionView
@@ -99,6 +105,14 @@ class MainWindow(QMainWindow):
             self.fractional_knapsack_solver_port,
         )
         self.knap_page.set_fractional_solve_usecase(self.solve_fractional_knapsack_uc)
+        self.multi_dimensional_knapsack_solver_port = MultiDimensionalKnapsackSolverAdapter()
+        self.solve_multi_dimensional_knapsack_uc = SolveMultiDimensionalKnapsackUseCase(
+            self.multi_dimensional_knapsack_solver_port,
+        )
+        self.knap_page.set_multi_dimensional_solve_usecase(
+            self.solve_multi_dimensional_knapsack_uc,
+        )
+        self.knap_page.set_multi_dimensional_milp_solve_usecase(self.solve_milp_uc)
         self.settings_page = SettingsView()
         self.lp_example_page = LPExampleView()
         self.lp_problem_page = LPProblemDescriptionView()

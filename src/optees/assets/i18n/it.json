@@ -117,7 +117,7 @@
     "header": {
       "title": "Knapsack",
       "section": "Formulazione del problema",
-      "description": "Scegli la variante di knapsack, poi descrivi oggetti, capacita' e limiti decisionali. Le varianti eseguibili in questa build sono 0/1, Bounded, Unbounded e Fractional; lo switch prepara la UI per le prossime formulazioni.",
+      "description": "Scegli la variante di knapsack, poi descrivi oggetti, capacita' e limiti decisionali. Le varianti eseguibili in questa build sono 0/1, Bounded, Unbounded, Fractional e Multi-dimensionale.",
       "buttons": {
         "example": "Esempio",
         "problem": "Descrizione problema"
@@ -125,7 +125,7 @@
     },
     "variant": {
       "section": "Variante",
-      "hint": "Seleziona il significato matematico di ogni variabile decisionale. Le varianti 0/1, Bounded, Unbounded e Fractional sono implementate; le altre modalita' definiscono i prossimi pannelli di formulazione.",
+      "hint": "Seleziona il significato matematico di ogni variabile decisionale. Ogni variante cambia il dominio di x_i e quindi la struttura del modello risolto.",
       "labels": {
         "zero_one": "0/1",
         "bounded": "Bounded",
@@ -145,15 +145,19 @@
         "bounded": "Ogni riga aggiunge una quantita' massima u_i. Il solver sceglie una quantita' intera x_i tra 0 e u_i per massimizzare il valore totale entro la capacita'.",
         "unbounded": "Ogni riga descrive un tipo di oggetto che puo' essere scelto in qualunque quantita' intera non negativa, limitata solo dalla capacita'.",
         "fractional": "Ogni oggetto puo' essere selezionato anche parzialmente. Il solver ordina per rapporto valore/peso e sceglie frazioni tra 0 e 1.",
-        "multi_dimensional": "Prossimo step: aggiungere una tabella risorse con una capacita' per dimensione e colonne di consumo per ogni risorsa."
+        "multi_dimensional": "Ogni oggetto consuma piu' risorse: peso, volume, tempo, budget o altre capacita'. Il solver sceglie un sottoinsieme 0/1 che rispetta tutti i limiti."
       }
     },
     "import": {
-      "burkardt_button": "Importa Burkardt",
-      "burkardt_tooltip": "Importa un'istanza testuale Burkardt KNAPSACK_01",
-      "dialog_title": "Apri file knapsack Burkardt",
+      "json_button": "Importa JSON",
+      "json_tooltip": "Importa un problema Knapsack in formato JSON Optees",
+      "json_dialog_title": "Apri problema Knapsack JSON",
+      "json_info_tooltip": "Informazioni sul formato JSON Knapsack",
+      "json_info_title": "Formato JSON Knapsack",
+      "json_info_body": "Il file JSON descrive la variante del problema, le capacita' e gli oggetti. Optees seleziona automaticamente il pannello corretto.",
+      "json_info_html": "<h3>Campi principali</h3><p>Usa <code>version</code> = <code>1</code>, <code>problem_type</code> = <code>knapsack</code>, <code>variant</code> e un array <code>items</code>. Le varianti ammesse sono <code>zero_one</code>, <code>bounded</code>, <code>unbounded</code>, <code>fractional</code> e <code>multi_dimensional</code>.</p><h3>Singola risorsa</h3><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"knapsack\",\n  \"variant\": \"bounded\",\n  \"capacity\": 7,\n  \"items\": [\n    {\"name\": \"A\", \"value\": 6, \"weight\": 2, \"max_quantity\": 3},\n    {\"name\": \"B\", \"value\": 10, \"weight\": 3, \"max_quantity\": 2}\n  ]\n}</pre><h3>Multi-dimensionale</h3><p>Aggiungi <code>domain</code> per specificare il dominio delle quantita': <code>zero_one</code>, <code>bounded</code>, <code>unbounded</code> o <code>fractional</code>. Ogni oggetto usa un vettore <code>usage</code> lungo quanto l'array <code>resources</code>.</p><pre>{\n  \"version\": \"1\",\n  \"variant\": \"multi_dimensional\",\n  \"domain\": \"fractional\",\n  \"resources\": [\n    {\"name\": \"peso\", \"capacity\": 10},\n    {\"name\": \"volume\", \"capacity\": 6}\n  ],\n  \"items\": [\n    {\"name\": \"A\", \"value\": 8, \"usage\": [4, 1.5], \"max_quantity\": 1},\n    {\"name\": \"B\", \"value\": 9, \"usage\": [5, 2], \"max_quantity\": \"inf\"}\n  ]\n}</pre><h3>Regole numeriche</h3><p>Per 0/1, bounded e unbounded, peso e capacita' devono essere interi non negativi. Nel fractional peso e capacita' possono essere decimali. Usa <code>inf</code> nei limiti superiori quando il dominio lo consente.</p>",
       "error_title": "Errore di importazione",
-      "error_body": "Impossibile caricare l'istanza Burkardt:\n{detail}"
+      "error_body": "Impossibile caricare il file:\n{detail}"
     },
     "capacity": {
       "section": "Capacita'",
@@ -186,12 +190,66 @@
       "info_body": "Ogni riga descrive un oggetto che puo' essere selezionato al massimo una volta.",
       "info_html": "<h3>Variabile decisionale</h3><p>Per ogni oggetto Optees crea una variabile binaria <code>x_i</code>: 1 significa scelto, 0 significa escluso.</p><h3>Valore</h3><p>Il valore e' il contributo all'obiettivo. Optees massimizza il valore totale selezionato.</p><h3>Peso</h3><p>Il peso consuma capacita' e deve essere intero nel solver DP attuale.</p>"
     },
+    "resources": {
+      "section": "Risorse",
+      "hint": "Definisci una capacita' per ogni dimensione del problema, ad esempio peso, volume, tempo o budget.",
+      "columns": {
+        "variable": "Ris.",
+        "name": "Risorsa",
+        "capacity": "Capacita'"
+      },
+      "name_placeholder": "Nome risorsa",
+      "capacity_placeholder": "es. 10",
+      "add": "Aggiungi risorsa",
+      "remove": "Rimuovi risorsa",
+      "info_tooltip": "Informazioni sulle risorse",
+      "info_title": "Risorse multi-dimensionali",
+      "info_body": "Ogni risorsa aggiunge un vincolo di capacita' indipendente.",
+      "info_html": "<h3>Vincoli</h3><p>Per ogni risorsa r il modello impone <code>sum uso_{i,r} x_i <= capacita'_r</code>.</p><h3>Interpretazione</h3><p>Un oggetto puo' avere valore alto ma consumare troppo peso, volume o budget. La soluzione deve rispettare tutte le risorse contemporaneamente.</p>"
+    },
+    "multi_domain": {
+      "section": "Dominio quantita'",
+      "hint": "Scegli il significato della variabile x_i nel modello multi-dimensionale.",
+      "labels": {
+        "zero_one": "0/1",
+        "bounded": "Intera limitata",
+        "unbounded": "Intera illimitata",
+        "fractional": "Frazionabile"
+      },
+      "descriptions": {
+        "zero_one": "Ogni oggetto puo' essere scelto una volta oppure escluso: x_i ∈ {0, 1}.",
+        "bounded": "Ogni oggetto puo' essere scelto in quantita' intera fino a un limite massimo: x_i ∈ {0, ..., u_i}.",
+        "unbounded": "Ogni oggetto puo' essere scelto in quantita' intera non negativa, senza limite esplicito oltre alle risorse.",
+        "fractional": "Ogni oggetto puo' essere scelto in quantita' continua. Con limite vuoto vale 1; usa inf per nessun limite superiore esplicito."
+      }
+    },
+    "multi_items": {
+      "section": "Oggetti multi-dimensionali",
+      "hint": "Inserisci una riga per ogni oggetto. Le colonne risorsa indicano quanto l'oggetto consuma se viene selezionato.",
+      "columns": {
+        "variable": "Var.",
+        "name": "Oggetto",
+        "value": "Valore",
+        "quantity_limit": "Limite max"
+      },
+      "name_placeholder": "Nome oggetto",
+      "value_placeholder": "es. 10",
+      "quantity_limit_placeholder": "es. 3 o inf",
+      "usage_placeholder": "es. 2",
+      "add": "Aggiungi oggetto",
+      "remove": "Rimuovi oggetto",
+      "info_tooltip": "Informazioni sugli oggetti multi-dimensionali",
+      "info_title": "Oggetti multi-dimensionali",
+      "info_body": "Ogni oggetto ha una variabile binaria e un vettore di consumi, uno per ogni risorsa.",
+      "info_html": "<h3>Variabile decisionale</h3><p><code>x_i = 1</code> significa oggetto scelto, <code>x_i = 0</code> escluso.</p><h3>Consumi</h3><p>La riga dell'oggetto contiene il vettore <code>(uso peso, uso volume, ...)</code>. La scelta e' ammissibile solo se la somma dei consumi degli oggetti scelti resta sotto ogni capacita'.</p>"
+    },
     "formula": {
       "section": "Modello matematico",
       "body": "max Σ valoreᵢ xᵢ soggetto a Σ pesoᵢ xᵢ ≤ capacita' e xᵢ ∈ {0, 1}. Il solver di programmazione dinamica e' esatto per questo modello 0/1, ma pseudo-polinomiale nella capacita'.",
       "bounded_body": "max Σ valoreᵢ xᵢ soggetto a Σ pesoᵢ xᵢ ≤ capacita' e xᵢ ∈ {0, 1, ..., uᵢ}. Il solver prova per ogni oggetto le quantita' ammissibili e ricostruisce una combinazione ottima.",
       "unbounded_body": "max Σ valoreᵢ xᵢ soggetto a Σ pesoᵢ xᵢ ≤ capacita' e xᵢ ∈ {0, 1, 2, ...}. Il solver usa programmazione dinamica consentendo di riutilizzare lo stesso oggetto piu' volte.",
       "fractional_body": "max Σ valoreᵢ xᵢ soggetto a Σ pesoᵢ xᵢ ≤ capacita' e 0 ≤ xᵢ ≤ 1. Poiche' le variabili sono continue, il greedy per densita' valore/peso e' esatto.",
+      "multi_dimensional_body": "max Σ valoreᵢ xᵢ soggetto a Σ usoᵢᵣ xᵢ ≤ capacita'ᵣ per ogni risorsa r. Il dominio di xᵢ dipende dalla scelta sopra: binario, intero limitato, intero illimitato o continuo frazionabile.",
       "info_tooltip": "Informazioni sull'algoritmo",
       "info_title": "Programmazione dinamica",
       "info_body": "Optees risolve la prima implementazione Knapsack con un algoritmo esatto di programmazione dinamica.",
@@ -205,7 +263,7 @@
     },
     "errors": {
       "invalid_title": "Dati non validi",
-      "invalid_body": "Controlla capacita', valori, pesi e quantita' massime. Nelle varianti intere pesi, capacita' e quantita' devono essere interi non negativi; nel fractional il peso deve essere positivo."
+      "invalid_body": "Controlla capacita', valori, pesi, quantita' massime e consumi delle risorse. Nelle varianti intere pesi, capacita' e quantita' devono essere interi non negativi; nel fractional il peso deve essere positivo; nel multi-dimensionale tutti i consumi devono essere numeri non negativi."
     },
     "sol": {
       "back": "Indietro",
@@ -214,6 +272,7 @@
       "empty": "Nessuna soluzione ancora calcolata.",
       "status_line": "Stato: <b>{status}</b> · valore migliore: <b>{objective}</b>",
       "summary": "Peso totale: {total_weight} / {capacity} · capacita' residua: {remaining} · oggetti selezionati: {selected}",
+      "multi_summary": "Risorse usate: {resources} · oggetti selezionati: {selected}",
       "method": "Metodo: {method}",
       "message": "Metodo: {method} · {message}",
       "yes": "Si",
@@ -221,9 +280,11 @@
       "charts": {
         "section": "Grafici",
         "capacity_title": "Uso capacita'",
+        "resource_title": "Uso risorse",
         "items_title": "Valore e peso per oggetto",
         "capacity_text": "Usato {used} di {capacity}; residuo {remaining}",
         "legend": "Blu = valore, arancione = peso; bordo verde = oggetto selezionato",
+        "multi_legend": "Blu = valore, arancione = consumo totale risorse; bordo verde = oggetto selezionato",
         "no_data": "Nessun dato grafico disponibile."
       },
       "columns": {
@@ -234,7 +295,8 @@
         "quantity": "Quantita'",
         "fraction": "Frazione",
         "max_quantity": "Quantita' max",
-        "ratio": "Valore/peso"
+        "ratio": "Valore/peso",
+        "value_usage": "Valore/consumo"
       }
     }
   },

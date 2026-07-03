@@ -1,20 +1,22 @@
-# 0/1 Knapsack Examples
+# Knapsack Examples
 
-The 0/1 knapsack problem is useful when you must choose a subset of items. Each
-item can be selected once or excluded.
+The Knapsack family is useful when you must choose items or item quantities in
+order to maximize value while respecting one or more capacities. The variants
+differ in the meaning of the decision variable `x_i`.
 
-The goal is:
-
-```text
-maximize total value
-without exceeding available capacity
-```
+| Variant | Meaning of `x_i` |
+|---|---|
+| 0/1 | item excluded or selected once |
+| Bounded | integer quantity with a maximum limit |
+| Unbounded | integer quantity with no explicit limit |
+| Fractional | continuous quantity or fraction |
+| Multi-dimensional | one or more resources: weight, volume, time, budget |
 
 ---
 
-## Example 1 - Teaching Instance
+## 1. 0/1 Knapsack - Item Selection
 
-Capacity is `5`. Available items are:
+Capacity is `5`.
 
 | Item | Value | Weight |
 |---|---:|---:|
@@ -41,86 +43,207 @@ x_B = 1
 x_C = 0
 ```
 
-Total weight:
+Total weight is `2 + 3 = 5`, total value is `3 + 4 = 7`.
 
-```text
-2 + 3 = 5
-```
-
-Total value:
-
-```text
-3 + 4 = 7
-```
-
-So the best choice is `A` and `B`.
+Use this variant when each item can be selected at most once: loading a van,
+selecting projects, choosing features under a budget.
 
 ---
 
-## Example 2 - Project Selection
+## 2. Bounded Knapsack - Limited Integer Quantities
 
-You have a budget of `10` weeks and must decide which projects to build.
+A warehouse must prepare a promotional kit. Each item has value, weight and a
+maximum available quantity.
 
-| Project | Expected value | Required weeks |
-|---|---:|---:|
-| Sales dashboard | 9 | 5 |
-| Report automation | 6 | 4 |
-| Customer portal | 12 | 8 |
-| Core refactor | 7 | 3 |
+| Item | Value | Weight | Max quantity |
+|---|---:|---:|---:|
+| Pen | 2 | 1 | 4 |
+| Mug | 8 | 3 | 2 |
+| Notebook | 5 | 2 | 3 |
 
-Each project is either selected or not selected:
-
-```text
-max z = 9 x_1 + 6 x_2 + 12 x_3 + 7 x_4
-
-subject to:
-  5 x_1 + 4 x_2 + 8 x_3 + 3 x_4 <= 10
-
-x_i in {0, 1}
-```
-
-The solver compares feasible project combinations and returns the one with the
-largest total value within the budget.
-
----
-
-## Example 3 - Van Loading
-
-A van can carry at most `15` kg.
-
-| Package | Profit | Weight |
-|---|---:|---:|
-| P1 | 20 | 4 |
-| P2 | 30 | 6 |
-| P3 | 35 | 7 |
-| P4 | 12 | 3 |
-| P5 | 3 | 1 |
+Capacity: `7`.
 
 Model:
 
 ```text
-max z = 20 x_1 + 30 x_2 + 35 x_3 + 12 x_4 + 3 x_5
+max z = 2 x_1 + 8 x_2 + 5 x_3
 
 subject to:
-  4 x_1 + 6 x_2 + 7 x_3 + 3 x_4 + x_5 <= 15
+  1 x_1 + 3 x_2 + 2 x_3 <= 7
+
+x_1 in {0, 1, 2, 3, 4}
+x_2 in {0, 1, 2}
+x_3 in {0, 1, 2, 3}
+```
+
+One feasible solution is:
+
+```text
+x_1 = 1
+x_2 = 2
+x_3 = 0
+
+weight = 1 + 2*3 = 7
+value = 2 + 2*8 = 18
+```
+
+Use this variant when several copies of the same type may be selected, but
+availability is limited.
+
+---
+
+## 3. Unbounded Knapsack - Repeatable Integer Quantities
+
+An application fills a cache with repeatable block types.
+
+| Block | Value | Weight |
+|---|---:|---:|
+| A | 3 | 1 |
+| B | 5 | 3 |
+| C | 9 | 4 |
+
+Capacity: `7`.
+
+Model:
+
+```text
+max z = 3 x_A + 5 x_B + 9 x_C
+
+subject to:
+  1 x_A + 3 x_B + 4 x_C <= 7
+
+x_A, x_B, x_C in {0, 1, 2, ...}
+```
+
+The solver can reuse the same block type several times, limited only by
+capacity.
+
+Use this variant for repeatable item types: standard lots, material cuts,
+replicable packages.
+
+---
+
+## 4. Fractional Knapsack - Divisible Items
+
+Suppose you have divisible raw materials.
+
+| Material | Value | Weight |
+|---|---:|---:|
+| A | 60 | 10 |
+| B | 100 | 20 |
+| C | 120 | 30 |
+
+Capacity: `50`.
+
+Model:
+
+```text
+max z = 60 x_A + 100 x_B + 120 x_C
+
+subject to:
+  10 x_A + 20 x_B + 30 x_C <= 50
+
+0 <= x_A, x_B, x_C <= 1
+```
+
+For the single-capacity fractional case, value/weight density is optimal:
+
+```text
+A: 60 / 10 = 6
+B: 100 / 20 = 5
+C: 120 / 30 = 4
+```
+
+The solver takes all of `A`, all of `B`, and part of `C`:
+
+```text
+x_A = 1
+x_B = 1
+x_C = 2/3
+
+value = 60 + 100 + 80 = 240
+```
+
+Use this variant when items are truly divisible: liquids, raw materials,
+financial allocation, allocable time.
+
+---
+
+## 5. Multi-dimensional 0/1 - Several Resources
+
+Each item consumes more than one resource. For example weight and volume.
+
+| Item | Value | Weight | Volume |
+|---|---:|---:|---:|
+| A | 8 | 4 | 1.5 |
+| B | 9 | 5 | 2 |
+| C | 14 | 6 | 4.5 |
+| D | 7 | 3 | 2 |
+
+Capacities:
+
+```text
+weight <= 10
+volume <= 6
+```
+
+Model:
+
+```text
+max z = 8 x_A + 9 x_B + 14 x_C + 7 x_D
+
+subject to:
+  4 x_A + 5 x_B + 6 x_C + 3 x_D <= 10
+  1.5 x_A + 2 x_B + 4.5 x_C + 2 x_D <= 6
 
 x_i in {0, 1}
 ```
 
-The best solution is not necessarily "take the highest value item first". The
-value/weight ratio helps intuition, but the exact problem depends on the full
-combination of weights.
+The solution must satisfy both capacities. A set may fit by weight and violate
+volume, so a single resource is not enough.
 
 ---
 
-## How to Use It in Optees
+## 6. Multi-dimensional with Quantities
 
-1. Set the maximum capacity.
-2. Add one row per item.
-3. Enter item value.
-4. Enter integer item weight.
+Inside the multi-dimensional variant you can change the domain of `x_i`.
+
+### Bounded Integer
+
+```text
+x_i in {0, ..., u_i}
+```
+
+Example: choose how many boxes of each product to load, with stock limits.
+
+### Unbounded Integer
+
+```text
+x_i in {0, 1, 2, ...}
+```
+
+Example: choose how many standard lots to produce, limited only by machine time
+and raw material.
+
+### Fractional
+
+```text
+0 <= x_i <= u_i
+```
+
+Example: choose kilograms of ingredients with weight, volume and budget
+constraints. With several resources, the value/weight greedy rule is no longer
+enough: the model becomes a continuous LP.
+
+---
+
+## How to Use These Models in Optees
+
+1. Choose the Knapsack variant.
+2. Choose the domain when using Multi-dimensional.
+3. Enter capacities, resources and items.
+4. Enter maximum limits when needed.
 5. Click `Optimize knapsack`.
 
-The solution page shows selected items, total value, total weight and remaining
-capacity.
-
+The solution page shows optimal value, selected items or quantities, resource
+usage and remaining capacities.

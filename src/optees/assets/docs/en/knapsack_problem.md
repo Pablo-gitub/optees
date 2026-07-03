@@ -1,39 +1,47 @@
-# 0/1 Knapsack - Problem Description
+# Knapsack - Problem Description
 
-The 0/1 knapsack problem is a classic operations research model. You have a
-limited capacity and must decide which items to include.
-
-The defining rule is:
+Knapsack is a family of optimization models where limited resources must be
+allocated by selecting items or item quantities. The common structure is:
 
 ```text
-each item is selected or excluded
+maximize value
+subject to one or more capacities
 ```
 
-You cannot take 30% of an item. That is the `0/1` part.
+The variants differ in the domain of the decision variables.
 
 ---
 
-## Mathematical Form
+## General Form
 
 For each item `i`, you know:
 
 | Symbol | Meaning |
 |---|---|
-| `v_i` | item value |
-| `w_i` | item weight |
-| `C` | maximum capacity |
+| `v_i` | unit value |
+| `w_i` | single-resource consumption |
+| `a_{i,r}` | consumption of resource `r` in the multi-dimensional case |
+| `C` | single capacity |
+| `C_r` | capacity of resource `r` |
 
-Introduce a binary variable:
+The variable `x_i` states how much of item `i` is selected. Its domain depends
+on the variant:
+
+| Variant | Domain |
+|---|---|
+| 0/1 | `x_i in {0, 1}` |
+| Bounded | `x_i in {0, ..., u_i}` |
+| Unbounded | `x_i in {0, 1, 2, ...}` |
+| Fractional | `0 <= x_i <= 1` or `0 <= x_i <= u_i` |
+
+---
+
+## 0/1 Knapsack
+
+The 0/1 model is:
 
 ```text
-x_i = 1  item i is selected
-x_i = 0  item i is excluded
-```
-
-The model is:
-
-```text
-max z = sum_i v_i x_i
+max sum_i v_i x_i
 
 subject to:
   sum_i w_i x_i <= C
@@ -41,51 +49,19 @@ subject to:
 x_i in {0, 1}
 ```
 
-The objective maximizes selected value. The constraint keeps total selected
-weight within capacity.
+Each item enters entirely or not at all. You cannot take 30% of an item. This
+variant fits project selection, package loading and feature selection under a
+budget.
 
----
+### Algorithm
 
-## Why Value/Weight Sorting Is Not Enough
-
-Sorting by `value / weight` is optimal for fractional knapsack, where fractions
-of items are allowed. It is not guaranteed optimal for 0/1 knapsack.
-
-In the 0/1 model, an item enters completely or does not enter at all, so the
-best solution depends on how weights combine.
-
-Example:
+Optees uses exact dynamic programming:
 
 ```text
-capacity = 10
-
-A: value 60, weight 10
-B: value 35, weight 6
-C: value 30, weight 4
+dp[i][c] = best value using the first i items and capacity c
 ```
 
-The combination `B + C` has weight 10 and value 65, so it beats `A`.
-
----
-
-## Algorithm Implemented in Optees
-
-The first implementation uses exact dynamic programming.
-
-It builds a table:
-
-```text
-dp[i][c]
-```
-
-where:
-
-- `i` is the number of items considered;
-- `c` is a capacity from `0` to `C`;
-- `dp[i][c]` is the best value reachable with the first `i` items and capacity
-  `c`.
-
-For each item there are two choices:
+For each item, it compares:
 
 ```text
 1. exclude the item
@@ -101,47 +77,167 @@ dp[i][c] = max(
 )
 ```
 
-The second option is available only when `w_i <= c`.
-
-At the end, the optimal value is:
-
-```text
-dp[n][C]
-```
-
-Optees then reconstructs the selected items by walking backward through the
-table.
-
----
-
-## Complexity
-
-Dynamic programming is exact, but its complexity is:
+The complexity is pseudo-polynomial:
 
 ```text
 time  O(n * C)
 space O(n * C)
 ```
 
-This is pseudo-polynomial complexity: it depends on the numeric value of
-capacity, not only on the number of digits used to write it.
+---
 
-For this reason, Optees applies a practical limit to the DP table size. If an
-instance is too large for this implementation, the solution is reported as
-`NotSolved` with a diagnostic message.
+## Bounded Knapsack
+
+Bounded knapsack allows several copies of an item, up to a maximum limit:
+
+```text
+max sum_i v_i x_i
+
+subject to:
+  sum_i w_i x_i <= C
+
+x_i in {0, 1, ..., u_i}
+```
+
+The limit `u_i` can represent stock, maximum lots or an accepted upper quantity.
+
+### Algorithm
+
+Optees uses dynamic programming and tests every admissible quantity from `0` to
+`u_i` for each item. It is exact for integer weights and capacity, but can grow
+quickly when capacities or limits are large.
 
 ---
 
-## Relationship with MILP
+## Unbounded Knapsack
 
-0/1 knapsack is also a special MILP:
+In unbounded knapsack each item represents a repeatable type:
 
 ```text
-max v^T x
-subject to w^T x <= C
+x_i in {0, 1, 2, ...}
+```
+
+The model is:
+
+```text
+max sum_i v_i x_i
+
+subject to:
+  sum_i w_i x_i <= C
+
+x_i non-negative integer
+```
+
+It is useful for standard lots, repeatable material cuts and replicable
+packages.
+
+### Algorithm
+
+Optees uses dynamic programming while allowing the same item type to be reused.
+The solver is exact for integer weights and capacity.
+
+---
+
+## Fractional Knapsack
+
+Fractional knapsack allows a fraction of each item:
+
+```text
+0 <= x_i <= 1
+```
+
+The model is:
+
+```text
+max sum_i v_i x_i
+
+subject to:
+  sum_i w_i x_i <= C
+  0 <= x_i <= 1
+```
+
+In the classic single-resource case, sorting by density `v_i / w_i` is optimal:
+take the highest density first and fill the remaining capacity.
+
+This property does not automatically hold when there are several resources.
+
+---
+
+## Multi-dimensional Knapsack
+
+In multi-dimensional knapsack, every item consumes a vector of resources:
+
+```text
+max sum_i v_i x_i
+
+subject to:
+  sum_i a_{i,r} x_i <= C_r    for every resource r
+```
+
+Examples of resources:
+
+- weight;
+- volume;
+- machine hours;
+- budget;
+- energy;
+- memory.
+
+The 0/1 version uses:
+
+```text
 x_i in {0, 1}
 ```
 
-A MILP solver can solve it, but a dedicated Knapsack view is faster and clearer
-when the problem is exactly: items, values, weights and capacity.
+Optees solves it with a dedicated branch-and-bound: it explores binary choices,
+prunes branches that violate a resource and keeps the best feasible solution.
 
+---
+
+## Multi-dimensional with Variable Domain
+
+In the Multi-dimensional view you can choose the quantity domain:
+
+| Domain | Model |
+|---|---|
+| 0/1 | `x_i in {0, 1}` |
+| Bounded integer | `x_i in {0, ..., u_i}` |
+| Unbounded integer | `x_i integer, x_i >= 0` |
+| Fractional | `x_i continuous, 0 <= x_i <= u_i` |
+
+Integer variants are mapped to a MILP. The fractional variant is mapped to a
+continuous linear model. This matters: with several resources, value/weight
+greedy is not enough because there is no single notion of "weight".
+
+---
+
+## Relationship with MILP and LP
+
+Many Knapsack variants are special cases of LP or MILP:
+
+```text
+max v^T x
+subject to A x <= b
+x_i binary, integer or continuous
+```
+
+The Knapsack view is more didactic because it uses the language of the problem:
+items, values, capacities, resources and quantities. The MILP view remains more
+general when you need arbitrary constraints outside the Knapsack structure.
+
+---
+
+## Reading the Solution
+
+| Field | Meaning |
+|---|---|
+| Status | `Optimal` when the solution is proven optimal |
+| Best value | total value of the solution |
+| Selected | item included in the 0/1 case |
+| Quantity | number of copies or continuous quantity |
+| Fraction | selected share in single-resource fractional knapsack |
+| Resource usage | total consumption of each capacity |
+| Remaining | unused capacity |
+
+If status is `Optimal`, the displayed solution is the best possible solution for
+the model entered.

@@ -16,6 +16,9 @@ from optees.domain.entities.knapsack.multi_dimensional_resource import (
 from optees.domain.entities.knapsack.multi_dimensional_solution import (
     MultiDimensionalKnapsackSolution,
 )
+from optees.domain.entities.knapsack.multi_dimensional_quantity_solution import (
+    MultiDimensionalQuantityKnapsackSolution,
+)
 from optees.domain.entities.knapsack.solution import KnapsackSolution
 from optees.domain.entities.knapsack.unbounded_item import UnboundedKnapsackItem
 from optees.domain.entities.knapsack.unbounded_solution import UnboundedKnapsackSolution
@@ -29,6 +32,7 @@ __all__ = [
     "MultiDimensionalKnapsackItem",
     "MultiDimensionalKnapsackResource",
     "MultiDimensionalKnapsackSolution",
+    "MultiDimensionalQuantityKnapsackSolution",
     "UnboundedKnapsackItem",
     "UnboundedKnapsackSolution",
     "KnapsackSolution",

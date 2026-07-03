@@ -56,9 +56,32 @@ class _CapacityUsageWidget(QWidget):
         title_font.setBold(True)
         title_font.setPointSize(11)
         painter.setFont(title_font)
-        painter.drawText(rect.left(), rect.top(), rect.width(), 22, Qt.AlignLeft, S.t("knapsack.sol.charts.capacity_title"))
+        title_key = (
+            "knapsack.sol.charts.resource_title"
+            if self._problem is not None
+            and self._solution is not None
+            and hasattr(self._problem, "resources")
+            and hasattr(self._solution, "resource_usage_totals")
+            else "knapsack.sol.charts.capacity_title"
+        )
+        painter.drawText(rect.left(), rect.top(), rect.width(), 22, Qt.AlignLeft, S.t(title_key))
 
         if self._problem is None or self._solution is None:
+            painter.setPen(muted)
+            painter.drawText(rect, Qt.AlignCenter, S.t("knapsack.sol.charts.no_data"))
+            return
+
+        if hasattr(self._problem, "resources") and hasattr(
+            self._solution,
+            "resource_usage_totals",
+        ):
+            self._paint_resource_usage(painter, rect, fg, muted, used_color, remaining_color)
+            return
+
+        if not hasattr(self._problem, "capacity") or not hasattr(
+            self._solution,
+            "total_weight",
+        ):
             painter.setPen(muted)
             painter.drawText(rect, Qt.AlignCenter, S.t("knapsack.sol.charts.no_data"))
             return
@@ -92,6 +115,56 @@ class _CapacityUsageWidget(QWidget):
                 remaining=_fmt(self._solution.remaining_capacity),
             ),
         )
+
+    def _paint_resource_usage(
+        self,
+        painter: QPainter,
+        rect,
+        fg: QColor,
+        muted: QColor,
+        used_color: QColor,
+        remaining_color: QColor,
+    ) -> None:
+        resources = list(getattr(self._problem, "resources", ()))
+        usages = list(getattr(self._solution, "resource_usage_totals", ()))
+        remaining = list(getattr(self._solution, "remaining_capacities", ()))
+        if not resources:
+            painter.setPen(muted)
+            painter.drawText(rect, Qt.AlignCenter, S.t("knapsack.sol.charts.no_data"))
+            return
+
+        painter.setFont(QFont())
+        bar_height = 14
+        row_height = 34
+        top = rect.top() + 36
+        for index, resource in enumerate(resources):
+            if top + index * row_height + row_height > rect.bottom():
+                break
+            capacity = max(float(resource.capacity), 0.0)
+            used = max(float(usages[index] if index < len(usages) else 0.0), 0.0)
+            left = float(remaining[index] if index < len(remaining) else capacity - used)
+            ratio = 0.0 if capacity <= 0 else min(used / capacity, 1.0)
+            y = top + index * row_height
+
+            painter.setPen(fg)
+            painter.drawText(
+                rect.left(),
+                y,
+                rect.width(),
+                16,
+                Qt.AlignLeft,
+                f"{resource.name}: {_fmt(used)} / {_fmt(capacity)}; {_fmt(left)}",
+            )
+
+            bar = QRectF(rect.left(), y + 18, rect.width(), bar_height)
+            painter.setPen(QPen(muted, 1))
+            painter.setBrush(remaining_color)
+            painter.drawRoundedRect(bar, 4, 4)
+            if ratio > 0:
+                used_bar = QRectF(bar.left(), bar.top(), bar.width() * ratio, bar.height())
+                painter.setPen(Qt.NoPen)
+                painter.setBrush(used_color)
+                painter.drawRoundedRect(used_bar, 4, 4)
 
 
 class _ItemBarsWidget(QWidget):
@@ -140,7 +213,8 @@ class _ItemBarsWidget(QWidget):
         items = list(self._problem.items)
         selected = set(self._solution.selected_indices)
         max_value = max([item.value for item in items] + [1.0])
-        max_weight = max([item.weight for item in items] + [1])
+        weight_metrics = [_resource_metric(item) for item in items]
+        max_weight = max(weight_metrics + [1.0])
 
         chart = rect.adjusted(0, 46, 0, -34)
         painter.setPen(QPen(muted, 1))
@@ -153,7 +227,7 @@ class _ItemBarsWidget(QWidget):
         for index, item in enumerate(items):
             cx = chart.left() + group_w * index + group_w / 2
             value_h = 0.0 if max_value <= 0 else chart.height() * (item.value / max_value)
-            weight_h = 0.0 if max_weight <= 0 else chart.height() * (item.weight / max_weight)
+            weight_h = 0.0 if max_weight <= 0 else chart.height() * (weight_metrics[index] / max_weight)
 
             value_rect = QRectF(cx - bar_w - gap / 2, chart.bottom() - value_h, bar_w, value_h)
             weight_rect = QRectF(cx + gap / 2, chart.bottom() - weight_h, bar_w, weight_h)
@@ -196,13 +270,18 @@ class _ItemBarsWidget(QWidget):
             )
 
         painter.setPen(fg)
+        legend_key = (
+            "knapsack.sol.charts.multi_legend"
+            if any(hasattr(item, "resource_usage") for item in items)
+            else "knapsack.sol.charts.legend"
+        )
         painter.drawText(
             rect.left(),
             rect.bottom() - 18,
             rect.width(),
             18,
             Qt.AlignLeft,
-            S.t("knapsack.sol.charts.legend"),
+            S.t(legend_key),
         )
 
 
@@ -323,6 +402,16 @@ class KnapsackSolutionView(QWidget):
         self.item_bars.set_data(self._problem, self._solution)
         has_quantities = self._solution is not None and hasattr(self._solution, "quantities")
         has_fractions = self._solution is not None and hasattr(self._solution, "fractions")
+        has_resource_usage = (
+            self._problem is not None
+            and bool(getattr(self._problem, "items", ()))
+            and hasattr(getattr(self._problem, "items")[0], "resource_usage")
+        )
+        resource_names = (
+            list(self._problem.resource_names())
+            if has_resource_usage and hasattr(self._problem, "resource_names")
+            else []
+        )
         has_max_quantity = (
             self._problem is not None
             and bool(getattr(self._problem, "items", ()))
@@ -337,12 +426,19 @@ class KnapsackSolutionView(QWidget):
             [
                 S.t("knapsack.sol.columns.item"),
                 S.t("knapsack.sol.columns.value"),
-                S.t("knapsack.sol.columns.weight"),
             ]
         )
+        if has_resource_usage:
+            headers.extend(resource_names)
+        else:
+            headers.append(S.t("knapsack.sol.columns.weight"))
         if has_max_quantity:
             headers.append(S.t("knapsack.sol.columns.max_quantity"))
-        headers.append(S.t("knapsack.sol.columns.ratio"))
+        headers.append(
+            S.t("knapsack.sol.columns.value_usage")
+            if has_resource_usage
+            else S.t("knapsack.sol.columns.ratio")
+        )
         self._model.setHorizontalHeaderLabels(headers)
 
         if self._solution is None:
@@ -361,16 +457,30 @@ class KnapsackSolutionView(QWidget):
             )
         )
 
-        capacity = self._problem.capacity if self._problem is not None else None
-        self.summary_line.setText(
-            S.t(
-                "knapsack.sol.summary",
-                total_weight=self._solution.total_weight,
-                capacity=_fmt(capacity),
-                remaining=_fmt(self._solution.remaining_capacity),
-                selected=len(self._solution.selected_indices),
+        if hasattr(self._solution, "resource_usage_totals"):
+            resources_text = self._format_resource_summary()
+            self.summary_line.setText(
+                S.t(
+                    "knapsack.sol.multi_summary",
+                    resources=resources_text,
+                    selected=len(self._solution.selected_indices),
+                )
             )
-        )
+        else:
+            capacity = (
+                self._problem.capacity
+                if self._problem is not None and hasattr(self._problem, "capacity")
+                else None
+            )
+            self.summary_line.setText(
+                S.t(
+                    "knapsack.sol.summary",
+                    total_weight=_fmt(self._solution.total_weight),
+                    capacity=_fmt(capacity),
+                    remaining=_fmt(self._solution.remaining_capacity),
+                    selected=len(self._solution.selected_indices),
+                )
+            )
 
         message = self._solution.diagnostics.message
         method = self._solution.diagnostics.method
@@ -388,7 +498,8 @@ class KnapsackSolutionView(QWidget):
         quantities = getattr(self._solution, "quantities", None)
         fractions = getattr(self._solution, "fractions", None)
         for index, item in enumerate(self._problem.items):
-            ratio = None if item.weight == 0 else item.value / item.weight
+            metric = _resource_metric(item)
+            ratio = None if metric == 0 else item.value / metric
             row = [
                 QStandardItem(S.t("knapsack.sol.yes") if index in selected else S.t("knapsack.sol.no")),
             ]
@@ -402,9 +513,13 @@ class KnapsackSolutionView(QWidget):
                 [
                     QStandardItem(item.name),
                     QStandardItem(_fmt(item.value)),
-                    QStandardItem(str(item.weight)),
                 ]
             )
+            if has_resource_usage:
+                for amount in item.resource_usage:
+                    row.append(QStandardItem(_fmt(amount)))
+            else:
+                row.append(QStandardItem(str(item.weight)))
             if has_max_quantity:
                 row.append(QStandardItem(str(getattr(item, "max_quantity", ""))))
             row.append(QStandardItem(_fmt(ratio)))
@@ -418,6 +533,21 @@ class KnapsackSolutionView(QWidget):
                     cell.setFont(font)
             self._model.appendRow(row)
 
+    def _format_resource_summary(self) -> str:
+        if self._problem is None or self._solution is None:
+            return "-"
+        resources = list(getattr(self._problem, "resources", ()))
+        usages = list(getattr(self._solution, "resource_usage_totals", ()))
+        remaining = list(getattr(self._solution, "remaining_capacities", ()))
+        chunks = []
+        for index, resource in enumerate(resources):
+            used = usages[index] if index < len(usages) else 0.0
+            left = remaining[index] if index < len(remaining) else resource.capacity - used
+            chunks.append(
+                f"{resource.name} {_fmt(used)}/{_fmt(resource.capacity)} ({_fmt(left)})"
+            )
+        return "; ".join(chunks) if chunks else "-"
+
 
 def _fmt(value: object) -> str:
     if value is None:
@@ -426,3 +556,11 @@ def _fmt(value: object) -> str:
         return f"{float(value):.6g}"
     except (TypeError, ValueError):
         return str(value)
+
+
+def _resource_metric(item: object) -> float:
+    if hasattr(item, "weight"):
+        return float(getattr(item, "weight"))
+    if hasattr(item, "resource_usage"):
+        return float(sum(getattr(item, "resource_usage")))
+    return 0.0
