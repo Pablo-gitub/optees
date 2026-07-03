@@ -25,7 +25,9 @@ from PySide6.QtWidgets import (
 
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.domain.entities.knapsack.bounded_item import BoundedKnapsackItem
 from optees.domain.entities.knapsack.item import KnapsackItem
+from optees.domain.models.knapsack.bounded_knapsack_model import BoundedKnapsackModel
 from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 from optees.domain.value_objects.knapsack.variant import KnapsackVariant
 from optees.presentation.controllers.knapsack_controller import KnapsackController
@@ -97,17 +99,37 @@ def _clear_layout(layout: QVBoxLayout) -> None:
             widget.deleteLater()
 
 
+_ITEM_INDEX_WIDTH = 44
+_ITEM_NUMERIC_COLUMN_WIDTH = 130
+_ITEM_REMOVE_BUTTON_WIDTH = 28
+
+
+def _item_var_name(index: int) -> str:
+    return f"X{index + 1}"
+
+
+def _is_default_item(item: KnapsackItem, index: int) -> bool:
+    return (
+        item.name == f"Item {index + 1}"
+        and float(item.value) == 0.0
+        and int(item.weight) == 0
+    )
+
+
 class _ItemRow(QWidget):
     remove_requested = Signal(int)
     name_changed = Signal(int, str)
     value_changed = Signal(int, float)
     weight_changed = Signal(int, int)
+    max_quantity_changed = Signal(int, int)
 
     def __init__(
         self,
         *,
         index: int,
         item: KnapsackItem,
+        max_quantity: int = 1,
+        show_max_quantity: bool = False,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
@@ -117,26 +139,35 @@ class _ItemRow(QWidget):
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(8)
 
-        self.lbl_index = QLabel(str(index + 1))
-        self.lbl_index.setMinimumWidth(34)
+        is_default_item = _is_default_item(item, index)
 
-        self.edit_name = QLineEdit(item.name)
+        self.lbl_index = QLabel(_item_var_name(index))
+        self.lbl_index.setFixedWidth(_ITEM_INDEX_WIDTH)
+
+        self.edit_name = QLineEdit("" if is_default_item else item.name)
         self.edit_name.setObjectName("knapsackItemName")
         self.edit_name.setFixedHeight(28)
         self.edit_name.setMinimumWidth(170)
         self.edit_name.editingFinished.connect(self._emit_name)
 
-        self.edit_value = QLineEdit(_fmt_number(item.value))
+        self.edit_value = QLineEdit("" if is_default_item else _fmt_number(item.value))
         self.edit_value.setObjectName("knapsackItemValue")
         self.edit_value.setFixedHeight(28)
-        self.edit_value.setMaximumWidth(130)
+        self.edit_value.setFixedWidth(_ITEM_NUMERIC_COLUMN_WIDTH)
         self.edit_value.editingFinished.connect(self._emit_value)
 
-        self.edit_weight = QLineEdit(str(item.weight))
+        self.edit_weight = QLineEdit("" if is_default_item else str(item.weight))
         self.edit_weight.setObjectName("knapsackItemWeight")
         self.edit_weight.setFixedHeight(28)
-        self.edit_weight.setMaximumWidth(130)
+        self.edit_weight.setFixedWidth(_ITEM_NUMERIC_COLUMN_WIDTH)
         self.edit_weight.editingFinished.connect(self._emit_weight)
+
+        self.edit_max_quantity = QLineEdit("" if max_quantity == 1 else str(max_quantity))
+        self.edit_max_quantity.setObjectName("knapsackItemMaxQuantity")
+        self.edit_max_quantity.setFixedHeight(28)
+        self.edit_max_quantity.setFixedWidth(_ITEM_NUMERIC_COLUMN_WIDTH)
+        self.edit_max_quantity.editingFinished.connect(self._emit_max_quantity)
+        self.edit_max_quantity.setVisible(show_max_quantity)
 
         self.btn_remove = QToolButton()
         icon = QIcon.fromTheme("edit-delete")
@@ -145,26 +176,31 @@ class _ItemRow(QWidget):
         else:
             self.btn_remove.setText("x")
         self.btn_remove.setAutoRaise(True)
-        self.btn_remove.setFixedSize(28, 28)
+        self.btn_remove.setFixedSize(_ITEM_REMOVE_BUTTON_WIDTH, 28)
         self.btn_remove.clicked.connect(lambda: self.remove_requested.emit(self._index))
 
         row.addWidget(self.lbl_index)
         row.addWidget(self.edit_name, 1)
         row.addWidget(self.edit_value)
         row.addWidget(self.edit_weight)
+        row.addWidget(self.edit_max_quantity)
         row.addWidget(self.btn_remove)
 
         self.refresh_strings()
 
     def set_index(self, index: int) -> None:
         self._index = index
-        self.lbl_index.setText(str(index + 1))
+        self.lbl_index.setText(_item_var_name(index))
 
     def refresh_strings(self) -> None:
         self.edit_name.setPlaceholderText(S.t("knapsack.items.name_placeholder"))
         self.edit_value.setPlaceholderText(S.t("knapsack.items.value_placeholder"))
         self.edit_weight.setPlaceholderText(S.t("knapsack.items.weight_placeholder"))
+        self.edit_max_quantity.setPlaceholderText(S.t("knapsack.items.max_quantity_placeholder"))
         self.btn_remove.setToolTip(S.t("knapsack.items.remove"))
+
+    def set_show_max_quantity(self, show: bool) -> None:
+        self.edit_max_quantity.setVisible(show)
 
     def _emit_name(self) -> None:
         text = self.edit_name.text().strip()
@@ -189,6 +225,15 @@ class _ItemRow(QWidget):
         self.edit_weight.setStyleSheet("")
         self.weight_changed.emit(self._index, weight)
 
+    def _emit_max_quantity(self) -> None:
+        try:
+            max_quantity = _parse_int(self.edit_max_quantity.text(), default=1)
+        except ValueError:
+            self.edit_max_quantity.setStyleSheet("border: 1px solid rgba(220,53,69,.90);")
+            return
+        self.edit_max_quantity.setStyleSheet("")
+        self.max_quantity_changed.emit(self._index, max_quantity)
+
 
 class _ItemsSection(Section):
     add_clicked = Signal()
@@ -196,6 +241,7 @@ class _ItemsSection(Section):
     name_changed = Signal(int, str)
     value_changed = Signal(int, float)
     weight_changed = Signal(int, int)
+    max_quantity_changed = Signal(int, int)
 
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__("", parent)
@@ -208,18 +254,29 @@ class _ItemsSection(Section):
         header = QHBoxLayout()
         header.setContentsMargins(0, 0, 0, 0)
         header.setSpacing(8)
-        self.col_idx = QLabel("#")
+        self.col_idx = QLabel()
         self.col_name = QLabel()
         self.col_value = QLabel()
         self.col_weight = QLabel()
-        self.col_idx.setMinimumWidth(34)
-        self.col_value.setMaximumWidth(130)
-        self.col_weight.setMaximumWidth(130)
+        self.col_max_quantity = QLabel()
+        self.col_idx.setFixedWidth(_ITEM_INDEX_WIDTH)
+        self.col_value.setFixedWidth(_ITEM_NUMERIC_COLUMN_WIDTH)
+        self.col_weight.setFixedWidth(_ITEM_NUMERIC_COLUMN_WIDTH)
+        self.col_max_quantity.setFixedWidth(_ITEM_NUMERIC_COLUMN_WIDTH)
+        for label in (
+            self.col_idx,
+            self.col_name,
+            self.col_value,
+            self.col_weight,
+            self.col_max_quantity,
+        ):
+            label.setAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         header.addWidget(self.col_idx)
         header.addWidget(self.col_name, 1)
         header.addWidget(self.col_value)
         header.addWidget(self.col_weight)
-        header.addSpacing(28)
+        header.addWidget(self.col_max_quantity)
+        header.addSpacing(_ITEM_REMOVE_BUTTON_WIDTH)
         self.body.addLayout(header)
 
         self._rows = QVBoxLayout()
@@ -234,16 +291,29 @@ class _ItemsSection(Section):
         footer.addWidget(self.btn_add)
         self.body.addLayout(footer)
 
+        self._show_max_quantity = False
         self.refresh_strings()
 
-    def set_items(self, items: list[KnapsackItem]) -> None:
+    def set_items(
+        self,
+        items: list[KnapsackItem],
+        max_quantities: Optional[list[int]] = None,
+    ) -> None:
         _clear_layout(self._rows)
+        max_quantities = max_quantities or []
         for index, item in enumerate(items):
-            row = _ItemRow(index=index, item=item)
+            max_quantity = max_quantities[index] if index < len(max_quantities) else 1
+            row = _ItemRow(
+                index=index,
+                item=item,
+                max_quantity=max_quantity,
+                show_max_quantity=self._show_max_quantity,
+            )
             row.remove_requested.connect(self.remove_clicked.emit)
             row.name_changed.connect(self.name_changed.emit)
             row.value_changed.connect(self.value_changed.emit)
             row.weight_changed.connect(self.weight_changed.emit)
+            row.max_quantity_changed.connect(self.max_quantity_changed.emit)
             self._rows.addWidget(row)
 
     def rows(self) -> list[_ItemRow]:
@@ -257,9 +327,11 @@ class _ItemsSection(Section):
     def refresh_strings(self) -> None:
         self.set_title(S.t("knapsack.items.section"))
         self._hint.setText(S.t("knapsack.items.hint"))
+        self.col_idx.setText(S.t("knapsack.items.columns.variable"))
         self.col_name.setText(S.t("knapsack.items.columns.name"))
         self.col_value.setText(S.t("knapsack.items.columns.value"))
         self.col_weight.setText(S.t("knapsack.items.columns.weight"))
+        self.col_max_quantity.setText(S.t("knapsack.items.columns.max_quantity"))
         self.btn_add.setText(S.t("knapsack.items.add"))
         for row in self.rows():
             row.refresh_strings()
@@ -267,6 +339,12 @@ class _ItemsSection(Section):
     def refresh_theme(self) -> None:
         super().refresh_theme()
         self._hint.setStyleSheet(theme.secondary_text_css(self))
+
+    def set_bounded_mode(self, enabled: bool) -> None:
+        self._show_max_quantity = enabled
+        self.col_max_quantity.setVisible(enabled)
+        for row in self.rows():
+            row.set_show_max_quantity(enabled)
 
 
 class KnapsackView(QWidget):
@@ -407,12 +485,16 @@ class KnapsackView(QWidget):
 
         self._ctrl: Optional[KnapsackController] = None
         self._solve_uc = None
+        self._bounded_solve_uc = None
+        self._bounded_max_quantities: list[int] = []
+        self._last_solved_model = None
 
         self.items_sec.add_clicked.connect(self._on_add_item)
         self.items_sec.remove_clicked.connect(self._on_remove_item)
         self.items_sec.name_changed.connect(self._on_item_name_changed)
         self.items_sec.value_changed.connect(self._on_item_value_changed)
         self.items_sec.weight_changed.connect(self._on_item_weight_changed)
+        self.items_sec.max_quantity_changed.connect(self._on_item_max_quantity_changed)
 
         S.language_changed.connect(self.refresh_strings)
         theme.theme_changed.connect(self.refresh_theme)
@@ -423,10 +505,9 @@ class KnapsackView(QWidget):
     def set_controller(self, controller: KnapsackController) -> None:
         self._ctrl = controller
         if not self._ctrl.items():
-            self._ctrl.set_capacity(5)
-            self._ctrl.add_item(KnapsackItem("A", 3, 2))
-            self._ctrl.add_item(KnapsackItem("B", 4, 3))
-            self._ctrl.add_item(KnapsackItem("C", 5, 4))
+            self._ctrl.set_capacity(0)
+            self._ctrl.add_item()
+            self._ctrl.add_item()
 
         self._ctrl.capacity_changed.connect(self._on_capacity_changed)
         self._ctrl.items_changed.connect(self._on_items_changed)
@@ -437,12 +518,22 @@ class KnapsackView(QWidget):
     def set_solve_usecase(self, usecase) -> None:
         self._solve_uc = usecase
 
+    def set_bounded_solve_usecase(self, usecase) -> None:
+        self._bounded_solve_uc = usecase
+
+    def current_problem_model(self):
+        if self._last_solved_model is not None:
+            return self._last_solved_model
+        return self._ctrl.model() if self._ctrl else None
+
     def _on_capacity_changed(self, capacity: int) -> None:
-        if self.edit_capacity.text() != str(capacity):
-            self.edit_capacity.setText(str(capacity))
+        text = "" if capacity == 0 else str(capacity)
+        if self.edit_capacity.text() != text:
+            self.edit_capacity.setText(text)
 
     def _on_items_changed(self, items: list[KnapsackItem]) -> None:
-        self.items_sec.set_items(items)
+        self._resize_bounded_quantities(len(items))
+        self.items_sec.set_items(items, self._bounded_max_quantities)
         self._update_optimize_enabled()
 
     def _on_capacity_edited(self) -> None:
@@ -476,6 +567,10 @@ class KnapsackView(QWidget):
         if self._ctrl:
             self._ctrl.set_item_weight(index, value)
 
+    def _on_item_max_quantity_changed(self, index: int, value: int) -> None:
+        self._resize_bounded_quantities(index + 1)
+        self._bounded_max_quantities[index] = value
+
     def _sync_rows_to_controller(self) -> bool:
         if not self._ctrl:
             return False
@@ -496,6 +591,10 @@ class KnapsackView(QWidget):
             try:
                 value = _parse_float(row.edit_value.text())
                 weight = _parse_int(row.edit_weight.text())
+                if self._variant is KnapsackVariant.BOUNDED:
+                    max_quantity = _parse_int(row.edit_max_quantity.text(), default=1)
+                    if max_quantity < 0:
+                        raise ValueError("max quantity must be non-negative")
             except ValueError:
                 QMessageBox.warning(
                     self,
@@ -503,19 +602,34 @@ class KnapsackView(QWidget):
                     S.t("knapsack.errors.invalid_body"),
                 )
                 return False
+            if self._variant is KnapsackVariant.BOUNDED:
+                self._resize_bounded_quantities(index + 1)
+                self._bounded_max_quantities[index] = max_quantity
             self._ctrl.set_item_name(index, name)
             self._ctrl.set_item_value(index, value)
             self._ctrl.set_item_weight(index, weight)
         return True
 
     def _on_optimize_clicked(self) -> None:
-        if not self._ctrl or not self._solve_uc:
-            return
-        if self._variant is not KnapsackVariant.ZERO_ONE:
+        if not self._ctrl:
             return
         if not self._sync_rows_to_controller():
             return
-        solution = self._solve_uc.execute(self._ctrl.model())
+
+        if self._variant is KnapsackVariant.ZERO_ONE:
+            if not self._solve_uc:
+                return
+            model = self._ctrl.model()
+            solution = self._solve_uc.execute(model)
+        elif self._variant is KnapsackVariant.BOUNDED:
+            if not self._bounded_solve_uc:
+                return
+            model = self._build_bounded_model()
+            solution = self._bounded_solve_uc.execute(model)
+        else:
+            return
+
+        self._last_solved_model = model
         self.solve_completed.emit(solution)
 
     def _on_import_burkardt(self) -> None:
@@ -600,7 +714,6 @@ class KnapsackView(QWidget):
         self.items_sec.refresh_strings()
         self.formula_sec.set_title(S.t("knapsack.formula.section"))
         self.btn_algorithm_info.setToolTip(S.t("knapsack.formula.info_tooltip"))
-        self.formula.setText(S.t("knapsack.formula.body"))
         self.btn_optimize.setText(S.t("knapsack.actions.optimize"))
         self._apply_variant()
 
@@ -631,6 +744,8 @@ class KnapsackView(QWidget):
 
     def _apply_variant(self) -> None:
         is_zero_one = self._variant is KnapsackVariant.ZERO_ONE
+        is_bounded = self._variant is KnapsackVariant.BOUNDED
+        is_executable = is_zero_one or is_bounded
         button = self.variant_buttons.get(self._variant)
         if button is not None and not button.isChecked():
             button.setChecked(True)
@@ -638,13 +753,19 @@ class KnapsackView(QWidget):
         self.variant_description.setText(
             S.t(f"knapsack.variant.descriptions.{self._variant.value}")
         )
-        self.variant_placeholder_sec.setVisible(not is_zero_one)
-        self.capacity_sec.setVisible(is_zero_one)
-        self.items_sec.setVisible(is_zero_one)
-        self.formula_sec.setVisible(is_zero_one)
+        self.variant_placeholder_sec.setVisible(not is_executable)
+        self.capacity_sec.setVisible(is_executable)
+        self.items_sec.setVisible(is_executable)
+        self.items_sec.set_bounded_mode(is_bounded)
+        self.formula_sec.setVisible(is_executable)
+        self.formula.setText(
+            S.t("knapsack.formula.bounded_body")
+            if is_bounded
+            else S.t("knapsack.formula.body")
+        )
         self.btn_import_burkardt.setEnabled(is_zero_one)
 
-        if not is_zero_one:
+        if not is_executable:
             self.variant_placeholder_sec.set_title(
                 S.t(
                     "knapsack.variant.placeholder_title",
@@ -658,7 +779,41 @@ class KnapsackView(QWidget):
 
     def _update_optimize_enabled(self) -> None:
         items = self._ctrl.items() if self._ctrl else []
-        self.btn_optimize.setEnabled(self._variant is KnapsackVariant.ZERO_ONE and bool(items))
+        self.btn_optimize.setEnabled(
+            self._variant in (KnapsackVariant.ZERO_ONE, KnapsackVariant.BOUNDED)
+            and bool(items)
+        )
+
+    def _resize_bounded_quantities(self, item_count: int) -> None:
+        if len(self._bounded_max_quantities) < item_count:
+            self._bounded_max_quantities.extend(
+                [1] * (item_count - len(self._bounded_max_quantities))
+            )
+        elif len(self._bounded_max_quantities) > item_count:
+            del self._bounded_max_quantities[item_count:]
+
+    def _build_bounded_model(self) -> BoundedKnapsackModel:
+        if not self._ctrl:
+            raise ValueError("missing knapsack controller")
+        items = []
+        for index, item in enumerate(self._ctrl.items()):
+            max_quantity = (
+                self._bounded_max_quantities[index]
+                if index < len(self._bounded_max_quantities)
+                else 1
+            )
+            items.append(
+                BoundedKnapsackItem(
+                    item.name,
+                    item.value,
+                    item.weight,
+                    max_quantity,
+                )
+            )
+        return BoundedKnapsackModel.from_parts(
+            tuple(items),
+            capacity=self._ctrl.capacity(),
+        )
 
 
 def _fmt_number(value: float) -> str:

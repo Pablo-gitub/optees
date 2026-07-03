@@ -19,8 +19,6 @@ from PySide6.QtWidgets import (
 
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
-from optees.domain.entities.knapsack.solution import KnapsackSolution
-from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 from optees.presentation.views.lp_view.section import Section
 
 
@@ -30,13 +28,13 @@ class _CapacityUsageWidget(QWidget):
         self.setObjectName("knapsackCapacityChart")
         self.setMinimumHeight(130)
         self.setMinimumWidth(320)
-        self._problem: Optional[Knapsack01Model] = None
-        self._solution: Optional[KnapsackSolution] = None
+        self._problem: Optional[object] = None
+        self._solution: Optional[object] = None
 
     def set_data(
         self,
-        problem: Optional[Knapsack01Model],
-        solution: Optional[KnapsackSolution],
+        problem: Optional[object],
+        solution: Optional[object],
     ) -> None:
         self._problem = problem
         self._solution = solution
@@ -102,13 +100,13 @@ class _ItemBarsWidget(QWidget):
         self.setObjectName("knapsackItemBars")
         self.setMinimumHeight(240)
         self.setMinimumWidth(420)
-        self._problem: Optional[Knapsack01Model] = None
-        self._solution: Optional[KnapsackSolution] = None
+        self._problem: Optional[object] = None
+        self._solution: Optional[object] = None
 
     def set_data(
         self,
-        problem: Optional[Knapsack01Model],
-        solution: Optional[KnapsackSolution],
+        problem: Optional[object],
+        solution: Optional[object],
     ) -> None:
         self._problem = problem
         self._solution = solution
@@ -284,19 +282,19 @@ class KnapsackSolutionView(QWidget):
         root.addStretch(1)
 
         self.solution_table = self.table
-        self._problem: Optional[Knapsack01Model] = None
-        self._solution: Optional[KnapsackSolution] = None
+        self._problem: Optional[object] = None
+        self._solution: Optional[object] = None
 
         S.language_changed.connect(self.refresh_strings)
         theme.theme_changed.connect(self.refresh_theme)
         self.refresh_strings()
         self.refresh_theme()
 
-    def set_problem(self, model: Knapsack01Model) -> None:
+    def set_problem(self, model: object) -> None:
         self._problem = model
         self._rebuild()
 
-    def set_solution(self, solution: KnapsackSolution) -> None:
+    def set_solution(self, solution: object) -> None:
         self._solution = solution
         self._rebuild()
 
@@ -323,15 +321,26 @@ class KnapsackSolutionView(QWidget):
         self._model.clear()
         self.capacity_chart.set_data(self._problem, self._solution)
         self.item_bars.set_data(self._problem, self._solution)
-        self._model.setHorizontalHeaderLabels(
+        has_quantities = self._solution is not None and hasattr(self._solution, "quantities")
+        has_max_quantity = (
+            self._problem is not None
+            and bool(getattr(self._problem, "items", ()))
+            and hasattr(getattr(self._problem, "items")[0], "max_quantity")
+        )
+        headers = [S.t("knapsack.sol.columns.selected")]
+        if has_quantities:
+            headers.append(S.t("knapsack.sol.columns.quantity"))
+        headers.extend(
             [
-                S.t("knapsack.sol.columns.selected"),
                 S.t("knapsack.sol.columns.item"),
                 S.t("knapsack.sol.columns.value"),
                 S.t("knapsack.sol.columns.weight"),
-                S.t("knapsack.sol.columns.ratio"),
             ]
         )
+        if has_max_quantity:
+            headers.append(S.t("knapsack.sol.columns.max_quantity"))
+        headers.append(S.t("knapsack.sol.columns.ratio"))
+        self._model.setHorizontalHeaderLabels(headers)
 
         if self._solution is None:
             self.status_line.setText(S.t("knapsack.sol.empty"))
@@ -373,18 +382,28 @@ class KnapsackSolutionView(QWidget):
             return
 
         selected = set(self._solution.selected_indices)
+        quantities = getattr(self._solution, "quantities", None)
         for index, item in enumerate(self._problem.items):
             ratio = None if item.weight == 0 else item.value / item.weight
             row = [
                 QStandardItem(S.t("knapsack.sol.yes") if index in selected else S.t("knapsack.sol.no")),
-                QStandardItem(item.name),
-                QStandardItem(_fmt(item.value)),
-                QStandardItem(str(item.weight)),
-                QStandardItem(_fmt(ratio)),
             ]
+            if quantities is not None:
+                quantity = quantities[index] if index < len(quantities) else 0
+                row.append(QStandardItem(_fmt(quantity)))
+            row.extend(
+                [
+                    QStandardItem(item.name),
+                    QStandardItem(_fmt(item.value)),
+                    QStandardItem(str(item.weight)),
+                ]
+            )
+            if has_max_quantity:
+                row.append(QStandardItem(str(getattr(item, "max_quantity", ""))))
+            row.append(QStandardItem(_fmt(ratio)))
             for col, cell in enumerate(row):
                 cell.setEditable(False)
-                if col in (2, 3, 4):
+                if col != 0 and cell.text() != item.name:
                     cell.setData(Qt.AlignRight | Qt.AlignVCenter, Qt.TextAlignmentRole)
                 if index in selected:
                     font = cell.font()

@@ -32,11 +32,13 @@ from optees.presentation.controllers.milp_controller import MILPController
 from optees.presentation.controllers.knapsack_controller import KnapsackController
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
 from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
+from optees.application.usecases.solve_bounded_knapsack_usecase import SolveBoundedKnapsackUseCase
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
 from optees.application.usecases.check_for_updates_usecase import CheckForUpdatesUseCase
 from optees.application.usecases.download_update_usecase import DownloadUpdateUseCase
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
+from optees.data.adapters.knapsack.bounded_knapsack_solver_adapter import BoundedKnapsackSolverAdapter
 from optees.data.adapters.knapsack.knapsack_solver_adapter import KnapsackSolverAdapter
 from optees.data.adapters.github.update_provider_adapter import GitHubUpdateProvider
 from optees.presentation.views.lp_solution_view.lp_solution_view import LPSolutionView
@@ -78,6 +80,11 @@ class MainWindow(QMainWindow):
         self.knapsack_solver_port = KnapsackSolverAdapter()
         self.solve_knapsack_uc = SolveKnapsackUseCase(self.knapsack_solver_port)
         self.knap_page.set_solve_usecase(self.solve_knapsack_uc)
+        self.bounded_knapsack_solver_port = BoundedKnapsackSolverAdapter()
+        self.solve_bounded_knapsack_uc = SolveBoundedKnapsackUseCase(
+            self.bounded_knapsack_solver_port,
+        )
+        self.knap_page.set_bounded_solve_usecase(self.solve_bounded_knapsack_uc)
         self.settings_page = SettingsView()
         self.lp_example_page = LPExampleView()
         self.lp_problem_page = LPProblemDescriptionView()

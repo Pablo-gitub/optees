@@ -139,7 +139,11 @@ class MainController(QObject):
         sol_view = self.window.page("knapsack_solution")
 
         try:
-            model_snapshot = self.window.knapsack_controller.model()
+            knap_page = self.window.page("knapsack")
+            if hasattr(knap_page, "current_problem_model"):
+                model_snapshot = knap_page.current_problem_model()
+            else:
+                model_snapshot = self.window.knapsack_controller.model()
             if hasattr(sol_view, "set_problem"):
                 sol_view.set_problem(model_snapshot)  # type: ignore[attr-defined]
         except Exception:
