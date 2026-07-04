@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pablo-gitub.github.io/optees/sitemap.xml

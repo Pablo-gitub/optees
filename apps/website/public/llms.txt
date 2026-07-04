@@ -1,0 +1,9 @@
+# Optees
+
+Optees is an open-source desktop optimization toolkit for Linear Programming,
+Mixed-Integer Linear Programming, and Knapsack models.
+
+- Website: https://pablo-gitub.github.io/optees/
+- Repository: https://github.com/Pablo-gitub/optees
+- Releases: https://github.com/Pablo-gitub/optees/releases
+- Roadmap: https://github.com/Pablo-gitub/optees/blob/main/docs/PROJECT_ROADMAP.md
