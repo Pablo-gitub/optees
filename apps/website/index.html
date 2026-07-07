@@ -3,40 +3,130 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Optees - Desktop Optimization Toolkit</title>
+
+    <title>Optees — Open-Source Optimization Software for LP, MILP &amp; Knapsack</title>
     <meta
       name="description"
-      content="Open-source desktop app for LP, MILP and Knapsack optimization with educational solution views, JSON import and scientific benchmark tests."
+      content="Optees is a free, open-source desktop app that makes operations research accessible. Model, solve and visualize Linear Programming, Mixed-Integer and Knapsack problems locally — with guided assistance, JSON import and educational solution views."
     />
+    <meta
+      name="keywords"
+      content="optimization software, operations research, linear programming, mixed integer programming, MILP, knapsack solver, LP solver, HiGHS, OR-Tools, SciPy, open source optimization, decision optimization, desktop optimization app"
+    />
+    <meta name="author" content="Optees" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#05060d" />
+
     <link rel="canonical" href="https://pablo-gitub.github.io/optees/" />
     <link rel="alternate" hreflang="en" href="https://pablo-gitub.github.io/optees/" />
     <link rel="alternate" hreflang="it" href="https://pablo-gitub.github.io/optees/" />
     <link rel="alternate" hreflang="x-default" href="https://pablo-gitub.github.io/optees/" />
-    <meta name="robots" content="index, follow" />
-    <meta name="theme-color" content="#07111f" />
+    <link rel="icon" type="image/png" href="./logo/optees-appicon.png" />
+    <link rel="apple-touch-icon" href="./logo/optees-appicon.png" />
 
+    <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Optees - Desktop Optimization Toolkit" />
+    <meta property="og:site_name" content="Optees" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="it_IT" />
+    <meta property="og:title" content="Optees — Open-Source Optimization Software" />
     <meta
       property="og:description"
-      content="Model, solve and inspect LP, MILP and Knapsack problems from a local desktop app."
+      content="Model, solve and visualize LP, MILP and Knapsack problems from a private, local desktop app. Free and open source."
     />
     <meta property="og:image" content="https://pablo-gitub.github.io/optees/logo/optees-appicon.png" />
+    <meta property="og:image:alt" content="Optees app icon" />
     <meta property="og:url" content="https://pablo-gitub.github.io/optees/" />
-    <meta name="twitter:card" content="summary_large_image" />
 
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Optees — Open-Source Optimization Software" />
+    <meta
+      name="twitter:description"
+      content="Model, solve and visualize LP, MILP and Knapsack problems from a private, local desktop app. Free and open source."
+    />
+    <meta name="twitter:image" content="https://pablo-gitub.github.io/optees/logo/optees-appicon.png" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.github.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Structured data: Software -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "Optees",
         "applicationCategory": "EducationalApplication",
+        "applicationSubCategory": "Optimization &amp; Operations Research",
         "operatingSystem": "macOS, Windows, Linux",
         "softwareVersion": "0.2.1",
-        "description": "Open-source desktop optimization toolkit for Linear Programming, Mixed-Integer Linear Programming and Knapsack models.",
+        "description": "Open-source desktop optimization toolkit for Linear Programming, Mixed-Integer Linear Programming and Knapsack models, with educational solution views and benchmark-backed solvers.",
+        "featureList": [
+          "Linear Programming (LP)",
+          "Mixed-Integer Linear Programming (MILP)",
+          "Knapsack: 0/1, bounded, unbounded, fractional, multi-dimensional",
+          "Guided algorithm assistant",
+          "JSON import",
+          "Educational solution views and charts"
+        ],
         "downloadUrl": "https://github.com/Pablo-gitub/optees/releases",
         "codeRepository": "https://github.com/Pablo-gitub/optees",
-        "license": "https://github.com/Pablo-gitub/optees"
+        "license": "https://github.com/Pablo-gitub/optees/blob/main/LICENSE",
+        "isAccessibleForFree": true,
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "screenshot": "https://pablo-gitub.github.io/optees/screenshots/optees-lp-solution.png"
+      }
+    </script>
+
+    <!-- Structured data: FAQ -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is Optees?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Optees is a free, open-source desktop application that makes operations research and mathematical optimization accessible to everyone. You can model, solve and inspect Linear Programming, Mixed-Integer Linear Programming and Knapsack problems locally."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Optees free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Optees is completely free and open source. Packaged desktop builds are published on GitHub Releases."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Which platforms are supported?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Optees is cross-platform and runs on macOS, Windows and Linux."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need to know how to code to use Optees?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Optees provides a guided interface with a built-in assistant that helps you pick the right algorithm and fill in structured inputs, so no scripting is required."
+            }
+          }
+        ]
       }
     </script>
   </head>

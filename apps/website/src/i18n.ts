@@ -1,6 +1,13 @@
 export type Language = "en" | "it";
 export type AlgorithmId = "lp" | "milp" | "knapsack" | "nlp";
 export type PreviewId = "home" | "lpSolution" | "knapsack" | "knapsackSolution";
+export type FeatureId =
+  | "assistant"
+  | "educational"
+  | "variants"
+  | "benchmarks"
+  | "local"
+  | "openSource";
 
 export const supportedLanguages: Language[] = ["en", "it"];
 
@@ -16,22 +23,37 @@ export function formatMessage(template: string, values: Record<string, string>):
 type AlgorithmCopy = {
   id: AlgorithmId;
   label: string;
+  short: string;
   status: string;
+  formula: string;
   description: string;
   details: string[];
+  preview: PreviewId;
 };
 
 type PreviewCopy = {
   id: PreviewId;
+  window: string;
   title: string;
   body: string;
   alt: string;
+};
+
+type FeatureCopy = {
+  id: FeatureId;
+  title: string;
+  body: string;
 };
 
 type WorkflowStepCopy = {
   number: string;
   title: string;
   body: string;
+};
+
+type FaqCopy = {
+  q: string;
+  a: string;
 };
 
 type SiteCopy = {
@@ -44,11 +66,13 @@ type SiteCopy = {
     aria: string;
     brandAria: string;
     sectionsAria: string;
+    features: string;
     algorithms: string;
     previews: string;
+    faq: string;
     download: string;
-    roadmap: string;
     github: string;
+    getApp: string;
   };
   language: {
     aria: string;
@@ -56,22 +80,35 @@ type SiteCopy = {
     options: Record<Language, string>;
   };
   hero: {
-    eyebrow: string;
+    badge: string;
     title: string;
+    titleAccent: string;
     copy: string;
-    download: string;
     source: string;
+    stackLabel: string;
+    stack: string[];
     metricsAria: string;
     metrics: Array<{
       value: string;
       label: string;
     }>;
+    shotCaption: string;
+    floatStatus: string;
+    floatObjective: string;
+  };
+  features: {
+    eyebrow: string;
+    title: string;
+    body: string;
+    items: FeatureCopy[];
   };
   algorithms: {
     eyebrow: string;
     title: string;
     body: string;
     tabsAria: string;
+    modelLabel: string;
+    capabilitiesLabel: string;
     items: AlgorithmCopy[];
   };
   previews: {
@@ -83,6 +120,7 @@ type SiteCopy = {
   workflow: {
     eyebrow: string;
     title: string;
+    body: string;
     steps: WorkflowStepCopy[];
   };
   download: {
@@ -92,348 +130,612 @@ type SiteCopy = {
     latestRelease: string;
     fallbackRelease: string;
     checkingRelease: string;
-    macButton: string;
+    downloadFor: string;
+    downloadGeneric: string;
+    otherVersions: string;
+    allReleases: string;
+    menuAria: string;
+    yourSystem: string;
+    platformNames: { mac: string; windows: string; linux: string };
     assetsButton: string;
+    platformsLabel: string;
+    platforms: string[];
     gatekeeperNote: string;
   };
-  roadmap: {
+  faq: {
     eyebrow: string;
     title: string;
     body: string;
-    project: string;
-    issues: string;
-    releases: string;
+    items: FaqCopy[];
   };
   footer: {
     product: string;
     claim: string;
-    repository: string;
+    tagline: string;
+    columns: Array<{
+      title: string;
+      links: Array<{ label: string; key: string }>;
+    }>;
+    socialAria: string;
+    madeBy: string;
+    copyright: string;
+    license: string;
   };
 };
 
 export const copy: Record<Language, SiteCopy> = {
   en: {
     meta: {
-      title: "Optees - Desktop Optimization Toolkit",
+      title: "Optees — Open-Source Optimization Software for LP, MILP & Knapsack",
       description:
-        "Open-source desktop app for LP, MILP and Knapsack optimization with educational solution views, JSON import and scientific benchmark tests.",
+        "Free, open-source desktop app that makes operations research accessible. Model, solve and visualize Linear Programming, Mixed-Integer and Knapsack problems locally, with a guided assistant and educational solution views.",
       ogDescription:
-        "Model, solve and inspect LP, MILP and Knapsack problems from a local desktop app.",
+        "Model, solve and visualize LP, MILP and Knapsack problems from a private, local desktop app. Free and open source.",
     },
     nav: {
       aria: "Primary navigation",
       brandAria: "Optees home",
       sectionsAria: "Page sections",
+      features: "Why Optees",
       algorithms: "Algorithms",
-      previews: "Previews",
+      previews: "Screens",
+      faq: "FAQ",
       download: "Download",
-      roadmap: "Roadmap",
       github: "GitHub",
+      getApp: "Get the app",
     },
     language: {
       aria: "Language selection",
       label: "Language",
       options: {
-        en: "English",
-        it: "Italiano",
+        en: "EN",
+        it: "IT",
       },
     },
     hero: {
-      eyebrow: "Open-source desktop optimization toolkit",
-      title: "Model, solve and inspect optimization problems locally.",
+      badge: "Open source · Cross-platform · Runs 100% locally",
+      title: "Operations research,",
+      titleAccent: "made effortless.",
       copy:
-        "Optees brings Linear Programming, Mixed-Integer Linear Programming and Knapsack workflows into a desktop interface with educational explanations, JSON import and benchmark-backed tests.",
-      download: "Download latest release",
-      source: "View source",
+        "Optees turns powerful optimization algorithms into a desktop app anyone can use. Model Linear Programming, Mixed-Integer and Knapsack problems, solve them with industry-grade engines, and understand every result — no scripting required.",
+      source: "Star on GitHub",
+      stackLabel: "Powered by",
+      stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Netlib", "MIPLIB"],
       metricsAria: "Project highlights",
       metrics: [
-        { value: "LP", label: "optimal ranges" },
-        { value: "MILP", label: "integer models" },
-        { value: "5", label: "knapsack variants" },
+        { value: "3", label: "Solver families, ready to use" },
+        { value: "5", label: "Knapsack variants in one flow" },
+        { value: "100%", label: "Local & private, no cloud" },
+        { value: "MIT", label: "Free and open source" },
+      ],
+      shotCaption: "Linear Programming solution — objective, ranges and feasible region",
+      floatStatus: "Optimal",
+      floatObjective: "z = 2·x₁ + 8·x₂ = 10",
+    },
+    features: {
+      eyebrow: "Why Optees",
+      title: "Optimization that explains itself",
+      body:
+        "Most solvers hand you a number. Optees hands you the model, the solution and the reasoning behind it — built for teams, students and analysts alike.",
+      items: [
+        {
+          id: "assistant",
+          title: "Guided assistant",
+          body:
+            "A built-in chatbot helps you pick the right algorithm for your problem and set up the model — even without an operations-research background.",
+        },
+        {
+          id: "educational",
+          title: "Educational solution views",
+          body:
+            "Every result comes with status, objective breakdown, optimal ranges, charts and plain-language notes, so you learn while you solve.",
+        },
+        {
+          id: "variants",
+          title: "Five Knapsack variants",
+          body:
+            "Switch between 0/1, bounded, unbounded, fractional and multi-dimensional models in a single, consistent workflow.",
+        },
+        {
+          id: "benchmarks",
+          title: "Benchmark-backed",
+          body:
+            "Solvers are validated against scientific datasets like Netlib and MIPLIB, so you can trust the numbers you ship.",
+        },
+        {
+          id: "local",
+          title: "Private by design",
+          body:
+            "Everything runs on your machine. No accounts, no uploads, no cloud — your data never leaves your desktop.",
+        },
+        {
+          id: "openSource",
+          title: "Open source",
+          body:
+            "Released under an open license. Read the code, file issues, follow the roadmap and shape where Optees goes next.",
+        },
       ],
     },
     algorithms: {
       eyebrow: "Algorithms",
       title: "A focused optimization workbench",
       body:
-        "Each algorithm family is built around the same path: formulate the model, solve it, then inspect the numerical and mathematical behavior of the result.",
+        "Every algorithm family follows the same path: formulate the model, solve it with a proven engine, then inspect the numerical and mathematical behaviour of the result.",
       tabsAria: "Algorithm families",
+      modelLabel: "Model",
+      capabilitiesLabel: "In this build",
       items: [
         {
           id: "lp",
           label: "Linear Programming",
-          status: "Implemented",
+          short: "LP",
+          status: "Available",
+          formula: "max cᵀx  s.t.  Ax ≤ b,  x ≥ 0",
           description:
-            "Continuous optimization with bounds, constraints, JSON import and optimal-range analysis.",
+            "Continuous optimization with bounds, constraints, JSON import and optimal-range analysis for alternate optima.",
           details: ["HiGHS backend", "Multiple optima ranges", "Netlib-tested"],
+          preview: "lpSolution",
         },
         {
           id: "milp",
           label: "Mixed-Integer Linear Programming",
-          status: "Implemented",
+          short: "MILP",
+          status: "Available",
+          formula: "max cᵀx  s.t.  Ax ≤ b,  xⱼ ∈ ℤ",
           description:
-            "Integer, binary and continuous variables with solver controls for time limits and MIP gap.",
-          details: ["CP-SAT/CBC", "Feasible status", "MIPLIB dataset"],
+            "Integer, binary and continuous variables together, with solver controls for time limits and MIP gap.",
+          details: ["CP-SAT / CBC", "Feasible status", "MIPLIB dataset"],
+          preview: "home",
         },
         {
           id: "knapsack",
           label: "Knapsack",
-          status: "Implemented",
+          short: "KP",
+          status: "Available",
+          formula: "max Σ vᵢ·xᵢ  s.t.  Σ wᵢ·xᵢ ≤ W",
           description:
-            "0/1, bounded, unbounded, fractional and multi-dimensional variants in one workflow.",
+            "0/1, bounded, unbounded, fractional and multi-dimensional variants unified in one workflow with JSON import.",
           details: ["JSON import", "Capacity charts", "Variant switch"],
+          preview: "knapsackSolution",
         },
         {
           id: "nlp",
           label: "Nonlinear Programming",
-          status: "Roadmap",
+          short: "NLP",
+          status: "On the roadmap",
+          formula: "min f(x)  s.t.  gᵢ(x) ≤ 0",
           description:
-            "Unconstrained, bounded, constrained, least-squares and minimax optimization.",
+            "Unconstrained, bounded, constrained, least-squares and minimax optimization — coming in a future release.",
           details: ["SciPy minimize", "Curve fitting", "Global methods later"],
+          preview: "home",
         },
       ],
     },
     previews: {
-      eyebrow: "Result previews",
-      title: "Use real views, not abstract diagrams",
+      eyebrow: "Product tour",
+      title: "Real screens, not abstract mockups",
       body:
-        "The landing page uses screenshots from the desktop app so users immediately see the actual modeling and solution surfaces they will download.",
+        "These are actual views from the desktop app, so you know exactly what you get before you download.",
       items: [
         {
           id: "home",
-          title: "Formulate optimization models",
-          body: "Build LP, MILP and Knapsack problems with structured inputs instead of ad-hoc scripts.",
-          alt: "Optees desktop home view with optimization algorithms",
+          window: "Optees — Home",
+          title: "Choose your method",
+          body: "Build LP, MILP and Knapsack problems from a clear catalogue of methods instead of ad-hoc scripts.",
+          alt: "Optees desktop home view listing optimization algorithms",
         },
         {
           id: "lpSolution",
-          title: "Inspect solution behavior",
-          body: "LP solutions include objective checks and ranges for alternate optima when available.",
-          alt: "Optees linear programming solution view",
+          window: "Optees — LP solution",
+          title: "Inspect solution behaviour",
+          body: "LP solutions include objective checks, optimal ranges and a feasible-region plot with the optimal point.",
+          alt: "Optees linear programming solution view with charts and feasible region",
         },
         {
           id: "knapsack",
-          title: "Compare Knapsack variants",
-          body: "Switch between 0/1, bounded, unbounded, fractional and multi-dimensional models.",
-          alt: "Optees Knapsack formulation view",
+          window: "Optees — Knapsack setup",
+          title: "Model Knapsack visually",
+          body: "Pick a variant, set the capacity and describe items in a structured table — no formulas to hand-write.",
+          alt: "Optees Knapsack problem setup view with items and capacity",
         },
         {
           id: "knapsackSolution",
-          title: "Read the result visually",
-          body: "Capacity usage, selected objects and value-density charts are shown next to the table.",
-          alt: "Optees Knapsack solution view with charts",
+          window: "Optees — Knapsack solution",
+          title: "Read the result at a glance",
+          body: "Capacity usage, selected items and value-to-weight charts sit right next to the decision table.",
+          alt: "Optees Knapsack solution view with capacity usage and value charts",
         },
       ],
     },
     workflow: {
-      eyebrow: "Workflow",
-      title: "From model to explanation",
+      eyebrow: "How it works",
+      title: "From model to explanation in three steps",
+      body: "The same intuitive loop, whatever you are optimizing.",
       steps: [
         {
           number: "01",
           title: "Formulate",
-          body: "Enter variables, bounds, objective functions, constraints or Knapsack items.",
+          body: "Enter variables, bounds, objective functions, constraints or Knapsack items — or import them from JSON.",
         },
         {
           number: "02",
           title: "Solve",
-          body: "Use SciPy/HiGHS, OR-Tools or dedicated dynamic programming adapters.",
+          body: "Run proven engines: SciPy/HiGHS for LP, OR-Tools for MILP, and dedicated dynamic-programming solvers for Knapsack.",
         },
         {
           number: "03",
           title: "Inspect",
-          body: "Read status, objective value, selected variables, charts and educational notes.",
+          body: "Read the status, objective value, selected variables, charts and educational notes that explain the result.",
         },
       ],
     },
     download: {
       eyebrow: "Download",
-      title: "Install the latest desktop build",
+      title: "Get Optees on your desktop",
       body:
-        "Releases are published on GitHub. Packaged builds can check for updates and guide the user to the newest installer when one is available.",
+        "Packaged builds are published on GitHub Releases. Install once and the app can check for updates and guide you to the newest installer.",
       latestRelease: "Latest release: {version}",
-      fallbackRelease: "Latest release: open GitHub to check",
-      checkingRelease: "Checking latest release...",
-      macButton: "Download for macOS",
-      assetsButton: "All release assets",
+      fallbackRelease: "Open GitHub to see the latest release",
+      checkingRelease: "Checking the latest release…",
+      downloadFor: "Download for {platform}",
+      downloadGeneric: "Download the app",
+      otherVersions: "Other platforms",
+      allReleases: "All releases on GitHub",
+      menuAria: "Choose your platform",
+      yourSystem: "detected",
+      platformNames: { mac: "macOS", windows: "Windows", linux: "Linux" },
+      assetsButton: "All platforms & assets",
+      platformsLabel: "Available for",
+      platforms: ["macOS", "Windows", "Linux"],
       gatekeeperNote:
-        "Unsigned macOS builds may require the standard Gatekeeper manual confirmation from System Settings.",
+        "Builds are unsigned: macOS may ask for a standard Gatekeeper confirmation, and Windows/Linux for the usual first-run approval.",
     },
-    roadmap: {
-      eyebrow: "Roadmap",
-      title: "Next: stronger benchmarks and nonlinear programming",
-      body:
-        "The next phase focuses on scientific Knapsack benchmarks, a first Nonlinear Programming workflow and a dedicated public website deployment pipeline.",
-      project: "Project roadmap",
-      issues: "Issues and planning",
-      releases: "Release history",
+    faq: {
+      eyebrow: "FAQ",
+      title: "Questions, answered",
+      body: "Everything you need to know before your first optimization.",
+      items: [
+        {
+          q: "What is Optees?",
+          a: "Optees is a free, open-source desktop app that makes operations research approachable. You can model, solve and inspect Linear Programming, Mixed-Integer Linear Programming and Knapsack problems without writing code.",
+        },
+        {
+          q: "Who is it for?",
+          a: "Analysts and businesses who need to make better resource, scheduling and logistics decisions, and students or teachers who want to see the mathematics behind each solution.",
+        },
+        {
+          q: "Is it really free?",
+          a: "Yes. Optees is completely free and released under an open-source license. Desktop builds are available on GitHub Releases.",
+        },
+        {
+          q: "Which platforms are supported?",
+          a: "Optees is cross-platform and runs on macOS, Windows and Linux.",
+        },
+        {
+          q: "Do I need to know how to code?",
+          a: "No. A guided assistant helps you choose the right algorithm and fill in structured inputs, so you can optimize without scripting.",
+        },
+        {
+          q: "What is coming next?",
+          a: "The roadmap focuses on stronger Knapsack benchmarks and a first Nonlinear Programming workflow, followed by graph and machine-learning methods.",
+        },
+      ],
     },
     footer: {
       product: "Optees",
       claim: "Open-source optimization toolkit",
-      repository: "GitHub repository",
+      tagline: "Model, solve and understand optimization problems — locally and for free.",
+      columns: [
+        {
+          title: "Product",
+          links: [
+            { label: "Why Optees", key: "#features" },
+            { label: "Algorithms", key: "#algorithms" },
+            { label: "Screens", key: "#previews" },
+            { label: "Download", key: "#download" },
+          ],
+        },
+        {
+          title: "Project",
+          links: [
+            { label: "GitHub repository", key: "repo" },
+            { label: "Releases", key: "releases" },
+            { label: "Roadmap", key: "roadmap" },
+            { label: "Issues", key: "issues" },
+          ],
+        },
+      ],
+      socialAria: "Social links",
+      madeBy: "Personal website of Paolo Pietrelli",
+      copyright: "© {year} Paolo Pietrelli · All rights reserved",
+      license: "MIT-style license",
     },
   },
   it: {
     meta: {
-      title: "Optees - Toolkit Desktop per l'Ottimizzazione",
+      title: "Optees — Software di Ottimizzazione Open Source per LP, MILP e Knapsack",
       description:
-        "Applicazione desktop open source per ottimizzazione LP, MILP e Knapsack con viste didattiche della soluzione, import JSON e test su benchmark scientifici.",
+        "App desktop gratuita e open source che rende accessibile la ricerca operativa. Modella, risolvi e visualizza problemi di Programmazione Lineare, Intera Mista e Knapsack in locale, con un assistente guidato e viste didattiche della soluzione.",
       ogDescription:
-        "Modella, risolvi e analizza problemi LP, MILP e Knapsack da un'app desktop locale.",
+        "Modella, risolvi e visualizza problemi LP, MILP e Knapsack da un'app desktop locale e privata. Gratuita e open source.",
     },
     nav: {
       aria: "Navigazione principale",
       brandAria: "Home di Optees",
       sectionsAria: "Sezioni della pagina",
+      features: "Perché Optees",
       algorithms: "Algoritmi",
-      previews: "Anteprime",
+      previews: "Schermate",
+      faq: "FAQ",
       download: "Download",
-      roadmap: "Roadmap",
       github: "GitHub",
+      getApp: "Scarica l'app",
     },
     language: {
       aria: "Selezione lingua",
       label: "Lingua",
       options: {
-        en: "English",
-        it: "Italiano",
+        en: "EN",
+        it: "IT",
       },
     },
     hero: {
-      eyebrow: "Toolkit desktop open source per l'ottimizzazione",
-      title: "Modella, risolvi e analizza problemi di ottimizzazione in locale.",
+      badge: "Open source · Multipiattaforma · Gira 100% in locale",
+      title: "La ricerca operativa,",
+      titleAccent: "resa semplice.",
       copy:
-        "Optees porta Programmazione Lineare, Programmazione Lineare Intera Mista e Knapsack dentro un'interfaccia desktop con spiegazioni didattiche, import JSON e test basati su benchmark.",
-      download: "Scarica l'ultima release",
-      source: "Vedi sorgente",
+        "Optees trasforma potenti algoritmi di ottimizzazione in un'app desktop alla portata di tutti. Modella problemi di Programmazione Lineare, Intera Mista e Knapsack, risolvili con motori di livello professionale e comprendi ogni risultato — senza scrivere codice.",
+      source: "Metti una stella su GitHub",
+      stackLabel: "Basato su",
+      stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Netlib", "MIPLIB"],
       metricsAria: "Punti chiave del progetto",
       metrics: [
-        { value: "LP", label: "range ottimi" },
-        { value: "MILP", label: "modelli interi" },
-        { value: "5", label: "varianti knapsack" },
+        { value: "3", label: "Famiglie di solver pronte all'uso" },
+        { value: "5", label: "Varianti Knapsack in un solo flusso" },
+        { value: "100%", label: "Locale e privato, nessun cloud" },
+        { value: "MIT", label: "Gratuito e open source" },
+      ],
+      shotCaption: "Soluzione di Programmazione Lineare — obiettivo, range e regione ammissibile",
+      floatStatus: "Ottimo",
+      floatObjective: "z = 2·x₁ + 8·x₂ = 10",
+    },
+    features: {
+      eyebrow: "Perché Optees",
+      title: "Un'ottimizzazione che si spiega da sola",
+      body:
+        "La maggior parte dei solver ti restituisce un numero. Optees ti restituisce il modello, la soluzione e il ragionamento dietro di essa — pensato per team, studenti e analisti.",
+      items: [
+        {
+          id: "assistant",
+          title: "Assistente guidato",
+          body:
+            "Un chatbot integrato ti aiuta a scegliere l'algoritmo giusto per il tuo problema e a impostare il modello — anche senza basi di ricerca operativa.",
+        },
+        {
+          id: "educational",
+          title: "Viste didattiche della soluzione",
+          body:
+            "Ogni risultato mostra stato, scomposizione dell'obiettivo, range ottimi, grafici e note in linguaggio semplice: impari mentre risolvi.",
+        },
+        {
+          id: "variants",
+          title: "Cinque varianti Knapsack",
+          body:
+            "Passa tra modelli 0/1, bounded, unbounded, fractional e multi-dimensional in un unico flusso di lavoro coerente.",
+        },
+        {
+          id: "benchmarks",
+          title: "Validato su benchmark",
+          body:
+            "I solver sono verificati su dataset scientifici come Netlib e MIPLIB, così puoi fidarti dei numeri che ottieni.",
+        },
+        {
+          id: "local",
+          title: "Privato per definizione",
+          body:
+            "Tutto gira sul tuo computer. Nessun account, nessun upload, nessun cloud: i tuoi dati non lasciano mai il desktop.",
+        },
+        {
+          id: "openSource",
+          title: "Open source",
+          body:
+            "Rilasciato con licenza aperta. Leggi il codice, apri issue, segui la roadmap e contribuisci a decidere il futuro di Optees.",
+        },
       ],
     },
     algorithms: {
       eyebrow: "Algoritmi",
       title: "Un ambiente mirato per l'ottimizzazione",
       body:
-        "Ogni famiglia di algoritmi segue lo stesso percorso: formulare il modello, risolverlo e poi ispezionare il comportamento numerico e matematico del risultato.",
+        "Ogni famiglia di algoritmi segue lo stesso percorso: formulare il modello, risolverlo con un motore affidabile e poi ispezionare il comportamento numerico e matematico del risultato.",
       tabsAria: "Famiglie di algoritmi",
+      modelLabel: "Modello",
+      capabilitiesLabel: "In questa build",
       items: [
         {
           id: "lp",
           label: "Programmazione Lineare",
-          status: "Implementato",
+          short: "LP",
+          status: "Disponibile",
+          formula: "max cᵀx  s.t.  Ax ≤ b,  x ≥ 0",
           description:
-            "Ottimizzazione continua con limiti, vincoli, import JSON e analisi dei range di soluzioni ottime.",
-          details: ["Backend HiGHS", "Range di ottimi multipli", "Test Netlib"],
+            "Ottimizzazione continua con limiti, vincoli, import JSON e analisi dei range per gli ottimi alternativi.",
+          details: ["Backend HiGHS", "Range di ottimi multipli", "Testato su Netlib"],
+          preview: "lpSolution",
         },
         {
           id: "milp",
           label: "Programmazione Lineare Intera Mista",
-          status: "Implementato",
+          short: "MILP",
+          status: "Disponibile",
+          formula: "max cᵀx  s.t.  Ax ≤ b,  xⱼ ∈ ℤ",
           description:
-            "Variabili intere, binarie e continue con opzioni solver per limite di tempo e MIP gap.",
-          details: ["CP-SAT/CBC", "Stato ammissibile", "Dataset MIPLIB"],
+            "Variabili intere, binarie e continue insieme, con controlli del solver per limite di tempo e MIP gap.",
+          details: ["CP-SAT / CBC", "Stato ammissibile", "Dataset MIPLIB"],
+          preview: "home",
         },
         {
           id: "knapsack",
           label: "Knapsack",
-          status: "Implementato",
+          short: "KP",
+          status: "Disponibile",
+          formula: "max Σ vᵢ·xᵢ  s.t.  Σ wᵢ·xᵢ ≤ W",
           description:
-            "Varianti 0/1, bounded, unbounded, fractional e multi-dimensional in un unico flusso.",
-          details: ["Import JSON", "Grafici di capacita'", "Switch variante"],
+            "Varianti 0/1, bounded, unbounded, fractional e multi-dimensional unificate in un unico flusso con import JSON.",
+          details: ["Import JSON", "Grafici di capacità", "Switch variante"],
+          preview: "knapsackSolution",
         },
         {
           id: "nlp",
           label: "Programmazione Non Lineare",
-          status: "Roadmap",
+          short: "NLP",
+          status: "In roadmap",
+          formula: "min f(x)  s.t.  gᵢ(x) ≤ 0",
           description:
-            "Ottimizzazione non vincolata, con bounds, vincolata, least-squares e minimax.",
+            "Ottimizzazione non vincolata, con bounds, vincolata, least-squares e minimax — in arrivo in una release futura.",
           details: ["SciPy minimize", "Curve fitting", "Metodi globali futuri"],
+          preview: "home",
         },
       ],
     },
     previews: {
-      eyebrow: "Anteprime risultati",
-      title: "Viste reali, non diagrammi astratti",
+      eyebrow: "Tour del prodotto",
+      title: "Schermate reali, non mockup astratti",
       body:
-        "La landing usa screenshot dell'app desktop, cosi' chi visita il sito vede subito le superfici reali di modellazione e soluzione che andra' a scaricare.",
+        "Queste sono viste effettive dell'app desktop, così sai esattamente cosa ottieni prima di scaricarla.",
       items: [
         {
           id: "home",
-          title: "Formula modelli di ottimizzazione",
-          body: "Costruisci problemi LP, MILP e Knapsack con input strutturati invece di script ad hoc.",
-          alt: "Home desktop di Optees con gli algoritmi di ottimizzazione",
+          window: "Optees — Home",
+          title: "Scegli il tuo metodo",
+          body: "Costruisci problemi LP, MILP e Knapsack da un catalogo chiaro di metodi, invece di script improvvisati.",
+          alt: "Vista home desktop di Optees con l'elenco degli algoritmi di ottimizzazione",
         },
         {
           id: "lpSolution",
+          window: "Optees — Soluzione LP",
           title: "Analizza il comportamento della soluzione",
-          body: "Le soluzioni LP includono controlli sull'obiettivo e range degli ottimi alternativi quando disponibili.",
-          alt: "Vista soluzione di programmazione lineare in Optees",
+          body: "Le soluzioni LP includono controlli sull'obiettivo, range ottimi e il grafico della regione ammissibile con il punto ottimo.",
+          alt: "Vista soluzione di programmazione lineare in Optees con grafici e regione ammissibile",
         },
         {
           id: "knapsack",
-          title: "Confronta le varianti Knapsack",
-          body: "Passa tra modelli 0/1, bounded, unbounded, fractional e multi-dimensional.",
-          alt: "Vista di formulazione Knapsack in Optees",
+          window: "Optees — Setup Knapsack",
+          title: "Modella Knapsack in modo visivo",
+          body: "Scegli una variante, imposta la capacità e descrivi gli oggetti in una tabella strutturata — nessuna formula da scrivere a mano.",
+          alt: "Vista di impostazione del problema Knapsack in Optees con oggetti e capacità",
         },
         {
           id: "knapsackSolution",
-          title: "Leggi il risultato in modo visivo",
-          body: "Uso della capacita', oggetti selezionati e grafici valore/peso sono mostrati accanto alla tabella.",
-          alt: "Vista soluzione Knapsack in Optees con grafici",
+          window: "Optees — Soluzione Knapsack",
+          title: "Leggi il risultato a colpo d'occhio",
+          body: "Uso della capacità, oggetti selezionati e grafici valore/peso sono accanto alla tabella delle decisioni.",
+          alt: "Vista soluzione Knapsack in Optees con uso della capacità e grafici dei valori",
         },
       ],
     },
     workflow: {
-      eyebrow: "Flusso",
-      title: "Dal modello alla spiegazione",
+      eyebrow: "Come funziona",
+      title: "Dal modello alla spiegazione in tre passi",
+      body: "Lo stesso ciclo intuitivo, qualunque cosa tu stia ottimizzando.",
       steps: [
         {
           number: "01",
           title: "Formula",
-          body: "Inserisci variabili, bounds, funzione obiettivo, vincoli o oggetti Knapsack.",
+          body: "Inserisci variabili, bounds, funzione obiettivo, vincoli o oggetti Knapsack — oppure importali da JSON.",
         },
         {
           number: "02",
           title: "Risolvi",
-          body: "Usa SciPy/HiGHS, OR-Tools o adattatori dedicati di programmazione dinamica.",
+          body: "Esegui motori affidabili: SciPy/HiGHS per LP, OR-Tools per MILP e solver di programmazione dinamica dedicati per Knapsack.",
         },
         {
           number: "03",
           title: "Ispeziona",
-          body: "Leggi stato, valore obiettivo, variabili selezionate, grafici e note didattiche.",
+          body: "Leggi stato, valore obiettivo, variabili selezionate, grafici e note didattiche che spiegano il risultato.",
         },
       ],
     },
     download: {
       eyebrow: "Download",
-      title: "Installa l'ultima build desktop",
+      title: "Porta Optees sul tuo desktop",
       body:
-        "Le release sono pubblicate su GitHub. Le build pacchettizzate possono controllare gli aggiornamenti e guidare l'utente verso il nuovo installer quando disponibile.",
+        "Le build pacchettizzate sono pubblicate su GitHub Releases. Installa una volta e l'app può controllare gli aggiornamenti e guidarti al nuovo installer.",
       latestRelease: "Ultima release: {version}",
-      fallbackRelease: "Ultima release: apri GitHub per controllare",
-      checkingRelease: "Controllo ultima release...",
-      macButton: "Scarica per macOS",
-      assetsButton: "Tutti gli asset della release",
+      fallbackRelease: "Apri GitHub per vedere l'ultima release",
+      checkingRelease: "Controllo dell'ultima release…",
+      downloadFor: "Scarica per {platform}",
+      downloadGeneric: "Scarica l'app",
+      otherVersions: "Altre piattaforme",
+      allReleases: "Tutte le release su GitHub",
+      menuAria: "Scegli la tua piattaforma",
+      yourSystem: "rilevato",
+      platformNames: { mac: "macOS", windows: "Windows", linux: "Linux" },
+      assetsButton: "Tutte le piattaforme e gli asset",
+      platformsLabel: "Disponibile per",
+      platforms: ["macOS", "Windows", "Linux"],
       gatekeeperNote:
-        "Le build macOS non firmate possono richiedere la conferma manuale standard di Gatekeeper dalle Impostazioni di Sistema.",
+        "Le build non sono firmate: macOS può chiedere la conferma standard di Gatekeeper, mentre Windows/Linux la consueta approvazione al primo avvio.",
     },
-    roadmap: {
-      eyebrow: "Roadmap",
-      title: "Prossimo passo: benchmark piu' forti e programmazione non lineare",
-      body:
-        "La prossima fase si concentra su benchmark scientifici Knapsack, un primo flusso di Programmazione Non Lineare e una pipeline dedicata per il sito pubblico.",
-      project: "Roadmap progetto",
-      issues: "Issue e pianificazione",
-      releases: "Storico release",
+    faq: {
+      eyebrow: "FAQ",
+      title: "Le risposte alle tue domande",
+      body: "Tutto ciò che ti serve sapere prima della tua prima ottimizzazione.",
+      items: [
+        {
+          q: "Cos'è Optees?",
+          a: "Optees è un'app desktop gratuita e open source che rende accessibile la ricerca operativa. Puoi modellare, risolvere e ispezionare problemi di Programmazione Lineare, Intera Mista e Knapsack senza scrivere codice.",
+        },
+        {
+          q: "A chi è rivolto?",
+          a: "Ad analisti e aziende che devono prendere decisioni migliori su risorse, scheduling e logistica, e a studenti o docenti che vogliono vedere la matematica dietro ogni soluzione.",
+        },
+        {
+          q: "È davvero gratuito?",
+          a: "Sì. Optees è completamente gratuito e rilasciato con licenza open source. Le build desktop sono disponibili su GitHub Releases.",
+        },
+        {
+          q: "Quali piattaforme sono supportate?",
+          a: "Optees è multipiattaforma e gira su macOS, Windows e Linux.",
+        },
+        {
+          q: "Devo saper programmare?",
+          a: "No. Un assistente guidato ti aiuta a scegliere l'algoritmo giusto e a inserire input strutturati, così ottimizzi senza scrivere codice.",
+        },
+        {
+          q: "Cosa arriverà in futuro?",
+          a: "La roadmap punta su benchmark Knapsack più solidi e su un primo flusso di Programmazione Non Lineare, seguiti da metodi su grafi e machine learning.",
+        },
+      ],
     },
     footer: {
       product: "Optees",
       claim: "Toolkit open source per l'ottimizzazione",
-      repository: "Repository GitHub",
+      tagline: "Modella, risolvi e comprendi problemi di ottimizzazione — in locale e gratis.",
+      columns: [
+        {
+          title: "Prodotto",
+          links: [
+            { label: "Perché Optees", key: "#features" },
+            { label: "Algoritmi", key: "#algorithms" },
+            { label: "Schermate", key: "#previews" },
+            { label: "Download", key: "#download" },
+          ],
+        },
+        {
+          title: "Progetto",
+          links: [
+            { label: "Repository GitHub", key: "repo" },
+            { label: "Release", key: "releases" },
+            { label: "Roadmap", key: "roadmap" },
+            { label: "Issue", key: "issues" },
+          ],
+        },
+      ],
+      socialAria: "Link social",
+      madeBy: "Sito personale di Paolo Pietrelli",
+      copyright: "© {year} Paolo Pietrelli · Tutti i diritti riservati",
+      license: "Licenza in stile MIT",
     },
   },
 };
