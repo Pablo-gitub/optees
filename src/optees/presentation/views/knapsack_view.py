@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.core.design import tokens
 from optees.domain.entities.lp.constraint import Constraint
 from optees.domain.entities.lp.objective import Objective
 from optees.domain.entities.knapsack.bounded_item import BoundedKnapsackItem
@@ -68,6 +69,11 @@ from optees.utility.knapsack_json_io import (
     KnapsackJsonProblem,
     knapsack_problem_from_file,
 )
+
+
+def _invalid_border() -> str:
+    """Inline stylesheet for an invalid input field (theme-aware danger color)."""
+    return f"border: 1px solid {tokens(theme.is_dark()).danger};"
 
 
 def _make_info_button(tooltip: str, parent: Optional[QWidget] = None) -> QPushButton:
@@ -233,6 +239,8 @@ class _ItemRow(QWidget):
         self.edit_max_quantity.setVisible(show_max_quantity)
 
         self.btn_remove = QToolButton()
+
+        self.btn_remove.setObjectName("rowRemoveButton")
         icon = QIcon.fromTheme("edit-delete")
         if not icon.isNull():
             self.btn_remove.setIcon(icon)
@@ -277,7 +285,7 @@ class _ItemRow(QWidget):
         try:
             value = _parse_float(self.edit_value.text())
         except ValueError:
-            self.edit_value.setStyleSheet("border: 1px solid rgba(220,53,69,.90);")
+            self.edit_value.setStyleSheet(_invalid_border())
             return
         self.edit_value.setStyleSheet("")
         self.value_changed.emit(self._index, value)
@@ -290,7 +298,7 @@ class _ItemRow(QWidget):
                 return
             weight = _parse_int(self.edit_weight.text())
         except ValueError:
-            self.edit_weight.setStyleSheet("border: 1px solid rgba(220,53,69,.90);")
+            self.edit_weight.setStyleSheet(_invalid_border())
             return
         self.edit_weight.setStyleSheet("")
         self.weight_changed.emit(self._index, weight)
@@ -299,7 +307,7 @@ class _ItemRow(QWidget):
         try:
             max_quantity = _parse_int(self.edit_max_quantity.text(), default=1)
         except ValueError:
-            self.edit_max_quantity.setStyleSheet("border: 1px solid rgba(220,53,69,.90);")
+            self.edit_max_quantity.setStyleSheet(_invalid_border())
             return
         self.edit_max_quantity.setStyleSheet("")
         self.max_quantity_changed.emit(self._index, max_quantity)
@@ -457,6 +465,8 @@ class _ResourceRow(QWidget):
         self.edit_capacity.editingFinished.connect(self.changed.emit)
 
         self.btn_remove = QToolButton()
+
+        self.btn_remove.setObjectName("rowRemoveButton")
         icon = QIcon.fromTheme("edit-delete")
         if not icon.isNull():
             self.btn_remove.setIcon(icon)
@@ -620,6 +630,8 @@ class _MultiItemRow(QWidget):
         self.edit_quantity_limit.setVisible(show_quantity_limit)
 
         self.btn_remove = QToolButton()
+
+        self.btn_remove.setObjectName("rowRemoveButton")
         icon = QIcon.fromTheme("edit-delete")
         if not icon.isNull():
             self.btn_remove.setIcon(icon)
@@ -1109,14 +1121,14 @@ class KnapsackView(QWidget):
             try:
                 _parse_float(self.edit_capacity.text())
             except ValueError:
-                self.edit_capacity.setStyleSheet("border: 1px solid rgba(220,53,69,.90);")
+                self.edit_capacity.setStyleSheet(_invalid_border())
                 return
             self.edit_capacity.setStyleSheet("")
             return
         try:
             capacity = _parse_int(self.edit_capacity.text())
         except ValueError:
-            self.edit_capacity.setStyleSheet("border: 1px solid rgba(220,53,69,.90);")
+            self.edit_capacity.setStyleSheet(_invalid_border())
             return
         self.edit_capacity.setStyleSheet("")
         self._ctrl.set_capacity(capacity)
@@ -1151,7 +1163,7 @@ class KnapsackView(QWidget):
         try:
             capacity = _parse_int(self.edit_capacity.text())
         except ValueError:
-            self.edit_capacity.setStyleSheet("border: 1px solid rgba(220,53,69,.90);")
+            self.edit_capacity.setStyleSheet(_invalid_border())
             QMessageBox.warning(
                 self,
                 S.t("knapsack.errors.invalid_title"),
@@ -1456,7 +1468,7 @@ class KnapsackView(QWidget):
         self._apply_variant()
 
     def refresh_theme(self) -> None:
-        title_fg = "rgba(255,255,255,0.95)" if theme.is_dark() else "rgba(0,0,0,0.90)"
+        title_fg = tokens(theme.is_dark()).text
         self.page_title.setStyleSheet(f"color: {title_fg}; margin-top: 8px; margin-bottom: 8px;")
         self.intro.refresh_theme()
         self.intro_text.setStyleSheet(theme.secondary_text_css(self))

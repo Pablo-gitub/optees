@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
 from optees.core.assets import asset
+from optees.core.design import tokens, flatten, Tokens
 
 
 # ---------------------------------------------------------------------------
@@ -50,25 +51,17 @@ def _to_html(markdown_text: str) -> str:
         return f"<pre>{html.escape(markdown_text)}</pre>"
 
 
-def _make_css(dark: bool) -> str:
-    if dark:
-        bg         = "#1b1b1b"
-        fg         = "rgba(255,255,255,0.88)"
-        h_color    = "rgba(255,255,255,0.95)"
-        secondary  = "rgba(255,255,255,0.55)"
-        code_bg    = "#272727"
-        border_clr = "rgba(255,255,255,0.13)"
-        link_clr   = "#7eb8f7"
-        blockq_clr = "rgba(255,255,255,0.45)"
-    else:
-        bg         = "#ffffff"
-        fg         = "rgba(0,0,0,0.84)"
-        h_color    = "rgba(0,0,0,0.90)"
-        secondary  = "rgba(0,0,0,0.52)"
-        code_bg    = "#f2f2f2"
-        border_clr = "rgba(0,0,0,0.12)"
-        link_clr   = "#1a6bbf"
-        blockq_clr = "rgba(0,0,0,0.42)"
+def _make_css(t: Tokens) -> str:
+    # Flatten translucent tokens to opaque hex: QTextBrowser's CSS subset
+    # does not honor rgba(...).
+    bg         = t.base
+    fg         = t.text
+    h_color    = t.text
+    secondary  = t.text_muted
+    code_bg    = flatten(t.surface_hover, t.base)
+    border_clr = flatten(t.border, t.base)
+    link_clr   = t.accent
+    blockq_clr = t.text_muted
 
     return f"""
         body {{
@@ -225,10 +218,9 @@ class LPInfoView(QWidget):
         self._render()
 
     def refresh_theme(self) -> None:
-        dark = theme.is_dark()
-        bg = "#1b1b1b" if dark else "#ffffff"
+        t = tokens(theme.is_dark())
         self.browser.setStyleSheet(
-            f"QTextBrowser {{ background-color: {bg}; border: none; }}"
+            f"QTextBrowser {{ background-color: {t.base}; border: none; }}"
         )
         self._render()
 
@@ -237,7 +229,7 @@ class LPInfoView(QWidget):
     def _render(self) -> None:
         md_text   = _load_doc(self._doc_key)
         html_body = _to_html(md_text)
-        css       = _make_css(theme.is_dark())
+        css       = _make_css(tokens(theme.is_dark()))
         self.browser.document().setDefaultStyleSheet(css)
         self.browser.setHtml(html_body)
 

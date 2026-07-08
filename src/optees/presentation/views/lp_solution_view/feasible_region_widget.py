@@ -6,6 +6,7 @@ from PySide6.QtCore import Qt
 
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.core import charts
 
 # Optional 3D support (guarded import)
 try:
@@ -181,6 +182,7 @@ class FeasibleRegionWidget(QWidget):
 
         # 3) Clear and dispatch
         self._fig.clear()
+        self._fig.patch.set_facecolor(charts.to_mpl(charts.current().window))
         if n == 2:
             self._ax = self._fig.add_subplot(111)  # 2D axes
             self._draw_2d()
@@ -190,11 +192,15 @@ class FeasibleRegionWidget(QWidget):
         elif n == 3 and not _HAS_MPL_3D:
             ax = self._fig.add_subplot(111)
             ax.text(0.5, 0.5, "Matplotlib 3D backend not available.",
-                    ha="center", va="center", transform=ax.transAxes)
+                    ha="center", va="center", transform=ax.transAxes,
+                    color=charts.to_mpl(charts.current().text_muted))
+            charts.style_axes(self._fig, ax, grid=False)
         else:
             ax = self._fig.add_subplot(111)
             ax.text(0.5, 0.5, S.t("lp.sol.feasible.only2d"),
-                    ha="center", va="center", transform=ax.transAxes)
+                    ha="center", va="center", transform=ax.transAxes,
+                    color=charts.to_mpl(charts.current().text_muted))
+            charts.style_axes(self._fig, ax, grid=False)
 
         self._fig.tight_layout()
         if self._canvas is not None:
@@ -208,6 +214,7 @@ class FeasibleRegionWidget(QWidget):
         import numpy as np
 
         ax = self._ax
+        t = charts.current()
         names:  List[str] = self._current_names(2)        # for value lookup
         labels: List[str] = self._current_axis_labels(2)  # for axis labels
         cons: List[Tuple[List[Optional[float]], str, Optional[float]]] = self._ctx.get("constraints", [])
@@ -255,7 +262,8 @@ class FeasibleRegionWidget(QWidget):
             mask &= (X1 <= _num(ub1, np.inf))
 
         # Feasible region (light fill)
-        ax.contourf(X0, X1, mask.astype(int), levels=[0.5, 1.5], alpha=0.25)
+        ax.contourf(X0, X1, mask.astype(int), levels=[0.5, 1.5],
+                    colors=[charts.to_mpl(t.accent)], alpha=0.22)
 
         # Constraint guide lines
         for a, rel, rhs in cons:
@@ -264,19 +272,21 @@ class FeasibleRegionWidget(QWidget):
             rhsf = _num(rhs, 0.0)
             if abs(a1) > 1e-12:
                 y = (rhsf - a0 * x0) / a1
-                ax.plot(x0, y, linewidth=1.0)
+                ax.plot(x0, y, linewidth=1.2, color=charts.to_mpl(t.cyan))
             elif abs(a0) > 1e-12:
                 x = rhsf / a0
-                ax.axvline(x, linewidth=1.0)
+                ax.axvline(x, linewidth=1.2, color=charts.to_mpl(t.cyan))
 
         # Optimal point (if present)
         values = (self._result or {}).get("values") or (self._result or {}).get("x") or {}
         p0 = _num(values.get(names[0]), None)
         p1 = _num(values.get(names[1]), None)
         if p0 is not None and p1 is not None:
-            ax.scatter([p0], [p1], s=40)
+            ax.scatter([p0], [p1], s=48, color=charts.to_mpl(t.accent), zorder=5,
+                       edgecolors=charts.to_mpl(t.on_accent), linewidths=1.2)
             ax.annotate(f"({p0:.3g}, {p1:.3g})",
-                        xy=(p0, p1), xytext=(6, 6), textcoords="offset points")
+                        xy=(p0, p1), xytext=(6, 6), textcoords="offset points",
+                        color=charts.to_mpl(t.text))
 
         # Axes styling
         ax.set_xlabel(labels[0])
@@ -286,7 +296,7 @@ class FeasibleRegionWidget(QWidget):
         ax.set_ylim([x1_min, x1_max])
         for spine in ax.spines.values():
             spine.set_linewidth(1.0)
-        ax.grid(True, linewidth=0.3, alpha=0.35)
+        charts.style_axes(self._fig, ax)
 
     # ----------------------------------------------------------------------
     # 3D Rendering
@@ -296,6 +306,7 @@ class FeasibleRegionWidget(QWidget):
         import numpy as np
 
         ax = self._ax
+        t = charts.current()
         names:  List[str] = self._current_names(3)         # for value lookup
         labels: List[str] = self._current_axis_labels(3)   # for axis labels
         cons: List[Tuple[List[Optional[float]], str, Optional[float]]] = self._ctx.get("constraints", [])
@@ -377,19 +388,25 @@ class FeasibleRegionWidget(QWidget):
                     ZZ = (rhsf - a0 * XX - a1 * YY) / a2
                     XX, YY, ZZ = _clip_to_box(XX, YY, ZZ)
                     ax.plot_surface(XX, YY, ZZ, rstride=1, cstride=1,
-                                    linewidth=0.4, edgecolor="k", alpha=0.35, antialiased=True)
+                                    linewidth=0.3, color=charts.to_mpl(t.accent),
+                                    edgecolor=charts.to_mpl(t.border_strong),
+                                    alpha=0.28, antialiased=True)
                 elif abs(a1) > 1e-12:
                     XX, ZZ = np.meshgrid(X, Z, indexing="xy")
                     YY = (rhsf - a0 * XX - a2 * ZZ) / a1
                     XX, YY, ZZ = _clip_to_box(XX, YY, ZZ)
                     ax.plot_surface(XX, YY, ZZ, rstride=1, cstride=1,
-                                    linewidth=0.4, edgecolor="k", alpha=0.35, antialiased=True)
+                                    linewidth=0.3, color=charts.to_mpl(t.accent),
+                                    edgecolor=charts.to_mpl(t.border_strong),
+                                    alpha=0.28, antialiased=True)
                 else:
                     YY, ZZ = np.meshgrid(Y, Z, indexing="xy")
                     XX = (rhsf - a1 * YY - a2 * ZZ) / a0
                     XX, YY, ZZ = _clip_to_box(XX, YY, ZZ)
                     ax.plot_surface(XX, YY, ZZ, rstride=1, cstride=1,
-                                    linewidth=0.4, edgecolor="k", alpha=0.35, antialiased=True)
+                                    linewidth=0.3, color=charts.to_mpl(t.accent),
+                                    edgecolor=charts.to_mpl(t.border_strong),
+                                    alpha=0.28, antialiased=True)
             except Exception:
                 # skip numerical issues
                 pass
@@ -399,8 +416,9 @@ class FeasibleRegionWidget(QWidget):
         def _v(i): return _num(values.get(names[i]), None)
         pt = (_v(0), _v(1), _v(2))
         if all(v is not None for v in pt):
-            ax.scatter([pt[0]], [pt[1]], [pt[2]], s=55)
-            ax.text(pt[0], pt[1], pt[2], f"({pt[0]:.3g}, {pt[1]:.3g}, {pt[2]:.3g})")
+            ax.scatter([pt[0]], [pt[1]], [pt[2]], s=55, color=charts.to_mpl(t.accent))
+            ax.text(pt[0], pt[1], pt[2], f"({pt[0]:.3g}, {pt[1]:.3g}, {pt[2]:.3g})",
+                    color=charts.to_mpl(t.text))
 
         # Axes labels/limits: now tight around the interesting range
         ax.set_xlabel(labels[0]); ax.set_ylabel(labels[1]); ax.set_zlabel(labels[2])
@@ -412,3 +430,4 @@ class FeasibleRegionWidget(QWidget):
         except Exception:
             pass
         ax.set_title(S.t("lp.sol.feasible.subtitle"))
+        charts.style_axes(self._fig, ax)

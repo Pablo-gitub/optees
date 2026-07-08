@@ -11,7 +11,7 @@ logging.basicConfig(level=os.getenv("OPTEES_LOG", "WARNING").upper())
 
 def main():
     app = QApplication(sys.argv)
-    theme.install_app_watcher()
+    theme.install_global_theme(app)
     variant = "dark" if is_dark_mode() else "light"
     app.setWindowIcon(QIcon(str(asset(f"logo/{variant}/appicon_256.png"))))
     win = MainWindow()

@@ -7,17 +7,20 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout
 from PySide6.QtCore import Qt
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.core.design import tokens, rgba, Tokens
+
 
 # ----------------------------------------------------------------------
-# Color presets for the status badge
+# Semantic colors for the status badge, derived from the design tokens
 # ----------------------------------------------------------------------
-_STATUS_COLORS = {
-    "Optimal":    {"bg": "rgba(46, 160, 67, 0.12)", "fg": "rgba(46,160,67,0.95)"},   # green
-    "Feasible":   {"bg": "rgba(46, 160, 67, 0.10)", "fg": "rgba(46,160,67,0.95)"},   # green
-    "Infeasible": {"bg": "rgba(255, 0, 0, 0.10)",   "fg": "rgba(220, 53, 69, 0.95)"}, # red
-    "Unbounded":  {"bg": "rgba(255, 165, 0, 0.12)", "fg": "rgba(255,140,0,0.95)"},   # orange
-    "NotSolved":  {"bg": "rgba(128,128,128,0.10)",  "fg": "rgba(108,117,125,0.95)"}, # gray
-}
+def _status_colors(t: Tokens) -> Dict[str, Dict[str, str]]:
+    return {
+        "Optimal":    {"bg": rgba(t.success, 0.14),    "fg": t.success},
+        "Feasible":   {"bg": rgba(t.success, 0.12),    "fg": t.success},
+        "Infeasible": {"bg": rgba(t.danger, 0.12),     "fg": t.danger},
+        "Unbounded":  {"bg": rgba(t.warning, 0.14),    "fg": t.warning},
+        "NotSolved":  {"bg": rgba(t.text_muted, 0.12), "fg": t.text_muted},
+    }
 
 
 class StatusCard(QWidget):
@@ -97,7 +100,7 @@ class StatusCard(QWidget):
 
     def refresh_theme(self) -> None:
         """Adjust text and background colors based on current theme."""
-        base_fg = "rgba(255,255,255,0.95)" if theme.is_dark() else "rgba(0,0,0,0.90)"
+        base_fg = tokens(theme.is_dark()).text
         self._objective.setStyleSheet(f"font-size: 20px; font-weight: 700; color: {base_fg};")
         self._meta.setTextFormat(Qt.RichText)
         self._formula_detail.setTextFormat(Qt.RichText)
@@ -149,7 +152,8 @@ class StatusCard(QWidget):
         }.get(st, st)
 
         # --- Status badge color ----------------------------------------
-        colors = _STATUS_COLORS.get(st, _STATUS_COLORS["NotSolved"])
+        _sc = _status_colors(tokens(theme.is_dark()))
+        colors = _sc.get(st, _sc["NotSolved"])
         self._status_badge.setText(badge_text)
         self._status_badge.setStyleSheet(
             f"border-radius: 14px; padding: 4px 10px; "

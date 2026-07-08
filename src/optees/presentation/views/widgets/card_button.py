@@ -8,6 +8,8 @@ from PySide6.QtWidgets import QFrame, QLabel, QHBoxLayout, QVBoxLayout, QSizePol
 
 from optees.presentation.views.widgets.icon_circle import IconCircle
 from optees.core.assets import asset as asset_path
+from optees.core.design import tokens
+from optees.core.theme import theme
 
 CARD_W = 360
 CARD_H = 140
@@ -39,14 +41,7 @@ class CardButton(QFrame):
         self.setCursor(Qt.PointingHandCursor)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.setFixedSize(CARD_W, CARD_H)
-        self.setStyleSheet("""
-            QFrame#Card {
-                border: 1px solid rgba(255,255,255,0.10);
-                border-radius: 16px;
-                background: rgba(255,255,255,0.04);
-            }
-            QFrame#Card:hover { background: rgba(255,255,255,0.07); }
-        """)
+        # Surface/border/hover come from the global stylesheet (QFrame#Card).
 
         root = QHBoxLayout(self)
         root.setContentsMargins(16, 16, 16, 16)
@@ -73,12 +68,7 @@ class CardButton(QFrame):
         if badge:
             b = QLabel(badge)
             b.setObjectName("badge")
-            b.setStyleSheet("""
-                QLabel#badge {
-                    border-radius: 10px; padding: 3px 8px;
-                    background: #2563eb; color: white; font-size: 11px;
-                }
-            """)
+            # Styled globally via QLabel#badge.
             title_row.addWidget(b, 0, Qt.AlignRight)
 
         text_col = QVBoxLayout()
@@ -107,10 +97,11 @@ class CardButton(QFrame):
     def _apply_theme(self) -> None:
         if not self._constructed:
             return
-        # Home cards are rendered on a dark translucent surface, so keep their
-        # text white regardless of the system palette.
-        self._title.setStyleSheet("color: rgba(255,255,255,0.95);")
-        self._sub.setStyleSheet("color: rgba(255,255,255,0.75);")
+        # Text colors come from the central tokens so cards read correctly in
+        # both light and dark themes.
+        t = tokens(theme.is_dark())
+        self._title.setStyleSheet(f"color: {t.text};")
+        self._sub.setStyleSheet(f"color: {t.text_muted};")
         self._icon.refresh_theme()
 
     def changeEvent(self, ev):

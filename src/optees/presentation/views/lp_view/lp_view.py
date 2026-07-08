@@ -11,6 +11,7 @@ from PySide6.QtWidgets import (
 
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.core.design import tokens
 from optees.presentation.controllers.lp_controller import LPController, LPVariable
 from optees.presentation.views.widgets.flow_layout import FlowLayout
 from .intro_section import IntroSection
@@ -312,10 +313,9 @@ class LPView(QWidget):
         self.btn_optimize.setText(S.t("lp.actions.optimize"))
 
     def refresh_theme(self) -> None:
-        if theme.is_dark():
-            self.page_title.setStyleSheet("color: rgba(255,255,255,0.95); margin-top: 8px; margin-bottom: 8px;")
-        else:
-            self.page_title.setStyleSheet("color: rgba(0,0,0,0.90); margin-top: 8px; margin-bottom: 8px;")
+        self.page_title.setStyleSheet(
+            f"color: {tokens(theme.is_dark()).text}; margin-top: 8px; margin-bottom: 8px;"
+        )
         self.intro.refresh_theme()
         self.vars_sec.refresh_theme()
         self.bounds_sec.refresh_theme()

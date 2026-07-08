@@ -9,6 +9,8 @@ from PySide6.QtWidgets import (
 
 from optees.core.assets import asset
 from optees.core.string_manager import strings as S
+from optees.core.design import tokens
+from optees.core.theme import theme
 from optees.presentation.views.widgets.card_button import CardButton
 from optees.presentation.views.widgets.flow_layout import FlowLayout
 
@@ -33,13 +35,17 @@ class Category(QFrame):
 
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
-        line.setStyleSheet("color: rgba(255,255,255,0.15);")
+        self._line = line
         root.addWidget(line)
+        self.apply_theme()
 
         self.flow = FlowLayout(hspacing=12, vspacing=12)
         root.addLayout(self.flow)
 
         self.set_title(title)
+
+    def apply_theme(self) -> None:
+        self._line.setStyleSheet(f"color: {tokens(theme.is_dark()).border_strong};")
 
     def set_title(self, text: str) -> None:
         # simple rich-text style (unchanged for now)
@@ -78,26 +84,7 @@ class HomePage(QWidget):
         self.update_banner.setObjectName("updateBannerButton")
         self.update_banner.setCursor(Qt.PointingHandCursor)
         self.update_banner.setVisible(False)
-        self.update_banner.setStyleSheet(
-            """
-            QPushButton#updateBannerButton {
-                text-align: left;
-                padding: 14px 18px;
-                border-radius: 8px;
-                border: 1px solid rgba(44, 123, 229, 0.55);
-                background: rgba(44, 123, 229, 0.18);
-                font-weight: 700;
-            }
-            QPushButton#updateBannerButton:hover {
-                background: rgba(44, 123, 229, 0.28);
-            }
-            QPushButton#updateBannerButton:disabled {
-                color: rgba(255,255,255,0.55);
-                border-color: rgba(255,255,255,0.20);
-                background: rgba(255,255,255,0.08);
-            }
-            """
-        )
+        # Styled globally via QPushButton#updateBannerButton.
         self.update_banner.clicked.connect(self.update_requested.emit)
         root.addWidget(self.update_banner)
 
@@ -141,7 +128,7 @@ class HomePage(QWidget):
         self._coming_labels = []  # keep references to update text on language change
         for cat in (self.cat_nlp, self.cat_graph, self.cat_ml):
             ph = QLabel(S.t("home.comingSoon"))
-            ph.setStyleSheet("color: rgba(255,255,255,0.5);")
+            ph.setStyleSheet(f"color: {tokens(theme.is_dark()).text_muted};")
             cat.add_card(ph)
             root.addWidget(cat)
             self._coming_labels.append(ph)
@@ -183,9 +170,14 @@ class HomePage(QWidget):
             ph.setText(cs)
         self._refresh_update_banner_text()
 
-    # kept for future: theme-related tweaks
     def refresh_theme(self) -> None:
-        pass
+        muted = tokens(theme.is_dark()).text_muted
+        for cat in (self.cat_lin, self.cat_nlp, self.cat_graph, self.cat_ml):
+            cat.apply_theme()
+        for ph in self._coming_labels:
+            ph.setStyleSheet(f"color: {muted};")
+        for card in (self.card_lp, self.card_milp, self.card_knap):
+            card._apply_theme()
 
     def set_update_available(self, result) -> None:
         self._update_result = result

@@ -9,6 +9,7 @@ from matplotlib.figure import Figure  # type: ignore
 
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.core import charts
 
 
 
@@ -137,14 +138,16 @@ class PlotWidget(QWidget):
         x_labels = list(self._ctx_labels) if (self._ctx_labels and len(self._ctx_labels) == len(names)) else names
 
         # Draw
+        t = charts.current()
         self._ax.clear()
         xs = list(range(len(names)))
-        self._ax.bar(xs, vals)
+        self._ax.bar(xs, vals, color=charts.to_mpl(t.accent))
         self._ax.set_xticks(xs)
         self._ax.set_xticklabels(x_labels)
         self._ax.set_xlabel(S.t("lp.sol.plot.x_label"))
         self._ax.set_ylabel(S.t("lp.sol.plot.y_label"))
         self._ax.tick_params(axis='x', rotation=0)
+        charts.style_axes(self._fig, self._ax)
 
         # Optional: keep Y axis starting at 0 for readability
         try:

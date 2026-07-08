@@ -5,7 +5,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFrame, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QWidget,
 )
-from optees.core.theme import theme
 
 class Section(QFrame):
     """Generic card with a title and a vertical body layout.
@@ -47,13 +46,6 @@ class Section(QFrame):
         self._hdr.addWidget(widget)
 
     def refresh_theme(self) -> None:
-        if theme.is_dark():
-            self.setStyleSheet("""
-                QFrame#Section { border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; }
-                QLabel#SectionTitle { color: rgba(255,255,255,0.92); }
-            """)
-        else:
-            self.setStyleSheet("""
-                QFrame#Section { border: 1px solid rgba(0,0,0,0.10); border-radius: 10px; }
-                QLabel#SectionTitle { color: rgba(0,0,0,0.85); }
-            """)
+        # Section styling now lives in the global stylesheet (optees.core.qss),
+        # which re-applies automatically on theme change. Kept for API parity.
+        return

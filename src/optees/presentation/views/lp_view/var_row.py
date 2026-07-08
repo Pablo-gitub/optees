@@ -48,6 +48,7 @@ class VarRow(QWidget):
 
         # delete button: toolbutton, icon-only, compact
         self.btn_remove = QToolButton()
+        self.btn_remove.setObjectName("rowRemoveButton")
         icon = QIcon.fromTheme("edit-delete")
         if not icon.isNull():
             self.btn_remove.setIcon(icon)

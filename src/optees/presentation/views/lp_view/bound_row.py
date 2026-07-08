@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QLineEdit, QToolButton
 
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.core.design import tokens
 
 # ---------------- Row "Xk [name]  🗑︎" ----------------
 
@@ -144,7 +145,9 @@ class BoundRow(QWidget):
     def show_error(self, which: str, msg: str) -> None:
         """which in {'lb','ub','order'}."""
         target = self.edit_lb if which == "lb" else self.edit_ub
-        target.setStyleSheet("border: 1px solid rgba(255,0,0,0.6); border-radius: 4px;")
+        target.setStyleSheet(
+            f"border: 1px solid {tokens(theme.is_dark()).danger}; border-radius: 4px;"
+        )
         target.setToolTip(msg)
 
     def clear_error(self) -> None:

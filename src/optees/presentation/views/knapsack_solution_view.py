@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (
 
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.core.design import tokens
+from optees.core.qss import qcolor
 from optees.presentation.views.lp_view.section import Section
 
 
@@ -46,10 +48,12 @@ class _CapacityUsageWidget(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         rect = self.rect().adjusted(14, 12, -14, -12)
 
-        fg = QColor(245, 245, 245) if theme.is_dark() else QColor(25, 25, 25)
-        muted = QColor(170, 170, 170) if theme.is_dark() else QColor(95, 95, 95)
-        used_color = QColor(46, 160, 67)
-        remaining_color = QColor(180, 186, 196) if theme.is_dark() else QColor(215, 220, 228)
+        t = tokens(theme.is_dark())
+        fg = qcolor(t.text)
+        muted = qcolor(t.text_muted)
+        used_color = qcolor(t.success)
+        remaining_color = qcolor(t.text_muted)
+        remaining_color.setAlpha(60)
 
         painter.setPen(fg)
         title_font = QFont()
@@ -191,11 +195,12 @@ class _ItemBarsWidget(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         rect = self.rect().adjusted(14, 12, -14, -12)
 
-        fg = QColor(245, 245, 245) if theme.is_dark() else QColor(25, 25, 25)
-        muted = QColor(170, 170, 170) if theme.is_dark() else QColor(95, 95, 95)
-        value_color = QColor(41, 121, 255)
-        weight_color = QColor(255, 152, 0)
-        selected_outline = QColor(46, 160, 67)
+        t = tokens(theme.is_dark())
+        fg = qcolor(t.text)
+        muted = qcolor(t.text_muted)
+        value_color = qcolor(t.accent)
+        weight_color = qcolor(t.warning)
+        selected_outline = qcolor(t.success)
         dim_alpha = 85
 
         painter.setPen(fg)
@@ -388,7 +393,7 @@ class KnapsackSolutionView(QWidget):
         self.status_sec.refresh_theme()
         self.chart_sec.refresh_theme()
         self.table_sec.refresh_theme()
-        fg = "rgba(255,255,255,0.95)" if theme.is_dark() else "rgba(0,0,0,0.90)"
+        fg = tokens(theme.is_dark()).text
         secondary = theme.secondary_text_css(self)
         self.status_line.setStyleSheet(f"font-size: 18px; font-weight: 700; color: {fg};")
         self.summary_line.setStyleSheet(secondary)

@@ -18,6 +18,7 @@ class ThemeManager(QObject):
         super().__init__()
         self._installed = False
         self._last_is_dark: Optional[bool] = None  # cache
+        self._applied_dark: Optional[bool] = None  # last theme applied to the app
 
     # ---------- query ----------
     def is_dark(self) -> bool:
@@ -84,6 +85,45 @@ class ThemeManager(QObject):
             return
         app.installEventFilter(self)
         self._installed = True
+
+    def install_global_theme(self, app: Optional[QApplication] = None) -> None:
+        """Apply the centralized palette + stylesheet and keep them in sync.
+
+        Uses the Fusion base style (native styles, especially on macOS, ignore
+        large parts of a global style sheet) and re-applies whenever the OS
+        switches between light and dark.
+        """
+        app = app or QApplication.instance()
+        if app is None:
+            return
+        try:
+            app.setStyle("Fusion")
+        except Exception:
+            pass
+        self.install_app_watcher()
+        self.apply_to_app(app, force=True)
+        self.theme_changed.connect(lambda: self.apply_to_app(app))
+
+    def apply_to_app(self, app: Optional[QApplication] = None, force: bool = False) -> None:
+        """(Re)apply palette and global stylesheet for the current theme.
+
+        Guarded against re-entrancy: ``setPalette`` itself emits an
+        ApplicationPaletteChange, which would otherwise loop back here forever.
+        We only re-apply when the effective dark/light state actually changed.
+        """
+        app = app or QApplication.instance()
+        if app is None:
+            return
+        dark = self.is_dark()
+        if not force and dark == self._applied_dark:
+            return
+        self._applied_dark = dark
+        # Local imports keep this Qt-heavy path out of module import time.
+        from optees.core.design import tokens
+        from optees.core.qss import build_palette, build_stylesheet
+        t = tokens(dark)
+        app.setPalette(build_palette(t))
+        app.setStyleSheet(build_stylesheet(t))
 
     # ---------- Qt hook ----------
     def eventFilter(self, obj, ev):

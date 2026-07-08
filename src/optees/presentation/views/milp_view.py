@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.core.design import tokens
 from optees.domain.entities.milp.variable import MILPVariable
 from optees.domain.value_objects.milp.integrality import Integrality
 from optees.presentation.controllers.milp_controller import MILPController
@@ -225,6 +226,8 @@ class _MILPVarRow(QWidget):
         self.combo_type.currentIndexChanged.connect(self._on_integrality_changed)
 
         self.btn_remove = QToolButton()
+
+        self.btn_remove.setObjectName("rowRemoveButton")
         icon = QIcon.fromTheme("edit-delete")
         if not icon.isNull():
             self.btn_remove.setIcon(icon)
@@ -746,14 +749,9 @@ class MILPView(QWidget):
         self.btn_optimize.setText(S.t("milp.actions.optimize"))
 
     def refresh_theme(self) -> None:
-        if theme.is_dark():
-            self.page_title.setStyleSheet(
-                "color: rgba(255,255,255,0.95); margin-top: 8px; margin-bottom: 8px;"
-            )
-        else:
-            self.page_title.setStyleSheet(
-                "color: rgba(0,0,0,0.90); margin-top: 8px; margin-bottom: 8px;"
-            )
+        self.page_title.setStyleSheet(
+            f"color: {tokens(theme.is_dark()).text}; margin-top: 8px; margin-bottom: 8px;"
+        )
         self.intro.refresh_theme()
         self.intro_text.setStyleSheet(theme.secondary_text_css(self))
         self.vars_sec.refresh_theme()
