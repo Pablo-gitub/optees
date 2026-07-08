@@ -32,21 +32,17 @@ from optees.presentation.main_window import MainWindow
 
 
 def _install_dark_palette(app: QApplication) -> None:
+    """Apply the app's real dark theme (token-based) for the landing shots.
+
+    Setting the dark palette makes ``theme.is_dark()`` resolve to True via its
+    luminance fallback, so every view and chart renders in dark mode.
+    """
+    from optees.core.design import DARK
+    from optees.core.qss import build_palette, build_stylesheet
+
     app.setStyle("Fusion")
-    palette = QPalette()
-    palette.setColor(QPalette.Window, QColor(45, 45, 45))
-    palette.setColor(QPalette.WindowText, QColor(245, 245, 245))
-    palette.setColor(QPalette.Base, QColor(30, 30, 30))
-    palette.setColor(QPalette.AlternateBase, QColor(50, 50, 50))
-    palette.setColor(QPalette.ToolTipBase, QColor(245, 245, 245))
-    palette.setColor(QPalette.ToolTipText, QColor(30, 30, 30))
-    palette.setColor(QPalette.Text, QColor(245, 245, 245))
-    palette.setColor(QPalette.Button, QColor(70, 70, 70))
-    palette.setColor(QPalette.ButtonText, QColor(245, 245, 245))
-    palette.setColor(QPalette.BrightText, Qt.GlobalColor.red)
-    palette.setColor(QPalette.Highlight, QColor(20, 125, 245))
-    palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))
-    app.setPalette(palette)
+    app.setPalette(build_palette(DARK))
+    app.setStyleSheet(build_stylesheet(DARK))
 
 
 def _capture(window: MainWindow, name: str, page: str) -> None:
