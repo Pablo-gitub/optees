@@ -1,45 +1,122 @@
-# Datasets & Formats
+# Datasets And Formats
 
-This project intentionally keeps solvers **agnostic** of file formats. Adapters live in `src/optees/data/adapters/` (currently under `src/optees/utility/` while bootstrapping).
+Optees keeps solvers independent from external file formats. Dataset readers
+live at the infrastructure boundary under `src/optees/utility/data_adapters/`;
+they convert source files into the canonical dictionaries or domain models used
+by the application.
 
-## LP (continuous)
-- **LPnetlib (SuiteSparse)**: `.mat` instances (A, c, row bounds `rl/ru`, or RHS `b`, and var bounds `lo/hi`).
-  - Source: https://sparse.tamu.edu/LPnetlib
-  - Adapter: `load_lpnetlib_mat(path)` → canonical LP dict.
+Every in-repository dataset must have a source, a format description, an
+expected outcome, and a test that consumes it. A small deterministic reference
+case is useful for regression, but it is not labelled as a scientific benchmark
+unless its origin and expected result are externally traceable.
 
-## 0/1 Knapsack
-- **Burkardt / KNAPSACK_01**: text files per instance:
-  - `<inst>_c.txt` (capacity, integer)
-  - `<inst>_w.txt` (weights, one per line, integers)
-  - `<inst>_p.txt` (profits/values, one per line)
-  - `<inst>_s.txt` (optional: optimal 0/1 selection, one per line)
-  - Source: https://people.sc.fsu.edu/~jburkardt/datasets/knapsack_01/knapsack_01.html
-  - Adapter: `load_knapsack_burkardt(dir_path, instance)`.
+## LP: LPnetlib
 
-## Layout under tests
-````
+- **Source:** [SuiteSparse LPnetlib](https://sparse.tamu.edu/LPnetlib).
+- **Files:** MATLAB `.mat` instances with the objective, matrix, row bounds,
+  and variable bounds.
+- **Included smoke instances:** `lp_afiro.mat` and `lp_25fv47.mat`.
+- **Reader:** `load_lpnetlib_mat(path)`.
+- **Tests:** `tests/utility/test_io_lpnetlib.py` and LP use-case tests.
 
+## MILP: MIPLIB 2017
+
+- **Source:** [MIPLIB 2017](https://miplib.zib.de/).
+- **Files:** MPS/MPS.GZ instances plus `miplib2017-v31.solu`, the published
+  status/objective table.
+- **Included corpus:** `tests/data/miplib2017/`.
+- **Tests:** `tests/utility/test_miplib_milp_e2e.py` discovers at most six small
+  instances, imposes an on-disk-size filter, a short solver limit, and a hard
+  per-instance timeout. It is optional when PuLP is unavailable.
+
+The full MIPLIB directory is intentionally not a promise that every instance
+is solvable by Optees' current adapter. It is a compatibility and parser
+regression corpus; large instances are outside the standard exact-solver budget.
+
+## 0/1 Knapsack: Burkardt KNAPSACK_01
+
+- **Source:** [Burkardt KNAPSACK_01 dataset](https://people.sc.fsu.edu/~jburkardt/datasets/knapsack_01/knapsack_01.html).
+- **Files per instance:**
+  - `<instance>_c.txt`: integer capacity;
+  - `<instance>_w.txt`: integer item weights;
+  - `<instance>_p.txt`: item profits/values;
+  - `<instance>_s.txt`: optional optimal 0/1 selection.
+- **Included instances:** `p01`, `p02`, and `p08`.
+- **Reader:** `load_knapsack_burkardt(dir_path, instance)`.
+- **Tests:** `tests/utility/test_io_knapsack.py`,
+  `tests/utility/test_io_knapsack_param.py`, and
+  `tests/application/usecases/test_solve_knapsack_burkardt.py`.
+
+`p01` and `p02` are standard exact regression cases. `p08` intentionally
+exceeds the configured DP budget in the use-case test, proving that the UI can
+report a bounded computational limit rather than claim an unproven optimum.
+
+## Multi-Dimensional 0/1 Knapsack: OR-Library mknap1
+
+- **Source:** [OR-Library multi-dimensional knapsack collection](https://people.brunel.ac.uk/~mastjjb/jeb/orlib/mknapinfo.html), maintained by J. E. Beasley.
+- **Original provenance:** the seven `mknap1` problems are the R&D-project
+  selection instances reported by C. C. Petersen (1967). The source page also
+  specifies the mathematical formulation and on-disk format.
+- **Included source file:** `tests/data/knapsack/orlib/mknap1.txt`, with only
+  trailing whitespace normalized from the source collection.
+- **SHA-256:**
+  `1e469c3ce6131f47bef6bd0af19e48d0f25bbe71c4eec76aa8cab43a24e01278`.
+- **Reader:** `load_orlib_mknap(path, instance_index)`, where the index is
+  1-based. It converts OR-Library's constraint-major coefficients into
+  Optees' item-major `usage_matrix`.
+- **Tests:** `tests/utility/test_orlib_mknap_adapter.py` validates parsing and
+  orientation; `tests/application/usecases/test_solve_multi_dimensional_knapsack_orlib.py`
+  verifies the published optima for instances 1--3.
+
+The file holds instances with 6, 10, 15, 20, 28, 39, and 50 items. The current
+exact branch-and-bound adapter has a conservative 32-item guard, and the
+standard suite uses the first three to keep CI deterministic. The remaining
+instances are retained as parser data and future performance-regression inputs,
+not as a claim that the current exact adapter should solve them routinely.
+
+## Bounded And Unbounded Knapsack Reference Cases
+
+There is no small, redistributable external corpus currently included for these
+two variants. Pisinger's academic code collection is an authoritative source
+for the variants and test generators, but it does not provide a ready-made
+small benchmark set suitable for vendoring here.
+
+- **Source reference:** [David Pisinger's optimization codes](https://hjemmesider.diku.dk/~pisinger/codes.html), including the bounded `bouknap`
+  algorithm and generators for related knapsack experiments.
+- **Included cases:** `tests/data/knapsack/reference_cases.json`.
+- **Purpose:** hand-checked, deterministic regression cases that assert the
+  exact objective, quantity vector, and feasibility for the Bounded and
+  Unbounded DP adapters.
+- **Tests:** `tests/application/usecases/test_solve_knapsack_reference_cases.py`.
+
+These cases are intentionally called **reference cases**, not external
+benchmarks. When a suitable redistributable corpus with published optima is
+identified, it should be added beside this file with its source, checksum, and
+dedicated adapter if necessary.
+
+## Test Data Layout
+
+```text
 tests/data/
-        lp/lpnetlib_mat/
-                lp_afiro.mat
-                lp_25fv47.mat
-        knapsack/
-            p01/
-                p01_c.txt
-                p01_w.txt
-                p01_p.txt
-                p01_s.txt
-            p02/
-                p02_c.txt
-                p02_w.txt
-                p02_p.txt
-                p02_s.txt
-            p08/
-                p08_c.txt
-                p08_w.txt
-                p08_p.txt
-                p08_s.txt
+  lp/lpnetlib_mat/
+    lp_afiro.mat
+    lp_25fv47.mat
+  miplib2017/
+    miplib2017-v31.solu
+    instances/
+  knapsack/
+    p01/, p02/, p08/                # Burkardt 0/1
+    orlib/mknap1.txt                # OR-Library multi-dimensional 0/1
+    reference_cases.json            # Bounded/Unbounded regression cases
+```
 
-````
+## Adding A Dataset
 
-> For larger sets (OR-Library, Pisinger), we’ll add separate adapters and keep only a few small instances in-repo. The rest should be documented with links and expected checksums.
+1. Verify the original source, usage terms, file checksum, and published
+   outcome before copying files into the repository.
+2. Add a dedicated reader when the format is not already supported; keep it out
+   of the solver itself.
+3. Add a parsing test and an end-to-end test that checks feasibility and a
+   published optimum or an explicitly documented reference outcome.
+4. Keep normal CI fast. Put expensive cases behind a marker or an explicit
+   opt-in command, and document the expected machine/runtime budget.

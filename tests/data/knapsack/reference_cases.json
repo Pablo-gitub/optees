@@ -1,0 +1,52 @@
+{
+  "version": "1",
+  "source": "Optees deterministic regression cases",
+  "purpose": "Small checked cases for variants without an included redistributable scientific corpus.",
+  "bounded": [
+    {
+      "id": "inventory_mix",
+      "capacity": 10,
+      "items": [
+        {"name": "A", "value": 6, "weight": 2, "max_quantity": 3},
+        {"name": "B", "value": 10, "weight": 3, "max_quantity": 2}
+      ],
+      "expected_objective": 32,
+      "expected_quantities": [2, 2]
+    },
+    {
+      "id": "limited_stock",
+      "capacity": 10,
+      "items": [
+        {"name": "A", "value": 9, "weight": 5, "max_quantity": 1},
+        {"name": "B", "value": 7, "weight": 3, "max_quantity": 3},
+        {"name": "C", "value": 4, "weight": 2, "max_quantity": 4}
+      ],
+      "expected_objective": 22,
+      "expected_quantities": [0, 2, 2]
+    }
+  ],
+  "unbounded": [
+    {
+      "id": "reusable_parts",
+      "capacity": 8,
+      "items": [
+        {"name": "A", "value": 10, "weight": 1},
+        {"name": "B", "value": 30, "weight": 2},
+        {"name": "C", "value": 44, "weight": 3}
+      ],
+      "expected_objective": 120,
+      "expected_quantities": [0, 4, 0]
+    },
+    {
+      "id": "single_best_density",
+      "capacity": 12,
+      "items": [
+        {"name": "A", "value": 15, "weight": 2},
+        {"name": "B", "value": 20, "weight": 3},
+        {"name": "C", "value": 36, "weight": 5}
+      ],
+      "expected_objective": 90,
+      "expected_quantities": [6, 0, 0]
+    }
+  ]
+}
