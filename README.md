@@ -1,37 +1,63 @@
 # Optees
 
-Optees is an open-source, cross-platform desktop application designed to make business optimization accessible to everyone, from technical experts to non-specialist personnel.
+Optees is an open-source, cross-platform desktop application for formulating,
+solving, and explaining operations-research models. It is designed for both
+students learning the mathematics and practitioners who need an inspectable
+optimization workflow.
 
-The goal is to provide a user-friendly tool that leverages powerful operational research algorithms to solve real-world business problems efficiently.
+## Available Today
+
+- Continuous Linear Programming through SciPy/HiGHS, including optimal ranges
+  when multiple optima exist.
+- Mixed-Integer Linear Programming with continuous, integer, and binary
+  variables through OR-Tools.
+- 0/1, Bounded, Unbounded, Fractional, and Multi-dimensional Knapsack.
+- Versioned JSON import for LP, MILP, and Knapsack formulations.
+- An English/Italian local rule-based Modeling Assistant that recommends a
+  solver family and can draft validated LP, MILP, and Knapsack JSON when the
+  prompt contains sufficient data.
+- Educational examples, mathematical explanations, result summaries, and
+  visualizations for the implemented families.
+
+The roadmap intentionally distinguishes shipped functionality from planned
+families such as nonlinear programming, graph algorithms, and heuristics.
 
 ## Documentation
+
 - [Architecture](docs/ARCHITECTURE.md)
-- [Testing](docs/TESTING.md)
-- [Datasets](docs/DATASETS.md)
+- [Project roadmap](docs/PROJECT_ROADMAP.md)
 - [Algorithms](docs/ALGORITHMS.md)
+- [Datasets](docs/DATASETS.md)
+- [Testing](docs/TESTING.md)
+- [Release procedure](docs/RELEASING.md)
 
-## Key Features
+## Run From Source
 
-- **Interactive Chatbot:** A guided assistant that helps users select the most suitable optimization algorithm for their specific needs.
-- **Data Management:** Easily import and manage data from common formats like CSV and Excel.
-- **Robust Algorithms:** A comprehensive suite of optimization algorithms for a wide range of problems, including resource management, scheduling, and logistics.
-- **Clear Output:** The application provides clear, actionable results with detailed explanations to help users understand the solution.
+Optees requires Python 3.12 or later.
 
-## Installation
+```bash
+git clone https://github.com/Pablo-gitub/optees.git
+cd optees
+conda create -n optees python=3.12
+conda activate optees
+python -m pip install -e ".[plot]" pytest pytest-qt
+python -m optees.main
+```
 
-This project requires Python 3.12 or later.
+To run the complete test suite from a source checkout:
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/your_username/optees.git](https://github.com/your_username/optees.git)
-    cd optees
-    ```
-2.  **Create and activate a virtual environment:**
-    ```bash
-    conda env create -f environment.yml
-    conda activate optees
-    ```
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+```bash
+PYTHONPATH=src python -m pytest -q
+```
+
+## Releases
+
+Official desktop packages are published on the
+[GitHub Releases page](https://github.com/Pablo-gitub/optees/releases).
+The release workflow builds a macOS Apple Silicon DMG, a Windows x64 ZIP, and a
+Linux x86_64 AppImage, each accompanied by `SHA256SUMS`.
+
+Without Apple Developer ID credentials, macOS packages are ad-hoc signed and
+Gatekeeper may require the user to explicitly open the application. See
+[RELEASING.md](docs/RELEASING.md) for build, verification, signing, and tag
+instructions.

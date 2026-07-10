@@ -12,6 +12,11 @@
 import sys
 from pathlib import Path
 
+_project_root = Path(SPECPATH).resolve()
+sys.path.insert(0, str(_project_root / "src"))
+
+from optees.core.build_metadata import macos_info_plist
+
 # ---------------------------------------------------------------------------
 # Platform icon
 # ---------------------------------------------------------------------------
@@ -93,15 +98,5 @@ if sys.platform == "darwin":
         name="optees.app",
         icon="src/optees/assets/logo/dark/optees.icns",
         bundle_identifier="com.paolopietrelli.optees",
-        info_plist={
-            "CFBundleName":               "Optees",
-            "CFBundleDisplayName":        "Optees",
-            "CFBundleVersion":            "0.1.0",
-            "CFBundleShortVersionString": "0.1.0",
-            "NSHighResolutionCapable":    True,
-            "NSPrincipalClass":           "NSApplication",
-            "NSAppleScriptEnabled":       False,
-            # Allow the app to run on Apple Silicon natively
-            "LSMinimumSystemVersion":     "13.0",
-        },
+        info_plist=macos_info_plist(),
     )
