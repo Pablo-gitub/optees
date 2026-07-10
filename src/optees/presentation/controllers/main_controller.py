@@ -2,7 +2,7 @@
 from __future__ import annotations
 from PySide6.QtCore import QObject, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from optees.presentation.main_window import MainWindow
@@ -11,6 +11,10 @@ from optees.presentation.views.lp_view.lp_view import LPView
 from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.home_view import HomePage  # usa lo stesso nome che usi nel MainWindow
+from optees.core.string_manager import strings as S
+from optees.utility.knapsack_json_io import knapsack_problem_from_dict
+from optees.utility.lp_json_io import lp_model_from_dict
+from optees.utility.milp_json_io import milp_model_from_dict
 import logging
 log = logging.getLogger(__name__)
 
@@ -83,6 +87,16 @@ class MainController(QObject):
         knap_sol_view = self.window.page("knapsack_solution")
         if hasattr(knap_sol_view, "back_requested"):
             knap_sol_view.back_requested.connect(lambda: self.window.goto("knapsack"))
+
+        assistant = self.window.page("assistant")
+        if hasattr(assistant, "back_requested"):
+            assistant.back_requested.connect(lambda: self.window.goto("home"))
+        if hasattr(assistant, "load_lp_requested"):
+            assistant.load_lp_requested.connect(self._load_assistant_lp_model)
+        if hasattr(assistant, "load_milp_requested"):
+            assistant.load_milp_requested.connect(self._load_assistant_milp_model)
+        if hasattr(assistant, "load_knapsack_requested"):
+            assistant.load_knapsack_requested.connect(self._load_assistant_knapsack_problem)
 
         self._wire_updates()
 
@@ -162,6 +176,39 @@ class MainController(QObject):
             pass
 
         self.window.goto("knapsack_solution")
+
+    def _load_assistant_lp_model(self, data: object) -> None:
+        try:
+            model = lp_model_from_dict(dict(data))  # type: ignore[arg-type]
+            self.window.lp_controller.load_model(model)
+            self.window.goto("lp")
+        except Exception as exc:
+            self._show_assistant_load_error(exc)
+
+    def _load_assistant_milp_model(self, data: object) -> None:
+        try:
+            model = milp_model_from_dict(dict(data))  # type: ignore[arg-type]
+            self.window.milp_controller.load_model(model)
+            self.window.goto("milp")
+        except Exception as exc:
+            self._show_assistant_load_error(exc)
+
+    def _load_assistant_knapsack_problem(self, data: object) -> None:
+        try:
+            problem = knapsack_problem_from_dict(dict(data))  # type: ignore[arg-type]
+            knap = self.window.page("knapsack")
+            if hasattr(knap, "load_json_problem"):
+                knap.load_json_problem(problem)  # type: ignore[attr-defined]
+            self.window.goto("knapsack")
+        except Exception as exc:
+            self._show_assistant_load_error(exc)
+
+    def _show_assistant_load_error(self, exc: Exception) -> None:
+        QMessageBox.warning(
+            self.window,
+            S.t("assistant.import_error.title"),
+            S.t("assistant.import_error.body", detail=str(exc)),
+        )
 
     def _wire_updates(self) -> None:
         update_controller = getattr(self.window, "update_controller", None)

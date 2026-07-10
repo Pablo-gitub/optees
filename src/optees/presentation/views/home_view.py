@@ -120,7 +120,7 @@ class HomePage(QWidget):
         self.card_milp.clicked.connect(self.go_milp.emit)
         self.card_knap.clicked.connect(self.go_knap.emit)
 
-        # add cards to the first category
+        # add cards to the first optimization category
         for card in (self.card_lp, self.card_milp, self.card_knap):
             self.cat_lin.add_card(card)
 

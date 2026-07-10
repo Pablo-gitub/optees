@@ -62,6 +62,54 @@
       "downloading": "Download aggiornamento {version} in corso..."
     }
   },
+  "assistant": {
+    "title": "Assistente di modellazione",
+    "bubble_tooltip": "Apri assistente di modellazione",
+    "intro": "Questo primo assistente e' completamente locale e rule-based: nessun prompt viene inviato fuori dall'app. Puo' consigliare una famiglia di solver e, quando il testo contiene dati abbastanza strutturati, generare una bozza JSON validata dagli stessi importer usati da Optees.",
+    "prompt": {
+      "label": "Descrizione del problema",
+      "placeholder": "Esempio: massimizza 3x + 5y soggetto a 2x + y <= 10; x + 3y <= 12, con variabili continue non negative."
+    },
+    "actions": {
+      "back": "Indietro",
+      "analyze": "Analizza problema",
+      "load": "Carica in {target}"
+    },
+    "result": {
+      "title": "Raccomandazione",
+      "family": "Famiglia",
+      "variant": "Variante",
+      "confidence": "Confidenza",
+      "status": "Stato",
+      "reasons": "Perche'",
+      "missing": "Dati mancanti o assunzioni",
+      "json_preview": "JSON generato"
+    },
+    "family": {
+      "lp": "Programmazione Lineare",
+      "milp": "MILP",
+      "knapsack": "Knapsack",
+      "nlp": "Programmazione Nonlineare",
+      "scheduling": "Scheduling",
+      "robust": "Ottimizzazione robusta",
+      "unknown": "Sconosciuta"
+    },
+    "status": {
+      "waiting": "In attesa della descrizione del problema.",
+      "loadable": "Una bozza validata puo' essere caricata.",
+      "guidance": "Solo raccomandazione: aggiungi i dati mancanti per generare una bozza.",
+      "planned": "Famiglia riconosciuta, UI dedicata non ancora implementata.",
+      "unknown": "Informazioni insufficienti per una raccomandazione affidabile."
+    },
+    "confirm": {
+      "title": "Caricare il modello generato?",
+      "body": "La formulazione corrente verra' sostituita dal modello generato. Continuare?"
+    },
+    "import_error": {
+      "title": "Errore import assistente",
+      "body": "Impossibile caricare il modello generato:\n{detail}"
+    }
+  },
   "milp": {
     "header": {
       "title": "Mixed-Integer Linear Programming (MILP)",

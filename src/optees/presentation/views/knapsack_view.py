@@ -1315,6 +1315,10 @@ class KnapsackView(QWidget):
             return
         self._load_single_resource_json_problem(problem)
 
+    def load_json_problem(self, problem: KnapsackJsonProblem) -> None:
+        """Load a validated Knapsack JSON problem into the current formulation view."""
+        self._load_json_problem(problem)
+
     def _load_single_resource_json_problem(self, problem: KnapsackJsonProblem) -> None:
         if problem.capacity is None:
             raise ValueError("capacity is required")
@@ -1763,4 +1767,3 @@ def _multi_domain_method(domain: str) -> str:
         _MULTI_DOMAIN_UNBOUNDED: "multidimensional_unbounded_milp",
         _MULTI_DOMAIN_FRACTIONAL: "multidimensional_fractional_lp",
     }.get(domain, "multidimensional_milp")
-

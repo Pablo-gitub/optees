@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QStatusBar, QSizePolicy
 )
 from PySide6.QtGui import QAction, QIcon
-from PySide6.QtCore import Qt, QSize, QTimer
+from PySide6.QtCore import QEvent, Qt, QSize, QTimer
 
 from optees.core.theme import theme
 from optees.core.assets import asset
@@ -18,6 +18,10 @@ from optees.presentation.views.lp_view.lp_view import LPView
 from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.knapsack_solution_view import KnapsackSolutionView
+from optees.presentation.views.assistant_view import AssistantView
+from optees.presentation.views.widgets.floating_assistant_button import (
+    FloatingAssistantButton,
+)
 from optees.presentation.views.settings_view import SettingsView
 from optees.presentation.views.lp_info_view import (
     LPExampleView,
@@ -41,6 +45,9 @@ from optees.application.usecases.solve_multi_dimensional_knapsack_usecase import
 from optees.application.usecases.solve_unbounded_knapsack_usecase import SolveUnboundedKnapsackUseCase
 from optees.application.usecases.check_for_updates_usecase import CheckForUpdatesUseCase
 from optees.application.usecases.download_update_usecase import DownloadUpdateUseCase
+from optees.application.usecases.analyze_problem_description_usecase import (
+    AnalyzeProblemDescriptionUseCase,
+)
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
 from optees.data.adapters.knapsack.bounded_knapsack_solver_adapter import BoundedKnapsackSolverAdapter
@@ -51,6 +58,7 @@ from optees.data.adapters.knapsack.multi_dimensional_knapsack_solver_adapter imp
 )
 from optees.data.adapters.knapsack.unbounded_knapsack_solver_adapter import UnboundedKnapsackSolverAdapter
 from optees.data.adapters.github.update_provider_adapter import GitHubUpdateProvider
+from optees.data.adapters.assistant import RuleBasedAssistantAdapter
 from optees.presentation.views.lp_solution_view.lp_solution_view import LPSolutionView
 from optees.presentation.controllers.main_controller import MainController
 from optees.presentation.controllers.update_controller import UpdateController
@@ -68,6 +76,13 @@ class MainWindow(QMainWindow):
 
         # --- pages ---
         self.home_page = HomePage()
+        self.assistant_page = AssistantView()
+        self.assistant_adapter = RuleBasedAssistantAdapter()
+        self.analyze_problem_description_uc = AnalyzeProblemDescriptionUseCase(
+            self.assistant_adapter,
+        )
+        self.assistant_page.set_usecase(self.analyze_problem_description_uc)
+
         self.lp_page = LPView()
         self.lp_controller = LPController()
         self.lp_page.set_controller(self.lp_controller)
@@ -128,6 +143,7 @@ class MainWindow(QMainWindow):
 
         # register pages
         self.register_page("home", self.home_page)
+        self.register_page("assistant", self.assistant_page)
         self.register_page("lp", self.lp_page)
         self.register_page("lp_example", self.lp_example_page)
         self.register_page("lp_problem", self.lp_problem_page)
@@ -145,6 +161,7 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self.home_page)
 
         self._build_toolbar()
+        self._build_assistant_bubble()
         self.setStatusBar(QStatusBar(self))
         self._apply_window_icon()
         theme.theme_changed.connect(self._on_theme_changed)
@@ -185,6 +202,36 @@ class MainWindow(QMainWindow):
 
     def goto(self, name: str) -> None:
         self.stack.setCurrentWidget(self._pages[name])
+        self._update_assistant_bubble_visibility()
+
+    def _build_assistant_bubble(self) -> None:
+        self.assistant_bubble = FloatingAssistantButton(
+            asset("icons/assistant.png"),
+            self.stack,
+        )
+        self.assistant_bubble.setToolTip(S.t("assistant.bubble_tooltip"))
+        self.assistant_bubble.clicked_without_drag.connect(lambda: self.goto("assistant"))
+        self.stack.installEventFilter(self)
+        self.stack.currentChanged.connect(lambda _index: self._update_assistant_bubble_visibility())
+        QTimer.singleShot(0, self._update_assistant_bubble_visibility)
+
+    def _update_assistant_bubble_visibility(self) -> None:
+        if not hasattr(self, "assistant_bubble"):
+            return
+        is_assistant = self.stack.currentWidget() is self.assistant_page
+        self.assistant_bubble.setVisible(not is_assistant)
+        if is_assistant:
+            return
+        if self.assistant_bubble.was_manually_positioned():
+            self.assistant_bubble.keep_inside_parent()
+        else:
+            self.assistant_bubble.anchor_bottom_right()
+        self.assistant_bubble.raise_()
+
+    def eventFilter(self, watched, event) -> bool:
+        if watched is self.stack and event.type() in (QEvent.Resize, QEvent.Show):
+            QTimer.singleShot(0, self._update_assistant_bubble_visibility)
+        return super().eventFilter(watched, event)
 
     # ---------------- toolbar with dropdown + settings button (right) -------------
     def _build_toolbar(self) -> None:
@@ -248,7 +295,7 @@ class MainWindow(QMainWindow):
                     self.milp_example_page, self.milp_problem_page,
                     self.knapsack_example_page, self.knapsack_problem_page,
                     self.lp_solution_page, self.milp_solution_page, self.knapsack_solution_page,
-                    self.milp_page, self.knap_page, self.settings_page):
+                    self.milp_page, self.knap_page, self.assistant_page, self.settings_page):
             if hasattr(page, "refresh_theme"):
                 try: page.refresh_theme()
                 except Exception: pass
@@ -263,13 +310,15 @@ class MainWindow(QMainWindow):
         self.act_knap.setText(S.t("alg.knap"))
         self.act_settings.setText(S.t("nav.settings"))
         self.act_settings.setToolTip(S.t("nav.settings"))
+        if hasattr(self, "assistant_bubble"):
+            self.assistant_bubble.setToolTip(S.t("assistant.bubble_tooltip"))
 
         # retranslate pages
         for page in (self.home_page, self.lp_page, self.lp_example_page, self.lp_problem_page,
                  self.milp_example_page, self.milp_problem_page,
                  self.knapsack_example_page, self.knapsack_problem_page,
                  self.lp_solution_page, self.milp_solution_page, self.knapsack_solution_page,
-                 self.milp_page, self.knap_page, self.settings_page):
+                 self.milp_page, self.knap_page, self.assistant_page, self.settings_page):
             if hasattr(page, "refresh_strings"):
                 try: page.refresh_strings()
                 except Exception: pass

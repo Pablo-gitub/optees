@@ -62,6 +62,54 @@
       "downloading": "Downloading update {version}..."
     }
   },
+  "assistant": {
+    "title": "Modeling Assistant",
+    "bubble_tooltip": "Open Modeling Assistant",
+    "intro": "This first assistant is fully local and rule-based: no prompt is sent outside the app. It can recommend a solver family and, when the prompt contains enough structured data, generate a JSON draft validated by the same importers used by Optees.",
+    "prompt": {
+      "label": "Problem description",
+      "placeholder": "Example: maximize 3x + 5y subject to 2x + y <= 10; x + 3y <= 12, with non-negative continuous variables."
+    },
+    "actions": {
+      "back": "Back",
+      "analyze": "Analyze problem",
+      "load": "Load into {target}"
+    },
+    "result": {
+      "title": "Recommendation",
+      "family": "Family",
+      "variant": "Variant",
+      "confidence": "Confidence",
+      "status": "Status",
+      "reasons": "Why",
+      "missing": "Missing or assumptions",
+      "json_preview": "Generated JSON"
+    },
+    "family": {
+      "lp": "Linear Programming",
+      "milp": "MILP",
+      "knapsack": "Knapsack",
+      "nlp": "Nonlinear Programming",
+      "scheduling": "Scheduling",
+      "robust": "Robust Optimization",
+      "unknown": "Unknown"
+    },
+    "status": {
+      "waiting": "Waiting for a problem description.",
+      "loadable": "A validated draft can be loaded.",
+      "guidance": "Recommendation only: add the missing data to generate a draft.",
+      "planned": "Recognized family, dedicated UI not implemented yet.",
+      "unknown": "Not enough information for a reliable recommendation."
+    },
+    "confirm": {
+      "title": "Load generated model?",
+      "body": "The current formulation will be replaced with the generated model. Continue?"
+    },
+    "import_error": {
+      "title": "Assistant import error",
+      "body": "Could not load the generated model:\n{detail}"
+    }
+  },
   "milp": {
     "header": {
       "title": "Mixed-Integer Linear Programming (MILP)",
