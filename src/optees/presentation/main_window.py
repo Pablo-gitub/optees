@@ -18,6 +18,8 @@ from optees.presentation.views.lp_view.lp_view import LPView
 from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.knapsack_solution_view import KnapsackSolutionView
+from optees.presentation.views.nlp_view import NLPView
+from optees.presentation.views.nlp_solution_view import NLPSolutionView
 from optees.presentation.views.assistant_view import AssistantView
 from optees.presentation.views.widgets.floating_assistant_button import (
     FloatingAssistantButton,
@@ -30,12 +32,15 @@ from optees.presentation.views.lp_info_view import (
     MILPProblemDescriptionView,
     KnapsackExampleView,
     KnapsackProblemDescriptionView,
+    NLPExampleView,
+    NLPProblemDescriptionView,
 )
 from optees.presentation.controllers.lp_controller import LPController
 from optees.presentation.controllers.milp_controller import MILPController
 from optees.presentation.controllers.knapsack_controller import KnapsackController
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
 from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
+from optees.application.usecases.solve_nlp_usecase import SolveNLPUseCase
 from optees.application.usecases.solve_bounded_knapsack_usecase import SolveBoundedKnapsackUseCase
 from optees.application.usecases.solve_fractional_knapsack_usecase import SolveFractionalKnapsackUseCase
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
@@ -50,6 +55,7 @@ from optees.application.usecases.analyze_problem_description_usecase import (
 )
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
+from optees.data.adapters.nlp.nlp_solver_adapter import ScipyNLPSolverAdapter
 from optees.data.adapters.knapsack.bounded_knapsack_solver_adapter import BoundedKnapsackSolverAdapter
 from optees.data.adapters.knapsack.fractional_knapsack_solver_adapter import FractionalKnapsackSolverAdapter
 from optees.data.adapters.knapsack.knapsack_solver_adapter import KnapsackSolverAdapter
@@ -99,6 +105,11 @@ class MainWindow(QMainWindow):
         self.solve_milp_uc = SolveMILPUseCase(self.milp_solver_port)
         self.milp_page.set_solve_usecase(self.solve_milp_uc)
 
+        self.nlp_page = NLPView()
+        self.nlp_solver_port = ScipyNLPSolverAdapter()
+        self.solve_nlp_uc = SolveNLPUseCase(self.nlp_solver_port)
+        self.nlp_page.set_solve_usecase(self.solve_nlp_uc)
+
         self.knap_page = KnapsackView()
         self.knapsack_controller = KnapsackController()
         self.knap_page.set_controller(self.knapsack_controller)
@@ -135,11 +146,14 @@ class MainWindow(QMainWindow):
         self.milp_problem_page = MILPProblemDescriptionView()
         self.knapsack_example_page = KnapsackExampleView()
         self.knapsack_problem_page = KnapsackProblemDescriptionView()
+        self.nlp_example_page = NLPExampleView()
+        self.nlp_problem_page = NLPProblemDescriptionView()
 
         # (NEW) solution page placeholder
         self.lp_solution_page = LPSolutionView()
         self.milp_solution_page = LPSolutionView()
         self.knapsack_solution_page = KnapsackSolutionView()
+        self.nlp_solution_page = NLPSolutionView()
 
         # register pages
         self.register_page("home", self.home_page)
@@ -151,6 +165,10 @@ class MainWindow(QMainWindow):
         self.register_page("milp_problem", self.milp_problem_page)
         self.register_page("knapsack_example", self.knapsack_example_page)
         self.register_page("knapsack_problem", self.knapsack_problem_page)
+        self.register_page("nlp", self.nlp_page)
+        self.register_page("nlp_example", self.nlp_example_page)
+        self.register_page("nlp_problem", self.nlp_problem_page)
+        self.register_page("nlp_solution", self.nlp_solution_page)
         self.register_page("lp_solution", self.lp_solution_page)
         self.register_page("milp", self.milp_page)
         self.register_page("milp_solution", self.milp_solution_page)
@@ -267,6 +285,10 @@ class MainWindow(QMainWindow):
         self.drop.setMenu(menu)
         self.toolbar.addWidget(self.drop)
 
+        self.act_nlp = QAction(S.t("alg.nlp"), self)
+        self.act_nlp.triggered.connect(lambda: self.goto("nlp"))
+        self.toolbar.addAction(self.act_nlp)
+
         # spacer
         spacer = QWidget(self)
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -295,7 +317,9 @@ class MainWindow(QMainWindow):
                     self.milp_example_page, self.milp_problem_page,
                     self.knapsack_example_page, self.knapsack_problem_page,
                     self.lp_solution_page, self.milp_solution_page, self.knapsack_solution_page,
-                    self.milp_page, self.knap_page, self.assistant_page, self.settings_page):
+                    self.milp_page, self.knap_page, self.nlp_page, self.nlp_example_page,
+                    self.nlp_problem_page, self.nlp_solution_page, self.assistant_page,
+                    self.settings_page):
             if hasattr(page, "refresh_theme"):
                 try: page.refresh_theme()
                 except Exception: pass
@@ -308,6 +332,7 @@ class MainWindow(QMainWindow):
         self.act_lp.setText(S.t("alg.lp"))
         self.act_milp.setText(S.t("alg.milp"))
         self.act_knap.setText(S.t("alg.knap"))
+        self.act_nlp.setText(S.t("alg.nlp"))
         self.act_settings.setText(S.t("nav.settings"))
         self.act_settings.setToolTip(S.t("nav.settings"))
         if hasattr(self, "assistant_bubble"):
@@ -318,7 +343,9 @@ class MainWindow(QMainWindow):
                  self.milp_example_page, self.milp_problem_page,
                  self.knapsack_example_page, self.knapsack_problem_page,
                  self.lp_solution_page, self.milp_solution_page, self.knapsack_solution_page,
-                 self.milp_page, self.knap_page, self.assistant_page, self.settings_page):
+                 self.milp_page, self.knap_page, self.nlp_page, self.nlp_example_page,
+                 self.nlp_problem_page, self.nlp_solution_page, self.assistant_page,
+                 self.settings_page):
             if hasattr(page, "refresh_strings"):
                 try: page.refresh_strings()
                 except Exception: pass

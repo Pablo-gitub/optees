@@ -59,6 +59,7 @@ class HomePage(QWidget):
     go_lp = Signal()
     go_milp = Signal()
     go_knap = Signal()
+    go_nlp = Signal()
     update_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None):
@@ -114,19 +115,28 @@ class HomePage(QWidget):
             S.t("cards.knap.subtitle"),
             icon_path=str(asset("icons/knap.svg")),
         )
+        self.card_nlp = CardButton(
+            S.t("cards.nlp.title"),
+            S.t("cards.nlp.subtitle"),
+            icon_path=str(asset("icons/lp.svg")),
+        )
 
         # wire signals
         self.card_lp.clicked.connect(self.go_lp.emit)
         self.card_milp.clicked.connect(self.go_milp.emit)
         self.card_knap.clicked.connect(self.go_knap.emit)
+        self.card_nlp.clicked.connect(self.go_nlp.emit)
 
         # add cards to the first optimization category
         for card in (self.card_lp, self.card_milp, self.card_knap):
             self.cat_lin.add_card(card)
 
+        self.cat_nlp.add_card(self.card_nlp)
+        root.addWidget(self.cat_nlp)
+
         # --- Future sections with "coming soon..." placeholder ---
         self._coming_labels = []  # keep references to update text on language change
-        for cat in (self.cat_nlp, self.cat_graph, self.cat_ml):
+        for cat in (self.cat_graph, self.cat_ml):
             ph = QLabel(S.t("home.comingSoon"))
             ph.setStyleSheet(f"color: {tokens(theme.is_dark()).text_muted};")
             cat.add_card(ph)
@@ -164,6 +174,9 @@ class HomePage(QWidget):
         self.card_knap._title.setText(f"<span style='font-weight:700'>{S.t('cards.knap.title')}</span>")
         self.card_knap._sub.setText(S.t("cards.knap.subtitle"))
 
+        self.card_nlp._title.setText(f"<span style='font-weight:700'>{S.t('cards.nlp.title')}</span>")
+        self.card_nlp._sub.setText(S.t("cards.nlp.subtitle"))
+
         # placeholders
         cs = S.t("home.comingSoon")
         for ph in self._coming_labels:
@@ -176,7 +189,7 @@ class HomePage(QWidget):
             cat.apply_theme()
         for ph in self._coming_labels:
             ph.setStyleSheet(f"color: {muted};")
-        for card in (self.card_lp, self.card_milp, self.card_knap):
+        for card in (self.card_lp, self.card_milp, self.card_knap, self.card_nlp):
             card._apply_theme()
 
     def set_update_available(self, result) -> None:

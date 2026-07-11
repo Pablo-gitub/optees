@@ -21,6 +21,10 @@
     "knap": {
       "title": "0/1 Knapsack",
       "subtitle": "Choose this method when you need to decide which whole objects to include in a set to maximize value without exceeding a maximum capacity."
+    },
+    "nlp": {
+      "title": "Continuous Nonlinear Optimization",
+      "subtitle": "Use this method when the objective curves and a local numerical solution from a chosen starting point is appropriate."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -28,12 +32,14 @@
     "toolbar": { "title": "Navigation" },
     "home": "Home",
     "linear_optimization": "Linear Optimization",
+    "nonlinear_optimization": "Nonlinear Optimization",
     "settings":"Settings"
   },
   "alg": {
     "lp": "Linear Programming (LP)",
     "milp": "Mixed-Integer (MILP)",
-    "knap": "0/1 Knapsack"
+    "knap": "0/1 Knapsack",
+    "nlp": "Nonlinear Programming (NLP)"
   },
   "settings": {
     "title": "Settings",
@@ -501,6 +507,82 @@
       "copy_report": "Copy report",
       "export_csv": "Export CSV",
       "export_json": "Export JSON"
+    }
+  },
+  "nlp": {
+    "header": {
+      "title": "Continuous Nonlinear Programming (NLP)",
+      "section": "Problem setup",
+      "description": "Define continuous variables, a feasible starting point, and a nonlinear scalar objective. This workflow returns a local numerical candidate, not a proof of global optimality.",
+      "buttons": { "example": "Example", "problem": "Problem description" }
+    },
+    "import": {
+      "button": "Import JSON",
+      "dialog_title": "Open NLP problem",
+      "error_title": "Import error",
+      "error_body": "Could not load the file:\n{detail}",
+      "info_tooltip": "NLP JSON format",
+      "info_title": "NLP JSON format",
+      "info_body": "Use schema version 1 with problem_type nonlinear_programming. Every variable needs a name and a finite initial value. Bounds are null when absent.",
+      "info_html": "<h3>Core fields</h3><p>Use <code>variables</code>, <code>objective</code>, and optional <code>solver_options</code>. The objective expression is validated by the same safe parser used by the manual form.</p><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"nonlinear_programming\",\n  \"variables\": [{\"name\": \"x1\", \"lb\": null, \"ub\": null, \"initial\": 0}],\n  \"objective\": {\"sense\": \"min\", \"expression\": \"(x1 - 2)**2\"},\n  \"solver_options\": {\"method\": \"BFGS\", \"max_iterations\": 1000, \"tolerance\": 1e-8}\n}</pre>"
+    },
+    "variables": {
+      "section": "Variables and initial point",
+      "hint": "Each variable is continuous. Leave a bound blank for no limit; the initial value is required and must satisfy the bounds.",
+      "columns": { "name": "Variable", "label": "Description", "lower": "Lower bound", "upper": "Upper bound", "initial": "Initial value" },
+      "name_placeholder": "e.g. x1",
+      "label_placeholder": "Short meaning",
+      "bound_placeholder": "blank = none",
+      "initial_placeholder": "e.g. 0",
+      "add": "Add variable",
+      "remove": "Remove variable"
+    },
+    "objective": {
+      "section": "Objective",
+      "hint": "Write one scalar expression using the declared variable names. The supported language is mathematical and deliberately restricted.",
+      "sense": "Sense",
+      "min": "Minimize",
+      "max": "Maximize",
+      "expression": "Expression",
+      "expression_placeholder": "e.g. (x1 - 2)**2 + sin(x2)",
+      "info_tooltip": "Safe objective expression",
+      "info_title": "Objective expression",
+      "info_body": "Allowed: declared variables, finite numbers, +, -, *, /, **, unary signs, abs, sin, cos, tan, exp, log, and sqrt. The expression must remain finite at every point evaluated by the solver.",
+      "info_html": "<h3>Safe language</h3><p>Optees parses the expression into a restricted tree. It never executes arbitrary Python.</p><h3>Example</h3><pre>(x1 - 2)**2 + sqrt(x2**2 + 1)</pre><p>Imports, attributes, comparisons, indexing, unknown names, and multi-argument functions are rejected.</p>"
+    },
+    "solver": {
+      "section": "Solver options",
+      "hint": "The method follows the local geometry from the initial point. Tolerance and iteration limit control numerical termination, not global-optimality proof.",
+      "method": "Method",
+      "max_iterations": "Max iterations",
+      "max_iterations_placeholder": "e.g. 1000",
+      "tolerance": "Tolerance",
+      "tolerance_placeholder": "blank = default",
+      "bounds_required": "At least one bound is present: Optees selects L-BFGS-B, the bound-aware method in this workflow.",
+      "unbounded_hint": "For an unbounded model, BFGS and Nelder-Mead are available local methods; L-BFGS-B also remains valid.",
+      "info_tooltip": "Solver options",
+      "info_title": "NLP solver options",
+      "info_body": "BFGS and Nelder-Mead are used here for unbounded models. L-BFGS-B is required for box bounds. Converged means a local termination criterion was met, not that the candidate is globally best.",
+      "info_html": "<h3>Methods</h3><p><b>BFGS</b> is a local curvature-based method. <b>Nelder-Mead</b> is a derivative-free simplex method. <b>L-BFGS-B</b> handles lower and upper bounds.</p><h3>Stopping</h3><p>Max iterations limits the numerical work. Tolerance controls a method-specific stopping test.</p>"
+    },
+    "actions": { "optimize": "Optimize NLP" },
+    "validation": {
+      "title": "Invalid NLP formulation",
+      "body": "The model cannot be solved:\n{detail}"
+    },
+    "info": { "close": "Close" },
+    "solution": {
+      "title": "Nonlinear Optimization Result",
+      "back": "Back",
+      "empty": "No nonlinear optimization result yet.",
+      "summary": { "section": "Numerical status" },
+      "status_line": "Status: <b>{status}</b>",
+      "local_notice": "This result is a local numerical candidate. Its quality can depend on the method and the initial point; it is not a global-optimality certificate.",
+      "status": { "converged": "Converged", "iteration_limit": "Iteration limit", "failed": "Failed", "not_solved": "Not solved" },
+      "details": { "section": "Run details", "objective": "Objective", "method": "Method", "iterations": "Iterations", "evaluations": "Evaluations", "feasibility": "Bounds feasibility", "message": "Termination message" },
+      "feasibility": { "within_bounds": "Within declared bounds", "violated": "Violates declared bounds", "unavailable": "Unavailable" },
+      "candidate": { "section": "Local candidate", "hint": "Variable values returned by the selected numerical run.", "variable": "Variable", "value": "Value" },
+      "trace": { "section": "Objective trace", "hint": "Initial objective followed by values captured during the run. A trace describes this run only.", "empty": "The selected run did not provide an objective trace.", "iteration": "Step", "objective": "Objective" }
     }
   }
 }

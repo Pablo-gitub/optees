@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 from optees.presentation.views.lp_view.lp_view import LPView
 from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
+from optees.presentation.views.nlp_view import NLPView
 from optees.presentation.views.home_view import HomePage  # usa lo stesso nome che usi nel MainWindow
 from optees.core.string_manager import strings as S
 from optees.utility.knapsack_json_io import knapsack_problem_from_dict
@@ -33,6 +34,8 @@ class MainController(QObject):
             home.go_milp.connect(lambda: self.window.goto("milp"))
         if hasattr(home, "go_knap"):
             home.go_knap.connect(lambda: self.window.goto("knapsack"))
+        if hasattr(home, "go_nlp"):
+            home.go_nlp.connect(lambda: self.window.goto("nlp"))
 
         # LP -> Solution
         lp: LPView = self.window.page("lp")  # type: ignore[assignment]
@@ -87,6 +90,19 @@ class MainController(QObject):
         knap_sol_view = self.window.page("knapsack_solution")
         if hasattr(knap_sol_view, "back_requested"):
             knap_sol_view.back_requested.connect(lambda: self.window.goto("knapsack"))
+
+        # NLP -> local numerical result
+        nlp: NLPView = self.window.page("nlp")  # type: ignore[assignment]
+        nlp.solve_completed.connect(self._on_nlp_solved)
+        nlp.example_requested.connect(lambda: self.window.goto("nlp_example"))
+        nlp.problem_description_requested.connect(lambda: self.window.goto("nlp_problem"))
+        for name in ("nlp_example", "nlp_problem"):
+            info_view = self.window.page(name)
+            if hasattr(info_view, "back_requested"):
+                info_view.back_requested.connect(lambda _=False: self.window.goto("nlp"))
+        nlp_solution = self.window.page("nlp_solution")
+        if hasattr(nlp_solution, "back_requested"):
+            nlp_solution.back_requested.connect(lambda: self.window.goto("nlp"))
 
         assistant = self.window.page("assistant")
         if hasattr(assistant, "back_requested"):
@@ -176,6 +192,25 @@ class MainController(QObject):
             pass
 
         self.window.goto("knapsack_solution")
+
+    def _on_nlp_solved(self, solution) -> None:
+        sol_view = self.window.page("nlp_solution")
+        try:
+            if hasattr(sol_view, "set_problem"):
+                sol_view.set_problem(self.window.nlp_page.current_model())  # type: ignore[attr-defined]
+        except Exception:
+            pass
+        if hasattr(sol_view, "set_solution"):
+            sol_view.set_solution(solution)  # type: ignore[attr-defined]
+        try:
+            log.debug(
+                "NLP result received: status=%s objective=%s",
+                getattr(solution, "status", None),
+                getattr(solution, "objective", None),
+            )
+        except Exception:
+            pass
+        self.window.goto("nlp_solution")
 
     def _load_assistant_lp_model(self, data: object) -> None:
         try:

@@ -21,6 +21,10 @@
     "knap": {
       "title": "Knapsack",
       "subtitle": "Scegli questo metodo quando devi decidere quali oggetti interi includere in un insieme per massimizzare il valore, senza superare una capacità massima."
+    },
+    "nlp": {
+      "title": "Ottimizzazione Nonlineare Continua",
+      "subtitle": "Usa questo metodo quando l'obiettivo e' curvo ed e' appropriata una soluzione numerica locale da un punto iniziale scelto."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -28,12 +32,14 @@
     "toolbar": { "title": "Navigazione" },
     "home": "Home",
     "linear_optimization": "Ottimizzazione lineare",
+    "nonlinear_optimization": "Ottimizzazione nonlineare",
     "settings":"Impostazioni"
   },
   "alg": {
     "lp": "Programmazione Lineare (LP)",
     "milp": "Mixed-Integer (MILP)",
-    "knap": "Zaino 0/1"
+    "knap": "Zaino 0/1",
+    "nlp": "Programmazione Nonlineare (NLP)"
   },
   "settings": {
     "title": "Impostazioni",
@@ -502,6 +508,79 @@
         "copy_report": "Copia report",
         "export_csv": "Esporta CSV",
         "export_json": "Esporta JSON"
+    }
+  },
+  "nlp": {
+    "header": {
+      "title": "Programmazione Nonlineare Continua (NLP)",
+      "section": "Formulazione del problema",
+      "description": "Definisci variabili continue, un punto iniziale ammissibile e un obiettivo scalare non lineare. Questo flusso restituisce un candidato numerico locale, non una prova di ottimo globale.",
+      "buttons": { "example": "Esempio", "problem": "Descrizione problema" }
+    },
+    "import": {
+      "button": "Importa JSON",
+      "dialog_title": "Apri problema NLP",
+      "error_title": "Errore di importazione",
+      "error_body": "Impossibile caricare il file:\n{detail}",
+      "info_tooltip": "Formato JSON NLP",
+      "info_title": "Formato JSON NLP",
+      "info_body": "Usa schema versione 1 con problem_type nonlinear_programming. Ogni variabile richiede un nome e un valore iniziale finito. I bounds sono null quando assenti.",
+      "info_html": "<h3>Campi principali</h3><p>Usa <code>variables</code>, <code>objective</code> e <code>solver_options</code> opzionale. L'espressione e' validata dallo stesso parser sicuro della form manuale.</p><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"nonlinear_programming\",\n  \"variables\": [{\"name\": \"x1\", \"lb\": null, \"ub\": null, \"initial\": 0}],\n  \"objective\": {\"sense\": \"min\", \"expression\": \"(x1 - 2)**2\"}\n}</pre>"
+    },
+    "variables": {
+      "section": "Variabili e punto iniziale",
+      "hint": "Ogni variabile e' continua. Lascia vuoto un bound se non c'e' limite; il valore iniziale e' obbligatorio e deve rispettare i bounds.",
+      "columns": { "name": "Variabile", "label": "Descrizione", "lower": "Limite inf.", "upper": "Limite sup.", "initial": "Valore iniziale" },
+      "name_placeholder": "es. x1",
+      "label_placeholder": "Significato breve",
+      "bound_placeholder": "vuoto = nessuno",
+      "initial_placeholder": "es. 0",
+      "add": "Aggiungi variabile",
+      "remove": "Rimuovi variabile"
+    },
+    "objective": {
+      "section": "Obiettivo",
+      "hint": "Scrivi un'espressione scalare usando i nomi delle variabili dichiarate. Il linguaggio supportato e' matematico e volutamente ristretto.",
+      "sense": "Tipo",
+      "min": "Minimizza",
+      "max": "Massimizza",
+      "expression": "Espressione",
+      "expression_placeholder": "es. (x1 - 2)**2 + sin(x2)",
+      "info_tooltip": "Espressione obiettivo sicura",
+      "info_title": "Espressione obiettivo",
+      "info_body": "Ammessi: variabili dichiarate, numeri finiti, +, -, *, /, **, segni unari, abs, sin, cos, tan, exp, log e sqrt. L'espressione deve restare finita in ogni punto valutato dal solver.",
+      "info_html": "<h3>Linguaggio sicuro</h3><p>Optees trasforma l'espressione in un albero ristretto e non esegue Python arbitrario.</p><h3>Esempio</h3><pre>(x1 - 2)**2 + sqrt(x2**2 + 1)</pre><p>Import, attributi, confronti, indici, nomi sconosciuti e funzioni con piu' argomenti vengono rifiutati.</p>"
+    },
+    "solver": {
+      "section": "Opzioni solver",
+      "hint": "Il metodo segue la geometria locale dal punto iniziale. Tolleranza e limite iterazioni controllano l'arresto numerico, non una prova di ottimo globale.",
+      "method": "Metodo",
+      "max_iterations": "Max iterazioni",
+      "max_iterations_placeholder": "es. 1000",
+      "tolerance": "Tolleranza",
+      "tolerance_placeholder": "vuoto = default",
+      "bounds_required": "E' presente almeno un bound: Optees seleziona L-BFGS-B, il metodo consapevole dei bounds in questo flusso.",
+      "unbounded_hint": "Per un modello senza bounds sono disponibili BFGS e Nelder-Mead; anche L-BFGS-B resta valido.",
+      "info_tooltip": "Opzioni solver",
+      "info_title": "Opzioni solver NLP",
+      "info_body": "BFGS e Nelder-Mead sono usati qui per modelli senza bounds. L-BFGS-B e' richiesto per bounds a box. Converged significa che e' soddisfatto un criterio locale, non che il candidato sia globalmente migliore.",
+      "info_html": "<h3>Metodi</h3><p><b>BFGS</b> usa la curvatura locale. <b>Nelder-Mead</b> e' un metodo a simplesso senza derivata inserita. <b>L-BFGS-B</b> gestisce bounds inferiori e superiori.</p><h3>Arresto</h3><p>Max iterazioni limita il lavoro numerico. La tolleranza controlla un test di arresto specifico del metodo.</p>"
+    },
+    "actions": { "optimize": "Ottimizza NLP" },
+    "validation": { "title": "Formulazione NLP non valida", "body": "Il modello non puo' essere risolto:\n{detail}" },
+    "info": { "close": "Chiudi" },
+    "solution": {
+      "title": "Risultato Ottimizzazione Nonlineare",
+      "back": "Indietro",
+      "empty": "Nessun risultato di ottimizzazione nonlineare.",
+      "summary": { "section": "Stato numerico" },
+      "status_line": "Stato: <b>{status}</b>",
+      "local_notice": "Questo risultato e' un candidato numerico locale. La qualita' puo' dipendere da metodo e punto iniziale; non e' un certificato di ottimo globale.",
+      "status": { "converged": "Convergente", "iteration_limit": "Limite iterazioni", "failed": "Fallito", "not_solved": "Non risolto" },
+      "details": { "section": "Dettagli esecuzione", "objective": "Obiettivo", "method": "Metodo", "iterations": "Iterazioni", "evaluations": "Valutazioni", "feasibility": "Ammissibilita' bounds", "message": "Messaggio di terminazione" },
+      "feasibility": { "within_bounds": "Entro i bounds dichiarati", "violated": "Viola i bounds dichiarati", "unavailable": "Non disponibile" },
+      "candidate": { "section": "Candidato locale", "hint": "Valori delle variabili restituiti dall'esecuzione numerica selezionata.", "variable": "Variabile", "value": "Valore" },
+      "trace": { "section": "Traccia dell'obiettivo", "hint": "Obiettivo iniziale e valori raccolti durante l'esecuzione. La traccia descrive solo questa run.", "empty": "L'esecuzione selezionata non ha fornito una traccia dell'obiettivo.", "iteration": "Passo", "objective": "Obiettivo" }
     }
   }
 }

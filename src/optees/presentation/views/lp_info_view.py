@@ -266,3 +266,13 @@ class KnapsackExampleView(LPInfoView):
 class KnapsackProblemDescriptionView(LPInfoView):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__("knapsack_problem", parent=parent)
+
+
+class NLPExampleView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("nlp_example", parent=parent)
+
+
+class NLPProblemDescriptionView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("nlp_problem", parent=parent)
