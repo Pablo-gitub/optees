@@ -1,17 +1,13 @@
-#
-# Module for Non-Linear Optimization and Metaheuristic utility functions.
-#
-# This module provides helper functions for solving complex, non-linear,
-# and computationally intensive optimization problems using metaheuristics
-# and advanced algorithms.
-#
+# Legacy compatibility module for planned nonlinear and heuristic features.
+
+from optees.utility.nlp_utils import solve_nlp
 
 def solve_non_linear_problem(problem_data):
     """
-    Solves a non-linear programming (NLP) problem.
+    Solve the Phase 1 continuous, box-bounded NLP contract.
 
-    This function handles optimization problems with non-linear objective
-    functions or constraints.
+    New application code should use ``SolveNLPUseCase`` through its solver
+    port. This wrapper remains for callers of the historical utility name.
 
     Args:
         problem_data (dict): A dictionary containing problem details.
@@ -19,8 +15,7 @@ def solve_non_linear_problem(problem_data):
     Returns:
         tuple: A tuple with the solution status, optimal value, and variable values.
     """
-    # TODO: Implement a non-linear solver, likely using SciPy.optimize.
-    pass
+    return solve_nlp(problem_data)
 
 def solve_genetic_algorithm(problem_data, config):
     """
