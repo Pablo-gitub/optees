@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
-  <title>Optees — Linear Programming</title>
-  <desc>Axes with a straight constraint line and the optimal vertex.</desc>
+  <title>Optees — Nonlinear Programming</title>
+  <desc>Axes with a smooth curve and its local minimum, evoking a nonlinear objective.</desc>
   <g fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
     <path d="M56 200 H206"/>
     <path d="M56 200 V66"/>
-    <path d="M66 172 L196 92"/>
+    <path d="M74 90 Q128 214 194 98"/>
   </g>
-  <circle cx="131" cy="132" r="13" fill="currentColor"/>
+  <circle cx="130" cy="152" r="13" fill="currentColor"/>
 </svg>

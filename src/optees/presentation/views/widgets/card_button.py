@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Optional
 import os
 
-from PySide6.QtCore import Qt, QEvent, Signal
+from PySide6.QtCore import Qt, QEvent, QSize, Signal
 from PySide6.QtGui import QPalette, QColor
 from PySide6.QtWidgets import QFrame, QLabel, QHBoxLayout, QVBoxLayout, QSizePolicy
 
@@ -39,8 +39,11 @@ class CardButton(QFrame):
 
         self.setObjectName("Card")
         self.setCursor(Qt.PointingHandCursor)
-        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        self.setFixedSize(CARD_W, CARD_H)
+        # Fixed width for a tidy grid, but the height grows with the content so
+        # long descriptions are never clipped.
+        self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.setFixedWidth(CARD_W)
+        self.setMinimumHeight(CARD_H)
         # Surface/border/hover come from the global stylesheet (QFrame#Card).
 
         root = QHBoxLayout(self)
@@ -50,7 +53,7 @@ class CardButton(QFrame):
         # icon
         icon_abs = _abs_icon_path(icon_path)
         self._icon = IconCircle(icon_abs, size=72, parent=self)
-        root.addWidget(self._icon, 0, Qt.AlignVCenter)
+        root.addWidget(self._icon, 0, Qt.AlignTop)
 
         # text column
         self._title = QLabel(f"<span style='font-weight:700'>{title}</span>")
@@ -78,6 +81,19 @@ class CardButton(QFrame):
 
         self._constructed = True
         self._apply_theme()
+
+    # The width is fixed, so derive the height from the wrapped content instead
+    # of a fixed value: this is what stops long descriptions from being clipped.
+    def sizeHint(self) -> QSize:
+        layout = self.layout()
+        if layout is not None and layout.hasHeightForWidth():
+            height = layout.heightForWidth(CARD_W)
+        else:
+            height = super().sizeHint().height()
+        return QSize(CARD_W, max(CARD_H, height))
+
+    def minimumSizeHint(self) -> QSize:
+        return self.sizeHint()
 
     def mousePressEvent(self, e):
         if e.button() == Qt.LeftButton:

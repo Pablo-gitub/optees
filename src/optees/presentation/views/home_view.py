@@ -118,7 +118,7 @@ class HomePage(QWidget):
         self.card_nlp = CardButton(
             S.t("cards.nlp.title"),
             S.t("cards.nlp.subtitle"),
-            icon_path=str(asset("icons/lp.svg")),
+            icon_path=str(asset("icons/nlp.svg")),
         )
 
         # wire signals
