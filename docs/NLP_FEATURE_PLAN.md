@@ -209,6 +209,20 @@ port and produce honest numerical statuses.
 **Exit criterion:** every supported solver path has a stable, documented
 numerical regression case suitable for normal CI.
 
+### Deferred: External Scientific Benchmark Integration
+
+- [ ] Select a redistributable continuous-NLP corpus with published reference
+      information and compatible usage terms.
+- [ ] Document whether each case verifies a local basin, a known global value,
+      feasibility, or numerical robustness; current local methods must never
+      be evaluated as if they proved a global optimum.
+- [ ] Add source metadata, checksum, parser or adapter boundaries, and a small
+      deterministic CI subset. Mark larger performance cases separately.
+
+This work belongs to the cross-family benchmark-hardening phase in
+`docs/PROJECT_ROADMAP.md`; analytic reference cases remain mandatory for this
+first vertical slice.
+
 ### 4. JSON Import And Export
 
 - [x] Implement `nlp_json_io.py` with `load`, `dump`, structural validation,

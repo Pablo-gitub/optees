@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QHeaderView,
     QScrollArea,
     QSizePolicy,
     QTableWidget,
@@ -21,6 +22,7 @@ from optees.core.string_manager import strings as S
 from optees.core.theme import theme
 from optees.domain.entities.nlp.solution import NLPSolution
 from optees.domain.models.nlp.nlp_model import NLPModel
+from optees.presentation.views.nlp_objective_plot_widget import NLPObjectivePlotWidget
 from optees.presentation.views.lp_view.section import Section
 
 
@@ -95,9 +97,20 @@ class NLPSolutionView(QWidget):
         candidate.body.addWidget(self.candidate_hint)
         self.candidate_table = _make_table()
         self.candidate_table.setObjectName("nlpCandidateTable")
+        candidate_header = self.candidate_table.horizontalHeader()
+        candidate_header.setStretchLastSection(False)
+        candidate_header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        candidate_header.setSectionResizeMode(1, QHeaderView.Stretch)
+        candidate_header.setSectionResizeMode(2, QHeaderView.Stretch)
         candidate.body.addWidget(self.candidate_table)
         self.candidate_section = candidate
         root.addWidget(candidate)
+
+        visualization = Section()
+        self.objective_plot = NLPObjectivePlotWidget()
+        visualization.body.addWidget(self.objective_plot)
+        self.visualization_section = visualization
+        root.addWidget(visualization)
 
         trace = Section()
         self.trace_hint = QLabel()
@@ -119,10 +132,12 @@ class NLPSolutionView(QWidget):
     def set_problem(self, model: NLPModel) -> None:
         """Keep bounds so the result view can report candidate feasibility."""
         self._model = model
+        self.objective_plot.set_problem(model)
         self._render_solution()
 
     def set_solution(self, solution: NLPSolution) -> None:
         self._solution = solution
+        self.objective_plot.set_solution(solution)
         self._render_solution()
 
     def refresh_strings(self) -> None:
@@ -144,6 +159,8 @@ class NLPSolutionView(QWidget):
             self.detail_labels[f"{key}_label"].setText(S.t(f"nlp.solution.details.{key}"))
         self.candidate_section.set_title(S.t("nlp.solution.candidate.section"))
         self.candidate_hint.setText(S.t("nlp.solution.candidate.hint"))
+        self.visualization_section.set_title(S.t("nlp.solution.visualization.section"))
+        self.objective_plot.refresh_strings()
         self.trace_section.set_title(S.t("nlp.solution.trace.section"))
         self.trace_hint.setText(S.t("nlp.solution.trace.hint"))
         self._render_solution()
@@ -155,6 +172,7 @@ class NLPSolutionView(QWidget):
         self.local_notice.setStyleSheet(f"color: {t.warning};")
         self.candidate_hint.setStyleSheet(f"color: {t.text_muted};")
         self.trace_hint.setStyleSheet(f"color: {t.text_muted};")
+        self.objective_plot.refresh_theme()
         for key, label in self.detail_labels.items():
             color = t.text if key.endswith("_label") else t.text_muted
             label.setStyleSheet(f"color: {color};")
@@ -209,14 +227,30 @@ class NLPSolutionView(QWidget):
         return S.t("nlp.solution.feasibility.within_bounds")
 
     def _set_candidate_rows(self, values: dict[str, float]) -> None:
-        self.candidate_table.setColumnCount(2)
+        descriptions = {
+            variable.name: variable.label or "-"
+            for variable in (self._model.variables if self._model is not None else ())
+        }
+        self.candidate_table.setColumnCount(3)
         self.candidate_table.setHorizontalHeaderLabels(
-            [S.t("nlp.solution.candidate.variable"), S.t("nlp.solution.candidate.value")]
+            [
+                S.t("nlp.solution.candidate.variable"),
+                S.t("nlp.solution.candidate.description"),
+                S.t("nlp.solution.candidate.value"),
+            ]
         )
+        value_header = self.candidate_table.horizontalHeaderItem(2)
+        if value_header is not None:
+            value_header.setTextAlignment(Qt.AlignCenter)
         self.candidate_table.setRowCount(len(values))
         for row, (name, value) in enumerate(values.items()):
-            self.candidate_table.setItem(row, 0, QTableWidgetItem(name))
-            self.candidate_table.setItem(row, 1, QTableWidgetItem(_format_number(value)))
+            variable_item = QTableWidgetItem(name)
+            description_item = QTableWidgetItem(descriptions.get(name, "-"))
+            value_item = QTableWidgetItem(_format_number(value))
+            value_item.setTextAlignment(Qt.AlignCenter)
+            self.candidate_table.setItem(row, 0, variable_item)
+            self.candidate_table.setItem(row, 1, description_item)
+            self.candidate_table.setItem(row, 2, value_item)
 
     def _set_trace_rows(self, history: tuple[float, ...]) -> None:
         self.trace_table.setColumnCount(2)

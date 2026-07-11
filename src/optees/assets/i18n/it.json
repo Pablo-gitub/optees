@@ -579,7 +579,26 @@
       "status": { "converged": "Convergente", "iteration_limit": "Limite iterazioni", "failed": "Fallito", "not_solved": "Non risolto" },
       "details": { "section": "Dettagli esecuzione", "objective": "Obiettivo", "method": "Metodo", "iterations": "Iterazioni", "evaluations": "Valutazioni", "feasibility": "Ammissibilita' bounds", "message": "Messaggio di terminazione" },
       "feasibility": { "within_bounds": "Entro i bounds dichiarati", "violated": "Viola i bounds dichiarati", "unavailable": "Non disponibile" },
-      "candidate": { "section": "Candidato locale", "hint": "Valori delle variabili restituiti dall'esecuzione numerica selezionata.", "variable": "Variabile", "value": "Valore" },
+      "candidate": { "section": "Candidato locale", "hint": "Valori delle variabili restituiti dall'esecuzione numerica selezionata.", "variable": "Variabile", "description": "Descrizione", "value": "Valore" },
+      "visualization": {
+        "section": "Paesaggio dell'obiettivo",
+        "hint": "Il grafico campiona il box di bounds finiti dichiarato. Illustra la geometria locale e non prova mai l'ottimalita' globale.",
+        "mode_label": "Vista",
+        "contour": "Curve di livello",
+        "surface": "Superficie 3D",
+        "slice_label": "Fissata al candidato",
+        "no_model": "Risolvi un modello non lineare per visualizzare l'obiettivo.",
+        "unsupported_dimension": "La visualizzazione dell'obiettivo e' disponibile solo per modelli con due o tre variabili decisionali.",
+        "bounds_required": "Imposta bounds inferiori e superiori finiti e distinti per ogni variabile per visualizzare l'obiettivo senza scegliere una finestra arbitraria.",
+        "matplotlib_unavailable": "Installa matplotlib per visualizzare l'obiettivo.",
+        "no_finite_samples": "Nel box mostrato non sono stati trovati valori finiti dell'obiettivo. Restringi i bounds a un dominio valido dell'espressione.",
+        "contour_title": "Curve di livello dell'obiettivo",
+        "surface_title": "Superficie dell'obiettivo",
+        "slice_title": "Sezione: {variable} = {value}",
+        "objective_axis": "Obiettivo",
+        "initial_point": "Punto iniziale",
+        "local_candidate": "Candidato locale"
+      },
       "trace": { "section": "Traccia dell'obiettivo", "hint": "Obiettivo iniziale e valori raccolti durante l'esecuzione. La traccia descrive solo questa run.", "empty": "L'esecuzione selezionata non ha fornito una traccia dell'obiettivo.", "iteration": "Passo", "objective": "Obiettivo" }
     }
   }

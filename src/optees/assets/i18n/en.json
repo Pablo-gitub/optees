@@ -581,7 +581,26 @@
       "status": { "converged": "Converged", "iteration_limit": "Iteration limit", "failed": "Failed", "not_solved": "Not solved" },
       "details": { "section": "Run details", "objective": "Objective", "method": "Method", "iterations": "Iterations", "evaluations": "Evaluations", "feasibility": "Bounds feasibility", "message": "Termination message" },
       "feasibility": { "within_bounds": "Within declared bounds", "violated": "Violates declared bounds", "unavailable": "Unavailable" },
-      "candidate": { "section": "Local candidate", "hint": "Variable values returned by the selected numerical run.", "variable": "Variable", "value": "Value" },
+      "candidate": { "section": "Local candidate", "hint": "Variable values returned by the selected numerical run.", "variable": "Variable", "description": "Description", "value": "Value" },
+      "visualization": {
+        "section": "Objective landscape",
+        "hint": "The chart samples the declared finite box bounds. It illustrates local geometry and never proves global optimality.",
+        "mode_label": "View",
+        "contour": "Contour map",
+        "surface": "3D surface",
+        "slice_label": "Fixed at candidate",
+        "no_model": "Solve a nonlinear model to display an objective visualization.",
+        "unsupported_dimension": "Objective visualization is available only for models with two or three decision variables.",
+        "bounds_required": "Set finite, distinct lower and upper bounds for every variable to visualize the objective without choosing an arbitrary window.",
+        "matplotlib_unavailable": "Install matplotlib to display the objective visualization.",
+        "no_finite_samples": "No finite objective values were found in the plotted box. Narrow the bounds to a valid expression domain.",
+        "contour_title": "Objective contours",
+        "surface_title": "Objective surface",
+        "slice_title": "Slice: {variable} = {value}",
+        "objective_axis": "Objective",
+        "initial_point": "Initial point",
+        "local_candidate": "Local candidate"
+      },
       "trace": { "section": "Objective trace", "hint": "Initial objective followed by values captured during the run. A trace describes this run only.", "empty": "The selected run did not provide an objective trace.", "iteration": "Step", "objective": "Objective" }
     }
   }

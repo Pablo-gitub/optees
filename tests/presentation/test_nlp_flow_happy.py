@@ -48,6 +48,8 @@ def test_nlp_form_solves_and_navigates_to_local_solution(window, qtbot) -> None:
     window.goto("nlp")
 
     rows = window.nlp_page.variables_section.rows()
+    rows[0].edit_label.setText("first coordinate")
+    rows[1].edit_label.setText("second coordinate")
     rows[0].edit_initial.setText("0")
     rows[1].edit_initial.setText("0")
     window.nlp_page.edit_expression.setText("(x1 - 2)**2 + (x2 + 1)**2")
@@ -69,6 +71,10 @@ def test_nlp_form_solves_and_navigates_to_local_solution(window, qtbot) -> None:
     }
     assert window.stack.currentWidget() is window.nlp_solution_page
     assert window.nlp_solution_page.candidate_table.rowCount() == 2
+    assert window.nlp_solution_page.candidate_table.columnCount() == 3
+    assert window.nlp_solution_page.candidate_table.item(0, 0).text() == "x1"
+    assert window.nlp_solution_page.candidate_table.item(0, 1).text() == "first coordinate"
+    assert window.nlp_solution_page.candidate_table.item(0, 2).textAlignment() == int(Qt.AlignCenter)
     assert window.nlp_solution_page.trace_table.rowCount() == 3
     assert window.nlp_solution_page.status.text()
     assert (
@@ -126,6 +132,8 @@ def test_nlp_view_uses_localized_controls(window) -> None:
     assert window.nlp_page.findChild(QPushButton, "nlpImportJsonButton").text()
     assert window.nlp_page.findChild(QPushButton, "nlpOptimizeButton").text()
     assert window.nlp_page.findChild(QLineEdit, "nlpObjectiveExpression").placeholderText()
+    assert window.nlp_page.btn_json_info.property("variant") == "info"
+    assert window.nlp_page.btn_json_info.text() == "i"
 
 
 @pytest.mark.parametrize("language", ["en", "it"])
@@ -171,3 +179,82 @@ def test_nlp_solution_explains_non_converged_runs(
     assert S.t(expected_status_key) in window.nlp_solution_page.status.text()
     assert window.nlp_solution_page.trace_table.rowCount() == 0
     assert window.nlp_solution_page.trace_hint.text() == S.t("nlp.solution.trace.empty")
+
+
+def test_nlp_solution_plots_bounded_two_variable_objective(window) -> None:
+    model = NLPModel.from_parts(
+        variables=[
+            NLPVariable("x1", lower_bound=-2.0, upper_bound=2.0, initial_value=-1.0),
+            NLPVariable("x2", lower_bound=-2.0, upper_bound=2.0, initial_value=1.0),
+        ],
+        objective=NLPObjective("(x1 - 1)**2 + (x2 + 1)**2"),
+        options=NLPOptions(method=NLPSolverMethod.L_BFGS_B),
+    )
+    solution = NLPSolution.from_solver_result(
+        status="Converged",
+        objective=0.0,
+        values={"x1": 1.0, "x2": -1.0},
+        extras={"method": "L-BFGS-B"},
+    )
+
+    window.nlp_solution_page.set_problem(model)
+    window.nlp_solution_page.set_solution(solution)
+    visualization = window.nlp_solution_page.objective_plot
+
+    assert visualization.visualization_state == "ready"
+    assert visualization.mode_combo.count() == 2
+    assert visualization.slice_combo.count() == 2
+    assert visualization._figure is not None
+    assert visualization._figure.axes
+
+
+def test_nlp_solution_uses_candidate_slice_for_three_variables(window) -> None:
+    model = NLPModel.from_parts(
+        variables=[
+            NLPVariable("x1", lower_bound=-1.0, upper_bound=1.0, initial_value=0.0),
+            NLPVariable("x2", lower_bound=-1.0, upper_bound=1.0, initial_value=0.0),
+            NLPVariable("x3", lower_bound=-1.0, upper_bound=1.0, initial_value=0.0),
+        ],
+        objective=NLPObjective("x1**2 + x2**2 + x3**2"),
+        options=NLPOptions(method=NLPSolverMethod.L_BFGS_B),
+    )
+    solution = NLPSolution.from_solver_result(
+        status="Converged",
+        objective=0.0,
+        values={"x1": 0.0, "x2": 0.0, "x3": 0.0},
+        extras={"method": "L-BFGS-B"},
+    )
+
+    window.nlp_solution_page.set_problem(model)
+    window.nlp_solution_page.set_solution(solution)
+    visualization = window.nlp_solution_page.objective_plot
+
+    assert visualization.visualization_state == "ready"
+    assert visualization.slice_combo.count() == 3
+    assert visualization._figure is not None
+    assert S.t("nlp.solution.visualization.slice_title", variable="x1", value="0") in (
+        visualization._figure.axes[0].get_title()
+    )
+
+
+def test_nlp_solution_requires_finite_bounds_for_objective_plot(window) -> None:
+    model = NLPModel.from_parts(
+        variables=[NLPVariable("x1"), NLPVariable("x2")],
+        objective=NLPObjective("x1**2 + x2**2"),
+        options=NLPOptions(method=NLPSolverMethod.BFGS),
+    )
+    solution = NLPSolution.from_solver_result(
+        status="Converged",
+        objective=0.0,
+        values={"x1": 0.0, "x2": 0.0},
+        extras={"method": "BFGS"},
+    )
+
+    window.nlp_solution_page.set_problem(model)
+    window.nlp_solution_page.set_solution(solution)
+
+    assert window.nlp_solution_page.objective_plot.visualization_state == "bounds_required"
+    assert (
+        window.nlp_solution_page.objective_plot.status_label.text()
+        == S.t("nlp.solution.visualization.bounds_required")
+    )

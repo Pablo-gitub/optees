@@ -26,8 +26,9 @@ application only when it has:
 5. examples, an educational problem-description page, and localized UI text;
 6. unit, integration, and presentation tests scaled to the risk of the
    implementation;
-7. small reproducible reference cases, plus scientific benchmarks where they
-   are available and suitable.
+7. small reproducible reference cases before exposure in the application;
+   external scientific benchmarks when they are available and suitable, and
+   before presenting a solver as robust beyond its documented scope.
 
 Exact solvers must distinguish a proven optimum from a feasible incumbent.
 Heuristic methods must explicitly state that they return a best-found solution,
@@ -35,20 +36,26 @@ not a proof of optimality.
 
 ## Delivery Strategy
 
-Optees will use a **breadth-first, then coordinated-depth** strategy.
+Optees will use a **vertical-first, benchmark-hardening, then coordinated-depth**
+strategy.
 
-- First, deliver one complete vertical slice for each major product section:
+- Every new algorithm first receives a usable vertical slice and mandatory
+  deterministic reference tests. A screen without a verified solver is never
+  considered an MVP.
+- Deliver one complete vertical slice for each major product section:
   Nonlinear Programming, Graph Theory, and Heuristics & Metaheuristics.
-- Then expand the established families horizontally, adding comparable depth to
-  LP/MILP, NLP, Graphs, and Heuristics.
-- Cross-cutting features such as JSON import, benchmarks, solution explanation,
-  the Modeling Assistant, localization, and release packaging evolve only when
-  they can support the families that actually exist.
+- After those slices, run a benchmark-hardening pass: add external scientific
+  datasets where a redistributable corpus and published outcomes are suitable,
+  retain checksums and provenance, and separate routine CI cases from slow
+  performance cases.
+- Only then expand established families horizontally, adding comparable depth
+  to LP/MILP, NLP, Graphs, and Heuristics.
 
-This avoids two bad outcomes: an application with only a very deep Linear
-Programming section, and an application with many empty categories. Every new
-section must earn its place through one usable end-to-end workflow before its
-advanced variants are added.
+This avoids three bad outcomes: an application with only a very deep Linear
+Programming section, many empty categories, or attractive workflows that have
+no regression evidence. Existing, low-friction benchmark integrations may be
+added during a vertical slice; a difficult external corpus does not block an
+otherwise tested first workflow, but it remains an explicit hardening item.
 
 ## Current Baseline
 
@@ -124,8 +131,14 @@ boundaries are maintained in `docs/NLP_FEATURE_PLAN.md`.
   options.
 - Solution view showing status, candidate point, objective, iterations,
   termination reason, and convergence history.
+- Bounded educational visualization: contour map and 3D objective surface for
+  two variables, and an honest candidate-centred 2D slice for three variables.
 - Educational examples and benchmark tests: Rosenbrock, Himmelblau, and small
   nonlinear quadratics.
+
+The included NLP cases are analytic references. A redistributable external NLP
+benchmark corpus remains a benchmark-hardening item before global-search or
+broader robustness claims are introduced.
 
 **Explicitly deferred:** nonlinear constraints, least squares, quadratic
 programming, nonlinear minimax, and global optimization.
@@ -169,6 +182,20 @@ common run-reporting contract is stable.
 **Explicitly deferred:** a generic "one metaheuristic for every problem"
 abstraction. Each supported problem needs a valid encoding, neighbourhood,
 feasibility repair, and objective evaluation contract.
+
+### Phase 3.5 - Scientific Benchmark Hardening
+
+After the first Graph and Heuristics workflows exist, consolidate scientific
+benchmark evidence before broadening the families further.
+
+- Keep the LPnetlib, MIPLIB, Burkardt, and OR-Library adapters reproducible.
+- Evaluate and document a redistributable external corpus for continuous NLP;
+  local methods must be assessed against their intended basin or local-search
+  contract, not falsely graded as global optimizers.
+- Add Graph and TSP sources with known outcomes, source metadata, checksums
+  where applicable, and a clearly bounded CI selection.
+- Keep toy and analytic cases in normal CI; mark heavier scientific regression
+  and performance cases explicitly.
 
 ### Phase 4 - Coordinated Family Expansion
 

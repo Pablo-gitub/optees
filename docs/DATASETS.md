@@ -108,6 +108,12 @@ iteration budget, expected local candidate, and numerical tolerance. This is
 important for multi-modal functions: the test verifies the documented basin,
 not an unsupported claim of global optimality.
 
+External NLP benchmark integration is planned in the project roadmap's
+benchmark-hardening phase. A corpus will be added only after its redistribution
+terms, expected local/global contract, source metadata, and CI budget have been
+reviewed. Until then, these cases are the required regression baseline for the
+local SciPy methods implemented by Optees.
+
 ## Test Data Layout
 
 ```text
