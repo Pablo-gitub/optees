@@ -231,15 +231,20 @@ def build_stylesheet(t: Tokens) -> str:
     }}
 
     /* Small round "i" info buttons (fixed 24x24) */
-    QPushButton#btnSchemaInfo, QPushButton#knapsackJsonInfoButton {{
+    QPushButton[variant="info"], QPushButton#btnSchemaInfo, QPushButton#knapsackJsonInfoButton {{
         padding: 0;
+        min-width: 24px;
+        max-width: 24px;
+        min-height: 24px;
+        max-height: 24px;
         border-radius: 12px;
-        background: {t.surface_solid};
-        border: 1px solid {t.border};
-        color: {t.text_muted};
-        font-weight: 700;
+        background: {t.accent_soft};
+        border: 1px solid {t.accent_soft_hover};
+        color: {t.accent};
+        font-size: 15px;
+        font-weight: 800;
     }}
-    QPushButton#btnSchemaInfo:hover, QPushButton#knapsackJsonInfoButton:hover {{
+    QPushButton[variant="info"]:hover, QPushButton#btnSchemaInfo:hover, QPushButton#knapsackJsonInfoButton:hover {{
         color: {t.on_accent};
         background: {t.accent};
         border-color: transparent;

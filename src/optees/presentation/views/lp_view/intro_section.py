@@ -128,6 +128,7 @@ class IntroSection(Section):
 
         self.btn_schema = QPushButton("i")
         self.btn_schema.setObjectName("btnSchemaInfo")
+        self.btn_schema.setProperty("variant", "info")
         self.btn_schema.setCursor(Qt.PointingHandCursor)
         self.btn_schema.setFixedSize(24, 24)
         self.btn_schema.setToolTip("JSON format")

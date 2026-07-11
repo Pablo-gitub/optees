@@ -151,6 +151,7 @@ def _clear_layout(layout: QVBoxLayout) -> None:
 def _make_info_button(tooltip: str, parent: Optional[QWidget] = None) -> QPushButton:
     button = QPushButton("i", parent)
     button.setObjectName("btnSchemaInfo")
+    button.setProperty("variant", "info")
     button.setText("i")
     button.setCursor(Qt.PointingHandCursor)
     button.setFixedSize(24, 24)

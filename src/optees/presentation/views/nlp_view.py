@@ -66,6 +66,7 @@ def _clear_layout(layout: QVBoxLayout) -> None:
 def _make_info_button(object_name: str, parent: Optional[QWidget] = None) -> QPushButton:
     button = QPushButton("i", parent)
     button.setObjectName(object_name)
+    button.setProperty("variant", "info")
     button.setFixedSize(24, 24)
     button.setCursor(Qt.PointingHandCursor)
     return button
