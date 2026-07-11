@@ -94,6 +94,20 @@ benchmarks. When a suitable redistributable corpus with published optima is
 identified, it should be added beside this file with its source, checksum, and
 dedicated adapter if necessary.
 
+## Continuous NLP Analytic Reference Cases
+
+- **Included file:** `tests/data/nlp/reference_cases.json`.
+- **Cases:** Rosenbrock with Nelder-Mead, Himmelblau in the basin selected by
+  the documented starting point, a bounded convex quadratic, and a concave
+  maximization quadratic.
+- **Tests:** `tests/utility/test_nlp_reference_cases.py`.
+
+These are deterministic **analytic reference cases**, not a downloaded
+scientific benchmark corpus. Each records an initial point, selected method,
+iteration budget, expected local candidate, and numerical tolerance. This is
+important for multi-modal functions: the test verifies the documented basin,
+not an unsupported claim of global optimality.
+
 ## Test Data Layout
 
 ```text
@@ -108,6 +122,8 @@ tests/data/
     p01/, p02/, p08/                # Burkardt 0/1
     orlib/mknap1.txt                # OR-Library multi-dimensional 0/1
     reference_cases.json            # Bounded/Unbounded regression cases
+  nlp/
+    reference_cases.json            # Analytic continuous NLP regressions
 ```
 
 ## Adding A Dataset

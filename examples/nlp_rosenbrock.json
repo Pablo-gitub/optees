@@ -1,0 +1,29 @@
+{
+  "version": "1",
+  "problem_type": "nonlinear_programming",
+  "variables": [
+    {
+      "name": "x1",
+      "label": "first coordinate",
+      "lb": null,
+      "ub": null,
+      "initial": -1.2
+    },
+    {
+      "name": "x2",
+      "label": "second coordinate",
+      "lb": null,
+      "ub": null,
+      "initial": 1.0
+    }
+  ],
+  "objective": {
+    "sense": "min",
+    "expression": "(1 - x1)**2 + 100 * (x2 - x1**2)**2"
+  },
+  "solver_options": {
+    "method": "Nelder-Mead",
+    "max_iterations": 5000,
+    "tolerance": 1e-8
+  }
+}

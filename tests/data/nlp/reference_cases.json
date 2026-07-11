@@ -1,0 +1,90 @@
+{
+  "version": "1",
+  "description": "Small deterministic analytic cases for the continuous NLP regression suite.",
+  "cases": [
+    {
+      "id": "rosenbrock_nelder_mead",
+      "kind": "analytic_reference_case",
+      "source": "Rosenbrock valley function; local minimum in the selected basin.",
+      "problem": {
+        "sense": "min",
+        "expression": "(1 - x1)**2 + 100 * (x2 - x1**2)**2",
+        "variables": ["x1", "x2"],
+        "initial_point": [-1.2, 1.0],
+        "bounds": null,
+        "method": "Nelder-Mead",
+        "max_iterations": 5000,
+        "tolerance": 1e-8
+      },
+      "expected": {
+        "status": "Converged",
+        "objective": 0.0,
+        "values": {"x1": 1.0, "x2": 1.0},
+        "absolute_tolerance": 0.00001
+      }
+    },
+    {
+      "id": "himmelblau_selected_basin",
+      "kind": "analytic_reference_case",
+      "source": "Himmelblau function; the start (0, 0) selects the local minimum (3, 2).",
+      "problem": {
+        "sense": "min",
+        "expression": "(x1**2 + x2 - 11)**2 + (x1 + x2**2 - 7)**2",
+        "variables": ["x1", "x2"],
+        "initial_point": [0.0, 0.0],
+        "bounds": null,
+        "method": "BFGS",
+        "max_iterations": 2000,
+        "tolerance": 1e-9
+      },
+      "expected": {
+        "status": "Converged",
+        "objective": 0.0,
+        "values": {"x1": 3.0, "x2": 2.0},
+        "absolute_tolerance": 0.00001
+      }
+    },
+    {
+      "id": "bounded_quadratic_boundary",
+      "kind": "analytic_reference_case",
+      "source": "Convex quadratic with the unconstrained x1 minimizer outside its box bound.",
+      "problem": {
+        "sense": "min",
+        "expression": "(x1 - 5)**2 + (x2 - 1)**2",
+        "variables": ["x1", "x2"],
+        "initial_point": [0.0, 0.0],
+        "bounds": [[0.0, 2.0], [-2.0, 2.0]],
+        "method": "L-BFGS-B",
+        "max_iterations": 1000,
+        "tolerance": 1e-9
+      },
+      "expected": {
+        "status": "Converged",
+        "objective": 9.0,
+        "values": {"x1": 2.0, "x2": 1.0},
+        "absolute_tolerance": 0.00001
+      }
+    },
+    {
+      "id": "concave_quadratic_maximization",
+      "kind": "analytic_reference_case",
+      "source": "Concave scalar quadratic used to verify max-to-min objective conversion.",
+      "problem": {
+        "sense": "max",
+        "expression": "10 - (x1 - 3)**2",
+        "variables": ["x1"],
+        "initial_point": [0.0],
+        "bounds": null,
+        "method": "BFGS",
+        "max_iterations": 1000,
+        "tolerance": 1e-9
+      },
+      "expected": {
+        "status": "Converged",
+        "objective": 10.0,
+        "values": {"x1": 3.0},
+        "absolute_tolerance": 0.00001
+      }
+    }
+  ]
+}
