@@ -231,8 +231,17 @@ class RuleBasedAssistantAdapter:
 
         family, score = self._classify(normalized)
         variant = self._variant_for(family, normalized)
-        implemented = family in {_FAMILY_LP, _FAMILY_MILP, _FAMILY_KNAPSACK}
-        load_target = family if implemented else None
+        implemented = family in {
+            _FAMILY_LP,
+            _FAMILY_MILP,
+            _FAMILY_KNAPSACK,
+            _FAMILY_NLP,
+        }
+        load_target = (
+            family
+            if implemented and family in {_FAMILY_LP, _FAMILY_MILP, _FAMILY_KNAPSACK}
+            else None
+        )
         if family == _FAMILY_KNAPSACK:
             load_target = "knapsack"
 
@@ -257,7 +266,9 @@ class RuleBasedAssistantAdapter:
             model_json = draft.data if draft else None
             if draft is not None:
                 missing.extend(draft.warnings)
-        elif family in {_FAMILY_NLP, _FAMILY_SCHEDULING, _FAMILY_ROBUST}:
+        elif family == _FAMILY_NLP:
+            missing.append(_msg(language, "nlp_drafting_deferred"))
+        elif family in {_FAMILY_SCHEDULING, _FAMILY_ROBUST}:
             missing.append(_msg(language, "planned_family"))
         else:
             missing.append(_msg(language, "problem_family"))
@@ -1065,6 +1076,7 @@ _MESSAGES = {
         "empty_prompt": "Describe the optimization problem to get a recommendation.",
         "problem_description": "problem description",
         "planned_family": "This family is recognized but its dedicated Optees form is not implemented yet.",
+        "nlp_drafting_deferred": "The NLP form is available, but rule-based NLP JSON drafting is not implemented yet.",
         "problem_family": "problem family",
         "capacity": "capacity",
         "items_with_value_weight": "items with value and weight",
@@ -1089,6 +1101,7 @@ _MESSAGES = {
         "empty_prompt": "Descrivi il problema di ottimizzazione per ottenere un suggerimento.",
         "problem_description": "descrizione del problema",
         "planned_family": "Questa famiglia e' riconosciuta ma la schermata dedicata in Optees non e' ancora implementata.",
+        "nlp_drafting_deferred": "La schermata NLP e' disponibile, ma la generazione rule-based di JSON NLP non e' ancora implementata.",
         "problem_family": "famiglia del problema",
         "capacity": "capacita'",
         "items_with_value_weight": "oggetti con valore e peso",
