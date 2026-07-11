@@ -26,6 +26,16 @@
   deterministic Bounded and Unbounded quantity regression cases.
 - `tests/utility/test_miplib_milp_e2e.py`: size-capped, optional MIPLIB
   end-to-end checks when PuLP and the solver dependencies are available.
+- `tests/utility/test_nlp_expression.py`: restricted expression syntax, unsafe
+  constructs, invalid function domains, and finite-value checks.
+- `tests/domain/test_nlp_model.py`, `tests/utility/test_nlp_utils.py`, and
+  `tests/application/usecases/test_solve_nlp_usecase.py`: continuous NLP
+  domain, numerical status, canonical mapping, and SciPy adapter coverage.
+- `tests/utility/test_nlp_reference_cases.py`: Rosenbrock, Himmelblau,
+  bounded quadratic, and maximization analytic regressions.
+- `tests/presentation/test_nlp_flow_happy.py` and
+  `tests/presentation/test_nlp_info_navigation.py`: localized NLP formulation,
+  import, solution, educational-page, and info-dialog flows.
 
 ## Commands
 ```bash

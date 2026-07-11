@@ -7,6 +7,8 @@ order in which the product grows.
 Related documents:
 
 - `docs/MILP_ROADMAP.md` for MILP-specific completion work;
+- `docs/NLP_FEATURE_PLAN.md` for the Phase 1 nonlinear-programming delivery
+  checklist;
 - `docs/DATASETS.md` for included scientific datasets;
 - `docs/TESTING.md` for the test strategy;
 - `docs/RELEASING.md` for build, signing, and tag verification;
@@ -106,10 +108,12 @@ are configured.
 
 ### Phase 1 - Nonlinear Programming: First Vertical Slice
 
-**Next implementation focus.** Start a complete continuous nonlinear
-optimization workflow without opening another unfinished family in parallel.
+**Implemented and verified locally.** The full test suite, macOS bundle asset
+inspection, code-signature check, and offscreen application startup all pass.
+The next release commit/tag publishes this vertical slice.
 
-The next new end-to-end family is continuous nonlinear optimization.
+The sequential implementation contract, safety rules, test matrix, and commit
+boundaries are maintained in `docs/NLP_FEATURE_PLAN.md`.
 
 - Domain model for continuous variables, bounds, a nonlinear objective, and
   safe structured function representation. Do not evaluate arbitrary Python

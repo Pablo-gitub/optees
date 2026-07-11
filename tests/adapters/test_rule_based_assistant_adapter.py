@@ -403,3 +403,25 @@ def test_rule_based_assistant_keeps_planned_families_non_loadable(
     assert not analysis.implemented
     assert not analysis.is_loadable
     assert analysis.model_json is None
+
+
+@pytest.mark.parametrize(
+    ("prompt", "language"),
+    [
+        ("Minimize the Rosenbrock nonlinear function from a starting point.", "en"),
+        ("Voglio minimizzare una funzione non lineare con bounds e punto iniziale.", "it"),
+    ],
+)
+def test_rule_based_assistant_marks_nlp_form_as_available_but_not_draftable(
+    assistant: RuleBasedAssistantAdapter,
+    prompt: str,
+    language: str,
+) -> None:
+    analysis = assistant.analyze(prompt, language=language)
+
+    assert analysis.family == "nlp"
+    assert analysis.implemented
+    assert analysis.load_target is None
+    assert not analysis.is_loadable
+    assert analysis.model_json is None
+    assert analysis.missing_information
