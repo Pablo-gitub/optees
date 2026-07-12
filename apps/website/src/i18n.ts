@@ -1,6 +1,12 @@
 export type Language = "en" | "it";
-export type AlgorithmId = "lp" | "milp" | "knapsack" | "nlp";
-export type PreviewId = "home" | "lpSolution" | "knapsack" | "knapsackSolution";
+export type AlgorithmId = "lp" | "milp" | "knapsack" | "nlp" | "graph";
+export type PreviewId =
+  | "home"
+  | "lpSolution"
+  | "knapsack"
+  | "knapsackSolution"
+  | "nlpSolution"
+  | "graphSolution";
 export type FeatureId =
   | "assistant"
   | "educational"
@@ -166,11 +172,11 @@ type SiteCopy = {
 export const copy: Record<Language, SiteCopy> = {
   en: {
     meta: {
-      title: "Optees — Open-Source Optimization Software for LP, MILP & Knapsack",
+      title: "Optees — Open-Source Operations Research Software",
       description:
-        "Free, open-source desktop app that makes operations research accessible. Model, solve and visualize Linear Programming, Mixed-Integer and Knapsack problems locally, with a guided assistant and educational solution views.",
+        "Free, open-source desktop app for Linear Programming, Mixed-Integer Programming, Knapsack, continuous Nonlinear Programming and Dijkstra shortest paths. Model and solve locally with a guided assistant and educational solution views.",
       ogDescription:
-        "Model, solve and visualize LP, MILP and Knapsack problems from a private, local desktop app. Free and open source.",
+        "Model, solve and understand LP, MILP, Knapsack, continuous NLP and Dijkstra shortest paths in a private local desktop app.",
     },
     nav: {
       aria: "Primary navigation",
@@ -197,13 +203,13 @@ export const copy: Record<Language, SiteCopy> = {
       title: "Operations research,",
       titleAccent: "made effortless.",
       copy:
-        "Optees turns powerful optimization algorithms into a desktop app anyone can use. Model Linear Programming, Mixed-Integer and Knapsack problems, solve them with industry-grade engines, and understand every result — no scripting required.",
+        "Optees turns operations-research methods into a desktop app anyone can use. Model LP, MILP and five Knapsack variants, explore continuous nonlinear objectives, or find a Dijkstra shortest path — then understand every result without scripting.",
       source: "Star on GitHub",
       stackLabel: "Powered by",
-      stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Netlib", "MIPLIB"],
+      stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Dijkstra", "Netlib"],
       metricsAria: "Project highlights",
       metrics: [
-        { value: "3", label: "Solver families, ready to use" },
+        { value: "5", label: "Algorithm workflows, ready to use" },
         { value: "5", label: "Knapsack variants in one flow" },
         { value: "100%", label: "Local & private, no cloud" },
         { value: "MIT", label: "Free and open source" },
@@ -220,15 +226,15 @@ export const copy: Record<Language, SiteCopy> = {
       items: [
         {
           id: "assistant",
-          title: "Guided assistant",
+          title: "Local modeling assistant",
           body:
-            "A built-in chatbot helps you pick the right algorithm for your problem and set up the model — even without an operations-research background.",
+            "A deterministic, rule-based assistant works entirely on your device: it recommends LP, MILP or Knapsack and can prepare validated structured drafts when enough data is present.",
         },
         {
           id: "educational",
           title: "Educational solution views",
           body:
-            "Every result comes with status, objective breakdown, optimal ranges, charts and plain-language notes, so you learn while you solve.",
+            "Read statuses, objective behaviour, optimal ranges, routes, charts and plain-language notes. NLP results explicitly distinguish a local numerical candidate from a proven optimum.",
         },
         {
           id: "variants",
@@ -240,7 +246,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "benchmarks",
           title: "Benchmark-backed",
           body:
-            "Solvers are validated against scientific datasets like Netlib and MIPLIB, so you can trust the numbers you ship.",
+            "LP and MILP regressions use Netlib and MIPLIB. Knapsack includes Burkardt and OR-Library cases; NLP and graph workflows use documented analytic or deterministic reference cases.",
         },
         {
           id: "local",
@@ -302,12 +308,23 @@ export const copy: Record<Language, SiteCopy> = {
           id: "nlp",
           label: "Nonlinear Programming",
           short: "NLP",
-          status: "On the roadmap",
+          status: "Available",
           formula: "min f(x)  s.t.  gᵢ(x) ≤ 0",
           description:
-            "Unconstrained, bounded, constrained, least-squares and minimax optimization — coming in a future release.",
-          details: ["SciPy minimize", "Curve fitting", "Global methods later"],
-          preview: "home",
+            "Continuous scalar optimization with safe expressions, an initial point and optional box bounds. The result is an honest local numerical candidate, not a proof of global optimality.",
+          details: ["BFGS / Nelder-Mead / L-BFGS-B", "Safe expression parser", "2D and 3D objective views"],
+          preview: "nlpSolution",
+        },
+        {
+          id: "graph",
+          label: "Graph Theory: Dijkstra",
+          short: "DSP",
+          status: "Available",
+          formula: "min Σ w(u, v) along a path s → t,  w(u, v) ≥ 0",
+          description:
+            "Find the shortest route in directed or undirected weighted graphs with a source and destination, then inspect the highlighted route, total cost and settled-node trace.",
+          details: ["Deterministic local Dijkstra", "JSON import/export", "Route visualization"],
+          preview: "graphSolution",
         },
       ],
     },
@@ -321,7 +338,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "home",
           window: "Optees — Home",
           title: "Choose your method",
-          body: "Build LP, MILP and Knapsack problems from a clear catalogue of methods instead of ad-hoc scripts.",
+          body: "Build LP, MILP, Knapsack, continuous NLP and graph problems from a clear catalogue of methods instead of ad-hoc scripts.",
           alt: "Optees desktop home view listing optimization algorithms",
         },
         {
@@ -345,6 +362,20 @@ export const copy: Record<Language, SiteCopy> = {
           body: "Capacity usage, selected items and value-to-weight charts sit right next to the decision table.",
           alt: "Optees Knapsack solution view with capacity usage and value charts",
         },
+        {
+          id: "nlpSolution",
+          window: "Optees — NLP solution",
+          title: "Inspect local numerical behaviour",
+          body: "See the candidate point, termination status and objective landscape. The view makes the local nature of numerical optimization explicit.",
+          alt: "Optees nonlinear-programming solution view with candidate details and objective plot",
+        },
+        {
+          id: "graphSolution",
+          window: "Optees — Dijkstra solution",
+          title: "Follow the shortest route",
+          body: "The selected path is drawn over the graph with its total distance and the deterministic Dijkstra settlement trace.",
+          alt: "Optees Dijkstra shortest-path solution view with a highlighted route",
+        },
       ],
     },
     workflow: {
@@ -355,17 +386,17 @@ export const copy: Record<Language, SiteCopy> = {
         {
           number: "01",
           title: "Formulate",
-          body: "Enter variables, bounds, objective functions, constraints or Knapsack items — or import them from JSON.",
+          body: "Enter variables, bounds, objectives, constraints, Knapsack items or a weighted graph — or import a versioned JSON model.",
         },
         {
           number: "02",
           title: "Solve",
-          body: "Run proven engines: SciPy/HiGHS for LP, OR-Tools for MILP, and dedicated dynamic-programming solvers for Knapsack.",
+          body: "Run the appropriate local engine: SciPy/HiGHS, OR-Tools, a dedicated Knapsack solver, a SciPy numerical method, or Dijkstra.",
         },
         {
           number: "03",
           title: "Inspect",
-          body: "Read the status, objective value, selected variables, charts and educational notes that explain the result.",
+          body: "Read the exact or numerical status, objective, selected variables, routes, charts and educational notes that explain the result.",
         },
       ],
     },
@@ -397,7 +428,7 @@ export const copy: Record<Language, SiteCopy> = {
       items: [
         {
           q: "What is Optees?",
-          a: "Optees is a free, open-source desktop app that makes operations research approachable. You can model, solve and inspect Linear Programming, Mixed-Integer Linear Programming and Knapsack problems without writing code.",
+          a: "Optees is a free, open-source desktop app for operations research. You can model, solve and inspect LP, MILP, five Knapsack variants, continuous Nonlinear Programming and Dijkstra shortest-path problems without writing code.",
         },
         {
           q: "Who is it for?",
@@ -417,7 +448,7 @@ export const copy: Record<Language, SiteCopy> = {
         },
         {
           q: "What is coming next?",
-          a: "The roadmap focuses on stronger Knapsack benchmarks and a first Nonlinear Programming workflow, followed by graph and machine-learning methods.",
+          a: "The roadmap next focuses on educational AI and machine-learning workflows, then heuristics and metaheuristics, while benchmark hardening continues across the released families.",
         },
       ],
     },
@@ -453,11 +484,11 @@ export const copy: Record<Language, SiteCopy> = {
   },
   it: {
     meta: {
-      title: "Optees — Software di Ottimizzazione Open Source per LP, MILP e Knapsack",
+      title: "Optees — Software Open Source per Ricerca Operativa",
       description:
-        "App desktop gratuita e open source che rende accessibile la ricerca operativa. Modella, risolvi e visualizza problemi di Programmazione Lineare, Intera Mista e Knapsack in locale, con un assistente guidato e viste didattiche della soluzione.",
+        "App desktop gratuita e open source per Programmazione Lineare, Intera Mista, Knapsack, Programmazione Non Lineare continua e cammini minimi di Dijkstra. Modella e risolvi in locale con assistente guidato e viste didattiche.",
       ogDescription:
-        "Modella, risolvi e visualizza problemi LP, MILP e Knapsack da un'app desktop locale e privata. Gratuita e open source.",
+        "Modella, risolvi e comprendi LP, MILP, Knapsack, NLP continua e cammini minimi di Dijkstra in un'app desktop privata e locale.",
     },
     nav: {
       aria: "Navigazione principale",
@@ -484,13 +515,13 @@ export const copy: Record<Language, SiteCopy> = {
       title: "La ricerca operativa,",
       titleAccent: "resa semplice.",
       copy:
-        "Optees trasforma potenti algoritmi di ottimizzazione in un'app desktop alla portata di tutti. Modella problemi di Programmazione Lineare, Intera Mista e Knapsack, risolvili con motori di livello professionale e comprendi ogni risultato — senza scrivere codice.",
+        "Optees trasforma metodi di ricerca operativa in un'app desktop alla portata di tutti. Modella LP, MILP e cinque varianti Knapsack, esplora obiettivi non lineari continui o trova un cammino minimo con Dijkstra, poi comprendi ogni risultato senza scrivere codice.",
       source: "Metti una stella su GitHub",
       stackLabel: "Basato su",
-      stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Netlib", "MIPLIB"],
+      stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Dijkstra", "Netlib"],
       metricsAria: "Punti chiave del progetto",
       metrics: [
-        { value: "3", label: "Famiglie di solver pronte all'uso" },
+        { value: "5", label: "Flussi algoritmici pronti all'uso" },
         { value: "5", label: "Varianti Knapsack in un solo flusso" },
         { value: "100%", label: "Locale e privato, nessun cloud" },
         { value: "MIT", label: "Gratuito e open source" },
@@ -507,15 +538,15 @@ export const copy: Record<Language, SiteCopy> = {
       items: [
         {
           id: "assistant",
-          title: "Assistente guidato",
+          title: "Assistente di modellazione locale",
           body:
-            "Un chatbot integrato ti aiuta a scegliere l'algoritmo giusto per il tuo problema e a impostare il modello — anche senza basi di ricerca operativa.",
+            "Un assistente deterministico basato su regole lavora interamente sul dispositivo: raccomanda LP, MILP o Knapsack e puo' preparare bozze strutturate validate quando i dati sono sufficienti.",
         },
         {
           id: "educational",
           title: "Viste didattiche della soluzione",
           body:
-            "Ogni risultato mostra stato, scomposizione dell'obiettivo, range ottimi, grafici e note in linguaggio semplice: impari mentre risolvi.",
+            "Leggi stati, comportamento dell'obiettivo, range ottimi, percorsi, grafici e note in linguaggio semplice. I risultati NLP distinguono esplicitamente un candidato numerico locale da un ottimo provato.",
         },
         {
           id: "variants",
@@ -527,7 +558,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "benchmarks",
           title: "Validato su benchmark",
           body:
-            "I solver sono verificati su dataset scientifici come Netlib e MIPLIB, così puoi fidarti dei numeri che ottieni.",
+            "LP e MILP usano regressioni Netlib e MIPLIB. Knapsack include casi Burkardt e OR-Library; NLP e grafi usano casi analitici o deterministici documentati.",
         },
         {
           id: "local",
@@ -589,12 +620,23 @@ export const copy: Record<Language, SiteCopy> = {
           id: "nlp",
           label: "Programmazione Non Lineare",
           short: "NLP",
-          status: "In roadmap",
+          status: "Disponibile",
           formula: "min f(x)  s.t.  gᵢ(x) ≤ 0",
           description:
-            "Ottimizzazione non vincolata, con bounds, vincolata, least-squares e minimax — in arrivo in una release futura.",
-          details: ["SciPy minimize", "Curve fitting", "Metodi globali futuri"],
-          preview: "home",
+            "Ottimizzazione scalare continua con espressioni sicure, punto iniziale e bounds opzionali. Il risultato e' un candidato numerico locale onesto, non una prova di ottimo globale.",
+          details: ["BFGS / Nelder-Mead / L-BFGS-B", "Parser di espressioni sicuro", "Viste obiettivo 2D e 3D"],
+          preview: "nlpSolution",
+        },
+        {
+          id: "graph",
+          label: "Teoria dei Grafi: Dijkstra",
+          short: "DSP",
+          status: "Disponibile",
+          formula: "min Σ w(u, v) lungo un cammino s → t,  w(u, v) ≥ 0",
+          description:
+            "Trova il percorso minimo in grafi pesati diretti o non diretti con sorgente e destinazione, poi ispeziona il percorso evidenziato, il costo totale e la traccia dei nodi stabilizzati.",
+          details: ["Dijkstra locale deterministico", "Import/export JSON", "Visualizzazione del percorso"],
+          preview: "graphSolution",
         },
       ],
     },
@@ -608,7 +650,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "home",
           window: "Optees — Home",
           title: "Scegli il tuo metodo",
-          body: "Costruisci problemi LP, MILP e Knapsack da un catalogo chiaro di metodi, invece di script improvvisati.",
+          body: "Costruisci problemi LP, MILP, Knapsack, NLP continua e su grafi da un catalogo chiaro di metodi, invece di script improvvisati.",
           alt: "Vista home desktop di Optees con l'elenco degli algoritmi di ottimizzazione",
         },
         {
@@ -632,6 +674,20 @@ export const copy: Record<Language, SiteCopy> = {
           body: "Uso della capacità, oggetti selezionati e grafici valore/peso sono accanto alla tabella delle decisioni.",
           alt: "Vista soluzione Knapsack in Optees con uso della capacità e grafici dei valori",
         },
+        {
+          id: "nlpSolution",
+          window: "Optees — Soluzione NLP",
+          title: "Ispeziona il comportamento numerico locale",
+          body: "Visualizza il punto candidato, lo stato di arresto e il paesaggio dell'obiettivo. La vista rende esplicita la natura locale dell'ottimizzazione numerica.",
+          alt: "Vista soluzione di programmazione non lineare in Optees con dettagli del candidato e grafico dell'obiettivo",
+        },
+        {
+          id: "graphSolution",
+          window: "Optees — Soluzione Dijkstra",
+          title: "Segui il percorso minimo",
+          body: "Il cammino scelto e' disegnato sul grafo con la distanza totale e la traccia deterministica dei nodi stabilizzati da Dijkstra.",
+          alt: "Vista soluzione di cammino minimo Dijkstra in Optees con percorso evidenziato",
+        },
       ],
     },
     workflow: {
@@ -642,17 +698,17 @@ export const copy: Record<Language, SiteCopy> = {
         {
           number: "01",
           title: "Formula",
-          body: "Inserisci variabili, bounds, funzione obiettivo, vincoli o oggetti Knapsack — oppure importali da JSON.",
+          body: "Inserisci variabili, bounds, obiettivi, vincoli, oggetti Knapsack o un grafo pesato — oppure importa un modello JSON versionato.",
         },
         {
           number: "02",
           title: "Risolvi",
-          body: "Esegui motori affidabili: SciPy/HiGHS per LP, OR-Tools per MILP e solver di programmazione dinamica dedicati per Knapsack.",
+          body: "Esegui il motore locale adatto: SciPy/HiGHS, OR-Tools, un solver Knapsack dedicato, un metodo numerico SciPy o Dijkstra.",
         },
         {
           number: "03",
           title: "Ispeziona",
-          body: "Leggi stato, valore obiettivo, variabili selezionate, grafici e note didattiche che spiegano il risultato.",
+          body: "Leggi stato esatto o numerico, valore obiettivo, variabili selezionate, percorsi, grafici e note didattiche che spiegano il risultato.",
         },
       ],
     },
@@ -684,7 +740,7 @@ export const copy: Record<Language, SiteCopy> = {
       items: [
         {
           q: "Cos'è Optees?",
-          a: "Optees è un'app desktop gratuita e open source che rende accessibile la ricerca operativa. Puoi modellare, risolvere e ispezionare problemi di Programmazione Lineare, Intera Mista e Knapsack senza scrivere codice.",
+          a: "Optees e' un'app desktop gratuita e open source per la ricerca operativa. Puoi modellare, risolvere e ispezionare LP, MILP, cinque varianti Knapsack, Programmazione Non Lineare continua e cammini minimi di Dijkstra senza scrivere codice.",
         },
         {
           q: "A chi è rivolto?",
@@ -704,7 +760,7 @@ export const copy: Record<Language, SiteCopy> = {
         },
         {
           q: "Cosa arriverà in futuro?",
-          a: "La roadmap punta su benchmark Knapsack più solidi e su un primo flusso di Programmazione Non Lineare, seguiti da metodi su grafi e machine learning.",
+          a: "La roadmap punta ora a flussi didattici di AI e machine learning, poi a euristiche e metaeuristiche, mentre il rafforzamento dei benchmark prosegue sulle famiglie gia' rilasciate.",
         },
       ],
     },

@@ -1,9 +1,27 @@
 # Optees
 
-Optees is an open-source desktop optimization toolkit for Linear Programming,
-Mixed-Integer Linear Programming, and Knapsack models.
+Optees is an open-source desktop operations-research toolkit. It provides local
+workflows for Linear Programming, Mixed-Integer Linear Programming, five
+Knapsack variants, continuous Nonlinear Programming, and Dijkstra shortest
+paths on non-negative weighted graphs.
 
-- Website: https://pablo-gitub.github.io/optees/
+## Released Capabilities
+
+- LP with HiGHS, JSON import/export, multiple-optima range analysis, and
+  feasible-region views for low-dimensional problems.
+- MILP with continuous, integer, and binary variables, time limits, and MIP
+  gap controls.
+- Knapsack 0/1, Bounded, Unbounded, Fractional, and Multi-dimensional.
+- Continuous NLP using BFGS, Nelder-Mead, or L-BFGS-B. Results are local
+  numerical candidates, not global-optimality certificates.
+- Dijkstra shortest paths for directed or undirected graphs with finite,
+  non-negative weights.
+- A fully local, deterministic rule-based modeling assistant for LP, MILP,
+  and Knapsack recommendations and validated JSON drafts.
+
+## Links
+
+- Website: %SITE_URL%/
 - Repository: https://github.com/Pablo-gitub/optees
 - Releases: https://github.com/Pablo-gitub/optees/releases
 - Roadmap: https://github.com/Pablo-gitub/optees/blob/main/docs/PROJECT_ROADMAP.md

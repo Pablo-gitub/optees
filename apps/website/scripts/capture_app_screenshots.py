@@ -18,16 +18,23 @@ from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
 from optees.core.string_manager import strings as S
+from optees.domain.entities.graph.edge import GraphEdge
+from optees.domain.entities.graph.vertex import GraphVertex
 from optees.domain.entities.knapsack.item import KnapsackItem
+from optees.domain.entities.nlp.objective import NLPObjective
+from optees.domain.entities.nlp.variable import NLPVariable
 from optees.domain.entities.lp.constraint import Constraint
 from optees.domain.entities.lp.objective import Objective
 from optees.domain.entities.lp.variable import Variable
 from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 from optees.domain.models.lp.lp_model import LPModel
+from optees.domain.models.graph.shortest_path_model import ShortestPathModel
+from optees.domain.models.nlp.nlp_model import NLPModel, NLPOptions
 from optees.domain.value_objects.knapsack.variant import KnapsackVariant
 from optees.domain.value_objects.lp.bounds import Bounds
 from optees.domain.value_objects.lp.objective_sense import ObjectiveSense
 from optees.domain.value_objects.lp.relation import Relation
+from optees.domain.value_objects.nlp.solver_method import NLPSolverMethod
 from optees.presentation.main_window import MainWindow
 
 
@@ -85,6 +92,38 @@ def _knapsack_model() -> Knapsack01Model:
     )
 
 
+def _nlp_model() -> NLPModel:
+    return NLPModel.from_parts(
+        variables=[
+            NLPVariable("x1", "first coordinate", -2.0, 2.0, -1.0),
+            NLPVariable("x2", "second coordinate", -2.0, 2.0, 1.0),
+        ],
+        objective=NLPObjective("(x1 - 1)**2 + (x2 + 1)**2"),
+        options=NLPOptions(method=NLPSolverMethod.L_BFGS_B),
+    )
+
+
+def _delivery_graph_model() -> ShortestPathModel:
+    return ShortestPathModel.from_parts(
+        vertices=[
+            GraphVertex("A", "Depot"),
+            GraphVertex("B", "Crossroad"),
+            GraphVertex("C", "Warehouse"),
+            GraphVertex("D", "Customer"),
+        ],
+        edges=[
+            GraphEdge("A", "B", 4),
+            GraphEdge("A", "C", 1),
+            GraphEdge("C", "B", 2),
+            GraphEdge("B", "D", 1),
+            GraphEdge("C", "D", 8),
+        ],
+        source="A",
+        destination="D",
+        directed=True,
+    )
+
+
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -116,6 +155,18 @@ def main() -> None:
     window.knapsack_solution_page.set_problem(knapsack_model)
     window.knapsack_solution_page.set_solution(knapsack_solution)
     _capture(window, "optees-knapsack-solution.png", "knapsack_solution")
+
+    nlp_model = _nlp_model()
+    nlp_solution = window.solve_nlp_uc.execute(nlp_model)
+    window.nlp_solution_page.set_problem(nlp_model)
+    window.nlp_solution_page.set_solution(nlp_solution)
+    _capture(window, "optees-nlp-solution.png", "nlp_solution")
+
+    graph_model = _delivery_graph_model()
+    graph_solution = window.solve_shortest_path_uc.execute(graph_model)
+    window.graph_solution_page.set_problem(graph_model)
+    window.graph_solution_page.set_solution(graph_solution)
+    _capture(window, "optees-graph-solution.png", "graph_solution")
 
     window.close()
 

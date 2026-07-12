@@ -4,23 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Optees — Open-Source Optimization Software for LP, MILP &amp; Knapsack</title>
+    <title>Optees — Open-Source Operations Research Software</title>
     <meta
       name="description"
-      content="Optees is a free, open-source desktop app that makes operations research accessible. Model, solve and visualize Linear Programming, Mixed-Integer and Knapsack problems locally — with guided assistance, JSON import and educational solution views."
+      content="Optees is a free, open-source desktop app for Linear Programming, Mixed-Integer Programming, Knapsack, continuous Nonlinear Programming and Dijkstra shortest paths. Model and solve locally with guided assistance and educational solution views."
     />
     <meta
       name="keywords"
-      content="optimization software, operations research, linear programming, mixed integer programming, MILP, knapsack solver, LP solver, HiGHS, OR-Tools, SciPy, open source optimization, decision optimization, desktop optimization app"
+      content="optimization software, operations research, linear programming, mixed integer programming, MILP, knapsack solver, nonlinear programming, Dijkstra shortest path, graph theory, LP solver, HiGHS, OR-Tools, SciPy, open source optimization, desktop optimization app"
     />
     <meta name="author" content="Optees" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#05060d" />
 
-    <link rel="canonical" href="https://pablo-gitub.github.io/optees/" />
-    <link rel="alternate" hreflang="en" href="https://pablo-gitub.github.io/optees/" />
-    <link rel="alternate" hreflang="it" href="https://pablo-gitub.github.io/optees/" />
-    <link rel="alternate" hreflang="x-default" href="https://pablo-gitub.github.io/optees/" />
+    <link rel="canonical" href="%SITE_URL%/" />
+    <link rel="alternate" hreflang="en" href="%SITE_URL%/" />
+    <link rel="alternate" hreflang="it" href="%SITE_URL%/" />
+    <link rel="alternate" hreflang="x-default" href="%SITE_URL%/" />
     <link rel="icon" type="image/png" href="./logo/optees-appicon.png" />
     <link rel="apple-touch-icon" href="./logo/optees-appicon.png" />
 
@@ -32,20 +32,20 @@
     <meta property="og:title" content="Optees — Open-Source Optimization Software" />
     <meta
       property="og:description"
-      content="Model, solve and visualize LP, MILP and Knapsack problems from a private, local desktop app. Free and open source."
+      content="Model, solve and understand LP, MILP, Knapsack, continuous NLP and Dijkstra shortest paths in a private local desktop app."
     />
-    <meta property="og:image" content="https://pablo-gitub.github.io/optees/logo/optees-appicon.png" />
+    <meta property="og:image" content="%SITE_URL%/logo/optees-appicon.png" />
     <meta property="og:image:alt" content="Optees app icon" />
-    <meta property="og:url" content="https://pablo-gitub.github.io/optees/" />
+    <meta property="og:url" content="%SITE_URL%/" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Optees — Open-Source Optimization Software" />
     <meta
       name="twitter:description"
-      content="Model, solve and visualize LP, MILP and Knapsack problems from a private, local desktop app. Free and open source."
+      content="Model, solve and understand LP, MILP, Knapsack, continuous NLP and Dijkstra shortest paths in a private local desktop app."
     />
-    <meta name="twitter:image" content="https://pablo-gitub.github.io/optees/logo/optees-appicon.png" />
+    <meta name="twitter:image" content="%SITE_URL%/logo/optees-appicon.png" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -63,15 +63,17 @@
         "@type": "SoftwareApplication",
         "name": "Optees",
         "applicationCategory": "EducationalApplication",
-        "applicationSubCategory": "Optimization &amp; Operations Research",
+        "applicationSubCategory": "Optimization and Operations Research",
         "operatingSystem": "macOS, Windows, Linux",
-        "softwareVersion": "0.4.0",
-        "description": "Open-source desktop optimization toolkit for Linear Programming, Mixed-Integer Linear Programming and Knapsack models, with educational solution views and benchmark-backed solvers.",
+        "softwareVersion": "0.5.0",
+        "description": "Open-source desktop operations-research toolkit for Linear Programming, Mixed-Integer Linear Programming, Knapsack, continuous Nonlinear Programming and Dijkstra shortest paths, with educational solution views and documented regression evidence.",
         "featureList": [
           "Linear Programming (LP)",
           "Mixed-Integer Linear Programming (MILP)",
           "Knapsack: 0/1, bounded, unbounded, fractional, multi-dimensional",
-          "Guided algorithm assistant",
+          "Continuous Nonlinear Programming: BFGS, Nelder-Mead and L-BFGS-B",
+          "Dijkstra shortest path for non-negative weighted graphs",
+          "Local rule-based modeling assistant",
           "JSON import",
           "Educational solution views and charts"
         ],
@@ -84,7 +86,7 @@
           "price": "0",
           "priceCurrency": "USD"
         },
-        "screenshot": "https://pablo-gitub.github.io/optees/screenshots/optees-lp-solution.png"
+        "screenshot": "%SITE_URL%/screenshots/optees-lp-solution.png"
       }
     </script>
 
@@ -99,7 +101,7 @@
             "name": "What is Optees?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Optees is a free, open-source desktop application that makes operations research and mathematical optimization accessible to everyone. You can model, solve and inspect Linear Programming, Mixed-Integer Linear Programming and Knapsack problems locally."
+              "text": "Optees is a free, open-source desktop application for operations research. You can model, solve and inspect LP, MILP, five Knapsack variants, continuous Nonlinear Programming and Dijkstra shortest-path problems locally."
             }
           },
           {

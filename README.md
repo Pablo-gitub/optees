@@ -12,7 +12,13 @@ optimization workflow.
 - Mixed-Integer Linear Programming with continuous, integer, and binary
   variables through OR-Tools.
 - 0/1, Bounded, Unbounded, Fractional, and Multi-dimensional Knapsack.
-- Versioned JSON import for LP, MILP, and Knapsack formulations.
+- Continuous Nonlinear Programming with safe scalar expressions, optional box
+  bounds, BFGS/Nelder-Mead/L-BFGS-B, and an explicit local-candidate result
+  contract.
+- Dijkstra shortest paths on directed or undirected graphs with finite,
+  non-negative weights.
+- Versioned JSON import for LP, MILP, Knapsack, NLP, and shortest-path
+  formulations.
 - An English/Italian local rule-based Modeling Assistant that recommends a
   solver family and can draft validated LP, MILP, and Knapsack JSON when the
   prompt contains sufficient data.
@@ -20,7 +26,8 @@ optimization workflow.
   visualizations for the implemented families.
 
 The roadmap intentionally distinguishes shipped functionality from planned
-families such as nonlinear programming, graph algorithms, and heuristics.
+expansion such as educational AI/ML, heuristics, broader graph algorithms, and
+global/nonlinear optimization methods.
 
 ## Documentation
 
@@ -30,6 +37,7 @@ families such as nonlinear programming, graph algorithms, and heuristics.
 - [Datasets](docs/DATASETS.md)
 - [Testing](docs/TESTING.md)
 - [Release procedure](docs/RELEASING.md)
+- [Website deployment](docs/WEBSITE_DEPLOYMENT.md)
 
 ## Run From Source
 

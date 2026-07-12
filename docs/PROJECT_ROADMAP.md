@@ -43,7 +43,8 @@ strategy.
   deterministic reference tests. A screen without a verified solver is never
   considered an MVP.
 - Deliver one complete vertical slice for each major product section:
-  Nonlinear Programming, Graph Theory, and Heuristics & Metaheuristics.
+  Nonlinear Programming, Graph Theory, educational AI & Machine Learning, and
+  Heuristics & Metaheuristics.
 - After those slices, run a benchmark-hardening pass: add external scientific
   datasets where a redistributable corpus and published outcomes are suitable,
   retain checksums and provenance, and separate routine CI cases from slow
@@ -91,12 +92,33 @@ otherwise tested first workflow, but it remains an explicit hardening item.
 - Conservative LP, MILP, and Knapsack JSON drafting validated by the existing
   importers before the UI may load a draft.
 
+### Nonlinear Programming
+
+- Continuous scalar objectives with a safe expression language, optional box
+  bounds, an explicit feasible initial point, and BFGS, Nelder-Mead, or
+  L-BFGS-B as appropriate.
+- Numerical solution view with candidate status, objective history, and
+  bounded 2D/3D objective visualizations.
+- Analytic reference cases for Rosenbrock, Himmelblau, bounded quadratic, and
+  nonlinear maximization. These verify a documented local-search contract,
+  not global optimality.
+
+### Graph Theory
+
+- Directed or undirected finite weighted graph model with JSON import/export.
+- Deterministic Dijkstra shortest path for non-negative weights, including
+  route reconstruction, settled-node trace, and highlighted graph result.
+- Deterministic graph regressions and a reusable delivery-route example;
+  external graph benchmark integration remains a hardening item.
+
 ### Product Delivery
 
 - Desktop release workflow and packaged-build update checks through GitHub
   Releases.
 - React/Vite website lives under `apps/website/` and remains a separate
-  deployment track within this repository.
+  deployment track within this repository. Firebase Hosting configuration is
+  prepared; the Firebase project association and canonical production domain
+  remain local deployment choices.
 
 ## Phased Implementation Plan
 
@@ -115,9 +137,8 @@ are configured.
 
 ### Phase 1 - Nonlinear Programming: First Vertical Slice
 
-**Implemented and verified locally.** The full test suite, macOS bundle asset
-inspection, code-signature check, and offscreen application startup all pass.
-The next release commit/tag publishes this vertical slice.
+**Released in `0.5.0`.** The full test suite, macOS bundle asset inspection,
+code-signature check, and offscreen application startup passed for this slice.
 
 The sequential implementation contract, safety rules, test matrix, and commit
 boundaries are maintained in `docs/NLP_FEATURE_PLAN.md`.
@@ -164,7 +185,40 @@ scientific benchmark coverage.
 **Explicitly deferred:** negative weights, all-pairs shortest paths, spanning
 trees, flow, matching, and TSP.
 
-### Phase 3 - Heuristics & Metaheuristics: First Vertical Slice
+### Phase 3 - AI & Machine Learning: Educational Foundations
+
+Educational machine learning is the next vertical slice, before heuristics.
+It is a separate local-learning section: it must not be presented as AutoML,
+an LLM provider, or a replacement for the Modeling Assistant.
+
+The delivery order is deliberately sequential:
+
+1. **Regression first:** a small supervised-learning workflow for continuous
+   targets, starting with linear regression and regularized linear regression.
+   It needs an explicit train/test split, fixed random seed, feature/target
+   selection, MAE/MSE/R², residual explanation, and a truthful one-feature
+   chart only where that visualization is mathematically meaningful.
+2. **Classification second:** binary classification with a transparent
+   baseline such as logistic regression, confusion matrix, accuracy,
+   precision, recall, F1, and an optional 2D decision-boundary visualization.
+   Class balance and train/test leakage must be explained, not hidden.
+3. **Clustering third:** local unsupervised clustering with k-means,
+   user-selected `k`, reproducible seed, feature scaling made visible, inertia
+   and silhouette diagnostics, and 2D/3D plots only for the selected displayed
+   dimensions.
+
+Every workflow must keep the same product standard as an optimizer: a domain
+model, a stable port and adapter, versioned structured import when appropriate,
+localized formulation/result pages, examples, and deterministic tests. The
+first data sources should be small, redistributable reference datasets with
+documented expected properties; larger benchmark suites are a later hardening
+activity. Model training remains entirely local.
+
+**Explicitly deferred:** arbitrary model selection, neural networks, LLM
+providers, automatic feature engineering, opaque scoring, and claims that a
+single metric is sufficient for a real decision.
+
+### Phase 3.5 - Heuristics & Metaheuristics: First Vertical Slice
 
 Heuristics deserves its own product section. It is a family of search methods,
 not a mathematical-programming model, and it must make approximation and
@@ -189,9 +243,9 @@ common run-reporting contract is stable.
 abstraction. Each supported problem needs a valid encoding, neighbourhood,
 feasibility repair, and objective evaluation contract.
 
-### Phase 3.5 - Scientific Benchmark Hardening
+### Phase 4 - Scientific Benchmark Hardening
 
-After the first Graph and Heuristics workflows exist, consolidate scientific
+After the first AI/ML and Heuristics workflows exist, consolidate scientific
 benchmark evidence before broadening the families further.
 
 - Keep the LPnetlib, MIPLIB, Burkardt, and OR-Library adapters reproducible.
@@ -203,9 +257,9 @@ benchmark evidence before broadening the families further.
 - Keep toy and analytic cases in normal CI; mark heavier scientific regression
   and performance cases explicitly.
 
-### Phase 4 - Coordinated Family Expansion
+### Phase 5 - Coordinated Family Expansion
 
-Once the four major sections have one complete workflow, deepen them in an
+Once the current vertical slices have one complete workflow, deepen them in an
 order that reuses the new foundations.
 
 | Family | Next capabilities |
@@ -214,11 +268,12 @@ order that reuses the new foundations.
 | Knapsack | Multiple-choice Knapsack, additional benchmark suites, and heuristic-versus-exact comparison for instances where DP or MILP becomes expensive. |
 | NLP | Nonlinear constraints, least squares, quadratic programming, nonlinear minimax, and global methods such as differential evolution. |
 | Graph Theory | Bellman-Ford, minimum spanning tree, max flow/min cut, matching, and exact/heuristic TSP comparison. |
+| AI & Machine Learning | Regularization and validation improvements after regression, then interpretable classification and clustering diagnostics; each expansion keeps local, reproducible data handling. |
 | Heuristics | Simulated Annealing, then problem-specific Genetic Algorithm or Tabu Search; every result keeps seed, budget, incumbent trace, and feasibility diagnostics. |
 | Scheduling | Parallel-machine makespan first, using a MILP formulation and later heuristic comparators; time-indexed and sequence-dependent models follow only with dedicated visualizations. |
 | Robust & Stochastic Optimization | Explicit scenario model, min-max regret, then newsvendor and revenue-management workflows with uncertainty assumptions visible in the UI. |
 
-### Phase 5 - Modeling Assistant: Structured Guidance
+### Phase 6 - Modeling Assistant: Structured Guidance
 
 Expand the assistant only after the target formulation pages exist.
 
@@ -231,13 +286,14 @@ Expand the assistant only after the target formulation pages exist.
   that measures classification, drafting validity, safety, and reproducibility.
   No LLM provider is required for Optees.
 
-### Phase 6 - AI & Machine Learning And Website Maturity
+### Website Delivery
 
-- Add educational regression, classification, clustering, and feature
-  selection only after the optimization sections are stable.
 - Use the website to document real released capabilities, benchmark evidence,
   screenshots, downloads, and algorithm limitations; it must not advertise
   unfinished families as available.
+- Publish the static React/Vite build through Firebase Hosting only after a
+  preview deploy verifies the selected canonical URL, SEO files, language
+  switching, and release download links.
 
 ## Cross-Family Concepts
 

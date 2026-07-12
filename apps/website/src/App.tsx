@@ -42,6 +42,8 @@ const previewAssets: Record<PreviewId, string> = {
   lpSolution: "screenshots/optees-lp-solution.png",
   knapsack: "screenshots/optees-knapsack.png",
   knapsackSolution: "screenshots/optees-knapsack-solution.png",
+  nlpSolution: "screenshots/optees-nlp-solution.png",
+  graphSolution: "screenshots/optees-graph-solution.png",
 };
 
 const footerLinkHref: Record<string, string> = {
