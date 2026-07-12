@@ -145,15 +145,21 @@ programming, nonlinear minimax, and global optimization.
 
 ### Phase 2 - Graph Theory: First Vertical Slice
 
-The first graph workflow should be shortest path because it has a clear model,
-a visual result, and accessible reference data.
+**Implemented and verified locally.** The first graph workflow is Dijkstra
+shortest path because it has a clear model, a visual result, and a concise
+correctness argument.
 
 - Directed/undirected weighted graph model and versioned JSON import/export.
 - Graph editor with vertices, arcs, weights, source, and destination.
-- Dijkstra for non-negative weights, with path reconstruction and explanation
-  of settled nodes and total cost.
+- Local deterministic Dijkstra for non-negative weights, with path
+  reconstruction and explanation of settled nodes and total cost.
 - Solution view that highlights the selected route over the input graph.
-- Tests for hand-built examples and a small documented benchmark corpus.
+- Domain, JSON, use-case, and presentation tests for directed, undirected,
+  reachable, unreachable, and invalid-weight cases.
+
+An external graph benchmark corpus is intentionally deferred to Phase 3.5.
+The current hand-built cases are deterministic regressions, not a claim of
+scientific benchmark coverage.
 
 **Explicitly deferred:** negative weights, all-pairs shortest paths, spanning
 trees, flow, matching, and TSP.

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Optees - Shortest Path</title>
+  <desc>Connected graph vertices with a highlighted route.</desc>
+  <g fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M58 166 L112 92 L194 116 L164 190 L58 166" opacity="0.55"/>
+    <path d="M58 166 L112 92 L194 116"/>
+  </g>
+  <g fill="currentColor">
+    <circle cx="58" cy="166" r="18"/>
+    <circle cx="112" cy="92" r="18"/>
+    <circle cx="194" cy="116" r="18"/>
+    <circle cx="164" cy="190" r="18" opacity="0.55"/>
+  </g>
+</svg>

@@ -11,6 +11,7 @@ from optees.presentation.views.lp_view.lp_view import LPView
 from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.nlp_view import NLPView
+from optees.presentation.views.graph_view import GraphView
 from optees.presentation.views.home_view import HomePage  # usa lo stesso nome che usi nel MainWindow
 from optees.core.string_manager import strings as S
 from optees.utility.knapsack_json_io import knapsack_problem_from_dict
@@ -36,6 +37,8 @@ class MainController(QObject):
             home.go_knap.connect(lambda: self.window.goto("knapsack"))
         if hasattr(home, "go_nlp"):
             home.go_nlp.connect(lambda: self.window.goto("nlp"))
+        if hasattr(home, "go_graph"):
+            home.go_graph.connect(lambda: self.window.goto("graph"))
 
         # LP -> Solution
         lp: LPView = self.window.page("lp")  # type: ignore[assignment]
@@ -103,6 +106,19 @@ class MainController(QObject):
         nlp_solution = self.window.page("nlp_solution")
         if hasattr(nlp_solution, "back_requested"):
             nlp_solution.back_requested.connect(lambda: self.window.goto("nlp"))
+
+        # Graph Theory -> Dijkstra result
+        graph: GraphView = self.window.page("graph")  # type: ignore[assignment]
+        graph.solve_completed.connect(self._on_graph_solved)
+        graph.example_requested.connect(lambda: self.window.goto("graph_example"))
+        graph.problem_description_requested.connect(lambda: self.window.goto("graph_problem"))
+        for name in ("graph_example", "graph_problem"):
+            info_view = self.window.page(name)
+            if hasattr(info_view, "back_requested"):
+                info_view.back_requested.connect(lambda _=False: self.window.goto("graph"))
+        graph_solution = self.window.page("graph_solution")
+        if hasattr(graph_solution, "back_requested"):
+            graph_solution.back_requested.connect(lambda: self.window.goto("graph"))
 
         assistant = self.window.page("assistant")
         if hasattr(assistant, "back_requested"):
@@ -211,6 +227,17 @@ class MainController(QObject):
         except Exception:
             pass
         self.window.goto("nlp_solution")
+
+    def _on_graph_solved(self, solution) -> None:
+        sol_view = self.window.page("graph_solution")
+        try:
+            if hasattr(sol_view, "set_problem"):
+                sol_view.set_problem(self.window.graph_page.current_model())  # type: ignore[attr-defined]
+        except Exception:
+            pass
+        if hasattr(sol_view, "set_solution"):
+            sol_view.set_solution(solution)  # type: ignore[attr-defined]
+        self.window.goto("graph_solution")
 
     def _load_assistant_lp_model(self, data: object) -> None:
         try:

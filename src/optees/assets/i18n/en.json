@@ -25,6 +25,10 @@
     "nlp": {
       "title": "Continuous Nonlinear Optimization",
       "subtitle": "Use this method when the objective curves and a local numerical solution from a chosen starting point is appropriate."
+    },
+    "graph": {
+      "title": "Shortest Path (Dijkstra)",
+      "subtitle": "Use this method to find the least-cost route between two nodes in a weighted graph with no negative edge weights."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -33,13 +37,15 @@
     "home": "Home",
     "linear_optimization": "Linear Optimization",
     "nonlinear_optimization": "Nonlinear Optimization",
+    "graph_theory": "Graph Theory",
     "settings":"Settings"
   },
   "alg": {
     "lp": "Linear Programming (LP)",
     "milp": "Mixed-Integer (MILP)",
     "knap": "0/1 Knapsack",
-    "nlp": "Nonlinear Programming (NLP)"
+    "nlp": "Nonlinear Programming (NLP)",
+    "graph": "Shortest Path (Dijkstra)"
   },
   "settings": {
     "title": "Settings",
@@ -602,6 +608,92 @@
         "local_candidate": "Local candidate"
       },
       "trace": { "section": "Objective trace", "hint": "Initial objective followed by values captured during the run. A trace describes this run only.", "empty": "The selected run did not provide an objective trace.", "iteration": "Step", "objective": "Objective" }
+    }
+  },
+  "graph": {
+    "header": {
+      "title": "Shortest Path (Dijkstra)",
+      "section": "Problem formulation",
+      "description": "Define a weighted graph, then choose a source and a destination. Dijkstra settles nodes in increasing known distance and returns a shortest route when every weight is non-negative.",
+      "buttons": { "example": "Example", "problem": "Problem description" }
+    },
+    "import": {
+      "button": "Import JSON",
+      "tooltip": "Import a shortest-path graph in Optees JSON format",
+      "dialog_title": "Open shortest-path graph",
+      "info_tooltip": "Shortest-path JSON format",
+      "info_title": "Shortest-path JSON format",
+      "info_body": "The file declares vertices, weighted edges, graph direction, source, and destination.",
+      "info_html": "<h3>Core fields</h3><p>Use schema version <code>1</code>, <code>problem_type</code> <code>shortest_path</code>, <code>vertices</code>, <code>edges</code>, <code>source</code>, and <code>destination</code>.</p><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"shortest_path\",\n  \"directed\": true,\n  \"vertices\": [{\"id\": \"A\", \"label\": \"Depot\"}, {\"id\": \"B\", \"label\": \"Customer\"}],\n  \"edges\": [{\"from\": \"A\", \"to\": \"B\", \"weight\": 4}],\n  \"source\": \"A\",\n  \"destination\": \"B\"\n}</pre>",
+      "error_title": "Import error",
+      "error_body": "Could not load the file:\n{detail}"
+    },
+    "terminals": {
+      "section": "Graph direction and terminals",
+      "hint": "Choose whether each edge has one direction, then select the route to compute.",
+      "directed": "Directed edges",
+      "source": "Source",
+      "destination": "Destination",
+      "info_tooltip": "Direction and terminal information",
+      "info_title": "Direction, source, and destination",
+      "info_body": "A directed edge A to B can only be travelled from A to B. In an undirected graph the same edge can be travelled both ways.",
+      "info_html": "<h3>Route request</h3><p>Dijkstra computes the least total edge weight from the source to the destination.</p><h3>Direction</h3><p>Clear <b>Directed edges</b> when each entered connection may be used in both directions.</p>"
+    },
+    "vertices": {
+      "section": "Vertices",
+      "hint": "Each vertex needs a unique identifier without spaces. The description is displayed in the result view.",
+      "id": "Identifier",
+      "label": "Description",
+      "add": "Add vertex",
+      "remove": "Remove selected",
+      "info_tooltip": "Vertex information",
+      "info_title": "Vertices",
+      "info_body": "Vertices represent places, states, machines, or any entities connected by edges.",
+      "info_html": "<h3>Identifiers</h3><p>Use short unique identifiers such as <code>A</code>, <code>depot</code>, or <code>machine_1</code>. Source, destination, and edges refer to these identifiers.</p>"
+    },
+    "edges": {
+      "section": "Weighted edges",
+      "hint": "Enter one connection per row. Dijkstra accepts only finite non-negative weights.",
+      "select": "",
+      "from": "From",
+      "to": "To",
+      "weight": "Weight",
+      "weight_placeholder": "e.g. 4",
+      "add": "Add edge",
+      "remove": "Remove selected",
+      "info_tooltip": "Edge-weight information",
+      "info_title": "Weighted edges",
+      "info_body": "The weight can represent distance, time, cost, or another additive non-negative quantity.",
+      "info_html": "<h3>Dijkstra requirement</h3><p>Every edge weight must be finite and at least zero. Negative weights invalidate Dijkstra's settled-distance argument and require a different algorithm such as Bellman-Ford.</p>"
+    },
+    "model": {
+      "section": "Mathematical model",
+      "text": "For a path P from source s to destination t, minimize the sum of edge weights along P. Dijkstra repeatedly settles the unsettled node with the smallest tentative distance.",
+      "info_tooltip": "Dijkstra model information",
+      "info_title": "Dijkstra shortest path",
+      "info_body": "Dijkstra is exact for finite graphs with non-negative weights. It returns Unreachable when no route joins the selected terminals.",
+      "info_html": "<h3>Objective</h3><p>Minimize <code>sum(w_e)</code> over all edges e selected by a path from s to t.</p><h3>Invariant</h3><p>When Dijkstra settles a node, its tentative distance is final because every remaining edge has non-negative weight.</p>"
+    },
+    "actions": { "solve": "Find shortest path" },
+    "validation": {
+      "title": "Invalid shortest-path formulation",
+      "body": "The graph cannot be solved:\n{detail}"
+    },
+    "solution": {
+      "title": "Shortest Path Result",
+      "back": "Back",
+      "empty": "No shortest-path result yet.",
+      "summary": { "section": "Dijkstra status" },
+      "status_line": "Status: <b>{status}</b>",
+      "status": { "path_found": "Path found", "unreachable": "Unreachable", "not_solved": "Not solved" },
+      "explanation": {
+        "found": "The destination was settled: with non-negative weights, the highlighted route has the least total weight.",
+        "unreachable": "Dijkstra exhausted every reachable vertex before settling the destination.",
+        "not_solved": "No valid Dijkstra result is available."
+      },
+      "route": { "section": "Selected route", "label": "Route:", "distance": { "label": "Total weight:" } },
+      "diagram": { "section": "Graph and route", "hint": "Blue vertices and edges belong to the returned path. Edge labels show their weights.", "empty": "Load a graph and solve it to display the route." },
+      "trace": { "section": "Settled vertices", "hint": "A settled distance is final under Dijkstra's non-negative-weight assumption.", "step": "Step", "vertex": "Vertex", "description": "Description", "distance": "Final distance" }
     }
   }
 }

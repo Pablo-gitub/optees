@@ -36,6 +36,14 @@
 - `tests/presentation/test_nlp_flow_happy.py` and
   `tests/presentation/test_nlp_info_navigation.py`: localized NLP formulation,
   import, solution, educational-page, and info-dialog flows.
+- `tests/domain/test_shortest_path_model.py`, `tests/utility/test_graph_utils.py`,
+  `tests/utility/test_graph_json_io.py`, and
+  `tests/application/usecases/test_solve_shortest_path_usecase.py`: Dijkstra
+  model validation, directed/undirected path finding, unreachable terminals,
+  non-negative weight checks, JSON, and canonical mapping.
+- `tests/presentation/test_graph_flow_happy.py`: graph Home navigation, manual
+  solve flow, imported graph form, highlighted route result, and unreachable
+  explanation.
 
 ## Commands
 ```bash

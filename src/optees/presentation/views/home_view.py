@@ -60,6 +60,7 @@ class HomePage(QWidget):
     go_milp = Signal()
     go_knap = Signal()
     go_nlp = Signal()
+    go_graph = Signal()
     update_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None):
@@ -120,12 +121,18 @@ class HomePage(QWidget):
             S.t("cards.nlp.subtitle"),
             icon_path=str(asset("icons/nlp.svg")),
         )
+        self.card_graph = CardButton(
+            S.t("cards.graph.title"),
+            S.t("cards.graph.subtitle"),
+            icon_path=str(asset("icons/graph.svg")),
+        )
 
         # wire signals
         self.card_lp.clicked.connect(self.go_lp.emit)
         self.card_milp.clicked.connect(self.go_milp.emit)
         self.card_knap.clicked.connect(self.go_knap.emit)
         self.card_nlp.clicked.connect(self.go_nlp.emit)
+        self.card_graph.clicked.connect(self.go_graph.emit)
 
         # add cards to the first optimization category
         for card in (self.card_lp, self.card_milp, self.card_knap):
@@ -134,9 +141,12 @@ class HomePage(QWidget):
         self.cat_nlp.add_card(self.card_nlp)
         root.addWidget(self.cat_nlp)
 
+        self.cat_graph.add_card(self.card_graph)
+        root.addWidget(self.cat_graph)
+
         # --- Future sections with "coming soon..." placeholder ---
         self._coming_labels = []  # keep references to update text on language change
-        for cat in (self.cat_graph, self.cat_ml):
+        for cat in (self.cat_ml,):
             ph = QLabel(S.t("home.comingSoon"))
             ph.setStyleSheet(f"color: {tokens(theme.is_dark()).text_muted};")
             cat.add_card(ph)
@@ -177,6 +187,9 @@ class HomePage(QWidget):
         self.card_nlp._title.setText(f"<span style='font-weight:700'>{S.t('cards.nlp.title')}</span>")
         self.card_nlp._sub.setText(S.t("cards.nlp.subtitle"))
 
+        self.card_graph._title.setText(f"<span style='font-weight:700'>{S.t('cards.graph.title')}</span>")
+        self.card_graph._sub.setText(S.t("cards.graph.subtitle"))
+
         # placeholders
         cs = S.t("home.comingSoon")
         for ph in self._coming_labels:
@@ -189,7 +202,7 @@ class HomePage(QWidget):
             cat.apply_theme()
         for ph in self._coming_labels:
             ph.setStyleSheet(f"color: {muted};")
-        for card in (self.card_lp, self.card_milp, self.card_knap, self.card_nlp):
+        for card in (self.card_lp, self.card_milp, self.card_knap, self.card_nlp, self.card_graph):
             card._apply_theme()
 
     def set_update_available(self, result) -> None:

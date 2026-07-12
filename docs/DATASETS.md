@@ -114,6 +114,17 @@ terms, expected local/global contract, source metadata, and CI budget have been
 reviewed. Until then, these cases are the required regression baseline for the
 local SciPy methods implemented by Optees.
 
+## Graph Theory: Dijkstra Reference Cases
+
+The first shortest-path workflow uses small hand-built directed, undirected,
+and unreachable graphs directly in the test suite, plus
+`examples/shortest_path_delivery.json` as a reusable UI example. These are
+deterministic regression cases, not a downloaded graph benchmark corpus.
+
+An external graph dataset will be evaluated in the benchmark-hardening phase.
+It must provide a redistributable source, known reference paths or distances,
+and a bounded CI subset before it is added here.
+
 ## Test Data Layout
 
 ```text

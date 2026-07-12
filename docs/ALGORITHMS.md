@@ -53,16 +53,24 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
   importers. NLP is currently recommendation-only; structured NLP drafting is
   deferred until its question-and-validation workflow exists.
 
+### Graph Theory: Dijkstra Shortest Path
+
+- Directed and undirected finite weighted graphs with source and destination.
+- Deterministic Dijkstra implementation for finite non-negative edge weights.
+- Path reconstruction, total weight, settled-node trace, JSON import, and a
+  highlighted graph result view.
+- A returned **Unreachable** status means no route exists from the selected
+  source to destination; it is not a solver failure.
+
 ## Planned Families
 
 The next sections are introduced in this order:
 
-1. Graph Theory: shortest path first, then graph optimization methods.
-2. Heuristics & Metaheuristics: TSP constructive/local-search baseline, then
+1. Heuristics & Metaheuristics: TSP constructive/local-search baseline, then
    Simulated Annealing and problem-specific metaheuristics.
-3. Scheduling and Robust/Stochastic Optimization: workflow-specific models
+2. Scheduling and Robust/Stochastic Optimization: workflow-specific models
    built first on the MILP, Graph, and Heuristic foundations.
-4. AI & Machine Learning: educational models and optimization links after the
+3. AI & Machine Learning: educational models and optimization links after the
    optimization families are stable.
 
 ## Cross-Family Methods

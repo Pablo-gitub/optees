@@ -25,6 +25,10 @@
     "nlp": {
       "title": "Ottimizzazione Nonlineare Continua",
       "subtitle": "Usa questo metodo quando l'obiettivo e' curvo ed e' appropriata una soluzione numerica locale da un punto iniziale scelto."
+    },
+    "graph": {
+      "title": "Cammino minimo (Dijkstra)",
+      "subtitle": "Usa questo metodo per trovare il percorso di costo minimo tra due nodi di un grafo pesato senza archi di peso negativo."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -33,13 +37,15 @@
     "home": "Home",
     "linear_optimization": "Ottimizzazione lineare",
     "nonlinear_optimization": "Ottimizzazione nonlineare",
+    "graph_theory": "Teoria dei grafi",
     "settings":"Impostazioni"
   },
   "alg": {
     "lp": "Programmazione Lineare (LP)",
     "milp": "Mixed-Integer (MILP)",
     "knap": "Zaino 0/1",
-    "nlp": "Programmazione Nonlineare (NLP)"
+    "nlp": "Programmazione Nonlineare (NLP)",
+    "graph": "Cammino minimo (Dijkstra)"
   },
   "settings": {
     "title": "Impostazioni",
@@ -600,6 +606,92 @@
         "local_candidate": "Candidato locale"
       },
       "trace": { "section": "Traccia dell'obiettivo", "hint": "Obiettivo iniziale e valori raccolti durante l'esecuzione. La traccia descrive solo questa run.", "empty": "L'esecuzione selezionata non ha fornito una traccia dell'obiettivo.", "iteration": "Passo", "objective": "Obiettivo" }
+    }
+  },
+  "graph": {
+    "header": {
+      "title": "Cammino minimo (Dijkstra)",
+      "section": "Formulazione del problema",
+      "description": "Definisci un grafo pesato, poi scegli sorgente e destinazione. Dijkstra rende definitivi i nodi in ordine di distanza nota crescente e restituisce un cammino minimo quando tutti i pesi sono non negativi.",
+      "buttons": { "example": "Esempio", "problem": "Descrizione problema" }
+    },
+    "import": {
+      "button": "Importa JSON",
+      "tooltip": "Importa un grafo per cammino minimo in formato JSON Optees",
+      "dialog_title": "Apri grafo per cammino minimo",
+      "info_tooltip": "Formato JSON cammino minimo",
+      "info_title": "Formato JSON cammino minimo",
+      "info_body": "Il file dichiara vertici, archi pesati, direzione del grafo, sorgente e destinazione.",
+      "info_html": "<h3>Campi principali</h3><p>Usa versione schema <code>1</code>, <code>problem_type</code> <code>shortest_path</code>, <code>vertices</code>, <code>edges</code>, <code>source</code> e <code>destination</code>.</p><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"shortest_path\",\n  \"directed\": true,\n  \"vertices\": [{\"id\": \"A\", \"label\": \"Deposito\"}, {\"id\": \"B\", \"label\": \"Cliente\"}],\n  \"edges\": [{\"from\": \"A\", \"to\": \"B\", \"weight\": 4}],\n  \"source\": \"A\",\n  \"destination\": \"B\"\n}</pre>",
+      "error_title": "Errore di importazione",
+      "error_body": "Impossibile caricare il file:\n{detail}"
+    },
+    "terminals": {
+      "section": "Direzione e terminali del grafo",
+      "hint": "Scegli se ogni arco ha una direzione e seleziona il percorso da calcolare.",
+      "directed": "Archi diretti",
+      "source": "Sorgente",
+      "destination": "Destinazione",
+      "info_tooltip": "Informazioni su direzione e terminali",
+      "info_title": "Direzione, sorgente e destinazione",
+      "info_body": "Un arco diretto da A a B puo' essere percorso solo da A verso B. In un grafo non diretto lo stesso arco puo' essere percorso in entrambi i versi.",
+      "info_html": "<h3>Richiesta di percorso</h3><p>Dijkstra calcola il peso totale minimo dalla sorgente alla destinazione.</p><h3>Direzione</h3><p>Disattiva <b>Archi diretti</b> quando ogni collegamento inserito puo' essere usato in entrambi i versi.</p>"
+    },
+    "vertices": {
+      "section": "Vertici",
+      "hint": "Ogni vertice richiede un identificatore unico senza spazi. La descrizione viene mostrata nella vista risultato.",
+      "id": "Identificatore",
+      "label": "Descrizione",
+      "add": "Aggiungi vertice",
+      "remove": "Rimuovi selezionati",
+      "info_tooltip": "Informazioni sui vertici",
+      "info_title": "Vertici",
+      "info_body": "I vertici rappresentano luoghi, stati, macchine o qualsiasi entita' collegata da archi.",
+      "info_html": "<h3>Identificatori</h3><p>Usa identificatori unici e brevi come <code>A</code>, <code>deposito</code> o <code>macchina_1</code>. Sorgente, destinazione e archi fanno riferimento a questi identificatori.</p>"
+    },
+    "edges": {
+      "section": "Archi pesati",
+      "hint": "Inserisci un collegamento per riga. Dijkstra accetta solo pesi finiti non negativi.",
+      "select": "",
+      "from": "Da",
+      "to": "A",
+      "weight": "Peso",
+      "weight_placeholder": "es. 4",
+      "add": "Aggiungi arco",
+      "remove": "Rimuovi selezionati",
+      "info_tooltip": "Informazioni sui pesi degli archi",
+      "info_title": "Archi pesati",
+      "info_body": "Il peso puo' rappresentare distanza, tempo, costo o un'altra quantita' additiva non negativa.",
+      "info_html": "<h3>Requisito di Dijkstra</h3><p>Ogni peso deve essere finito e almeno zero. Pesi negativi invalidano l'argomento delle distanze definitive di Dijkstra e richiedono un algoritmo diverso come Bellman-Ford.</p>"
+    },
+    "model": {
+      "section": "Modello matematico",
+      "text": "Per un cammino P dalla sorgente s alla destinazione t, minimizza la somma dei pesi degli archi in P. Dijkstra rende definitivo ripetutamente il nodo non definitivo con la minima distanza provvisoria.",
+      "info_tooltip": "Informazioni sul modello Dijkstra",
+      "info_title": "Cammino minimo di Dijkstra",
+      "info_body": "Dijkstra e' esatto per grafi finiti con pesi non negativi. Restituisce Non raggiungibile quando nessun percorso collega i terminali selezionati.",
+      "info_html": "<h3>Obiettivo</h3><p>Minimizza <code>sum(w_e)</code> su tutti gli archi e selezionati da un cammino da s a t.</p><h3>Invariante</h3><p>Quando Dijkstra rende definitivo un nodo, la sua distanza provvisoria e' finale poiche' ogni arco rimanente ha peso non negativo.</p>"
+    },
+    "actions": { "solve": "Trova cammino minimo" },
+    "validation": {
+      "title": "Formulazione del cammino minimo non valida",
+      "body": "Il grafo non puo' essere risolto:\n{detail}"
+    },
+    "solution": {
+      "title": "Risultato cammino minimo",
+      "back": "Indietro",
+      "empty": "Nessun risultato di cammino minimo.",
+      "summary": { "section": "Stato Dijkstra" },
+      "status_line": "Stato: <b>{status}</b>",
+      "status": { "path_found": "Cammino trovato", "unreachable": "Non raggiungibile", "not_solved": "Non risolto" },
+      "explanation": {
+        "found": "La destinazione e' stata resa definitiva: con pesi non negativi, il percorso evidenziato ha peso totale minimo.",
+        "unreachable": "Dijkstra ha esaurito tutti i vertici raggiungibili prima di rendere definitiva la destinazione.",
+        "not_solved": "Non e' disponibile un risultato Dijkstra valido."
+      },
+      "route": { "section": "Percorso selezionato", "label": "Percorso:", "distance": { "label": "Peso totale:" } },
+      "diagram": { "section": "Grafo e percorso", "hint": "Vertici e archi blu appartengono al percorso restituito. Le etichette degli archi mostrano i pesi.", "empty": "Carica un grafo e risolvilo per visualizzare il percorso." },
+      "trace": { "section": "Vertici resi definitivi", "hint": "Una distanza resa definitiva e' finale con l'assunzione di pesi non negativi di Dijkstra.", "step": "Passo", "vertex": "Vertice", "description": "Descrizione", "distance": "Distanza finale" }
     }
   }
 }
