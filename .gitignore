@@ -12,4 +12,5 @@ apps/website/vite.config.js
 *.dmg
 .claude/
 .firebaserc
+.firebase/
 apps/website/.env.local
