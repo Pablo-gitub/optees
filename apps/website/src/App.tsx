@@ -39,6 +39,7 @@ const languageStorageKey = "optees.website.language";
 
 const previewAssets: Record<PreviewId, string> = {
   home: "screenshots/optees-home.png",
+  assistant: "screenshots/optees-assistant.png",
   lpSolution: "screenshots/optees-lp-solution.png",
   knapsack: "screenshots/optees-knapsack.png",
   knapsackSolution: "screenshots/optees-knapsack-solution.png",

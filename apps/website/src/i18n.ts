@@ -2,6 +2,7 @@ export type Language = "en" | "it";
 export type AlgorithmId = "lp" | "milp" | "knapsack" | "nlp" | "regression" | "classification" | "graph";
 export type PreviewId =
   | "home"
+  | "assistant"
   | "lpSolution"
   | "knapsack"
   | "knapsackSolution"
@@ -247,7 +248,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "assistant",
           title: "Local modeling assistant",
           body:
-            "A deterministic, rule-based assistant works entirely on your device: it recommends optimization, regression, or binary-classification workflows and can prepare validated LP, MILP, and Knapsack drafts when enough data is present.",
+            "A deterministic pattern-matching algorithm works entirely on your device. It does not use an AI model, LLM, or cloud service: it recommends a workflow and can validate explicit structured drafts before loading them.",
         },
         {
           id: "educational",
@@ -377,7 +378,7 @@ export const copy: Record<Language, SiteCopy> = {
       assistant: {
         title: "Draft structured data locally",
         body:
-          "The Modeling Assistant can recommend Regression or Binary Classification from normal prose. It only prepares a loadable dataset after you explicitly name columns and provide pipe-separated rows; the same importer used by the form validates the draft before it can replace your work.",
+          "The Modeling Assistant is a deterministic pattern-matching algorithm, not a generative AI or cloud service. It can recommend Regression or Binary Classification from normal prose, then prepares a loadable dataset only after you explicitly name columns and provide pipe-separated rows; the same importer used by the form validates the draft before it can replace your work.",
       },
       workflows: [
         {
@@ -397,17 +398,17 @@ export const copy: Record<Language, SiteCopy> = {
       ],
     },
     previews: {
-      eyebrow: "Product tour",
-      title: "Real screens, not abstract mockups",
+      eyebrow: "Explore the app",
+      title: "Follow each step of the method",
       body:
-        "These are actual views from the desktop app, so you know exactly what you get before you download.",
+        "Each workspace focuses on one part of the learning process: formulate a model, run a local method, then inspect how the result was obtained.",
       items: [
         {
-          id: "home",
-          window: "Optees — Home",
-          title: "Choose your method",
-          body: "Build LP, MILP, Knapsack, continuous NLP and graph problems from a clear catalogue of methods instead of ad-hoc scripts.",
-          alt: "Optees desktop home view listing optimization algorithms",
+          id: "assistant",
+          window: "Optees — Modeling Assistant",
+          title: "Describe the decision in your own words",
+          body: "The assistant uses deterministic language patterns locally to recommend a solver family. It does not call an AI model or send your description outside Optees; explicit data can become an importer-validated JSON draft.",
+          alt: "Optees local modeling assistant recommending the Knapsack workflow and generating validated JSON",
         },
         {
           id: "lpSolution",
@@ -623,7 +624,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "assistant",
           title: "Assistente di modellazione locale",
           body:
-            "Un assistente deterministico basato su regole lavora interamente sul dispositivo: raccomanda flussi di ottimizzazione, regressione o classificazione binaria e puo' preparare bozze LP, MILP e Knapsack validate quando i dati sono sufficienti.",
+            "Un algoritmo deterministico di riconoscimento di pattern lavora interamente sul dispositivo. Non usa modelli AI, LLM o servizi cloud: raccomanda un flusso e puo' validare bozze strutturate esplicite prima del caricamento.",
         },
         {
           id: "educational",
@@ -753,7 +754,7 @@ export const copy: Record<Language, SiteCopy> = {
       assistant: {
         title: "Prepara dati strutturati in locale",
         body:
-          "L'Assistente di modellazione puo' raccomandare Regressione o Classificazione binaria da testo libero. Prepara un dataset caricabile solo dopo che dichiari esplicitamente le colonne e fornisci righe separate da |; lo stesso importer della form valida la bozza prima che possa sostituire il tuo lavoro.",
+          "L'Assistente di modellazione e' un algoritmo deterministico di riconoscimento di pattern, non un'AI generativa né un servizio cloud. Puo' raccomandare Regressione o Classificazione binaria da testo libero, poi prepara un dataset caricabile solo dopo che dichiari esplicitamente le colonne e fornisci righe separate da |; lo stesso importer della form valida la bozza prima che possa sostituire il tuo lavoro.",
       },
       workflows: [
         {
@@ -773,17 +774,17 @@ export const copy: Record<Language, SiteCopy> = {
       ],
     },
     previews: {
-      eyebrow: "Tour del prodotto",
-      title: "Schermate reali, non mockup astratti",
+      eyebrow: "Esplora l'app",
+      title: "Segui ogni passaggio del metodo",
       body:
-        "Queste sono viste effettive dell'app desktop, così sai esattamente cosa ottieni prima di scaricarla.",
+        "Ogni ambiente si concentra su una parte del percorso di apprendimento: formula il modello, esegui un metodo locale e ispeziona come e' stato ottenuto il risultato.",
       items: [
         {
-          id: "home",
-          window: "Optees — Home",
-          title: "Scegli il tuo metodo",
-          body: "Costruisci problemi LP, MILP, Knapsack, NLP continua e su grafi da un catalogo chiaro di metodi, invece di script improvvisati.",
-          alt: "Vista home desktop di Optees con l'elenco degli algoritmi di ottimizzazione",
+          id: "assistant",
+          window: "Optees — Assistente di modellazione",
+          title: "Descrivi la decisione con parole tue",
+          body: "L'assistente usa pattern linguistici deterministici in locale per raccomandare una famiglia di solver. Non chiama modelli AI e non invia la descrizione fuori da Optees; dati espliciti possono diventare una bozza JSON validata dall'importer.",
+          alt: "Assistente di modellazione locale di Optees che raccomanda Knapsack e genera JSON validato",
         },
         {
           id: "lpSolution",
