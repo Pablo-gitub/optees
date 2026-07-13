@@ -32,6 +32,11 @@ from optees.domain.models.graph.shortest_path_model import ShortestPathModel
 from optees.domain.models.nlp.nlp_model import NLPModel, NLPOptions
 from optees.domain.models.regression.regression_model import RegressionModel, RegressionOptions
 from optees.domain.entities.regression.dataset import RegressionDataset
+from optees.domain.models.classification.binary_classification_model import (
+    BinaryClassificationModel,
+    ClassificationOptions,
+)
+from optees.domain.entities.classification.dataset import ClassificationDataset
 from optees.domain.value_objects.knapsack.variant import KnapsackVariant
 from optees.domain.value_objects.lp.bounds import Bounds
 from optees.domain.value_objects.lp.objective_sense import ObjectiveSense
@@ -146,6 +151,26 @@ def _regression_model() -> RegressionModel:
     )
 
 
+def _classification_model() -> BinaryClassificationModel:
+    return BinaryClassificationModel(
+        ClassificationDataset.from_rows(
+            feature_names=("score", "debt_ratio"),
+            target_name="approved",
+            rows=[
+                ((38, 0.78), "no"),
+                ((44, 0.70), "no"),
+                ((51, 0.64), "no"),
+                ((57, 0.55), "no"),
+                ((68, 0.42), "yes"),
+                ((74, 0.35), "yes"),
+                ((81, 0.28), "yes"),
+                ((88, 0.19), "yes"),
+            ],
+        ),
+        ClassificationOptions(test_fraction=0.25, random_seed=42, l2_alpha=0.2),
+    )
+
+
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -195,6 +220,12 @@ def main() -> None:
     window.regression_solution_page.set_problem(regression_model)
     window.regression_solution_page.set_solution(regression_solution)
     _capture(window, "optees-regression-solution.png", "regression_solution")
+
+    classification_model = _classification_model()
+    classification_solution = window.train_classification_uc.execute(classification_model)
+    window.classification_solution_page.set_problem(classification_model)
+    window.classification_solution_page.set_solution(classification_solution)
+    _capture(window, "optees-classification-solution.png", "classification_solution")
 
     window.close()
 

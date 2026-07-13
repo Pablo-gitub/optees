@@ -1,5 +1,5 @@
 export type Language = "en" | "it";
-export type AlgorithmId = "lp" | "milp" | "knapsack" | "nlp" | "regression" | "graph";
+export type AlgorithmId = "lp" | "milp" | "knapsack" | "nlp" | "regression" | "classification" | "graph";
 export type PreviewId =
   | "home"
   | "lpSolution"
@@ -7,6 +7,7 @@ export type PreviewId =
   | "knapsackSolution"
   | "nlpSolution"
   | "regressionSolution"
+  | "classificationSolution"
   | "graphSolution";
 export type FeatureId =
   | "assistant"
@@ -175,9 +176,9 @@ export const copy: Record<Language, SiteCopy> = {
     meta: {
       title: "Optees — Open-Source Operations Research Software",
       description:
-        "Free, open-source desktop app for Linear Programming, Mixed-Integer Programming, Knapsack, continuous Nonlinear Programming, educational Linear Regression and Dijkstra shortest paths. Model and solve locally with a guided assistant and educational solution views.",
+        "Free, open-source desktop app for Linear Programming, Mixed-Integer Programming, Knapsack, continuous Nonlinear Programming, educational Linear Regression, Binary Classification and Dijkstra shortest paths. Model and solve locally with a guided assistant and educational solution views.",
       ogDescription:
-        "Model, solve and understand LP, MILP, Knapsack, continuous NLP, Linear Regression and Dijkstra shortest paths in a private local desktop app.",
+        "Model, solve and understand LP, MILP, Knapsack, continuous NLP, Linear Regression, Binary Classification and Dijkstra shortest paths in a private local desktop app.",
     },
     nav: {
       aria: "Primary navigation",
@@ -204,16 +205,16 @@ export const copy: Record<Language, SiteCopy> = {
       title: "Operations research,",
       titleAccent: "made effortless.",
       copy:
-        "Optees turns operations-research methods into a desktop app anyone can use. Model LP, MILP and five Knapsack variants, explore continuous nonlinear objectives, fit transparent linear regression, or find a Dijkstra shortest path — then understand every result without scripting.",
+        "Optees turns operations-research methods into a desktop app anyone can use. Model LP, MILP and five Knapsack variants, explore continuous nonlinear objectives, fit transparent regression and binary classification, or find a Dijkstra shortest path — then understand every result without scripting.",
       source: "Star on GitHub",
       stackLabel: "Powered by",
       stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Dijkstra", "Netlib"],
       metricsAria: "Project highlights",
       metrics: [
-        { value: "6", label: "Algorithm workflows, ready to use" },
+        { value: "7", label: "Algorithm workflows, ready to use" },
         { value: "5", label: "Knapsack variants in one flow" },
         { value: "100%", label: "Local & private, no cloud" },
-        { value: "MIT", label: "Free and open source" },
+      { value: "Apache 2.0", label: "Free and open source" },
       ],
       shotCaption: "Linear Programming solution — objective, ranges and feasible region",
       floatStatus: "Optimal",
@@ -229,7 +230,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "assistant",
           title: "Local modeling assistant",
           body:
-            "A deterministic, rule-based assistant works entirely on your device: it recommends LP, MILP or Knapsack and can prepare validated structured drafts when enough data is present.",
+            "A deterministic, rule-based assistant works entirely on your device: it recommends optimization, regression, or binary-classification workflows and can prepare validated LP, MILP, and Knapsack drafts when enough data is present.",
         },
         {
           id: "educational",
@@ -247,7 +248,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "benchmarks",
           title: "Benchmark-backed",
           body:
-            "LP and MILP regressions use Netlib and MIPLIB. Knapsack includes Burkardt and OR-Library cases; NLP, regression, and graph workflows use documented analytic or deterministic reference cases.",
+            "LP and MILP regressions use Netlib and MIPLIB. Knapsack includes Burkardt and OR-Library cases; NLP, regression, classification, and graph workflows use documented analytic or deterministic reference cases.",
         },
         {
           id: "local",
@@ -328,6 +329,17 @@ export const copy: Record<Language, SiteCopy> = {
           preview: "regressionSolution",
         },
         {
+          id: "classification",
+          label: "Binary Classification",
+          short: "CLS",
+          status: "Available",
+          formula: "P(y = 1 | x) = 1 / (1 + e^(-beta_0 - beta^T x))",
+          description:
+            "Educational local logistic regression for two named classes, with stratified held-out evaluation, confusion matrices, predicted probabilities, and an optional 2D decision boundary.",
+          details: ["Logistic Regression", "Accuracy / Precision / Recall / F1", "Training-only scaling"],
+          preview: "classificationSolution",
+        },
+        {
           id: "graph",
           label: "Graph Theory: Dijkstra",
           short: "DSP",
@@ -389,6 +401,13 @@ export const copy: Record<Language, SiteCopy> = {
           alt: "Optees linear regression solution view with learned coefficients, metrics, residuals, and fitted line",
         },
         {
+          id: "classificationSolution",
+          window: "Optees — Classification result",
+          title: "Inspect a binary decision boundary",
+          body: "Review class labels, held-out metrics, confusion matrices, probabilities, and a 2D boundary without confusing a small local model with a production decision system.",
+          alt: "Optees binary-classification solution view with coefficients, confusion matrix, metrics, and decision boundary",
+        },
+        {
           id: "graphSolution",
           window: "Optees — Dijkstra solution",
           title: "Follow the shortest route",
@@ -447,7 +466,7 @@ export const copy: Record<Language, SiteCopy> = {
       items: [
         {
           q: "What is Optees?",
-          a: "Optees is a free, open-source desktop app for operations research. You can model, solve and inspect LP, MILP, five Knapsack variants, continuous Nonlinear Programming, educational Linear Regression and Dijkstra shortest-path problems without writing code.",
+          a: "Optees is a free, open-source desktop app for operations research and educational machine learning. You can model, solve and inspect LP, MILP, five Knapsack variants, continuous Nonlinear Programming, Linear Regression, Binary Classification and Dijkstra shortest-path problems without writing code.",
         },
         {
           q: "Who is it for?",
@@ -467,7 +486,7 @@ export const copy: Record<Language, SiteCopy> = {
         },
         {
           q: "What is coming next?",
-          a: "The roadmap next adds transparent classification and clustering to the educational AI and machine-learning section, then heuristics and metaheuristics, while benchmark hardening continues across the released families.",
+          a: "The roadmap next adds transparent clustering to the educational AI and machine-learning section, then heuristics and metaheuristics, while benchmark hardening continues across the released families.",
         },
       ],
     },
@@ -498,16 +517,16 @@ export const copy: Record<Language, SiteCopy> = {
       socialAria: "Social links",
       madeBy: "Personal website of Paolo Pietrelli",
       copyright: "© {year} Paolo Pietrelli · All rights reserved",
-      license: "MIT-style license",
+      license: "Apache License 2.0",
     },
   },
   it: {
     meta: {
       title: "Optees — Software Open Source per Ricerca Operativa",
       description:
-        "App desktop gratuita e open source per Programmazione Lineare, Intera Mista, Knapsack, Programmazione Non Lineare continua, Regressione Lineare didattica e cammini minimi di Dijkstra. Modella e risolvi in locale con assistente guidato e viste didattiche.",
+        "App desktop gratuita e open source per Programmazione Lineare, Intera Mista, Knapsack, Programmazione Non Lineare continua, Regressione Lineare didattica, Classificazione Binaria e cammini minimi di Dijkstra. Modella e risolvi in locale con assistente guidato e viste didattiche.",
       ogDescription:
-        "Modella, risolvi e comprendi LP, MILP, Knapsack, NLP continua, Regressione Lineare e cammini minimi di Dijkstra in un'app desktop privata e locale.",
+        "Modella, risolvi e comprendi LP, MILP, Knapsack, NLP continua, Regressione Lineare, Classificazione Binaria e cammini minimi di Dijkstra in un'app desktop privata e locale.",
     },
     nav: {
       aria: "Navigazione principale",
@@ -534,16 +553,16 @@ export const copy: Record<Language, SiteCopy> = {
       title: "La ricerca operativa,",
       titleAccent: "resa semplice.",
       copy:
-        "Optees trasforma metodi di ricerca operativa in un'app desktop alla portata di tutti. Modella LP, MILP e cinque varianti Knapsack, esplora obiettivi non lineari continui, adatta una regressione lineare trasparente o trova un cammino minimo con Dijkstra, poi comprendi ogni risultato senza scrivere codice.",
+        "Optees trasforma metodi di ricerca operativa in un'app desktop alla portata di tutti. Modella LP, MILP e cinque varianti Knapsack, esplora obiettivi non lineari continui, adatta regressione e classificazione binaria trasparenti o trova un cammino minimo con Dijkstra, poi comprendi ogni risultato senza scrivere codice.",
       source: "Metti una stella su GitHub",
       stackLabel: "Basato su",
       stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Dijkstra", "Netlib"],
       metricsAria: "Punti chiave del progetto",
       metrics: [
-        { value: "6", label: "Flussi algoritmici pronti all'uso" },
+        { value: "7", label: "Flussi algoritmici pronti all'uso" },
         { value: "5", label: "Varianti Knapsack in un solo flusso" },
         { value: "100%", label: "Locale e privato, nessun cloud" },
-        { value: "MIT", label: "Gratuito e open source" },
+      { value: "Apache 2.0", label: "Gratuito e open source" },
       ],
       shotCaption: "Soluzione di Programmazione Lineare — obiettivo, range e regione ammissibile",
       floatStatus: "Ottimo",
@@ -559,7 +578,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "assistant",
           title: "Assistente di modellazione locale",
           body:
-            "Un assistente deterministico basato su regole lavora interamente sul dispositivo: raccomanda LP, MILP o Knapsack e puo' preparare bozze strutturate validate quando i dati sono sufficienti.",
+            "Un assistente deterministico basato su regole lavora interamente sul dispositivo: raccomanda flussi di ottimizzazione, regressione o classificazione binaria e puo' preparare bozze LP, MILP e Knapsack validate quando i dati sono sufficienti.",
         },
         {
           id: "educational",
@@ -577,7 +596,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "benchmarks",
           title: "Validato su benchmark",
           body:
-            "LP e MILP usano regressioni Netlib e MIPLIB. Knapsack include casi Burkardt e OR-Library; NLP, regressione e grafi usano casi analitici o deterministici documentati.",
+            "LP e MILP usano regressioni Netlib e MIPLIB. Knapsack include casi Burkardt e OR-Library; NLP, regressione, classificazione e grafi usano casi analitici o deterministici documentati.",
         },
         {
           id: "local",
@@ -658,6 +677,17 @@ export const copy: Record<Language, SiteCopy> = {
           preview: "regressionSolution",
         },
         {
+          id: "classification",
+          label: "Classificazione binaria",
+          short: "CLS",
+          status: "Disponibile",
+          formula: "P(y = 1 | x) = 1 / (1 + e^(-beta_0 - beta^T x))",
+          description:
+            "Regressione logistica locale didattica per due classi nominate, con valutazione separata stratificata, matrici di confusione, probabilita' previste e un confine decisionale 2D opzionale.",
+          details: ["Regressione logistica", "Accuracy / Precision / Recall / F1", "Standardizzazione solo training"],
+          preview: "classificationSolution",
+        },
+        {
           id: "graph",
           label: "Teoria dei Grafi: Dijkstra",
           short: "DSP",
@@ -719,6 +749,13 @@ export const copy: Record<Language, SiteCopy> = {
           alt: "Vista soluzione di regressione lineare in Optees con coefficienti appresi, metriche, residui e retta stimata",
         },
         {
+          id: "classificationSolution",
+          window: "Optees — Risultato classificazione",
+          title: "Ispeziona un confine decisionale binario",
+          body: "Controlla classi, metriche sulle righe lasciate fuori, matrici di confusione, probabilita' e un confine 2D senza confondere un piccolo modello locale con un sistema decisionale di produzione.",
+          alt: "Vista soluzione di classificazione binaria in Optees con coefficienti, matrice di confusione, metriche e confine decisionale",
+        },
+        {
           id: "graphSolution",
           window: "Optees — Soluzione Dijkstra",
           title: "Segui il percorso minimo",
@@ -777,7 +814,7 @@ export const copy: Record<Language, SiteCopy> = {
       items: [
         {
           q: "Cos'è Optees?",
-          a: "Optees e' un'app desktop gratuita e open source per la ricerca operativa. Puoi modellare, risolvere e ispezionare LP, MILP, cinque varianti Knapsack, Programmazione Non Lineare continua, Regressione Lineare didattica e cammini minimi di Dijkstra senza scrivere codice.",
+          a: "Optees e' un'app desktop gratuita e open source per ricerca operativa e machine learning didattico. Puoi modellare, risolvere e ispezionare LP, MILP, cinque varianti Knapsack, Programmazione Non Lineare continua, Regressione Lineare, Classificazione Binaria e cammini minimi di Dijkstra senza scrivere codice.",
         },
         {
           q: "A chi è rivolto?",
@@ -797,7 +834,7 @@ export const copy: Record<Language, SiteCopy> = {
         },
         {
           q: "Cosa arriverà in futuro?",
-          a: "La roadmap aggiunge ora classificazione e clustering trasparenti alla sezione didattica di AI e machine learning, poi euristiche e metaeuristiche, mentre il rafforzamento dei benchmark prosegue sulle famiglie gia' rilasciate.",
+          a: "La roadmap aggiunge ora clustering trasparente alla sezione didattica di AI e machine learning, poi euristiche e metaeuristiche, mentre il rafforzamento dei benchmark prosegue sulle famiglie gia' rilasciate.",
         },
       ],
     },
@@ -828,7 +865,7 @@ export const copy: Record<Language, SiteCopy> = {
       socialAria: "Link social",
       madeBy: "Sito personale di Paolo Pietrelli",
       copyright: "© {year} Paolo Pietrelli · Tutti i diritti riservati",
-      license: "Licenza in stile MIT",
+      license: "Licenza Apache 2.0",
     },
   },
 };
