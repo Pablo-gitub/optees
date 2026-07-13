@@ -29,6 +29,10 @@
     "graph": {
       "title": "Cammino minimo (Dijkstra)",
       "subtitle": "Usa questo metodo per trovare il percorso di costo minimo tra due nodi di un grafo pesato senza archi di peso negativo."
+    },
+    "regression": {
+      "title": "Regressione lineare",
+      "subtitle": "Usa questo metodo per apprendere e valutare una relazione numerica trasparente tra input continui e un target continuo."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -38,6 +42,7 @@
     "linear_optimization": "Ottimizzazione lineare",
     "nonlinear_optimization": "Ottimizzazione nonlineare",
     "graph_theory": "Teoria dei grafi",
+    "machine_learning": "AI & Machine Learning",
     "settings":"Impostazioni"
   },
   "alg": {
@@ -45,7 +50,8 @@
     "milp": "Mixed-Integer (MILP)",
     "knap": "Zaino 0/1",
     "nlp": "Programmazione Nonlineare (NLP)",
-    "graph": "Cammino minimo (Dijkstra)"
+    "graph": "Cammino minimo (Dijkstra)",
+    "regression": "Regressione lineare"
   },
   "settings": {
     "title": "Impostazioni",
@@ -102,6 +108,7 @@
       "milp": "MILP",
       "knapsack": "Knapsack",
       "nlp": "Programmazione Nonlineare",
+      "regression": "Regressione lineare",
       "scheduling": "Scheduling",
       "robust": "Ottimizzazione robusta",
       "unknown": "Sconosciuta"
@@ -120,6 +127,34 @@
     "import_error": {
       "title": "Errore import assistente",
       "body": "Impossibile caricare il modello generato:\n{detail}"
+    }
+  },
+  "error_feedback": {
+    "generic": "Controlla i dati inseriti e riprova.",
+    "import": {
+      "read": "Non e' stato possibile leggere il file come JSON. Controlla che esista, sia leggibile e contenga JSON valido.",
+      "schema": "Questo file JSON non rispetta il formato richiesto da questo algoritmo. Controlla versione, tipo di problema, campi obbligatori e valori numerici."
+    },
+    "nlp": {
+      "expression": "Controlla l'espressione obiettivo: usa nomi di variabili dichiarati e solo operatori e funzioni matematiche supportati.",
+      "bounds": "Controlla ogni bound inferiore/superiore e il punto iniziale. Il punto iniziale deve essere finito e rispettare i bounds dichiarati.",
+      "model": "Controlla nomi delle variabili, punto iniziale, opzioni del solver e obiettivo non lineare prima di risolvere."
+    },
+    "regression": {
+      "dataset": "Usa almeno quattro osservazioni complete. Le celle di feature e target devono contenere valori numerici finiti e i nomi delle feature devono essere univoci.",
+      "options": "Controlla metodo, quota test, seed casuale e valore positivo di alpha Ridge."
+    },
+    "graph": {
+      "weights": "Ogni peso di un arco deve essere un numero finito non negativo: Dijkstra non puo' usare pesi negativi.",
+      "topology": "Dichiara vertici univoci, scegli sorgente e destinazione e assicurati che ogni arco colleghi due vertici distinti dichiarati.",
+      "solver": "Il solver per il cammino minimo non e' disponibile in questa sessione dell'app. Riavvia l'applicazione e riprova."
+    },
+    "assistant": {
+      "generated_model": "La bozza generata non e' valida per la formulazione selezionata. Controlla il suggerimento e inserisci o importa il modello manualmente."
+    },
+    "update": {
+      "check": "Non e' stato possibile contattare il servizio aggiornamenti. Controlla la connessione Internet e riprova piu' tardi.",
+      "download": "Non e' stato possibile scaricare o aprire l'installer dell'aggiornamento. Controlla la connessione Internet e riprova."
     }
   },
   "milp": {
@@ -692,6 +727,74 @@
       "route": { "section": "Percorso selezionato", "label": "Percorso:", "distance": { "label": "Peso totale:" } },
       "diagram": { "section": "Grafo e percorso", "hint": "Vertici e archi blu appartengono al percorso restituito. Le etichette degli archi mostrano i pesi.", "empty": "Carica un grafo e risolvilo per visualizzare il percorso." },
       "trace": { "section": "Vertici resi definitivi", "hint": "Una distanza resa definitiva e' finale con l'assunzione di pesi non negativi di Dijkstra.", "step": "Passo", "vertex": "Vertice", "description": "Descrizione", "distance": "Distanza finale" }
+    }
+  },
+  "regression": {
+    "header": {
+      "title": "Regressione lineare",
+      "section": "Formulazione del problema",
+      "description": "Scegli feature numeriche in input e un target continuo. Optees addestra il modello localmente, usando una divisione training/test riproducibile per calcolare le metriche.",
+      "buttons": { "example": "Esempio", "problem": "Descrizione problema" }
+    },
+    "import": {
+      "button": "Importa JSON",
+      "dialog_title": "Apri modello di regressione",
+      "error_title": "Errore di importazione",
+      "error_body": "Impossibile caricare il file:\n{detail}",
+      "info_tooltip": "Formato JSON regressione",
+      "info_title": "Formato JSON regressione",
+      "info_body": "Usa schema versione 1 con problem_type regression. Il dataset contiene nomi delle feature, un nome target e righe numeriche.",
+      "info_html": "<h3>Campi principali</h3><p>Usa <code>dataset</code> e <code>training_options</code>. Ogni riga ha un array <code>features</code> e un <code>target</code> numerico.</p><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"regression\",\n  \"dataset\": {\"feature_names\": [\"dimensione\"], \"target_name\": \"prezzo\", \"rows\": [{\"features\": [50], \"target\": 120}]},\n  \"training_options\": {\"method\": \"OLS\", \"test_fraction\": 0.2, \"random_seed\": 42}\n}</pre>"
+    },
+    "dataset": {
+      "section": "Dataset",
+      "hint": "Inserisci nomi delle feature numeriche separati da virgole e un target continuo. Mantieni solo righe complete; servono almeno quattro osservazioni per una valutazione training/test.",
+      "features": "Feature",
+      "features_placeholder": "es. superficie, stanze",
+      "target": "Target",
+      "target_placeholder": "es. prezzo",
+      "apply_columns": "Applica colonne",
+      "rows": "Osservazioni",
+      "value_placeholder": "valore",
+      "add": "Aggiungi osservazione",
+      "remove": "Rimuovi selezionate",
+      "info_tooltip": "Informazioni sul dataset",
+      "info_title": "Dataset numerico supervisionato",
+      "info_body": "Le feature sono gli input esplicativi. Il target e' la quantita' continua che il modello impara a stimare. Ogni valore inserito o importato deve essere finito.",
+      "info_html": "<h3>Una riga, un'osservazione</h3><p>Per i prezzi delle case, le feature possono essere superficie e numero di stanze, mentre il target e' il prezzo di vendita. Una riga rappresenta una casa osservata.</p><h3>Training e test</h3><p>Optees divide le righe in modo deterministico. Il modello si adatta solo alle righe di training e calcola le metriche test sulle righe lasciate fuori.</p>"
+    },
+    "training": {
+      "section": "Opzioni di addestramento",
+      "hint": "Il seed rende ripetibile la divisione training/test. Ridge usa una penalita' positiva per ridurre i coefficienti delle feature; l'intercetta non e' penalizzata.",
+      "method": "Metodo",
+      "ols": "Minimi quadrati ordinari (OLS)",
+      "ridge": "Regressione Ridge",
+      "test_fraction": "Quota test",
+      "seed": "Seed casuale",
+      "ridge_alpha": "Alpha Ridge",
+      "info_tooltip": "Opzioni di addestramento",
+      "info_title": "OLS, Ridge e valutazione separata",
+      "info_body": "OLS minimizza i residui quadratici sui dati training. Ridge aggiunge una penalita' quadratica sui coefficienti e puo' rendere le stime meno sensibili a feature correlate. Le righe test non sono mai usate nell'addestramento.",
+      "info_html": "<h3>OLS</h3><p>OLS sceglie coefficienti che minimizzano la somma dei residui quadratici di training.</p><h3>Ridge</h3><p>Ridge minimizza la stessa perdita piu' <code>alpha * sum(beta_j^2)</code> per i coefficienti delle feature. Aumentare alpha in genere riduce i coefficienti verso zero.</p><h3>Seed</h3><p>Usa lo stesso seed per riprodurre stessa divisione e metriche.</p>"
+    },
+    "actions": { "train": "Addestra regressione" },
+    "validation": {
+      "title": "Formulazione regressione non valida",
+      "body": "Il modello non puo' essere addestrato:\n{detail}"
+    },
+    "solution": {
+      "title": "Risultato regressione",
+      "back": "Indietro",
+      "empty": "Nessun risultato di regressione.",
+      "summary": { "section": "Stato addestramento" },
+      "status_line": "Stato: <b>{status}</b>",
+      "status": { "trained": "Addestrato", "failed": "Fallito", "not_trained": "Non addestrato" },
+      "notice": "Le metriche descrivono questa divisione e questo dataset. Non dimostrano causalita', prestazioni future o idoneita' a una decisione reale senza ulteriore validazione.",
+      "details": { "section": "Dettagli del modello", "method": "Metodo", "train_count": "Righe training", "test_count": "Righe test", "seed": "Seed casuale", "intercept": "Intercetta", "message": "Messaggio" },
+      "coefficients": { "section": "Equazione appresa", "hint": "La previsione e' intercetta piu' la somma di ogni valore feature moltiplicato per il suo coefficiente.", "feature": "Feature", "coefficient": "Coefficiente" },
+      "metrics": { "section": "Metriche di valutazione", "hint": "MAE, MSE e RMSE minori sono migliori sulla stessa scala del target. R-quadrato piu' alto e' migliore, ma puo' non essere disponibile per un target costante.", "partition": "Partizione", "mae": "MAE", "mse": "MSE", "rmse": "RMSE", "r_squared": "R-quadrato", "train": "Training", "test": "Test" },
+      "predictions": { "section": "Previsioni e residui", "hint": "Residuo = target reale meno target previsto. Le righe test sono state escluse dall'addestramento.", "row": "Riga", "partition": "Partizione", "actual": "Reale", "predicted": "Previsto", "residual": "Residuo" },
+      "plot": { "section": "Adattamento con una feature", "hint": "Questo grafico appare solo se il modello usa una sola feature. Separa osservazioni training e test lasciate fuori.", "unavailable": "Un grafico di adattamento e' disponibile solo quando il modello usa una sola feature e matplotlib e' installato.", "x_axis": "Feature", "y_axis": "Target", "line": "Retta stimata", "train": "Training", "test": "Test" }
     }
   }
 }

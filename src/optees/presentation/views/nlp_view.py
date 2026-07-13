@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 from optees.core.design import tokens
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.presentation.error_feedback import localized_error_detail
 from optees.domain.entities.nlp.objective import NLPObjective
 from optees.domain.entities.nlp.variable import NLPVariable
 from optees.domain.models.nlp.nlp_model import NLPModel, NLPOptions
@@ -546,7 +547,7 @@ class NLPView(QWidget):
             QMessageBox.warning(
                 self,
                 S.t("nlp.import.error_title"),
-                S.t("nlp.import.error_body", detail=str(exc)),
+                S.t("nlp.import.error_body", detail=localized_error_detail("nlp_import", exc)),
             )
 
     def _on_optimize(self) -> None:
@@ -558,7 +559,7 @@ class NLPView(QWidget):
             QMessageBox.warning(
                 self,
                 S.t("nlp.validation.title"),
-                S.t("nlp.validation.body", detail=str(exc)),
+                S.t("nlp.validation.body", detail=localized_error_detail("nlp_validation", exc)),
             )
             return
         self.solve_completed.emit(self._solve_usecase.execute(model))

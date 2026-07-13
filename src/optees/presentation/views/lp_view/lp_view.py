@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
 from optees.core.design import tokens
+from optees.presentation.error_feedback import localized_error_detail
 from optees.presentation.controllers.lp_controller import LPController, LPVariable
 from optees.presentation.views.widgets.flow_layout import FlowLayout
 from .intro_section import IntroSection
@@ -260,7 +261,7 @@ class LPView(QWidget):
             QMessageBox.warning(
                 self,
                 S.t("lp.import.error_title"),
-                S.t("lp.import.error_body", detail=str(exc)),
+                S.t("lp.import.error_body", detail=localized_error_detail("lp_import", exc)),
             )
             return
         if self._ctrl:

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Optees — Linear Regression</title>
+  <desc>Data points and an ascending fitted line, evoking educational regression.</desc>
+  <g fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M52 202 H208"/>
+    <path d="M52 202 V54"/>
+    <path d="M70 174 L190 76"/>
+  </g>
+  <g fill="currentColor">
+    <circle cx="78" cy="163" r="11"/>
+    <circle cx="108" cy="146" r="11"/>
+    <circle cx="139" cy="114" r="11"/>
+    <circle cx="177" cy="91" r="11"/>
+  </g>
+</svg>

@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 from optees.core.design import tokens
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.presentation.error_feedback import localized_error_detail
 from optees.domain.entities.graph.edge import GraphEdge
 from optees.domain.entities.graph.vertex import GraphVertex
 from optees.domain.models.graph.shortest_path_model import ShortestPathModel
@@ -445,7 +446,7 @@ class GraphView(QWidget):
             QMessageBox.warning(
                 self,
                 S.t("graph.import.error_title"),
-                S.t("graph.import.error_body", detail=str(exc)),
+                S.t("graph.import.error_body", detail=localized_error_detail("graph_import", exc)),
             )
 
     def _show_info(self, section: str) -> None:
@@ -461,7 +462,7 @@ class GraphView(QWidget):
         QMessageBox.warning(
             self,
             S.t("graph.validation.title"),
-            S.t("graph.validation.body", detail=detail),
+            S.t("graph.validation.body", detail=localized_error_detail("graph_validation", detail)),
         )
 
 

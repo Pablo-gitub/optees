@@ -45,6 +45,18 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
   trace, and analytic reference regressions for Rosenbrock, Himmelblau,
   bounded quadratics, and maximization.
 
+### Educational AI & Machine Learning: Linear Regression
+
+- Local Ordinary Least Squares (OLS) and Ridge regression for finite numeric
+  tabular datasets with continuous targets.
+- Deterministic train/test split, fixed seed, MAE, MSE, RMSE, and R-squared
+  reported separately for training and held-out test observations.
+- Learned intercept and coefficients, prediction/residual table, and a fitted
+  line chart when exactly one feature is selected.
+- Versioned JSON import/export and analytic affine reference cases. Results
+  are explicitly presented as predictive fits, not causal conclusions or
+  guarantees of future performance.
+
 ### Modeling Assistant
 
 - Local deterministic family recommendation for LP, MILP, Knapsack, NLP,
@@ -66,12 +78,12 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
 
 The next sections are introduced in this order:
 
-1. Heuristics & Metaheuristics: TSP constructive/local-search baseline, then
+1. Educational AI & Machine Learning: transparent binary classification, then
+   k-means clustering, using the same local-data and evaluation contract.
+2. Heuristics & Metaheuristics: TSP constructive/local-search baseline, then
    Simulated Annealing and problem-specific metaheuristics.
-2. Scheduling and Robust/Stochastic Optimization: workflow-specific models
+3. Scheduling and Robust/Stochastic Optimization: workflow-specific models
    built first on the MILP, Graph, and Heuristic foundations.
-3. AI & Machine Learning: educational models and optimization links after the
-   optimization families are stable.
 
 ## Cross-Family Methods
 

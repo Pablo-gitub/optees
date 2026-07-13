@@ -8,10 +8,12 @@ if TYPE_CHECKING:
     from optees.presentation.main_window import MainWindow
 
 from optees.presentation.views.lp_view.lp_view import LPView
+from optees.presentation.error_feedback import localized_error_detail
 from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.nlp_view import NLPView
 from optees.presentation.views.graph_view import GraphView
+from optees.presentation.views.regression_view import RegressionView
 from optees.presentation.views.home_view import HomePage  # usa lo stesso nome che usi nel MainWindow
 from optees.core.string_manager import strings as S
 from optees.utility.knapsack_json_io import knapsack_problem_from_dict
@@ -39,6 +41,8 @@ class MainController(QObject):
             home.go_nlp.connect(lambda: self.window.goto("nlp"))
         if hasattr(home, "go_graph"):
             home.go_graph.connect(lambda: self.window.goto("graph"))
+        if hasattr(home, "go_regression"):
+            home.go_regression.connect(lambda: self.window.goto("regression"))
 
         # LP -> Solution
         lp: LPView = self.window.page("lp")  # type: ignore[assignment]
@@ -119,6 +123,19 @@ class MainController(QObject):
         graph_solution = self.window.page("graph_solution")
         if hasattr(graph_solution, "back_requested"):
             graph_solution.back_requested.connect(lambda: self.window.goto("graph"))
+
+        # AI & Machine Learning -> regression result
+        regression: RegressionView = self.window.page("regression")  # type: ignore[assignment]
+        regression.solve_completed.connect(self._on_regression_trained)
+        regression.example_requested.connect(lambda: self.window.goto("regression_example"))
+        regression.problem_description_requested.connect(lambda: self.window.goto("regression_problem"))
+        for name in ("regression_example", "regression_problem"):
+            info_view = self.window.page(name)
+            if hasattr(info_view, "back_requested"):
+                info_view.back_requested.connect(lambda _=False: self.window.goto("regression"))
+        regression_solution = self.window.page("regression_solution")
+        if hasattr(regression_solution, "back_requested"):
+            regression_solution.back_requested.connect(lambda: self.window.goto("regression"))
 
         assistant = self.window.page("assistant")
         if hasattr(assistant, "back_requested"):
@@ -239,6 +256,17 @@ class MainController(QObject):
             sol_view.set_solution(solution)  # type: ignore[attr-defined]
         self.window.goto("graph_solution")
 
+    def _on_regression_trained(self, solution) -> None:
+        sol_view = self.window.page("regression_solution")
+        try:
+            if hasattr(sol_view, "set_problem"):
+                sol_view.set_problem(self.window.regression_page.current_model())  # type: ignore[attr-defined]
+        except Exception:
+            pass
+        if hasattr(sol_view, "set_solution"):
+            sol_view.set_solution(solution)  # type: ignore[attr-defined]
+        self.window.goto("regression_solution")
+
     def _load_assistant_lp_model(self, data: object) -> None:
         try:
             model = lp_model_from_dict(dict(data))  # type: ignore[arg-type]
@@ -269,7 +297,7 @@ class MainController(QObject):
         QMessageBox.warning(
             self.window,
             S.t("assistant.import_error.title"),
-            S.t("assistant.import_error.body", detail=str(exc)),
+            S.t("assistant.import_error.body", detail=localized_error_detail("assistant_import", exc)),
         )
 
     def _wire_updates(self) -> None:

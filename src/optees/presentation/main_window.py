@@ -22,6 +22,8 @@ from optees.presentation.views.nlp_view import NLPView
 from optees.presentation.views.nlp_solution_view import NLPSolutionView
 from optees.presentation.views.graph_view import GraphView
 from optees.presentation.views.graph_solution_view import GraphSolutionView
+from optees.presentation.views.regression_view import RegressionView
+from optees.presentation.views.regression_solution_view import RegressionSolutionView
 from optees.presentation.views.assistant_view import AssistantView
 from optees.presentation.views.widgets.floating_assistant_button import (
     FloatingAssistantButton,
@@ -38,6 +40,8 @@ from optees.presentation.views.lp_info_view import (
     NLPProblemDescriptionView,
     GraphExampleView,
     GraphProblemDescriptionView,
+    RegressionExampleView,
+    RegressionProblemDescriptionView,
 )
 from optees.presentation.controllers.lp_controller import LPController
 from optees.presentation.controllers.milp_controller import MILPController
@@ -46,6 +50,7 @@ from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
 from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
 from optees.application.usecases.solve_nlp_usecase import SolveNLPUseCase
 from optees.application.usecases.solve_shortest_path_usecase import SolveShortestPathUseCase
+from optees.application.usecases.train_regression_usecase import TrainRegressionUseCase
 from optees.application.usecases.solve_bounded_knapsack_usecase import SolveBoundedKnapsackUseCase
 from optees.application.usecases.solve_fractional_knapsack_usecase import SolveFractionalKnapsackUseCase
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
@@ -62,6 +67,7 @@ from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
 from optees.data.adapters.nlp.nlp_solver_adapter import ScipyNLPSolverAdapter
 from optees.data.adapters.graph.dijkstra_solver_adapter import DijkstraSolverAdapter
+from optees.data.adapters.regression.numpy_regression_adapter import NumpyRegressionAdapter
 from optees.data.adapters.knapsack.bounded_knapsack_solver_adapter import BoundedKnapsackSolverAdapter
 from optees.data.adapters.knapsack.fractional_knapsack_solver_adapter import FractionalKnapsackSolverAdapter
 from optees.data.adapters.knapsack.knapsack_solver_adapter import KnapsackSolverAdapter
@@ -121,6 +127,11 @@ class MainWindow(QMainWindow):
         self.solve_shortest_path_uc = SolveShortestPathUseCase(self.graph_solver_port)
         self.graph_page.set_solve_usecase(self.solve_shortest_path_uc)
 
+        self.regression_page = RegressionView()
+        self.regression_solver_port = NumpyRegressionAdapter()
+        self.train_regression_uc = TrainRegressionUseCase(self.regression_solver_port)
+        self.regression_page.set_solve_usecase(self.train_regression_uc)
+
         self.knap_page = KnapsackView()
         self.knapsack_controller = KnapsackController()
         self.knap_page.set_controller(self.knapsack_controller)
@@ -161,6 +172,8 @@ class MainWindow(QMainWindow):
         self.nlp_problem_page = NLPProblemDescriptionView()
         self.graph_example_page = GraphExampleView()
         self.graph_problem_page = GraphProblemDescriptionView()
+        self.regression_example_page = RegressionExampleView()
+        self.regression_problem_page = RegressionProblemDescriptionView()
 
         # (NEW) solution page placeholder
         self.lp_solution_page = LPSolutionView()
@@ -168,6 +181,7 @@ class MainWindow(QMainWindow):
         self.knapsack_solution_page = KnapsackSolutionView()
         self.nlp_solution_page = NLPSolutionView()
         self.graph_solution_page = GraphSolutionView()
+        self.regression_solution_page = RegressionSolutionView()
 
         # register pages
         self.register_page("home", self.home_page)
@@ -187,6 +201,10 @@ class MainWindow(QMainWindow):
         self.register_page("graph_example", self.graph_example_page)
         self.register_page("graph_problem", self.graph_problem_page)
         self.register_page("graph_solution", self.graph_solution_page)
+        self.register_page("regression", self.regression_page)
+        self.register_page("regression_example", self.regression_example_page)
+        self.register_page("regression_problem", self.regression_problem_page)
+        self.register_page("regression_solution", self.regression_solution_page)
         self.register_page("lp_solution", self.lp_solution_page)
         self.register_page("milp", self.milp_page)
         self.register_page("milp_solution", self.milp_solution_page)
@@ -311,6 +329,10 @@ class MainWindow(QMainWindow):
         self.act_graph.triggered.connect(lambda: self.goto("graph"))
         self.toolbar.addAction(self.act_graph)
 
+        self.act_regression = QAction(S.t("alg.regression"), self)
+        self.act_regression.triggered.connect(lambda: self.goto("regression"))
+        self.toolbar.addAction(self.act_regression)
+
         # spacer
         spacer = QWidget(self)
         spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -342,6 +364,8 @@ class MainWindow(QMainWindow):
                     self.milp_page, self.knap_page, self.nlp_page, self.nlp_example_page,
                     self.nlp_problem_page, self.nlp_solution_page, self.graph_page,
                     self.graph_example_page, self.graph_problem_page, self.graph_solution_page,
+                    self.regression_page, self.regression_example_page,
+                    self.regression_problem_page, self.regression_solution_page,
                     self.assistant_page,
                     self.settings_page):
             if hasattr(page, "refresh_theme"):
@@ -358,6 +382,7 @@ class MainWindow(QMainWindow):
         self.act_knap.setText(S.t("alg.knap"))
         self.act_nlp.setText(S.t("alg.nlp"))
         self.act_graph.setText(S.t("alg.graph"))
+        self.act_regression.setText(S.t("alg.regression"))
         self.act_settings.setText(S.t("nav.settings"))
         self.act_settings.setToolTip(S.t("nav.settings"))
         if hasattr(self, "assistant_bubble"):
@@ -371,6 +396,8 @@ class MainWindow(QMainWindow):
                  self.milp_page, self.knap_page, self.nlp_page, self.nlp_example_page,
                  self.nlp_problem_page, self.nlp_solution_page, self.graph_page,
                  self.graph_example_page, self.graph_problem_page, self.graph_solution_page,
+                 self.regression_page, self.regression_example_page,
+                 self.regression_problem_page, self.regression_solution_page,
                  self.assistant_page,
                  self.settings_page):
             if hasattr(page, "refresh_strings"):

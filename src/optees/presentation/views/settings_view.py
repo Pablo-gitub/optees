@@ -6,6 +6,7 @@ from PySide6.QtCore import QLocale
 
 from optees.core.version import get_app_version
 from optees.core.string_manager import strings as S
+from optees.presentation.error_feedback import localized_error_detail
 
 
 class SettingsView(QWidget):
@@ -168,7 +169,10 @@ class SettingsView(QWidget):
         elif self._update_state == "launching":
             text = S.t("settings.update_launching")
         elif self._update_state == "error":
-            text = S.t("settings.update_error", detail=self._update_message or "-")
+            text = S.t(
+                "settings.update_error",
+                detail=localized_error_detail("update", self._update_message),
+            )
         else:
             text = S.t("settings.update_unknown")
         self.value_update.setText(text)

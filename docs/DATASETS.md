@@ -114,6 +114,19 @@ terms, expected local/global contract, source metadata, and CI budget have been
 reviewed. Until then, these cases are the required regression baseline for the
 local SciPy methods implemented by Optees.
 
+## Educational Regression Analytic Reference Cases
+
+- **Included file:** `tests/data/regression/reference_cases.json`.
+- **Cases:** exact affine relations with one feature and with two independent
+  features.
+- **Tests:** `tests/utility/test_regression_reference_cases.py`.
+
+These deterministic cases are not a predictive benchmark. They verify the
+local OLS implementation against known intercepts, feature coefficients, and
+held-out metrics under a fixed train/test split. Future dataset additions for
+classification and clustering must be redistributable, documented, and kept
+separate from performance claims.
+
 ## Graph Theory: Dijkstra Reference Cases
 
 The first shortest-path workflow uses small hand-built directed, undirected,
@@ -141,6 +154,8 @@ tests/data/
     reference_cases.json            # Bounded/Unbounded regression cases
   nlp/
     reference_cases.json            # Analytic continuous NLP regressions
+  regression/
+    reference_cases.json            # Analytic OLS regression cases
 ```
 
 ## Adding A Dataset

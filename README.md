@@ -17,7 +17,10 @@ optimization workflow.
   contract.
 - Dijkstra shortest paths on directed or undirected graphs with finite,
   non-negative weights.
-- Versioned JSON import for LP, MILP, Knapsack, NLP, and shortest-path
+- Educational linear regression with OLS and Ridge, deterministic train/test
+  splits, MAE/MSE/RMSE/R-squared, residuals, and a one-feature fit chart.
+- Versioned JSON import for LP, MILP, Knapsack, NLP, shortest-path, and
+  regression
   formulations.
 - An English/Italian local rule-based Modeling Assistant that recommends a
   solver family and can draft validated LP, MILP, and Knapsack JSON when the
@@ -26,8 +29,8 @@ optimization workflow.
   visualizations for the implemented families.
 
 The roadmap intentionally distinguishes shipped functionality from planned
-expansion such as educational AI/ML, heuristics, broader graph algorithms, and
-global/nonlinear optimization methods.
+expansion such as classification/clustering, heuristics, broader graph
+algorithms, and global/nonlinear optimization methods.
 
 ## Documentation
 

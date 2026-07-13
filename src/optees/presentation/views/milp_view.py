@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.presentation.error_feedback import localized_error_detail
 from optees.core.design import tokens
 from optees.domain.entities.milp.variable import MILPVariable
 from optees.domain.value_objects.milp.integrality import Integrality
@@ -685,7 +686,7 @@ class MILPView(QWidget):
             QMessageBox.warning(
                 self,
                 S.t("milp.import.error_title"),
-                S.t("milp.import.error_body", detail=str(exc)),
+                S.t("milp.import.error_body", detail=localized_error_detail("milp_import", exc)),
             )
             return
         if self._ctrl:

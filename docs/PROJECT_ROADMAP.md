@@ -111,6 +111,15 @@ otherwise tested first workflow, but it remains an explicit hardening item.
 - Deterministic graph regressions and a reusable delivery-route example;
   external graph benchmark integration remains a hardening item.
 
+### Educational AI & Machine Learning
+
+- Local numeric linear regression with OLS and Ridge estimators.
+- Explicit reproducible train/test split, coefficients, MAE/MSE/RMSE/R-squared,
+  residual table, one-feature fit visualization, and versioned JSON import.
+- Analytic affine reference cases verify the numerical contract. This workflow
+  teaches a predictive fit and its limits; it does not claim causality or
+  future performance.
+
 ### Product Delivery
 
 - Desktop release workflow and packaged-build update checks through GitHub
@@ -191,18 +200,23 @@ Educational machine learning is the next vertical slice, before heuristics.
 It is a separate local-learning section: it must not be presented as AutoML,
 an LLM provider, or a replacement for the Modeling Assistant.
 
-The delivery order is deliberately sequential:
+The delivery order is deliberately sequential.
 
-1. **Regression first:** a small supervised-learning workflow for continuous
-   targets, starting with linear regression and regularized linear regression.
-   It needs an explicit train/test split, fixed random seed, feature/target
-   selection, MAE/MSE/R², residual explanation, and a truthful one-feature
-   chart only where that visualization is mathematically meaningful.
-2. **Classification second:** binary classification with a transparent
+**Regression is implemented and verified locally.** The initial workflow
+provides OLS and Ridge for finite numeric tabular data, a deterministic
+train/test split, fixed random seed, selected feature and target names,
+MAE/MSE/RMSE/R-squared, residuals, a one-feature fit chart, localized teaching
+pages, versioned JSON import, and analytic affine reference cases. The result
+view explicitly separates training from held-out test observations and does
+not present a predictive fit as a causal conclusion.
+
+The remaining work is:
+
+1. **Classification next:** binary classification with a transparent
    baseline such as logistic regression, confusion matrix, accuracy,
    precision, recall, F1, and an optional 2D decision-boundary visualization.
    Class balance and train/test leakage must be explained, not hidden.
-3. **Clustering third:** local unsupervised clustering with k-means,
+2. **Clustering after classification:** local unsupervised clustering with k-means,
    user-selected `k`, reproducible seed, feature scaling made visible, inertia
    and silhouette diagnostics, and 2D/3D plots only for the selected displayed
    dimensions.

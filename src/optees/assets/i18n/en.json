@@ -29,6 +29,10 @@
     "graph": {
       "title": "Shortest Path (Dijkstra)",
       "subtitle": "Use this method to find the least-cost route between two nodes in a weighted graph with no negative edge weights."
+    },
+    "regression": {
+      "title": "Linear Regression",
+      "subtitle": "Use this method to learn and evaluate a transparent numerical relationship between continuous inputs and a continuous target."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -38,6 +42,7 @@
     "linear_optimization": "Linear Optimization",
     "nonlinear_optimization": "Nonlinear Optimization",
     "graph_theory": "Graph Theory",
+    "machine_learning": "AI & Machine Learning",
     "settings":"Settings"
   },
   "alg": {
@@ -45,7 +50,8 @@
     "milp": "Mixed-Integer (MILP)",
     "knap": "0/1 Knapsack",
     "nlp": "Nonlinear Programming (NLP)",
-    "graph": "Shortest Path (Dijkstra)"
+    "graph": "Shortest Path (Dijkstra)",
+    "regression": "Linear Regression"
   },
   "settings": {
     "title": "Settings",
@@ -102,6 +108,7 @@
       "milp": "MILP",
       "knapsack": "Knapsack",
       "nlp": "Nonlinear Programming",
+      "regression": "Linear Regression",
       "scheduling": "Scheduling",
       "robust": "Robust Optimization",
       "unknown": "Unknown"
@@ -120,6 +127,34 @@
     "import_error": {
       "title": "Assistant import error",
       "body": "Could not load the generated model:\n{detail}"
+    }
+  },
+  "error_feedback": {
+    "generic": "Check the entered data and try again.",
+    "import": {
+      "read": "The file could not be read as JSON. Check that it exists, is readable, and contains valid JSON.",
+      "schema": "This JSON file does not match the format required by this algorithm. Check its version, problem type, required fields, and numeric values."
+    },
+    "nlp": {
+      "expression": "Check the objective expression: use declared variable names and only the supported mathematical operators and functions.",
+      "bounds": "Check each lower/upper bound and the initial point. The initial point must be finite and lie within its declared bounds.",
+      "model": "Check variable names, the initial point, solver options, and the nonlinear objective before solving."
+    },
+    "regression": {
+      "dataset": "Use at least four complete observations. Feature and target cells must contain finite numeric values, and feature names must be unique.",
+      "options": "Check the method, test fraction, random seed, and positive Ridge alpha value."
+    },
+    "graph": {
+      "weights": "Every edge weight must be a finite non-negative number because Dijkstra cannot use negative weights.",
+      "topology": "Declare unique vertices, choose a source and destination, and ensure every edge joins two declared distinct vertices.",
+      "solver": "The shortest-path solver is not available in this application session. Restart the application and try again."
+    },
+    "assistant": {
+      "generated_model": "The generated draft is not valid for the selected formulation. Review the recommendation and enter or import the model manually."
+    },
+    "update": {
+      "check": "The update service could not be reached. Check the internet connection and try again later.",
+      "download": "The update installer could not be downloaded or opened. Check the internet connection and try again."
     }
   },
   "milp": {
@@ -694,6 +729,74 @@
       "route": { "section": "Selected route", "label": "Route:", "distance": { "label": "Total weight:" } },
       "diagram": { "section": "Graph and route", "hint": "Blue vertices and edges belong to the returned path. Edge labels show their weights.", "empty": "Load a graph and solve it to display the route." },
       "trace": { "section": "Settled vertices", "hint": "A settled distance is final under Dijkstra's non-negative-weight assumption.", "step": "Step", "vertex": "Vertex", "description": "Description", "distance": "Final distance" }
+    }
+  },
+  "regression": {
+    "header": {
+      "title": "Linear Regression",
+      "section": "Problem setup",
+      "description": "Choose numeric input features and one continuous target. Optees fits the selected model locally, using a reproducible training/test split to report evaluation metrics.",
+      "buttons": { "example": "Example", "problem": "Problem description" }
+    },
+    "import": {
+      "button": "Import JSON",
+      "dialog_title": "Open regression model",
+      "error_title": "Import error",
+      "error_body": "Could not load the file:\n{detail}",
+      "info_tooltip": "Regression JSON format",
+      "info_title": "Regression JSON format",
+      "info_body": "Use schema version 1 with problem_type regression. The dataset contains feature names, one target name, and numeric rows.",
+      "info_html": "<h3>Core fields</h3><p>Use <code>dataset</code> and <code>training_options</code>. Every row has a <code>features</code> array and one numeric <code>target</code>.</p><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"regression\",\n  \"dataset\": {\"feature_names\": [\"size\"], \"target_name\": \"price\", \"rows\": [{\"features\": [50], \"target\": 120}]},\n  \"training_options\": {\"method\": \"OLS\", \"test_fraction\": 0.2, \"random_seed\": 42}\n}</pre>"
+    },
+    "dataset": {
+      "section": "Dataset",
+      "hint": "Enter comma-separated numeric feature names and one continuous target. Keep complete rows only; at least four observations are required for a train/test evaluation.",
+      "features": "Features",
+      "features_placeholder": "e.g. floor_area, rooms",
+      "target": "Target",
+      "target_placeholder": "e.g. price",
+      "apply_columns": "Apply columns",
+      "rows": "Observations",
+      "value_placeholder": "value",
+      "add": "Add observation",
+      "remove": "Remove selected",
+      "info_tooltip": "Dataset information",
+      "info_title": "Numeric supervised dataset",
+      "info_body": "Features are the explanatory inputs. The target is the continuous quantity the model learns to estimate. Every imported or entered value must be finite.",
+      "info_html": "<h3>One row, one observation</h3><p>For house prices, features may be floor area and room count, while the target is the sale price. A row represents one observed house.</p><h3>Training and test data</h3><p>Optees splits the rows deterministically. The model fits only the training rows and reports test metrics on held-out rows.</p>"
+    },
+    "training": {
+      "section": "Training options",
+      "hint": "The seed makes the train/test split repeatable. Ridge uses a positive penalty to shrink feature coefficients; the intercept is not penalized.",
+      "method": "Method",
+      "ols": "Ordinary least squares (OLS)",
+      "ridge": "Ridge regression",
+      "test_fraction": "Test fraction",
+      "seed": "Random seed",
+      "ridge_alpha": "Ridge alpha",
+      "info_tooltip": "Training options",
+      "info_title": "OLS, Ridge, and held-out evaluation",
+      "info_body": "OLS minimizes squared residuals on training data. Ridge adds a quadratic coefficient penalty, which can make estimates less sensitive to correlated features. Test rows are never used to fit either model.",
+      "info_html": "<h3>OLS</h3><p>OLS chooses coefficients that minimize the sum of squared training residuals.</p><h3>Ridge</h3><p>Ridge minimizes that same loss plus <code>alpha * sum(beta_j^2)</code> for feature coefficients. Increasing alpha generally shrinks coefficients toward zero.</p><h3>Seed</h3><p>Use the same seed to reproduce the same split and metrics.</p>"
+    },
+    "actions": { "train": "Train regression" },
+    "validation": {
+      "title": "Invalid regression formulation",
+      "body": "The model cannot be trained:\n{detail}"
+    },
+    "solution": {
+      "title": "Regression Result",
+      "back": "Back",
+      "empty": "No regression result yet.",
+      "summary": { "section": "Training status" },
+      "status_line": "Status: <b>{status}</b>",
+      "status": { "trained": "Trained", "failed": "Failed", "not_trained": "Not trained" },
+      "notice": "Metrics describe this chosen split and dataset. They do not prove causality, future performance, or suitability for a real decision without further validation.",
+      "details": { "section": "Model details", "method": "Method", "train_count": "Training rows", "test_count": "Test rows", "seed": "Random seed", "intercept": "Intercept", "message": "Message" },
+      "coefficients": { "section": "Learned equation", "hint": "The prediction is intercept plus the sum of each feature value multiplied by its coefficient.", "feature": "Feature", "coefficient": "Coefficient" },
+      "metrics": { "section": "Evaluation metrics", "hint": "Lower MAE, MSE, and RMSE are better on the same target scale. Higher R-squared is better, but it may be unavailable for a constant target.", "partition": "Partition", "mae": "MAE", "mse": "MSE", "rmse": "RMSE", "r_squared": "R-squared", "train": "Training", "test": "Test" },
+      "predictions": { "section": "Predictions and residuals", "hint": "Residual = actual target minus predicted target. Test rows were excluded from fitting.", "row": "Row", "partition": "Partition", "actual": "Actual", "predicted": "Predicted", "residual": "Residual" },
+      "plot": { "section": "One-feature fit", "hint": "This chart is shown only when exactly one feature is selected. It separates training and held-out test observations.", "unavailable": "A fit chart is available only when the model uses exactly one feature and matplotlib is installed.", "x_axis": "Feature", "y_axis": "Target", "line": "Fitted line", "train": "Training", "test": "Test" }
     }
   }
 }

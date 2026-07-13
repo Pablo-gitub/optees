@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
+from optees.presentation.error_feedback import localized_error_detail
 from optees.core.design import tokens
 from optees.domain.entities.lp.constraint import Constraint
 from optees.domain.entities.lp.objective import Objective
@@ -1301,7 +1302,7 @@ class KnapsackView(QWidget):
             QMessageBox.warning(
                 self,
                 S.t("knapsack.import.error_title"),
-                S.t("knapsack.import.error_body", detail=str(exc)),
+                S.t("knapsack.import.error_body", detail=localized_error_detail("knapsack_import", exc)),
             )
 
     def _load_json_problem(self, problem: KnapsackJsonProblem) -> None:

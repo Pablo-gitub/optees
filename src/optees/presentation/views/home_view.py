@@ -61,6 +61,7 @@ class HomePage(QWidget):
     go_knap = Signal()
     go_nlp = Signal()
     go_graph = Signal()
+    go_regression = Signal()
     update_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None):
@@ -126,6 +127,11 @@ class HomePage(QWidget):
             S.t("cards.graph.subtitle"),
             icon_path=str(asset("icons/graph.svg")),
         )
+        self.card_regression = CardButton(
+            S.t("cards.regression.title"),
+            S.t("cards.regression.subtitle"),
+            icon_path=str(asset("icons/regression.svg")),
+        )
 
         # wire signals
         self.card_lp.clicked.connect(self.go_lp.emit)
@@ -133,6 +139,7 @@ class HomePage(QWidget):
         self.card_knap.clicked.connect(self.go_knap.emit)
         self.card_nlp.clicked.connect(self.go_nlp.emit)
         self.card_graph.clicked.connect(self.go_graph.emit)
+        self.card_regression.clicked.connect(self.go_regression.emit)
 
         # add cards to the first optimization category
         for card in (self.card_lp, self.card_milp, self.card_knap):
@@ -144,14 +151,9 @@ class HomePage(QWidget):
         self.cat_graph.add_card(self.card_graph)
         root.addWidget(self.cat_graph)
 
-        # --- Future sections with "coming soon..." placeholder ---
-        self._coming_labels = []  # keep references to update text on language change
-        for cat in (self.cat_ml,):
-            ph = QLabel(S.t("home.comingSoon"))
-            ph.setStyleSheet(f"color: {tokens(theme.is_dark()).text_muted};")
-            cat.add_card(ph)
-            root.addWidget(cat)
-            self._coming_labels.append(ph)
+        self.cat_ml.add_card(self.card_regression)
+        root.addWidget(self.cat_ml)
+        self._coming_labels = []
 
         # Listen for language changes (optional; main_window already calls refresh_strings)
         try:
@@ -190,6 +192,11 @@ class HomePage(QWidget):
         self.card_graph._title.setText(f"<span style='font-weight:700'>{S.t('cards.graph.title')}</span>")
         self.card_graph._sub.setText(S.t("cards.graph.subtitle"))
 
+        self.card_regression._title.setText(
+            f"<span style='font-weight:700'>{S.t('cards.regression.title')}</span>"
+        )
+        self.card_regression._sub.setText(S.t("cards.regression.subtitle"))
+
         # placeholders
         cs = S.t("home.comingSoon")
         for ph in self._coming_labels:
@@ -202,7 +209,14 @@ class HomePage(QWidget):
             cat.apply_theme()
         for ph in self._coming_labels:
             ph.setStyleSheet(f"color: {muted};")
-        for card in (self.card_lp, self.card_milp, self.card_knap, self.card_nlp, self.card_graph):
+        for card in (
+            self.card_lp,
+            self.card_milp,
+            self.card_knap,
+            self.card_nlp,
+            self.card_graph,
+            self.card_regression,
+        ):
             card._apply_theme()
 
     def set_update_available(self, result) -> None:

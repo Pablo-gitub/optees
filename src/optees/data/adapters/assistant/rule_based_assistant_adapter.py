@@ -15,6 +15,7 @@ _FAMILY_LP = "lp"
 _FAMILY_MILP = "milp"
 _FAMILY_KNAPSACK = "knapsack"
 _FAMILY_NLP = "nlp"
+_FAMILY_REGRESSION = "regression"
 _FAMILY_SCHEDULING = "scheduling"
 _FAMILY_ROBUST = "robust"
 _FAMILY_UNKNOWN = "unknown"
@@ -157,6 +158,19 @@ class RuleBasedAssistantAdapter:
             ),
         ),
         _KeywordRule(
+            _FAMILY_REGRESSION,
+            5,
+            (
+                "linear regression",
+                "regressione lineare",
+                "ridge regression",
+                "regressione ridge",
+                "ordinary least squares",
+                "minimi quadrati ordinari",
+                "ols",
+            ),
+        ),
+        _KeywordRule(
             _FAMILY_NLP,
             4,
             (
@@ -236,6 +250,7 @@ class RuleBasedAssistantAdapter:
             _FAMILY_MILP,
             _FAMILY_KNAPSACK,
             _FAMILY_NLP,
+            _FAMILY_REGRESSION,
         }
         load_target = (
             family
@@ -268,6 +283,8 @@ class RuleBasedAssistantAdapter:
                 missing.extend(draft.warnings)
         elif family == _FAMILY_NLP:
             missing.append(_msg(language, "nlp_drafting_deferred"))
+        elif family == _FAMILY_REGRESSION:
+            missing.append(_msg(language, "regression_drafting_deferred"))
         elif family in {_FAMILY_SCHEDULING, _FAMILY_ROBUST}:
             missing.append(_msg(language, "planned_family"))
         else:
@@ -298,6 +315,7 @@ class RuleBasedAssistantAdapter:
             _FAMILY_MILP: 0,
             _FAMILY_KNAPSACK: 0,
             _FAMILY_NLP: 0,
+            _FAMILY_REGRESSION: 0,
             _FAMILY_SCHEDULING: 0,
             _FAMILY_ROBUST: 0,
         }
@@ -368,6 +386,83 @@ class RuleBasedAssistantAdapter:
             ("profit", "profitto", "cost", "costo", "labor", "lavoro", "material", "materia"),
         ):
             scores[_FAMILY_LP] += 9
+
+        # Regression is recognized from a prediction/estimation task grounded
+        # in previous numerical observations. Requiring both parts avoids
+        # mistaking generic forecasts or nonlinear curve fitting for OLS/Ridge.
+        if (
+            not _has_any(
+                text,
+                (
+                    "nonlinear",
+                    "non lineare",
+                    "non-lineare",
+                    "quadratic",
+                    "quadratico",
+                    "curva",
+                    "curve",
+                    "derivata",
+                    "derivative",
+                ),
+            )
+            and _has_any(
+                text,
+                (
+                    "predict",
+                    "prediction",
+                    "forecast",
+                    "prevedere",
+                    "previsione",
+                    "stimare",
+                    "estimate",
+                    "estimating",
+                    "stima",
+                    "regression",
+                    "regressione",
+                    "fit a line",
+                    "adattare una retta",
+                ),
+            )
+            and _has_any(
+                text,
+                (
+                    "historical data",
+                    "past data",
+                    "past months",
+                    "previous sales",
+                    "training data",
+                    "dataset",
+                    "data set",
+                    "observations",
+                    "observation",
+                    "records",
+                    "record",
+                    "samples",
+                    "dati storici",
+                    "dati di addestramento",
+                    "mesi passati",
+                    "vendite precedenti",
+                    "appartamenti simili",
+                    "osservazioni",
+                    "campioni",
+                    "feature",
+                    "features",
+                    "target",
+                    "prezzo",
+                    "price",
+                    "sales",
+                    "vendite",
+                    "rent",
+                    "rental",
+                    "affitti",
+                    "affitto",
+                    "consumption",
+                    "consumi",
+                    "consumo",
+                ),
+            )
+        ):
+            scores[_FAMILY_REGRESSION] += 12
 
         if _has_any(text, ("yes or no", "si o no", "whether", "aprire", "open")) and _has_any(
             text,
@@ -480,6 +575,8 @@ class RuleBasedAssistantAdapter:
             if _has_any(text, ("least squares", "minimi quadrati")):
                 return "least_squares"
             return "standard_nlp"
+        if family == _FAMILY_REGRESSION:
+            return "linear_regression"
         if family == _FAMILY_SCHEDULING:
             if _has_any(text, ("macchine parallele", "parallel machines")):
                 return "parallel_machines"
@@ -516,6 +613,8 @@ class RuleBasedAssistantAdapter:
             reasons.append(_msg(language, "reason_lp"))
         elif family == _FAMILY_NLP:
             reasons.append(_msg(language, "reason_nlp"))
+        elif family == _FAMILY_REGRESSION:
+            reasons.append(_msg(language, "reason_regression"))
         elif family == _FAMILY_SCHEDULING:
             reasons.append(_msg(language, "reason_scheduling"))
         elif family == _FAMILY_ROBUST:
@@ -820,6 +919,7 @@ def _priority(family: str) -> int:
         _FAMILY_SCHEDULING: 5,
         _FAMILY_ROBUST: 4,
         _FAMILY_MILP: 3,
+        _FAMILY_REGRESSION: 3,
         _FAMILY_NLP: 2,
         _FAMILY_LP: 1,
         _FAMILY_UNKNOWN: 0,
@@ -1077,6 +1177,7 @@ _MESSAGES = {
         "problem_description": "problem description",
         "planned_family": "This family is recognized but its dedicated Optees form is not implemented yet.",
         "nlp_drafting_deferred": "The NLP form is available, but rule-based NLP JSON drafting is not implemented yet.",
+        "regression_drafting_deferred": "The Linear Regression form is available, but rule-based regression JSON drafting is not implemented yet.",
         "problem_family": "problem family",
         "capacity": "capacity",
         "items_with_value_weight": "items with value and weight",
@@ -1092,6 +1193,7 @@ _MESSAGES = {
         "reason_threshold": "Threshold or block choices require binary variables to activate the selected segment.",
         "reason_lp": "The prompt describes a linear objective with linear constraints and continuous decisions.",
         "reason_nlp": "The prompt mentions nonlinear expressions, curves, products of variables, or derivatives.",
+        "reason_regression": "The prompt asks to estimate or predict a continuous outcome from previous numerical observations.",
         "reason_scheduling": "The prompt mentions jobs, machines, sequences, deadlines, or makespan.",
         "reason_robust": "The prompt mentions uncertainty, scenarios, regret, or worst-case decisions.",
         "reason_unknown": "The prompt is too generic for a reliable solver recommendation.",
@@ -1102,6 +1204,7 @@ _MESSAGES = {
         "problem_description": "descrizione del problema",
         "planned_family": "Questa famiglia e' riconosciuta ma la schermata dedicata in Optees non e' ancora implementata.",
         "nlp_drafting_deferred": "La schermata NLP e' disponibile, ma la generazione rule-based di JSON NLP non e' ancora implementata.",
+        "regression_drafting_deferred": "La schermata di regressione lineare e' disponibile, ma la generazione rule-based di JSON per la regressione non e' ancora implementata.",
         "problem_family": "famiglia del problema",
         "capacity": "capacita'",
         "items_with_value_weight": "oggetti con valore e peso",
@@ -1117,6 +1220,7 @@ _MESSAGES = {
         "reason_threshold": "Scelte a soglia o per blocchi richiedono variabili binarie per attivare il segmento scelto.",
         "reason_lp": "Il testo descrive un obiettivo lineare con vincoli lineari e decisioni continue.",
         "reason_nlp": "Il testo cita espressioni non lineari, curve, prodotti tra variabili o derivate.",
+        "reason_regression": "Il testo chiede di stimare o prevedere un risultato continuo a partire da osservazioni numeriche precedenti.",
         "reason_scheduling": "Il testo cita lavori, macchine, sequenze, scadenze o makespan.",
         "reason_robust": "Il testo cita incertezza, scenari, regret o decisioni worst-case.",
         "reason_unknown": "Il testo e' troppo generico per consigliare un solver in modo affidabile.",

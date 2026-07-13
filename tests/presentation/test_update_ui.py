@@ -3,6 +3,7 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QPushButton
 
+from optees.core.string_manager import strings as S
 from optees.domain.entities.update import AppRelease, ReleaseAsset, UpdateCheckResult
 
 
@@ -49,7 +50,10 @@ def test_settings_shows_update_status(window):
 
     window.settings_page.set_update_error("offline")
 
-    assert "offline" in window.settings_page.value_update.text()
+    assert window.settings_page.value_update.text() == S.t(
+        "settings.update_error",
+        detail=S.t("error_feedback.update.check"),
+    )
 
 
 def test_source_run_marks_update_check_as_development(window):
