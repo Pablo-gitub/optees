@@ -1,0 +1,71 @@
+name: Deploy Website
+
+# Landing releases are intentionally independent from desktop application tags.
+# Example: git tag -a landing-v0.0.1 -m "Publish landing v0.0.1"
+on:
+  push:
+    tags:
+      - "landing-v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-hosting-live
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy landing
+    runs-on: ubuntu-latest
+    environment:
+      name: firebase-hosting
+      url: https://optees-1acac.web.app
+
+    steps:
+      - name: Checkout tagged source
+        uses: actions/checkout@v4
+
+      - name: Validate landing version tag
+        shell: bash
+        run: |
+          if [[ ! "${GITHUB_REF_NAME}" =~ ^landing-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Expected a tag in the form landing-vMAJOR.MINOR.PATCH; got ${GITHUB_REF_NAME}." >&2
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/website/package-lock.json
+
+      - name: Install website dependencies
+        working-directory: apps/website
+        run: npm ci
+
+      - name: Build production website
+        working-directory: apps/website
+        env:
+          VITE_SITE_URL: https://optees-1acac.web.app
+        run: npm run build
+
+      - name: Deploy Firebase Hosting live channel
+        id: firebase_deploy
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          entryPoint: .
+          projectId: optees-1acac
+          channelId: live
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_OPTEES_1ACAC }}
+
+      - name: Publish deployment summary
+        shell: bash
+        run: |
+          {
+            echo "## Landing deployment"
+            echo
+            echo "- Tag: \`${GITHUB_REF_NAME}\`"
+            echo "- Site: ${{ steps.firebase_deploy.outputs.urls }}"
+          } >> "${GITHUB_STEP_SUMMARY}"

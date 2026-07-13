@@ -76,10 +76,50 @@ The Firebase CLI automatically serves the `public` directory configured in
 4. Deploy production only after the desktop release has been published on
    GitHub Releases, so the landing page cannot promise an unavailable build.
 
-## Future CI
+## Continuous Deployment From Landing Tags
 
-Automated Firebase deployment should be a separate GitHub Actions workflow.
-It needs a project-specific service-account credential stored as a GitHub
-secret and must build with the same `VITE_SITE_URL` used in production. Keep
-that credential out of the repository and add the workflow only after the
-first manual preview and production deploy have verified the project/domain.
+`.github/workflows/deploy-website.yml` deploys the live Firebase Hosting site
+only when a tag matching `landing-vMAJOR.MINOR.PATCH` is pushed. It is separate
+from `vMAJOR.MINOR.PATCH`, which continues to build desktop release artifacts.
+
+The workflow:
+
+1. checks out the exact tagged commit and validates the tag format;
+2. installs dependencies from `apps/website/package-lock.json` with `npm ci`;
+3. builds with `VITE_SITE_URL=https://optees-1acac.web.app`;
+4. deploys `apps/website/dist/` to Firebase Hosting's `live` channel.
+
+### Required GitHub Secret
+
+Before pushing the first landing tag, create a repository Actions secret named
+`FIREBASE_SERVICE_ACCOUNT_OPTEES_1ACAC`. Its value must be the full JSON key
+for a Firebase/Google Cloud service account allowed to deploy Firebase
+Hosting. Never commit this JSON file or put it in an Actions variable.
+
+The Firebase CLI command `firebase init hosting:github` can create this
+service account and repository secret automatically, but it also generates
+its own workflow files. For this repository, keep the custom tag workflow and
+either use the generated secret or create the service account manually. At a
+minimum, grant its identity Firebase Hosting deployment permissions; use the
+roles recommended by the official Firebase Hosting GitHub Action when the
+project later adds Authentication preview domains or Cloud Run rewrites.
+
+Add the secret in GitHub under **Settings -> Secrets and variables -> Actions
+-> New repository secret**. The secret name in the workflow is deliberately
+specific to the Firebase Project ID, so it cannot accidentally target another
+project.
+
+### Publish A Landing Release
+
+From the repository root, first publish the commits the tag must represent:
+
+```bash
+git push
+git tag -a landing-v0.0.1 -m "Publish landing v0.0.1"
+git push origin landing-v0.0.1
+```
+
+No Python application version bump is needed for a `landing-v*` tag. GitHub
+Actions deploys the website source present at that exact tag; check the
+**Deploy Website** workflow run and open `https://optees-1acac.web.app` when
+it succeeds.
