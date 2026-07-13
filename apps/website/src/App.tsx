@@ -516,6 +516,7 @@ function App() {
           <nav className="nav-links" aria-label={t.nav.sectionsAria}>
             <a href="#features">{t.nav.features}</a>
             <a href="#algorithms">{t.nav.algorithms}</a>
+            <a href="#machine-learning">{t.nav.machineLearning}</a>
             <a href="#previews">{t.nav.previews}</a>
             <a href="#faq">{t.nav.faq}</a>
           </nav>
@@ -697,6 +698,64 @@ function App() {
                 ))}
               </ul>
             </article>
+          </div>
+        </section>
+
+        {/* AI & MACHINE LEARNING --------------------------------------- */}
+        <section
+          id="machine-learning"
+          className="section machine-learning-section"
+          aria-labelledby="machine-learning-title"
+        >
+          <div className="section-heading" data-reveal>
+            <p className="eyebrow">{t.machineLearning.eyebrow}</p>
+            <h2 id="machine-learning-title">{t.machineLearning.title}</h2>
+            <p>{t.machineLearning.body}</p>
+          </div>
+
+          <div className="machine-learning-assistant" data-reveal>
+            <span className="machine-learning-assistant-icon" aria-hidden="true">
+              <Icon name="assistant" />
+            </span>
+            <div>
+              <h3>{t.machineLearning.assistant.title}</h3>
+              <p>{t.machineLearning.assistant.body}</p>
+            </div>
+          </div>
+
+          <div className="machine-learning-workflows">
+            {t.machineLearning.workflows.map((workflow, index) => {
+              const preview = screenshots.find((shot) => shot.id === workflow.preview);
+              if (!preview) return null;
+
+              return (
+                <article
+                  className="machine-learning-workflow"
+                  key={workflow.title}
+                  data-reveal
+                  style={{ transitionDelay: `${index * 90}ms` }}
+                >
+                  <div className="machine-learning-copy">
+                    <h3>{workflow.title}</h3>
+                    <p>{workflow.body}</p>
+                    <ul className="machine-learning-points">
+                      {workflow.points.map((point) => (
+                        <li key={point}>
+                          <Icon name="check" />
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <WindowFrame
+                    className="machine-learning-shot"
+                    title={preview.window}
+                    src={preview.src}
+                    alt={preview.alt}
+                  />
+                </article>
+              );
+            })}
           </div>
         </section>
 

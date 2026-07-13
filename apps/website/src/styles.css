@@ -999,6 +999,102 @@ main,
   color: var(--cyan);
 }
 
+/* ---- AI & Machine Learning --------------------------------------------- */
+
+.machine-learning-assistant {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  width: min(var(--maxw), 100%);
+  margin: 0 auto;
+  padding: 0 0 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.machine-learning-assistant-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  color: var(--cyan);
+  background: rgba(87, 211, 255, 0.08);
+}
+
+.machine-learning-assistant-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.machine-learning-assistant h3,
+.machine-learning-copy h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.22rem;
+  font-weight: 600;
+}
+
+.machine-learning-assistant p,
+.machine-learning-copy > p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  line-height: 1.62;
+}
+
+.machine-learning-workflows {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(var(--maxw), 100%);
+  margin: 0 auto;
+}
+
+.machine-learning-workflow {
+  display: grid;
+  gap: 24px;
+  padding: 34px 30px 0 0;
+}
+
+.machine-learning-workflow + .machine-learning-workflow {
+  padding-right: 0;
+  padding-left: 30px;
+  border-left: 1px solid var(--border);
+}
+
+.machine-learning-points {
+  display: grid;
+  gap: 9px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.machine-learning-points li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.machine-learning-points svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--cyan);
+}
+
+.machine-learning-shot {
+  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.machine-learning-workflow:hover .machine-learning-shot {
+  transform: translateY(-5px);
+  border-color: rgba(87, 211, 255, 0.4);
+  box-shadow: 0 34px 80px rgba(2, 6, 22, 0.6);
+}
+
 /* ---- Previews ----------------------------------------------------------- */
 
 .preview-grid {
@@ -1564,7 +1660,7 @@ main,
 
 @media (max-width: 1000px) {
   .hero-inner {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 44px;
   }
 
@@ -1600,6 +1696,21 @@ main,
 
   .algorithm-layout {
     grid-template-columns: 1fr;
+  }
+
+  .machine-learning-workflows {
+    grid-template-columns: 1fr;
+  }
+
+  .machine-learning-workflow,
+  .machine-learning-workflow + .machine-learning-workflow {
+    padding: 28px 0 0;
+  }
+
+  .machine-learning-workflow + .machine-learning-workflow {
+    margin-top: 30px;
+    border-top: 1px solid var(--border);
+    border-left: 0;
   }
 
   .download-panel {

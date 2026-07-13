@@ -76,6 +76,7 @@ type SiteCopy = {
     sectionsAria: string;
     features: string;
     algorithms: string;
+    machineLearning: string;
     previews: string;
     faq: string;
     download: string;
@@ -118,6 +119,21 @@ type SiteCopy = {
     modelLabel: string;
     capabilitiesLabel: string;
     items: AlgorithmCopy[];
+  };
+  machineLearning: {
+    eyebrow: string;
+    title: string;
+    body: string;
+    assistant: {
+      title: string;
+      body: string;
+    };
+    workflows: Array<{
+      title: string;
+      body: string;
+      points: string[];
+      preview: PreviewId;
+    }>;
   };
   previews: {
     eyebrow: string;
@@ -186,6 +202,7 @@ export const copy: Record<Language, SiteCopy> = {
       sectionsAria: "Page sections",
       features: "Why Optees",
       algorithms: "Algorithms",
+      machineLearning: "AI & Machine Learning",
       previews: "Screens",
       faq: "FAQ",
       download: "Download",
@@ -349,6 +366,33 @@ export const copy: Record<Language, SiteCopy> = {
             "Find the shortest route in directed or undirected weighted graphs with a source and destination, then inspect the highlighted route, total cost and settled-node trace.",
           details: ["Deterministic local Dijkstra", "JSON import/export", "Route visualization"],
           preview: "graphSolution",
+        },
+      ],
+    },
+    machineLearning: {
+      eyebrow: "AI & Machine Learning",
+      title: "Learn from data without hiding the method",
+      body:
+        "Optees treats educational machine learning as a transparent local workflow: define a numeric table, keep the train/test split reproducible, inspect the held-out result, and keep predictive claims separate from causal conclusions.",
+      assistant: {
+        title: "Draft structured data locally",
+        body:
+          "The Modeling Assistant can recommend Regression or Binary Classification from normal prose. It only prepares a loadable dataset after you explicitly name columns and provide pipe-separated rows; the same importer used by the form validates the draft before it can replace your work.",
+      },
+      workflows: [
+        {
+          title: "Linear Regression",
+          body:
+            "Fit OLS or Ridge models for a continuous numeric target, then compare training and held-out errors instead of trusting a single fitted line.",
+          points: ["OLS and Ridge", "MAE, MSE, RMSE, R-squared", "Coefficients and residuals"],
+          preview: "regressionSolution",
+        },
+        {
+          title: "Binary Classification",
+          body:
+            "Train local logistic regression for exactly two named outcomes and inspect the errors each class receives before treating the model as useful.",
+          points: ["Stratified split", "Precision, recall, F1", "Confusion matrix and 2D boundary"],
+          preview: "classificationSolution",
         },
       ],
     },
@@ -534,6 +578,7 @@ export const copy: Record<Language, SiteCopy> = {
       sectionsAria: "Sezioni della pagina",
       features: "Perché Optees",
       algorithms: "Algoritmi",
+      machineLearning: "AI e Machine Learning",
       previews: "Schermate",
       faq: "FAQ",
       download: "Download",
@@ -697,6 +742,33 @@ export const copy: Record<Language, SiteCopy> = {
             "Trova il percorso minimo in grafi pesati diretti o non diretti con sorgente e destinazione, poi ispeziona il percorso evidenziato, il costo totale e la traccia dei nodi stabilizzati.",
           details: ["Dijkstra locale deterministico", "Import/export JSON", "Visualizzazione del percorso"],
           preview: "graphSolution",
+        },
+      ],
+    },
+    machineLearning: {
+      eyebrow: "AI e Machine Learning",
+      title: "Impara dai dati senza nascondere il metodo",
+      body:
+        "Optees tratta il machine learning didattico come un flusso locale e trasparente: definisci una tabella numerica, mantieni riproducibile la divisione training/test, ispeziona il risultato lasciato fuori e separa le previsioni dalle conclusioni causali.",
+      assistant: {
+        title: "Prepara dati strutturati in locale",
+        body:
+          "L'Assistente di modellazione puo' raccomandare Regressione o Classificazione binaria da testo libero. Prepara un dataset caricabile solo dopo che dichiari esplicitamente le colonne e fornisci righe separate da |; lo stesso importer della form valida la bozza prima che possa sostituire il tuo lavoro.",
+      },
+      workflows: [
+        {
+          title: "Regressione Lineare",
+          body:
+            "Adatta modelli OLS o Ridge per un target numerico continuo, poi confronta errori di training e su righe lasciate fuori invece di fidarti di una sola retta stimata.",
+          points: ["OLS e Ridge", "MAE, MSE, RMSE, R-quadrato", "Coefficienti e residui"],
+          preview: "regressionSolution",
+        },
+        {
+          title: "Classificazione Binaria",
+          body:
+            "Addestra regressione logistica locale per esattamente due esiti nominati e ispeziona gli errori ricevuti da ciascuna classe prima di trattare il modello come utile.",
+          points: ["Split stratificato", "Precision, recall, F1", "Matrice di confusione e confine 2D"],
+          preview: "classificationSolution",
         },
       ],
     },
