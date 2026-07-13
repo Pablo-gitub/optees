@@ -87,10 +87,12 @@ otherwise tested first workflow, but it remains an explicit hardening item.
 ### Modeling Assistant
 
 - Fully local, deterministic, rule-based solver recommendation.
-- English and Italian natural-language regression prompts, including expert and
-  beginner wording.
-- Conservative LP, MILP, and Knapsack JSON drafting validated by the existing
-  importers before the UI may load a draft.
+- English and Italian natural-language prompts, including expert and beginner
+  wording for Regression and Binary Classification.
+- Conservative LP, MILP, Knapsack, Regression, and Binary Classification JSON
+  drafting validated by the existing importers before the UI may load a draft.
+  Regression and Classification require explicitly named columns and
+  pipe-separated rows; prose-only descriptions are recommendation-only.
 
 ### Nonlinear Programming
 
@@ -218,8 +220,10 @@ finite numeric features and exactly two labels, a deterministic stratified
 split, training-only standardization, accuracy/precision/recall/F1, confusion
 matrices, per-row probabilities, an optional 2D decision boundary, localized
 teaching pages, versioned JSON import, deterministic reference cases, and
-matched English/Italian assistant prompts. It does not draft datasets from
-prose and must not be treated as a fairness, causality, or deployment claim.
+matched English/Italian assistant prompts. The assistant can draft a dataset
+only from explicitly declared columns and pipe-separated rows, validates it
+through the importer, and never invents observations from prose. This workflow
+must not be treated as a fairness, causality, or deployment claim.
 
 The remaining work is:
 
@@ -300,7 +304,9 @@ order that reuses the new foundations.
 
 ### Phase 6 - Modeling Assistant: Structured Guidance
 
-Expand the assistant only after the target formulation pages exist.
+Extend the assistant only after the target formulation pages exist. Regression
+and Binary Classification already accept conservative, importer-validated
+drafts from explicit table notation; this phase must retain that safety bar.
 
 - Ask targeted follow-up questions instead of guessing omitted data.
 - Draft and validate structured JSON for the newly implemented families.

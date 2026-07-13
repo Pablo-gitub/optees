@@ -88,7 +88,7 @@
   "assistant": {
     "title": "Assistente di modellazione",
     "bubble_tooltip": "Apri assistente di modellazione",
-    "intro": "Questo primo assistente e' completamente locale e rule-based: nessun prompt viene inviato fuori dall'app. Puo' consigliare una famiglia di solver e, quando il testo contiene dati abbastanza strutturati, generare una bozza JSON validata dagli stessi importer usati da Optees.",
+    "intro": "Questo primo assistente e' completamente locale e rule-based: nessun prompt viene inviato fuori dall'app. Puo' consigliare una famiglia di solver e, quando il testo contiene dati abbastanza strutturati, generare una bozza JSON validata dagli stessi importer usati da Optees. Per Regressione o Classificazione binaria, dichiara colonne e righe separate da |, ad esempio: caratteristiche: superficie, stanze; bersaglio: prezzo; righe: 50 | 2 | 120; 60 | 2 | 140.",
     "prompt": {
       "label": "Descrizione del problema",
       "placeholder": "Esempio: massimizza 3x + 5y soggetto a 2x + y <= 10; x + 3y <= 12, con variabili continue non negative."

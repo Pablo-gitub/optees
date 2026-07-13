@@ -357,7 +357,7 @@ class ClassificationSolutionView(QWidget):
     @staticmethod
     def _cell(table: QTableWidget, row: int, column: int, text: str, alignment: Qt.AlignmentFlag = Qt.AlignLeft) -> None:
         item = QTableWidgetItem(text)
-        item.setTextAlignment(int(alignment | Qt.AlignVCenter))
+        item.setTextAlignment(alignment | Qt.AlignVCenter)
         table.setItem(row, column, item)
 
 

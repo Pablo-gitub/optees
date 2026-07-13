@@ -20,6 +20,8 @@ from optees.core.string_manager import strings as S
 from optees.utility.knapsack_json_io import knapsack_problem_from_dict
 from optees.utility.lp_json_io import lp_model_from_dict
 from optees.utility.milp_json_io import milp_model_from_dict
+from optees.utility.regression_json_io import regression_model_from_dict
+from optees.utility.classification_json_io import classification_model_from_dict
 import logging
 log = logging.getLogger(__name__)
 
@@ -161,6 +163,10 @@ class MainController(QObject):
             assistant.load_milp_requested.connect(self._load_assistant_milp_model)
         if hasattr(assistant, "load_knapsack_requested"):
             assistant.load_knapsack_requested.connect(self._load_assistant_knapsack_problem)
+        if hasattr(assistant, "load_regression_requested"):
+            assistant.load_regression_requested.connect(self._load_assistant_regression_model)
+        if hasattr(assistant, "load_classification_requested"):
+            assistant.load_classification_requested.connect(self._load_assistant_classification_model)
 
         self._wire_updates()
 
@@ -316,6 +322,22 @@ class MainController(QObject):
             if hasattr(knap, "load_json_problem"):
                 knap.load_json_problem(problem)  # type: ignore[attr-defined]
             self.window.goto("knapsack")
+        except Exception as exc:
+            self._show_assistant_load_error(exc)
+
+    def _load_assistant_regression_model(self, data: object) -> None:
+        try:
+            model = regression_model_from_dict(dict(data))  # type: ignore[arg-type]
+            self.window.regression_page.set_model(model)
+            self.window.goto("regression")
+        except Exception as exc:
+            self._show_assistant_load_error(exc)
+
+    def _load_assistant_classification_model(self, data: object) -> None:
+        try:
+            model = classification_model_from_dict(dict(data))  # type: ignore[arg-type]
+            self.window.classification_page.set_model(model)
+            self.window.goto("classification")
         except Exception as exc:
             self._show_assistant_load_error(exc)
 

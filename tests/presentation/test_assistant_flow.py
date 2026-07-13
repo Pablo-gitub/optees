@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import pytest
 
 pytest.importorskip("PySide6")
@@ -49,6 +51,45 @@ def test_assistant_view_recognizes_plain_bag_prompt(window, qtbot):
     assert '"capacity": 10.0' in preview
     assert '"laptop"' in preview
     assert window.assistant_page.btn_load.isVisible()
+
+
+def test_assistant_loads_a_validated_regression_draft_into_its_form(window, qtbot):
+    window.goto("assistant")
+    window.assistant_page.prompt.setPlainText(
+        "Fit linear regression. Features: floor_area, rooms; target: price; "
+        "rows: 50 | 2 | 120; 60 | 2 | 140; 70 | 3 | 170; 80 | 3 | 200"
+    )
+
+    qtbot.mouseClick(window.assistant_page.btn_analyze, Qt.LeftButton)
+
+    assert window.assistant_page.btn_load.isVisible()
+    payload = json.loads(window.assistant_page.json_preview.toPlainText())
+    window.assistant_page.load_regression_requested.emit(payload)
+
+    assert window.stack.currentWidget() is window.regression_page
+    model = window.regression_page.current_model()
+    assert model.dataset.feature_names == ("floor_area", "rooms")
+    assert model.dataset.target_name == "price"
+
+
+def test_assistant_loads_a_validated_classification_draft_into_its_form(window, qtbot):
+    window.goto("assistant")
+    window.assistant_page.prompt.setPlainText(
+        "Train binary classification. Features: income, debt; target: decision; "
+        "rows: 30 | 8 | rejected; 32 | 7 | rejected; 35 | 8 | rejected; "
+        "70 | 2 | approved; 75 | 3 | approved; 80 | 2 | approved"
+    )
+
+    qtbot.mouseClick(window.assistant_page.btn_analyze, Qt.LeftButton)
+
+    assert window.assistant_page.btn_load.isVisible()
+    payload = json.loads(window.assistant_page.json_preview.toPlainText())
+    window.assistant_page.load_classification_requested.emit(payload)
+
+    assert window.stack.currentWidget() is window.classification_page
+    model = window.classification_page.current_model()
+    assert model.dataset.feature_names == ("income", "debt")
+    assert model.dataset.labels == ("approved", "rejected")
 
 
 @pytest.mark.parametrize(

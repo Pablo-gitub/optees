@@ -88,7 +88,7 @@
   "assistant": {
     "title": "Modeling Assistant",
     "bubble_tooltip": "Open Modeling Assistant",
-    "intro": "This first assistant is fully local and rule-based: no prompt is sent outside the app. It can recommend a solver family and, when the prompt contains enough structured data, generate a JSON draft validated by the same importers used by Optees.",
+    "intro": "This first assistant is fully local and rule-based: no prompt is sent outside the app. It can recommend a solver family and, when the prompt contains enough structured data, generate a JSON draft validated by the same importers used by Optees. For Regression or Binary Classification, declare columns and pipe-separated rows, for example: features: area, rooms; target: price; rows: 50 | 2 | 120; 60 | 2 | 140.",
     "prompt": {
       "label": "Problem description",
       "placeholder": "Example: maximize 3x + 5y subject to 2x + y <= 10; x + 3y <= 12, with non-negative continuous variables."

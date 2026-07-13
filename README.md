@@ -71,7 +71,7 @@ More real application screens and platform downloads are available on the
 | **Graph Theory** | Dijkstra shortest paths on directed or undirected graphs with finite, non-negative weights, route reconstruction, and graph visualization. |
 | **Linear Regression** | Local OLS and Ridge regression for numeric tables, deterministic train/test splits, residuals, metrics, and a one-feature fit chart. |
 | **Binary Classification** | Local logistic regression for two labels, stratified held-out evaluation, accuracy/precision/recall/F1, confusion matrices, probabilities, and an optional 2D decision boundary. |
-| **Modeling Assistant** | English/Italian local rule-based recommendations for solver families. It can draft validated LP, MILP, and Knapsack JSON only when the prompt contains sufficient structured data. |
+| **Modeling Assistant** | English/Italian local rule-based recommendations for solver families. It drafts validated LP, MILP, Knapsack, Regression, and Binary Classification JSON only from explicit structured data; it never invents observations from prose. |
 
 ## Download And Run
 

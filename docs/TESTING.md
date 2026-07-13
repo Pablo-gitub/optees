@@ -55,6 +55,9 @@
 - `tests/adapters/test_assistant_classification_prompts.py`:
   equivalent English and Italian prompts across technical and colloquial
   descriptions.
+- `tests/adapters/test_assistant_ai_drafting.py`: explicit English/Italian
+  Regression and Binary Classification table drafts, importer validation,
+  decimal-comma handling, and refusal of ambiguous or invalid datasets.
 - `tests/presentation/test_classification_flow_happy.py`: Home navigation,
   train flow, imported data, localized documentation, and decision-boundary
   result view.

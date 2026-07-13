@@ -76,9 +76,12 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
 - Local deterministic family recommendation for LP, MILP, Knapsack, NLP,
   linear regression, binary classification, Scheduling, and Robust
   Optimization.
-- Conservative LP/MILP/Knapsack JSON drafting validated against Optees
-  importers. NLP is currently recommendation-only; structured NLP drafting is
-  deferred until its question-and-validation workflow exists.
+- Conservative LP/MILP/Knapsack JSON drafting plus Regression and Binary
+  Classification drafts from explicitly named, pipe-separated dataset rows.
+  Every draft is validated against the same Optees importer used by the form;
+  the assistant never invents observations from a prose-only description. NLP
+  is currently recommendation-only; structured NLP drafting is deferred until
+  its question-and-validation workflow exists.
 
 ### Graph Theory: Dijkstra Shortest Path
 

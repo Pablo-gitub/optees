@@ -6,9 +6,11 @@ from dataclasses import dataclass
 from typing import Any, Iterable
 
 from optees.domain.entities.assistant import AssistantAnalysis
+from optees.utility.classification_json_io import classification_model_from_dict
 from optees.utility.knapsack_json_io import knapsack_problem_from_dict
 from optees.utility.lp_json_io import lp_model_from_dict
 from optees.utility.milp_json_io import milp_model_from_dict
+from optees.utility.regression_json_io import regression_model_from_dict
 
 
 _FAMILY_LP = "lp"
@@ -345,9 +347,13 @@ class RuleBasedAssistantAdapter:
         elif family == _FAMILY_NLP:
             missing.append(_msg(language, "nlp_drafting_deferred"))
         elif family == _FAMILY_REGRESSION:
-            missing.append(_msg(language, "regression_drafting_deferred"))
+            model_json, missing = self._draft_regression(original, language)
+            if model_json is not None:
+                load_target = _FAMILY_REGRESSION
         elif family == _FAMILY_CLASSIFICATION:
-            missing.append(_msg(language, "classification_drafting_deferred"))
+            model_json, missing = self._draft_classification(original, language)
+            if model_json is not None:
+                load_target = _FAMILY_CLASSIFICATION
         elif family == _FAMILY_GRAPH:
             missing.append(_msg(language, "graph_drafting_deferred"))
         elif family in {_FAMILY_SCHEDULING, _FAMILY_ROBUST}:
@@ -359,6 +365,7 @@ class RuleBasedAssistantAdapter:
             validation_errors = self._validate_model_json(family, model_json)
             if validation_errors:
                 model_json = None
+                load_target = None
 
         confidence = _confidence(score, bool(model_json), family != _FAMILY_UNKNOWN)
         return AssistantAnalysis(
@@ -836,6 +843,26 @@ class RuleBasedAssistantAdapter:
             return None, missing
         return draft, missing
 
+    def _draft_regression(
+        self,
+        source: str,
+        language: str,
+    ) -> tuple[dict[str, Any] | None, list[str]]:
+        draft = _parse_supervised_dataset(source, problem_type="regression")
+        if draft is None:
+            return None, [_msg(language, "supervised_dataset_format")]
+        return draft, []
+
+    def _draft_classification(
+        self,
+        source: str,
+        language: str,
+    ) -> tuple[dict[str, Any] | None, list[str]]:
+        draft = _parse_supervised_dataset(source, problem_type="binary_classification")
+        if draft is None:
+            return None, [_msg(language, "supervised_dataset_format")]
+        return draft, []
+
     def _validate_model_json(self, family: str, data: dict[str, Any]) -> list[str]:
         try:
             if family == _FAMILY_LP:
@@ -844,6 +871,10 @@ class RuleBasedAssistantAdapter:
                 milp_model_from_dict(data)
             elif family == _FAMILY_KNAPSACK:
                 knapsack_problem_from_dict(data)
+            elif family == _FAMILY_REGRESSION:
+                regression_model_from_dict(data)
+            elif family == _FAMILY_CLASSIFICATION:
+                classification_model_from_dict(data)
             else:
                 return ["No importer is available for this family."]
         except Exception as exc:
@@ -1299,6 +1330,123 @@ def _to_number(raw: str) -> float:
     return float(str(raw).replace(",", "."))
 
 
+_SUPERVISED_FEATURE_FIELDS = (
+    "feature",
+    "features",
+    "caratteristica",
+    "caratteristiche",
+    "variabile",
+    "variabili",
+)
+_SUPERVISED_TARGET_FIELDS = (
+    "target",
+    "outcome",
+    "label",
+    "bersaglio",
+    "esito",
+    "classe",
+)
+_SUPERVISED_ROW_FIELDS = (
+    "rows",
+    "data",
+    "observations",
+    "records",
+    "righe",
+    "dati",
+    "osservazioni",
+)
+
+
+def _parse_supervised_dataset(source: str, *, problem_type: str) -> dict[str, Any] | None:
+    """Parse an intentionally small, unambiguous local table notation.
+
+    Natural language is sufficient for a solver recommendation, but it cannot
+    reliably encode a dataset. Drafting therefore requires named columns and
+    pipe-separated cells, for example::
+
+        features: area, rooms; target: price;
+        rows: 50 | 2 | 120; 60 | 2 | 140; 70 | 3 | 170; 80 | 3 | 200
+
+    Pipes make commas safe as decimal separators in Italian prompts. The model
+    importer remains the authority for row counts, label cardinality, and all
+    numerical validation.
+    """
+    feature_field = _extract_supervised_field(source, _SUPERVISED_FEATURE_FIELDS)
+    target_field = _extract_supervised_field(source, _SUPERVISED_TARGET_FIELDS)
+    rows_field = _extract_supervised_rows(source)
+    if feature_field is None or target_field is None or rows_field is None:
+        return None
+
+    feature_names = _split_supervised_feature_names(feature_field)
+    target_name = _clean_supervised_cell(target_field)
+    if not feature_names or not target_name:
+        return None
+
+    rows: list[dict[str, object]] = []
+    expected_width = len(feature_names) + 1
+    for raw_row in re.split(r"[;\n]+", rows_field):
+        row = raw_row.strip()
+        if not row:
+            continue
+        cells = [_clean_supervised_cell(cell) for cell in row.strip("|").split("|")]
+        if len(cells) != expected_width or any(not cell for cell in cells):
+            return None
+        try:
+            features = [_to_number(cell) for cell in cells[:-1]]
+            target: object = (
+                _to_number(cells[-1])
+                if problem_type == "regression"
+                else cells[-1]
+            )
+        except ValueError:
+            return None
+        rows.append({"features": features, "target": target})
+
+    if not rows:
+        return None
+
+    return {
+        "version": "1",
+        "problem_type": problem_type,
+        "dataset": {
+            "feature_names": feature_names,
+            "target_name": target_name,
+            "rows": rows,
+        },
+        "training_options": {},
+    }
+
+
+def _extract_supervised_field(source: str, labels: tuple[str, ...]) -> str | None:
+    label_pattern = "|".join(re.escape(label) for label in labels)
+    match = re.search(
+        rf"\b(?:{label_pattern})\b\s*:\s*([^;\n]+)",
+        source,
+        flags=re.IGNORECASE,
+    )
+    return match.group(1) if match else None
+
+
+def _extract_supervised_rows(source: str) -> str | None:
+    label_pattern = "|".join(re.escape(label) for label in _SUPERVISED_ROW_FIELDS)
+    match = re.search(
+        rf"\b(?:{label_pattern})\b\s*:\s*(.+)$",
+        source,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    return match.group(1) if match else None
+
+
+def _split_supervised_feature_names(raw: str) -> list[str]:
+    separator = "|" if "|" in raw else ","
+    values = [_clean_supervised_cell(value) for value in raw.split(separator)]
+    return values if values and all(values) else []
+
+
+def _clean_supervised_cell(value: str) -> str:
+    return value.strip().strip("`*_ ")
+
+
 _NUM = r"[-+]?\d+(?:[\.,]\d+)?"
 _STOP_WORDS = {
     "and",
@@ -1325,8 +1473,7 @@ _MESSAGES = {
         "problem_description": "problem description",
         "planned_family": "This family is recognized but its dedicated Optees form is not implemented yet.",
         "nlp_drafting_deferred": "The NLP form is available, but rule-based NLP JSON drafting is not implemented yet.",
-        "regression_drafting_deferred": "The Linear Regression form is available, but rule-based regression JSON drafting is not implemented yet.",
-        "classification_drafting_deferred": "The Binary Classification form is available, but rule-based classification JSON drafting is not implemented yet.",
+        "supervised_dataset_format": "an explicit dataset table: features: f1, f2; target: y; rows: 1 | 2 | label_or_value; ...",
         "graph_drafting_deferred": "The Shortest Path graph form is available, but rule-based graph JSON drafting is not implemented yet.",
         "problem_family": "problem family",
         "capacity": "capacity",
@@ -1356,8 +1503,7 @@ _MESSAGES = {
         "problem_description": "descrizione del problema",
         "planned_family": "Questa famiglia e' riconosciuta ma la schermata dedicata in Optees non e' ancora implementata.",
         "nlp_drafting_deferred": "La schermata NLP e' disponibile, ma la generazione rule-based di JSON NLP non e' ancora implementata.",
-        "regression_drafting_deferred": "La schermata di regressione lineare e' disponibile, ma la generazione rule-based di JSON per la regressione non e' ancora implementata.",
-        "classification_drafting_deferred": "La schermata di classificazione binaria e' disponibile, ma la generazione rule-based di JSON per la classificazione non e' ancora implementata.",
+        "supervised_dataset_format": "una tabella dati esplicita: caratteristiche: f1, f2; bersaglio: y; righe: 1 | 2 | etichetta_o_valore; ...",
         "graph_drafting_deferred": "La schermata del grafo (cammino minimo) e' disponibile, ma la generazione rule-based di JSON per i grafi non e' ancora implementata.",
         "problem_family": "famiglia del problema",
         "capacity": "capacita'",

@@ -30,6 +30,8 @@ class AssistantView(QWidget):
     load_lp_requested = Signal(object)
     load_milp_requested = Signal(object)
     load_knapsack_requested = Signal(object)
+    load_regression_requested = Signal(object)
+    load_classification_requested = Signal(object)
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
@@ -243,6 +245,10 @@ class AssistantView(QWidget):
             self.load_milp_requested.emit(payload)
         elif analysis.load_target == "knapsack":
             self.load_knapsack_requested.emit(payload)
+        elif analysis.load_target == "regression":
+            self.load_regression_requested.emit(payload)
+        elif analysis.load_target == "classification":
+            self.load_classification_requested.emit(payload)
 
     def _render_empty_result(self) -> None:
         self.lbl_family_value.setText("-")
