@@ -124,8 +124,23 @@ local SciPy methods implemented by Optees.
 These deterministic cases are not a predictive benchmark. They verify the
 local OLS implementation against known intercepts, feature coefficients, and
 held-out metrics under a fixed train/test split. Future dataset additions for
-classification and clustering must be redistributable, documented, and kept
-separate from performance claims.
+clustering must be redistributable, documented, and kept separate from
+performance claims.
+
+## Educational Binary Classification Reference Cases
+
+- **Included file:** `tests/data/classification/reference_cases.json`.
+- **Case:** a small, two-feature linearly separable dataset with two labels and
+  documented expected training and held-out accuracy under a fixed stratified
+  split.
+- **Tests:** `tests/utility/test_classification_reference_cases.py` plus
+  domain, JSON, use-case, adapter, presentation, and bilingual assistant tests.
+
+This is a deterministic implementation regression, not a scientific predictive
+benchmark. It checks the local logistic-regression contract, class-preserving
+split, metrics, and 2D visualization inputs. A future external classification
+dataset must be redistributable, documented with its intended evaluation
+protocol, and kept separate from fairness or real-world deployment claims.
 
 ## Graph Theory: Dijkstra Reference Cases
 
@@ -156,6 +171,8 @@ tests/data/
     reference_cases.json            # Analytic continuous NLP regressions
   regression/
     reference_cases.json            # Analytic OLS regression cases
+  classification/
+    reference_cases.json            # Logistic-regression reference case
 ```
 
 ## Adding A Dataset

@@ -33,6 +33,10 @@
     "regression": {
       "title": "Regressione lineare",
       "subtitle": "Usa questo metodo per apprendere e valutare una relazione numerica trasparente tra input continui e un target continuo."
+    },
+    "classification": {
+      "title": "Classificazione binaria",
+      "subtitle": "Usa questo metodo per prevedere una di due classi nominate da osservazioni numeriche e valutarla su dati lasciati fuori."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -51,7 +55,8 @@
     "knap": "Zaino 0/1",
     "nlp": "Programmazione Nonlineare (NLP)",
     "graph": "Cammino minimo (Dijkstra)",
-    "regression": "Regressione lineare"
+    "regression": "Regressione lineare",
+    "classification": "Classificazione binaria"
   },
   "settings": {
     "title": "Impostazioni",
@@ -109,6 +114,8 @@
       "knapsack": "Knapsack",
       "nlp": "Programmazione Nonlineare",
       "regression": "Regressione lineare",
+      "classification": "Classificazione binaria",
+      "graph": "Cammino minimo",
       "scheduling": "Scheduling",
       "robust": "Ottimizzazione robusta",
       "unknown": "Sconosciuta"
@@ -143,6 +150,10 @@
     "regression": {
       "dataset": "Usa almeno quattro osservazioni complete. Le celle di feature e target devono contenere valori numerici finiti e i nomi delle feature devono essere univoci.",
       "options": "Controlla metodo, quota test, seed casuale e valore positivo di alpha Ridge."
+    },
+    "classification": {
+      "dataset": "Usa esattamente due classi non vuote, almeno tre osservazioni complete per classe, valori numerici finiti per le feature e nomi feature univoci.",
+      "options": "Controlla quota test, seed casuale, learning rate, limite di iterazioni e valore non negativo di alpha L2."
     },
     "graph": {
       "weights": "Ogni peso di un arco deve essere un numero finito non negativo: Dijkstra non puo' usare pesi negativi.",
@@ -795,6 +806,75 @@
       "metrics": { "section": "Metriche di valutazione", "hint": "MAE, MSE e RMSE minori sono migliori sulla stessa scala del target. R-quadrato piu' alto e' migliore, ma puo' non essere disponibile per un target costante.", "partition": "Partizione", "mae": "MAE", "mse": "MSE", "rmse": "RMSE", "r_squared": "R-quadrato", "train": "Training", "test": "Test" },
       "predictions": { "section": "Previsioni e residui", "hint": "Residuo = target reale meno target previsto. Le righe test sono state escluse dall'addestramento.", "row": "Riga", "partition": "Partizione", "actual": "Reale", "predicted": "Previsto", "residual": "Residuo" },
       "plot": { "section": "Adattamento con una feature", "hint": "Questo grafico appare solo se il modello usa una sola feature. Separa osservazioni training e test lasciate fuori.", "unavailable": "Un grafico di adattamento e' disponibile solo quando il modello usa una sola feature e matplotlib e' installato.", "x_axis": "Feature", "y_axis": "Target", "line": "Retta stimata", "train": "Training", "test": "Test" }
+    }
+  },
+  "classification": {
+    "header": {
+      "title": "Classificazione binaria",
+      "section": "Formulazione del problema",
+      "description": "Scegli feature numeriche e un target categorico con esattamente due classi. Optees addestra localmente un classificatore di regressione logistica con una divisione training/test stratificata e riproducibile.",
+      "buttons": { "example": "Esempio", "problem": "Descrizione problema" }
+    },
+    "import": {
+      "button": "Importa JSON",
+      "dialog_title": "Apri modello di classificazione binaria",
+      "error_title": "Errore di importazione",
+      "error_body": "Impossibile caricare il file:\n{detail}",
+      "info_tooltip": "Formato JSON classificazione binaria",
+      "info_title": "Formato JSON classificazione binaria",
+      "info_body": "Usa schema versione 1 con problem_type binary_classification. Ogni riga contiene feature numeriche e una classe target testuale.",
+      "info_html": "<h3>Campi principali</h3><p>Usa <code>dataset</code> e <code>training_options</code>. Ogni riga ha un array <code>features</code> numerico e un <code>target</code> testuale.</p><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"binary_classification\",\n  \"dataset\": {\"feature_names\": [\"punteggio\"], \"target_name\": \"approvata\", \"rows\": [{\"features\": [81], \"target\": \"si\"}]},\n  \"training_options\": {\"test_fraction\": 0.25, \"random_seed\": 42}\n}</pre>"
+    },
+    "dataset": {
+      "section": "Dataset",
+      "hint": "Inserisci nomi delle feature numeriche separati da virgola e una classe target. Usa esattamente due classi non vuote e almeno tre osservazioni complete per ciascuna classe.",
+      "features": "Feature",
+      "features_placeholder": "es. reddito, eta",
+      "target": "Classe target",
+      "target_placeholder": "es. approvata",
+      "apply_columns": "Applica colonne",
+      "rows": "Osservazioni",
+      "add": "Aggiungi osservazione",
+      "remove": "Rimuovi selezionate",
+      "info_tooltip": "Informazioni sul dataset",
+      "info_title": "Dataset supervisionato binario",
+      "info_body": "Le feature sono input numerici. Il target contiene una di due classi, ad esempio no/si. La divisione stratificata mantiene entrambe le classi nei dati training e test.",
+      "info_html": "<h3>Una riga, un esito noto</h3><p>Per un semplice problema di approvazione, le feature possono essere reddito e debito mentre il target e' <code>si</code> o <code>no</code>. Una riga rappresenta un caso gia' osservato.</p><h3>Cosa questo flusso non fa</h3><p>Non deduce categorie dal testo, non gestisce valori mancanti e non dimostra che una previsione sia equa o causale. Prima di usare un classificatore in una decisione reale, controlla qualita' dei dati e conseguenze degli errori.</p>"
+    },
+    "training": {
+      "section": "Opzioni di addestramento",
+      "hint": "La regressione logistica standardizza le feature usando solo le righe training. Il seed rende riproducibile la divisione stratificata; alpha L2 penalizza i pesi delle feature ma non l'intercetta.",
+      "method": "Metodo",
+      "logistic": "Regressione logistica",
+      "test_fraction": "Quota test",
+      "seed": "Seed casuale",
+      "learning_rate": "Learning rate",
+      "max_iterations": "Max iterazioni",
+      "l2_alpha": "Alpha L2",
+      "info_tooltip": "Opzioni di addestramento",
+      "info_title": "Regressione logistica e valutazione separata",
+      "info_body": "Il modello stima la probabilita' della classe positiva con una sigmoide, poi assegna quella classe a probabilita' almeno del 50%. Standardizzazione e addestramento usano solo le righe training: le righe test non entrano nell'addestramento.",
+      "info_html": "<h3>Punteggio e probabilita'</h3><p>Il modello forma un punteggio pesato e lo trasforma in probabilita' con una sigmoide. Una probabilita' almeno pari a 0.5 riceve la classe positiva.</p><h3>Regolarizzazione</h3><p>Alpha L2 scoraggia pesi delle feature molto grandi. Puo' rendere il modello meno sensibile a feature rumorose o correlate, ma non sostituisce dati rappresentativi sufficienti.</p><h3>Riproducibilita'</h3><p>Usa lo stesso seed per riprodurre la stessa divisione training/test e lo stesso risultato.</p>"
+    },
+    "actions": { "train": "Addestra classificatore" },
+    "validation": {
+      "title": "Formulazione classificazione non valida",
+      "body": "Il classificatore non puo' essere addestrato:\n{detail}"
+    },
+    "solution": {
+      "title": "Risultato classificazione",
+      "back": "Indietro",
+      "empty": "Nessun risultato di classificazione.",
+      "summary": { "section": "Stato addestramento" },
+      "status_line": "Stato: <b>{status}</b>",
+      "status": { "trained": "Addestrato", "failed": "Fallito", "not_trained": "Non addestrato" },
+      "notice": "Accuracy, precision, recall e F1 dipendono dalla classe positiva scelta, dalla soglia, dalla divisione e dal bilanciamento delle classi. Non dimostrano equita', causalita' o prestazioni su dati futuri.",
+      "details": { "section": "Dettagli del modello", "method": "Metodo", "classes": "Classi (negativa / positiva)", "train_count": "Righe training", "test_count": "Righe test", "seed": "Seed casuale", "iterations": "Iterazioni", "message": "Messaggio", "converged": "convergente", "iteration_limit": "limite iterazioni" },
+      "coefficients": { "section": "Punteggio appreso", "hint": "I coefficienti usano feature standardizzate con media e scala calcolate solo sui dati training. Coefficienti positivi aumentano la probabilita' della classe positiva.", "feature": "Feature", "coefficient": "Coefficiente", "intercept": "Intercetta" },
+      "metrics": { "section": "Metriche di valutazione", "hint": "Accuracy e' la correttezza complessiva. Precision indica quanto spesso le previsioni positive erano corrette; recall quante classi positive reali sono state trovate; F1 le bilancia. Confronta training e test, soprattutto con classi sbilanciate.", "partition": "Partizione", "accuracy": "Accuracy", "precision": "Precision", "recall": "Recall", "f1": "F1", "train": "Training", "test": "Test" },
+      "confusion": { "section": "Matrice di confusione", "hint": "Le righe sono le classi reali e le colonne sono le classi previste. La classe positiva e' la seconda in ordine alfabetico mostrata nei dettagli del modello.", "partition": "Partizione", "actual": "Reale" },
+      "predictions": { "section": "Previsioni", "hint": "La probabilita' e' P(classe positiva | feature). Un valore almeno del 50% viene classificato come classe positiva.", "row": "Riga", "partition": "Partizione", "actual": "Reale", "predicted": "Prevista", "probability": "Probabilita' positiva" },
+      "boundary": { "section": "Confine decisionale 2D", "hint": "Il contorno nero e' il confine decisionale al 50%. Lo sfondo indica la probabilita' della classe prevista; i punti sono le osservazioni reali.", "unavailable": "Un grafico del confine decisionale e' disponibile solo quando il modello usa esattamente due feature e matplotlib e' installato.", "legend": "Classe reale" }
     }
   }
 }

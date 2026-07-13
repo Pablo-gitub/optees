@@ -62,6 +62,7 @@ class HomePage(QWidget):
     go_nlp = Signal()
     go_graph = Signal()
     go_regression = Signal()
+    go_classification = Signal()
     update_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None):
@@ -132,6 +133,11 @@ class HomePage(QWidget):
             S.t("cards.regression.subtitle"),
             icon_path=str(asset("icons/regression.svg")),
         )
+        self.card_classification = CardButton(
+            S.t("cards.classification.title"),
+            S.t("cards.classification.subtitle"),
+            icon_path=str(asset("icons/classification.svg")),
+        )
 
         # wire signals
         self.card_lp.clicked.connect(self.go_lp.emit)
@@ -140,6 +146,7 @@ class HomePage(QWidget):
         self.card_nlp.clicked.connect(self.go_nlp.emit)
         self.card_graph.clicked.connect(self.go_graph.emit)
         self.card_regression.clicked.connect(self.go_regression.emit)
+        self.card_classification.clicked.connect(self.go_classification.emit)
 
         # add cards to the first optimization category
         for card in (self.card_lp, self.card_milp, self.card_knap):
@@ -152,6 +159,7 @@ class HomePage(QWidget):
         root.addWidget(self.cat_graph)
 
         self.cat_ml.add_card(self.card_regression)
+        self.cat_ml.add_card(self.card_classification)
         root.addWidget(self.cat_ml)
         self._coming_labels = []
 
@@ -196,6 +204,10 @@ class HomePage(QWidget):
             f"<span style='font-weight:700'>{S.t('cards.regression.title')}</span>"
         )
         self.card_regression._sub.setText(S.t("cards.regression.subtitle"))
+        self.card_classification._title.setText(
+            f"<span style='font-weight:700'>{S.t('cards.classification.title')}</span>"
+        )
+        self.card_classification._sub.setText(S.t("cards.classification.subtitle"))
 
         # placeholders
         cs = S.t("home.comingSoon")
@@ -216,6 +228,7 @@ class HomePage(QWidget):
             self.card_nlp,
             self.card_graph,
             self.card_regression,
+            self.card_classification,
         ):
             card._apply_theme()
 

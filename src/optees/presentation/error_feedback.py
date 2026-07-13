@@ -36,6 +36,18 @@ def localized_error_detail(scope: str, error: Exception | str) -> str:
             return S.t("error_feedback.regression.options")
         return S.t("error_feedback.regression.dataset")
 
+    if scope == "classification_validation":
+        if _contains(
+            detail,
+            "test_fraction",
+            "seed",
+            "learning_rate",
+            "max_iterations",
+            "l2_alpha",
+        ):
+            return S.t("error_feedback.classification.options")
+        return S.t("error_feedback.classification.dataset")
+
     if scope == "graph_validation":
         if _contains(detail, "weight", "peso"):
             return S.t("error_feedback.graph.weights")

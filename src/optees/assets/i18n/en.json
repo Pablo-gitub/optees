@@ -33,6 +33,10 @@
     "regression": {
       "title": "Linear Regression",
       "subtitle": "Use this method to learn and evaluate a transparent numerical relationship between continuous inputs and a continuous target."
+    },
+    "classification": {
+      "title": "Binary Classification",
+      "subtitle": "Use this method to predict one of two named classes from numeric observations, then evaluate the prediction on held-out data."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -51,7 +55,8 @@
     "knap": "0/1 Knapsack",
     "nlp": "Nonlinear Programming (NLP)",
     "graph": "Shortest Path (Dijkstra)",
-    "regression": "Linear Regression"
+    "regression": "Linear Regression",
+    "classification": "Binary Classification"
   },
   "settings": {
     "title": "Settings",
@@ -109,6 +114,8 @@
       "knapsack": "Knapsack",
       "nlp": "Nonlinear Programming",
       "regression": "Linear Regression",
+      "classification": "Binary Classification",
+      "graph": "Shortest Path",
       "scheduling": "Scheduling",
       "robust": "Robust Optimization",
       "unknown": "Unknown"
@@ -143,6 +150,10 @@
     "regression": {
       "dataset": "Use at least four complete observations. Feature and target cells must contain finite numeric values, and feature names must be unique.",
       "options": "Check the method, test fraction, random seed, and positive Ridge alpha value."
+    },
+    "classification": {
+      "dataset": "Use exactly two non-empty class labels, at least three complete observations for each class, finite numeric feature values, and unique feature names.",
+      "options": "Check the test fraction, random seed, learning rate, iteration limit, and non-negative L2 alpha value."
     },
     "graph": {
       "weights": "Every edge weight must be a finite non-negative number because Dijkstra cannot use negative weights.",
@@ -797,6 +808,75 @@
       "metrics": { "section": "Evaluation metrics", "hint": "Lower MAE, MSE, and RMSE are better on the same target scale. Higher R-squared is better, but it may be unavailable for a constant target.", "partition": "Partition", "mae": "MAE", "mse": "MSE", "rmse": "RMSE", "r_squared": "R-squared", "train": "Training", "test": "Test" },
       "predictions": { "section": "Predictions and residuals", "hint": "Residual = actual target minus predicted target. Test rows were excluded from fitting.", "row": "Row", "partition": "Partition", "actual": "Actual", "predicted": "Predicted", "residual": "Residual" },
       "plot": { "section": "One-feature fit", "hint": "This chart is shown only when exactly one feature is selected. It separates training and held-out test observations.", "unavailable": "A fit chart is available only when the model uses exactly one feature and matplotlib is installed.", "x_axis": "Feature", "y_axis": "Target", "line": "Fitted line", "train": "Training", "test": "Test" }
+    }
+  },
+  "classification": {
+    "header": {
+      "title": "Binary Classification",
+      "section": "Problem setup",
+      "description": "Choose numeric input features and a categorical target with exactly two labels. Optees trains a local logistic-regression classifier on a reproducible stratified train/test split.",
+      "buttons": { "example": "Example", "problem": "Problem description" }
+    },
+    "import": {
+      "button": "Import JSON",
+      "dialog_title": "Open binary-classification model",
+      "error_title": "Import error",
+      "error_body": "Could not load the file:\n{detail}",
+      "info_tooltip": "Binary-classification JSON format",
+      "info_title": "Binary-classification JSON format",
+      "info_body": "Use schema version 1 with problem_type binary_classification. Each row contains numeric feature values and one string target label.",
+      "info_html": "<h3>Core fields</h3><p>Use <code>dataset</code> and <code>training_options</code>. Each row has a numeric <code>features</code> array and a string <code>target</code>.</p><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"binary_classification\",\n  \"dataset\": {\"feature_names\": [\"score\"], \"target_name\": \"approved\", \"rows\": [{\"features\": [81], \"target\": \"yes\"}]},\n  \"training_options\": {\"test_fraction\": 0.25, \"random_seed\": 42}\n}</pre>"
+    },
+    "dataset": {
+      "section": "Dataset",
+      "hint": "Enter comma-separated numeric feature names and a target class. Use exactly two non-empty labels and at least three complete observations for each label.",
+      "features": "Features",
+      "features_placeholder": "e.g. income, age",
+      "target": "Target class",
+      "target_placeholder": "e.g. approved",
+      "apply_columns": "Apply columns",
+      "rows": "Observations",
+      "add": "Add observation",
+      "remove": "Remove selected",
+      "info_tooltip": "Dataset information",
+      "info_title": "Binary supervised dataset",
+      "info_body": "Features are numeric inputs. The target contains one of two labels such as no/yes. A stratified split preserves both labels in training and test data.",
+      "info_html": "<h3>One row, one known outcome</h3><p>For a simple approval problem, features may be income and debt while the target is <code>yes</code> or <code>no</code>. A row represents an already observed case.</p><h3>What this workflow does not do</h3><p>It does not infer categories from text, handle missing values, or prove that a prediction is fair or causal. Inspect data quality and the consequences of mistakes before using a classifier in a real decision.</p>"
+    },
+    "training": {
+      "section": "Training options",
+      "hint": "Logistic Regression standardizes features using training rows only. The seed makes the stratified split reproducible; L2 alpha penalizes feature weights but not the intercept.",
+      "method": "Method",
+      "logistic": "Logistic Regression",
+      "test_fraction": "Test fraction",
+      "seed": "Random seed",
+      "learning_rate": "Learning rate",
+      "max_iterations": "Max iterations",
+      "l2_alpha": "L2 alpha",
+      "info_tooltip": "Training options",
+      "info_title": "Logistic Regression and held-out evaluation",
+      "info_body": "The model estimates the probability of the positive class with a sigmoid, then predicts that class at probability 50% or greater. Feature scaling and fitting use training rows only, so test rows do not leak into training.",
+      "info_html": "<h3>Score and probability</h3><p>The model forms a weighted score and maps it to a probability with a sigmoid. A probability of at least 0.5 receives the positive label.</p><h3>Regularization</h3><p>L2 alpha discourages large feature weights. It can make a model less sensitive to noisy or correlated features, but it does not replace enough representative data.</p><h3>Reproducibility</h3><p>Use the same seed to reproduce the same stratified train/test split and the same result.</p>"
+    },
+    "actions": { "train": "Train classifier" },
+    "validation": {
+      "title": "Invalid classification formulation",
+      "body": "The classifier cannot be trained:\n{detail}"
+    },
+    "solution": {
+      "title": "Classification Result",
+      "back": "Back",
+      "empty": "No classification result yet.",
+      "summary": { "section": "Training status" },
+      "status_line": "Status: <b>{status}</b>",
+      "status": { "trained": "Trained", "failed": "Failed", "not_trained": "Not trained" },
+      "notice": "Accuracy, precision, recall, and F1 depend on the selected positive label, threshold, split, and class balance. They do not prove fairness, causality, or performance on future data.",
+      "details": { "section": "Model details", "method": "Method", "classes": "Class labels (negative / positive)", "train_count": "Training rows", "test_count": "Test rows", "seed": "Random seed", "iterations": "Iterations", "message": "Message", "converged": "converged", "iteration_limit": "iteration limit" },
+      "coefficients": { "section": "Learned score", "hint": "Coefficients use features standardized with training-only mean and scale. Positive coefficients increase the probability of the positive label.", "feature": "Feature", "coefficient": "Coefficient", "intercept": "Intercept" },
+      "metrics": { "section": "Evaluation metrics", "hint": "Accuracy is overall correctness. Precision asks how often predicted positives were correct; recall asks how many actual positives were found; F1 balances them. Compare training and test, especially with imbalanced labels.", "partition": "Partition", "accuracy": "Accuracy", "precision": "Precision", "recall": "Recall", "f1": "F1", "train": "Training", "test": "Test" },
+      "confusion": { "section": "Confusion matrix", "hint": "Rows are actual labels and columns are predicted labels. The positive label is the second alphabetical label shown in Model details.", "partition": "Partition", "actual": "Actual" },
+      "predictions": { "section": "Predictions", "hint": "Probability is P(positive label | features). A value at least 50% is classified as the positive label.", "row": "Row", "partition": "Partition", "actual": "Actual", "predicted": "Predicted", "probability": "Positive probability" },
+      "boundary": { "section": "2D decision boundary", "hint": "The black contour is the 50% decision boundary. Background shading indicates the predicted-class probability; points are actual observations.", "unavailable": "A decision-boundary chart is available only when the model uses exactly two features and matplotlib is installed.", "legend": "Actual label" }
     }
   }
 }

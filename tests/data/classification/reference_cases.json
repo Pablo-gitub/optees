@@ -1,0 +1,24 @@
+{
+  "linearly_separable_2d": {
+    "feature_names": ["x1", "x2"],
+    "target_name": "approved",
+    "rows": [
+      {"features": [0, 0], "target": "no"},
+      {"features": [0, 1], "target": "no"},
+      {"features": [1, 0], "target": "no"},
+      {"features": [1, 1], "target": "no"},
+      {"features": [3, 3], "target": "yes"},
+      {"features": [3, 4], "target": "yes"},
+      {"features": [4, 3], "target": "yes"},
+      {"features": [4, 4], "target": "yes"}
+    ],
+    "training_options": {
+      "test_fraction": 0.25,
+      "random_seed": 17,
+      "learning_rate": 0.1,
+      "max_iterations": 2000,
+      "l2_alpha": 0.0
+    },
+    "expected": {"train_accuracy": 1.0, "test_accuracy": 1.0}
+  }
+}

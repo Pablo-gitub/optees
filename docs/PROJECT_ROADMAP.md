@@ -119,6 +119,9 @@ otherwise tested first workflow, but it remains an explicit hardening item.
 - Analytic affine reference cases verify the numerical contract. This workflow
   teaches a predictive fit and its limits; it does not claim causality or
   future performance.
+- Local binary classification with logistic regression, stratified train/test
+  splits, training-only feature standardization, accuracy/precision/recall/F1,
+  confusion matrices, and an optional 2D decision-boundary visualization.
 
 ### Product Delivery
 
@@ -202,24 +205,32 @@ an LLM provider, or a replacement for the Modeling Assistant.
 
 The delivery order is deliberately sequential.
 
-**Regression is implemented and verified locally.** The initial workflow
-provides OLS and Ridge for finite numeric tabular data, a deterministic
+**Regression and binary classification are implemented and verified locally.**
+The regression workflow provides OLS and Ridge for finite numeric tabular data, a deterministic
 train/test split, fixed random seed, selected feature and target names,
 MAE/MSE/RMSE/R-squared, residuals, a one-feature fit chart, localized teaching
 pages, versioned JSON import, and analytic affine reference cases. The result
 view explicitly separates training from held-out test observations and does
 not present a predictive fit as a causal conclusion.
 
+The binary-classification workflow provides local logistic regression for
+finite numeric features and exactly two labels, a deterministic stratified
+split, training-only standardization, accuracy/precision/recall/F1, confusion
+matrices, per-row probabilities, an optional 2D decision boundary, localized
+teaching pages, versioned JSON import, deterministic reference cases, and
+matched English/Italian assistant prompts. It does not draft datasets from
+prose and must not be treated as a fairness, causality, or deployment claim.
+
 The remaining work is:
 
-1. **Classification next:** binary classification with a transparent
-   baseline such as logistic regression, confusion matrix, accuracy,
-   precision, recall, F1, and an optional 2D decision-boundary visualization.
-   Class balance and train/test leakage must be explained, not hidden.
-2. **Clustering after classification:** local unsupervised clustering with k-means,
+1. **Clustering next:** local unsupervised clustering with k-means,
    user-selected `k`, reproducible seed, feature scaling made visible, inertia
    and silhouette diagnostics, and 2D/3D plots only for the selected displayed
    dimensions.
+2. **Classification hardening:** add a suitable redistributable external
+   benchmark only after its source, evaluation protocol, expected properties,
+   license, and CI budget are reviewed. Keep this distinct from claims about
+   fairness or production readiness.
 
 Every workflow must keep the same product standard as an optimizer: a domain
 model, a stable port and adapter, versioned structured import when appropriate,
@@ -282,7 +293,7 @@ order that reuses the new foundations.
 | Knapsack | Multiple-choice Knapsack, additional benchmark suites, and heuristic-versus-exact comparison for instances where DP or MILP becomes expensive. |
 | NLP | Nonlinear constraints, least squares, quadratic programming, nonlinear minimax, and global methods such as differential evolution. |
 | Graph Theory | Bellman-Ford, minimum spanning tree, max flow/min cut, matching, and exact/heuristic TSP comparison. |
-| AI & Machine Learning | Regularization and validation improvements after regression, then interpretable classification and clustering diagnostics; each expansion keeps local, reproducible data handling. |
+| AI & Machine Learning | Regularization and validation improvements after regression and binary classification, then clustering diagnostics; each expansion keeps local, reproducible data handling. |
 | Heuristics | Simulated Annealing, then problem-specific Genetic Algorithm or Tabu Search; every result keeps seed, budget, incumbent trace, and feasibility diagnostics. |
 | Scheduling | Parallel-machine makespan first, using a MILP formulation and later heuristic comparators; time-indexed and sequence-dependent models follow only with dedicated visualizations. |
 | Robust & Stochastic Optimization | Explicit scenario model, min-max regret, then newsvendor and revenue-management workflows with uncertainty assumptions visible in the UI. |

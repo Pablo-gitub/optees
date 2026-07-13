@@ -57,10 +57,25 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
   are explicitly presented as predictive fits, not causal conclusions or
   guarantees of future performance.
 
+### Educational AI & Machine Learning: Binary Classification
+
+- Local binary logistic regression for finite numeric feature tables with
+  exactly two non-empty target labels.
+- Deterministic stratified train/test splitting. Feature standardization is
+  fitted on training rows only and reused on held-out test rows, preventing
+  train/test leakage.
+- Accuracy, precision, recall, F1, confusion matrices, per-row predicted
+  probabilities, and a 50% decision-boundary chart when exactly two features
+  are selected.
+- Versioned JSON import/export and reference cases for a linearly separable
+  two-dimensional dataset. Results are explicitly educational predictive fits,
+  not evidence of fairness, causality, or future real-world performance.
+
 ### Modeling Assistant
 
 - Local deterministic family recommendation for LP, MILP, Knapsack, NLP,
-  Scheduling, and Robust Optimization.
+  linear regression, binary classification, Scheduling, and Robust
+  Optimization.
 - Conservative LP/MILP/Knapsack JSON drafting validated against Optees
   importers. NLP is currently recommendation-only; structured NLP drafting is
   deferred until its question-and-validation workflow exists.
@@ -78,8 +93,9 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
 
 The next sections are introduced in this order:
 
-1. Educational AI & Machine Learning: transparent binary classification, then
-   k-means clustering, using the same local-data and evaluation contract.
+1. Educational AI & Machine Learning: k-means clustering, using the same
+   local-data and evaluation contract after the shipped regression and binary
+   classification workflows.
 2. Heuristics & Metaheuristics: TSP constructive/local-search baseline, then
    Simulated Annealing and problem-specific metaheuristics.
 3. Scheduling and Robust/Stochastic Optimization: workflow-specific models

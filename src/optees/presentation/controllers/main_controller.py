@@ -14,6 +14,7 @@ from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.nlp_view import NLPView
 from optees.presentation.views.graph_view import GraphView
 from optees.presentation.views.regression_view import RegressionView
+from optees.presentation.views.classification_view import ClassificationView
 from optees.presentation.views.home_view import HomePage  # usa lo stesso nome che usi nel MainWindow
 from optees.core.string_manager import strings as S
 from optees.utility.knapsack_json_io import knapsack_problem_from_dict
@@ -43,6 +44,8 @@ class MainController(QObject):
             home.go_graph.connect(lambda: self.window.goto("graph"))
         if hasattr(home, "go_regression"):
             home.go_regression.connect(lambda: self.window.goto("regression"))
+        if hasattr(home, "go_classification"):
+            home.go_classification.connect(lambda: self.window.goto("classification"))
 
         # LP -> Solution
         lp: LPView = self.window.page("lp")  # type: ignore[assignment]
@@ -136,6 +139,18 @@ class MainController(QObject):
         regression_solution = self.window.page("regression_solution")
         if hasattr(regression_solution, "back_requested"):
             regression_solution.back_requested.connect(lambda: self.window.goto("regression"))
+
+        classification: ClassificationView = self.window.page("classification")  # type: ignore[assignment]
+        classification.solve_completed.connect(self._on_classification_trained)
+        classification.example_requested.connect(lambda: self.window.goto("classification_example"))
+        classification.problem_description_requested.connect(lambda: self.window.goto("classification_problem"))
+        for name in ("classification_example", "classification_problem"):
+            info_view = self.window.page(name)
+            if hasattr(info_view, "back_requested"):
+                info_view.back_requested.connect(lambda _=False: self.window.goto("classification"))
+        classification_solution = self.window.page("classification_solution")
+        if hasattr(classification_solution, "back_requested"):
+            classification_solution.back_requested.connect(lambda: self.window.goto("classification"))
 
         assistant = self.window.page("assistant")
         if hasattr(assistant, "back_requested"):
@@ -266,6 +281,17 @@ class MainController(QObject):
         if hasattr(sol_view, "set_solution"):
             sol_view.set_solution(solution)  # type: ignore[attr-defined]
         self.window.goto("regression_solution")
+
+    def _on_classification_trained(self, solution) -> None:
+        sol_view = self.window.page("classification_solution")
+        try:
+            if hasattr(sol_view, "set_problem"):
+                sol_view.set_problem(self.window.classification_page.current_model())  # type: ignore[attr-defined]
+        except Exception:
+            pass
+        if hasattr(sol_view, "set_solution"):
+            sol_view.set_solution(solution)  # type: ignore[attr-defined]
+        self.window.goto("classification_solution")
 
     def _load_assistant_lp_model(self, data: object) -> None:
         try:

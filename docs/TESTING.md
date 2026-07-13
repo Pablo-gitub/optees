@@ -44,6 +44,20 @@
 - `tests/presentation/test_graph_flow_happy.py`: graph Home navigation, manual
   solve flow, imported graph form, highlighted route result, and unreachable
   explanation.
+- `tests/domain/test_classification_model.py`,
+  `tests/utility/test_classification_utils.py`,
+  `tests/utility/test_classification_json_io.py`, and
+  `tests/application/usecases/test_train_classification_usecase.py`: binary
+  classification validation, local logistic regression, held-out metrics,
+  versioned JSON, and canonical mapping.
+- `tests/utility/test_classification_reference_cases.py`:
+  deterministic two-dimensional logistic-regression reference case.
+- `tests/adapters/test_assistant_classification_prompts.py`:
+  equivalent English and Italian prompts across technical and colloquial
+  descriptions.
+- `tests/presentation/test_classification_flow_happy.py`: Home navigation,
+  train flow, imported data, localized documentation, and decision-boundary
+  result view.
 
 ## Commands
 ```bash

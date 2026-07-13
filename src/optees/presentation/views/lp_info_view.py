@@ -296,3 +296,13 @@ class RegressionExampleView(LPInfoView):
 class RegressionProblemDescriptionView(LPInfoView):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__("regression_problem", parent=parent)
+
+
+class ClassificationExampleView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("classification_example", parent=parent)
+
+
+class ClassificationProblemDescriptionView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("classification_problem", parent=parent)
