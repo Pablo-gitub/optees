@@ -1,0 +1,43 @@
+{
+  "source": "Analytic deterministic regression references",
+  "cases": [
+    {
+      "id": "one_feature_affine",
+      "problem": {
+        "feature_names": ["size"],
+        "target_name": "price",
+        "feature_rows": [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10]],
+        "target_values": [5, 8, 11, 14, 17, 20, 23, 26, 29, 32],
+        "method": "OLS",
+        "test_fraction": 0.2,
+        "random_seed": 17,
+        "ridge_alpha": 1.0
+      },
+      "expected": {
+        "intercept": 2.0,
+        "coefficients": {"size": 3.0},
+        "test_rmse": 0.0,
+        "test_r_squared": 1.0
+      }
+    },
+    {
+      "id": "two_feature_affine",
+      "problem": {
+        "feature_names": ["area", "rooms"],
+        "target_name": "price",
+        "feature_rows": [[0, 0], [1, 0], [0, 1], [1, 1], [2, 0], [0, 2], [2, 1], [1, 2], [3, 1], [2, 2]],
+        "target_values": [5, 7, 2, 4, 9, -1, 6, 1, 8, 3],
+        "method": "OLS",
+        "test_fraction": 0.2,
+        "random_seed": 23,
+        "ridge_alpha": 1.0
+      },
+      "expected": {
+        "intercept": 5.0,
+        "coefficients": {"area": 2.0, "rooms": -3.0},
+        "test_rmse": 0.0,
+        "test_r_squared": 1.0
+      }
+    }
+  ]
+}

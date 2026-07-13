@@ -8,13 +8,14 @@ dynamic = ["version"]
 requires-python = ">=3.12"
 dependencies = [
     "PySide6",
+    "numpy",
     "scipy",
     "ortools",
     "markdown",
 ]
 
 [project.optional-dependencies]
-plot = ["matplotlib", "numpy"]
+plot = ["matplotlib"]
 
 [project.gui-scripts]
 optees = "optees.main:main"
