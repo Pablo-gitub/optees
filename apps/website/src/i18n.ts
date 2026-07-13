@@ -1,11 +1,12 @@
 export type Language = "en" | "it";
-export type AlgorithmId = "lp" | "milp" | "knapsack" | "nlp" | "graph";
+export type AlgorithmId = "lp" | "milp" | "knapsack" | "nlp" | "regression" | "graph";
 export type PreviewId =
   | "home"
   | "lpSolution"
   | "knapsack"
   | "knapsackSolution"
   | "nlpSolution"
+  | "regressionSolution"
   | "graphSolution";
 export type FeatureId =
   | "assistant"
@@ -174,9 +175,9 @@ export const copy: Record<Language, SiteCopy> = {
     meta: {
       title: "Optees — Open-Source Operations Research Software",
       description:
-        "Free, open-source desktop app for Linear Programming, Mixed-Integer Programming, Knapsack, continuous Nonlinear Programming and Dijkstra shortest paths. Model and solve locally with a guided assistant and educational solution views.",
+        "Free, open-source desktop app for Linear Programming, Mixed-Integer Programming, Knapsack, continuous Nonlinear Programming, educational Linear Regression and Dijkstra shortest paths. Model and solve locally with a guided assistant and educational solution views.",
       ogDescription:
-        "Model, solve and understand LP, MILP, Knapsack, continuous NLP and Dijkstra shortest paths in a private local desktop app.",
+        "Model, solve and understand LP, MILP, Knapsack, continuous NLP, Linear Regression and Dijkstra shortest paths in a private local desktop app.",
     },
     nav: {
       aria: "Primary navigation",
@@ -203,13 +204,13 @@ export const copy: Record<Language, SiteCopy> = {
       title: "Operations research,",
       titleAccent: "made effortless.",
       copy:
-        "Optees turns operations-research methods into a desktop app anyone can use. Model LP, MILP and five Knapsack variants, explore continuous nonlinear objectives, or find a Dijkstra shortest path — then understand every result without scripting.",
+        "Optees turns operations-research methods into a desktop app anyone can use. Model LP, MILP and five Knapsack variants, explore continuous nonlinear objectives, fit transparent linear regression, or find a Dijkstra shortest path — then understand every result without scripting.",
       source: "Star on GitHub",
       stackLabel: "Powered by",
       stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Dijkstra", "Netlib"],
       metricsAria: "Project highlights",
       metrics: [
-        { value: "5", label: "Algorithm workflows, ready to use" },
+        { value: "6", label: "Algorithm workflows, ready to use" },
         { value: "5", label: "Knapsack variants in one flow" },
         { value: "100%", label: "Local & private, no cloud" },
         { value: "MIT", label: "Free and open source" },
@@ -246,7 +247,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "benchmarks",
           title: "Benchmark-backed",
           body:
-            "LP and MILP regressions use Netlib and MIPLIB. Knapsack includes Burkardt and OR-Library cases; NLP and graph workflows use documented analytic or deterministic reference cases.",
+            "LP and MILP regressions use Netlib and MIPLIB. Knapsack includes Burkardt and OR-Library cases; NLP, regression, and graph workflows use documented analytic or deterministic reference cases.",
         },
         {
           id: "local",
@@ -316,6 +317,17 @@ export const copy: Record<Language, SiteCopy> = {
           preview: "nlpSolution",
         },
         {
+          id: "regression",
+          label: "Linear Regression",
+          short: "REG",
+          status: "Available",
+          formula: "y_hat = beta_0 + Σ beta_j x_j",
+          description:
+            "Educational OLS and Ridge regression for continuous targets, with a deterministic train/test split, learned coefficients, residuals, and held-out metrics.",
+          details: ["OLS and Ridge", "MAE / MSE / RMSE / R-squared", "Local numeric training"],
+          preview: "regressionSolution",
+        },
+        {
           id: "graph",
           label: "Graph Theory: Dijkstra",
           short: "DSP",
@@ -368,6 +380,13 @@ export const copy: Record<Language, SiteCopy> = {
           title: "Inspect local numerical behaviour",
           body: "See the candidate point, termination status and objective landscape. The view makes the local nature of numerical optimization explicit.",
           alt: "Optees nonlinear-programming solution view with candidate details and objective plot",
+        },
+        {
+          id: "regressionSolution",
+          window: "Optees — Regression result",
+          title: "Evaluate a transparent predictive fit",
+          body: "Inspect coefficients, split-aware error metrics, residuals, and the fitted line without treating a small dataset as a causal conclusion.",
+          alt: "Optees linear regression solution view with learned coefficients, metrics, residuals, and fitted line",
         },
         {
           id: "graphSolution",
@@ -428,7 +447,7 @@ export const copy: Record<Language, SiteCopy> = {
       items: [
         {
           q: "What is Optees?",
-          a: "Optees is a free, open-source desktop app for operations research. You can model, solve and inspect LP, MILP, five Knapsack variants, continuous Nonlinear Programming and Dijkstra shortest-path problems without writing code.",
+          a: "Optees is a free, open-source desktop app for operations research. You can model, solve and inspect LP, MILP, five Knapsack variants, continuous Nonlinear Programming, educational Linear Regression and Dijkstra shortest-path problems without writing code.",
         },
         {
           q: "Who is it for?",
@@ -448,7 +467,7 @@ export const copy: Record<Language, SiteCopy> = {
         },
         {
           q: "What is coming next?",
-          a: "The roadmap next focuses on educational AI and machine-learning workflows, then heuristics and metaheuristics, while benchmark hardening continues across the released families.",
+          a: "The roadmap next adds transparent classification and clustering to the educational AI and machine-learning section, then heuristics and metaheuristics, while benchmark hardening continues across the released families.",
         },
       ],
     },
@@ -486,9 +505,9 @@ export const copy: Record<Language, SiteCopy> = {
     meta: {
       title: "Optees — Software Open Source per Ricerca Operativa",
       description:
-        "App desktop gratuita e open source per Programmazione Lineare, Intera Mista, Knapsack, Programmazione Non Lineare continua e cammini minimi di Dijkstra. Modella e risolvi in locale con assistente guidato e viste didattiche.",
+        "App desktop gratuita e open source per Programmazione Lineare, Intera Mista, Knapsack, Programmazione Non Lineare continua, Regressione Lineare didattica e cammini minimi di Dijkstra. Modella e risolvi in locale con assistente guidato e viste didattiche.",
       ogDescription:
-        "Modella, risolvi e comprendi LP, MILP, Knapsack, NLP continua e cammini minimi di Dijkstra in un'app desktop privata e locale.",
+        "Modella, risolvi e comprendi LP, MILP, Knapsack, NLP continua, Regressione Lineare e cammini minimi di Dijkstra in un'app desktop privata e locale.",
     },
     nav: {
       aria: "Navigazione principale",
@@ -515,13 +534,13 @@ export const copy: Record<Language, SiteCopy> = {
       title: "La ricerca operativa,",
       titleAccent: "resa semplice.",
       copy:
-        "Optees trasforma metodi di ricerca operativa in un'app desktop alla portata di tutti. Modella LP, MILP e cinque varianti Knapsack, esplora obiettivi non lineari continui o trova un cammino minimo con Dijkstra, poi comprendi ogni risultato senza scrivere codice.",
+        "Optees trasforma metodi di ricerca operativa in un'app desktop alla portata di tutti. Modella LP, MILP e cinque varianti Knapsack, esplora obiettivi non lineari continui, adatta una regressione lineare trasparente o trova un cammino minimo con Dijkstra, poi comprendi ogni risultato senza scrivere codice.",
       source: "Metti una stella su GitHub",
       stackLabel: "Basato su",
       stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Dijkstra", "Netlib"],
       metricsAria: "Punti chiave del progetto",
       metrics: [
-        { value: "5", label: "Flussi algoritmici pronti all'uso" },
+        { value: "6", label: "Flussi algoritmici pronti all'uso" },
         { value: "5", label: "Varianti Knapsack in un solo flusso" },
         { value: "100%", label: "Locale e privato, nessun cloud" },
         { value: "MIT", label: "Gratuito e open source" },
@@ -558,7 +577,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "benchmarks",
           title: "Validato su benchmark",
           body:
-            "LP e MILP usano regressioni Netlib e MIPLIB. Knapsack include casi Burkardt e OR-Library; NLP e grafi usano casi analitici o deterministici documentati.",
+            "LP e MILP usano regressioni Netlib e MIPLIB. Knapsack include casi Burkardt e OR-Library; NLP, regressione e grafi usano casi analitici o deterministici documentati.",
         },
         {
           id: "local",
@@ -628,6 +647,17 @@ export const copy: Record<Language, SiteCopy> = {
           preview: "nlpSolution",
         },
         {
+          id: "regression",
+          label: "Regressione Lineare",
+          short: "REG",
+          status: "Disponibile",
+          formula: "y_hat = beta_0 + Σ beta_j x_j",
+          description:
+            "Regressione OLS e Ridge didattica per target continui, con divisione training/test deterministica, coefficienti appresi, residui e metriche sulle righe lasciate fuori.",
+          details: ["OLS e Ridge", "MAE / MSE / RMSE / R-quadrato", "Addestramento numerico locale"],
+          preview: "regressionSolution",
+        },
+        {
           id: "graph",
           label: "Teoria dei Grafi: Dijkstra",
           short: "DSP",
@@ -680,6 +710,13 @@ export const copy: Record<Language, SiteCopy> = {
           title: "Ispeziona il comportamento numerico locale",
           body: "Visualizza il punto candidato, lo stato di arresto e il paesaggio dell'obiettivo. La vista rende esplicita la natura locale dell'ottimizzazione numerica.",
           alt: "Vista soluzione di programmazione non lineare in Optees con dettagli del candidato e grafico dell'obiettivo",
+        },
+        {
+          id: "regressionSolution",
+          window: "Optees — Risultato regressione",
+          title: "Valuta una previsione trasparente",
+          body: "Ispeziona coefficienti, metriche per partizione, residui e retta stimata senza trattare un piccolo dataset come una conclusione causale.",
+          alt: "Vista soluzione di regressione lineare in Optees con coefficienti appresi, metriche, residui e retta stimata",
         },
         {
           id: "graphSolution",
@@ -740,7 +777,7 @@ export const copy: Record<Language, SiteCopy> = {
       items: [
         {
           q: "Cos'è Optees?",
-          a: "Optees e' un'app desktop gratuita e open source per la ricerca operativa. Puoi modellare, risolvere e ispezionare LP, MILP, cinque varianti Knapsack, Programmazione Non Lineare continua e cammini minimi di Dijkstra senza scrivere codice.",
+          a: "Optees e' un'app desktop gratuita e open source per la ricerca operativa. Puoi modellare, risolvere e ispezionare LP, MILP, cinque varianti Knapsack, Programmazione Non Lineare continua, Regressione Lineare didattica e cammini minimi di Dijkstra senza scrivere codice.",
         },
         {
           q: "A chi è rivolto?",
@@ -760,7 +797,7 @@ export const copy: Record<Language, SiteCopy> = {
         },
         {
           q: "Cosa arriverà in futuro?",
-          a: "La roadmap punta ora a flussi didattici di AI e machine learning, poi a euristiche e metaeuristiche, mentre il rafforzamento dei benchmark prosegue sulle famiglie gia' rilasciate.",
+          a: "La roadmap aggiunge ora classificazione e clustering trasparenti alla sezione didattica di AI e machine learning, poi euristiche e metaeuristiche, mentre il rafforzamento dei benchmark prosegue sulle famiglie gia' rilasciate.",
         },
       ],
     },

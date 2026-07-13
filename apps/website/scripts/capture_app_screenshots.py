@@ -30,6 +30,8 @@ from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 from optees.domain.models.lp.lp_model import LPModel
 from optees.domain.models.graph.shortest_path_model import ShortestPathModel
 from optees.domain.models.nlp.nlp_model import NLPModel, NLPOptions
+from optees.domain.models.regression.regression_model import RegressionModel, RegressionOptions
+from optees.domain.entities.regression.dataset import RegressionDataset
 from optees.domain.value_objects.knapsack.variant import KnapsackVariant
 from optees.domain.value_objects.lp.bounds import Bounds
 from optees.domain.value_objects.lp.objective_sense import ObjectiveSense
@@ -124,6 +126,26 @@ def _delivery_graph_model() -> ShortestPathModel:
     )
 
 
+def _regression_model() -> RegressionModel:
+    return RegressionModel(
+        RegressionDataset.from_rows(
+            feature_names=("floor_area",),
+            target_name="price",
+            rows=[
+                ((40,), 100),
+                ((50,), 130),
+                ((60,), 150),
+                ((70,), 180),
+                ((80,), 200),
+                ((90,), 235),
+                ((100,), 255),
+                ((110,), 285),
+            ],
+        ),
+        RegressionOptions(test_fraction=0.25, random_seed=42),
+    )
+
+
 def main() -> None:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -167,6 +189,12 @@ def main() -> None:
     window.graph_solution_page.set_problem(graph_model)
     window.graph_solution_page.set_solution(graph_solution)
     _capture(window, "optees-graph-solution.png", "graph_solution")
+
+    regression_model = _regression_model()
+    regression_solution = window.train_regression_uc.execute(regression_model)
+    window.regression_solution_page.set_problem(regression_model)
+    window.regression_solution_page.set_solution(regression_solution)
+    _capture(window, "optees-regression-solution.png", "regression_solution")
 
     window.close()
 
