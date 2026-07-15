@@ -1339,6 +1339,7 @@ main,
 
 .split-primary {
   border-radius: 999px 0 0 999px;
+  white-space: nowrap;
 }
 
 .split-download.split-box .split-primary {
@@ -1799,6 +1800,16 @@ main,
 
   .hero-actions .split-primary {
     flex: 1;
+  }
+
+  .download-panel {
+    padding: 24px 20px;
+    gap: 24px;
+    border-radius: 20px;
+  }
+
+  .download-box {
+    padding: 20px;
   }
 }
 
