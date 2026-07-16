@@ -19,3 +19,9 @@ __all__ = [
     "StructuredError",
     "TerminationReason",
 ]
+from optees.application.contracts.capability import (
+    CapabilityDescriptor,
+    ProblemValidation,
+)
+
+__all__ = ["CapabilityDescriptor", "ProblemValidation"]
