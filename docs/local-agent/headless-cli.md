@@ -67,7 +67,7 @@ replace the versioned result contract.
 
 ## Current Scope
 
-The Phase 3 proof exposes only `lp.continuous`. It intentionally has no HTTP
-server, queue, persistent job state, arbitrary code execution, or unrestricted
-problem-format conversion. Additional capabilities are migrated through the
-same registry and facade in later phases.
+The registry currently exposes `lp.continuous` and `knapsack.zero_one`. It
+intentionally has no HTTP server, queue, persistent job state, arbitrary code
+execution, or unrestricted problem-format conversion. Additional capabilities
+are migrated through the same registry and facade one contract at a time.

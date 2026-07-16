@@ -60,7 +60,32 @@ def test_list_capabilities_emits_one_versioned_json_document():
     assert result.returncode == ExitCode.SUCCESS
     assert result.stderr == ""
     assert payload["contract_version"] == "1"
-    assert payload["capabilities"][0]["id"] == "lp.continuous"
+    assert {item["id"] for item in payload["capabilities"]} == {
+        "lp.continuous",
+        "knapsack.zero_one",
+    }
+
+
+def test_solve_zero_one_knapsack_through_cli():
+    payload = {
+        "version": "1",
+        "problem_type": "knapsack",
+        "variant": "zero_one",
+        "capacity": 5,
+        "items": [
+            {"name": "A", "value": 6, "weight": 2},
+            {"name": "B", "value": 10, "weight": 4},
+            {"name": "C", "value": 5, "weight": 3},
+        ],
+    }
+
+    result = _run("solve", "knapsack.zero_one", stdin=json.dumps(payload))
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.SUCCESS
+    assert output["mathematical_status"] == "optimal"
+    assert output["result"]["selected_indices"] == [0, 2]
+    assert output["result"]["objective"] == pytest.approx(11.0)
 
 
 def test_validate_accepts_problem_from_stdin_without_solving():
