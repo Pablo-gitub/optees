@@ -126,7 +126,7 @@ def test_production_service_solves_burkardt_reference_instances(instance: str):
 def test_production_registry_contains_lp_and_zero_one_knapsack():
     descriptors = create_local_optimization_service().list_capabilities()
 
-    assert {descriptor["id"] for descriptor in descriptors} == {
+    assert {
         "lp.continuous",
         "knapsack.zero_one",
-    }
+    } <= {descriptor["id"] for descriptor in descriptors}

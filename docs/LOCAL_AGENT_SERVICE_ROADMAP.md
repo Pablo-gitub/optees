@@ -265,12 +265,13 @@ Migrate one capability per atomic step. Every migration requires:
 Suggested order:
 
 1. [x] 0/1 Knapsack;
-2. [ ] remaining Knapsack variants;
-3. [ ] MILP;
-4. [ ] Dijkstra;
-5. [ ] NLP;
-6. [ ] Regression and Binary Classification;
-7. [ ] Single-container 3D Packing as the long-running cancellable case.
+2. [x] Bounded Knapsack;
+3. [ ] Unbounded, Fractional, and Multi-dimensional Knapsack;
+4. [ ] MILP;
+5. [ ] Dijkstra;
+6. [ ] NLP;
+7. [ ] Regression and Binary Classification;
+8. [ ] Single-container 3D Packing as the long-running cancellable case.
 
 `knapsack.zero_one` reuses the shared schema-v1 Knapsack importer through an
 application-owned mapper, the existing `SolveKnapsackUseCase`, and the exact
@@ -278,6 +279,11 @@ dynamic-programming adapter. Its result codec preserves selected indices and
 names, total value and weight, residual capacity, and DP diagnostics. The
 in-process and CLI paths are covered by fake-port tests and the Burkardt `p01`
 and `p02` reference instances.
+
+`knapsack.bounded` preserves the complete integer quantity vector and selected
+item quantities in its result contract. Its production integration is checked
+against the versioned `inventory_mix` and `limited_stock` deterministic
+reference cases, in addition to fake-port, codec, and CLI tests.
 
 **Completion:** all capabilities listed in the baseline are serializable and
 invocable through the same in-process service and CLI.
