@@ -67,6 +67,32 @@ jobs:
       - name: Build with PyInstaller
         run: pyinstaller optees.spec --noconfirm
 
+      - name: Verify bundled OR-Tools libraries (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $libs = python -c "import ortools, pathlib; print(pathlib.Path(ortools.__file__).resolve().parent / '.libs')"
+          $wheelLibraries = @(Get-ChildItem $libs -File)
+
+          if (-not ($wheelLibraries.Name -contains 'ortools.dll')) {
+            throw "ortools.dll is missing from the installed OR-Tools wheel at $libs"
+          }
+
+          foreach ($library in $wheelLibraries) {
+            $shipped = Join-Path 'dist\optees\_internal' $library.Name
+            if (-not (Test-Path $shipped -PathType Leaf)) {
+              throw "The packaged application is missing $($library.Name)"
+            }
+
+            $sourceHash = (Get-FileHash $library.FullName -Algorithm SHA256).Hash
+            $shippedHash = (Get-FileHash $shipped -Algorithm SHA256).Hash
+            if ($sourceHash -ne $shippedHash) {
+              throw "$($library.Name) was not copied from the installed OR-Tools wheel"
+            }
+          }
+
+          Write-Host "Verified $($wheelLibraries.Count) OR-Tools wheel libraries."
+
       # ── Package: Linux → AppImage ─────────────────────────────────────────
       - name: Create AppDir (Linux)
         if: runner.os == 'Linux'

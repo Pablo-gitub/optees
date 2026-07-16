@@ -43,6 +43,20 @@ For a local smoke launch without opening a visible desktop window, use a
 short-lived offscreen process only as an additional diagnostic. The normal
 manual acceptance test remains launching the generated `.app` on macOS.
 
+### Windows OR-Tools integrity
+
+The Windows OR-Tools wheel keeps its native dependency closure in
+`ortools/.libs`. `optees.spec` deliberately copies every file from that
+directory and removes same-named DLLs that PyInstaller may have discovered
+elsewhere on the runner. This prevents a package that either misses
+`ortools.dll` or combines it with unrelated Abseil/Protobuf builds.
+
+The release workflow compares the SHA-256 hash of every bundled OR-Tools DLL
+with the installed wheel before creating `optees-windows-x64.zip`. A missing or
+different file fails the platform build. This integrity check verifies bundle
+provenance; a future packaged `--selftest` command should additionally execute
+a tiny MILP to verify runtime loading end to end.
+
 ## Publish A Release
 
 After the version-bump commit and all checks succeed:

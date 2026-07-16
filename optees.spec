@@ -12,6 +12,8 @@
 import sys
 from pathlib import Path
 
+from PyInstaller.utils.hooks import get_package_paths
+
 _project_root = Path(SPECPATH).resolve()
 sys.path.insert(0, str(_project_root / "src"))
 
@@ -26,13 +28,31 @@ _icon = (
     "src/optees/assets/logo/dark/appicon_256.png"
 )
 
+# The Windows OR-Tools wheel stores its complete native dependency set under
+# ortools/.libs. That directory is not a normal DLL search path, so PyInstaller
+# can otherwise miss ortools.dll or resolve same-named dependencies from the
+# build runner. Collect the wheel-owned files explicitly and verify their
+# presence before Analysis starts.
+_ortools_libs = []
+if sys.platform == "win32":
+    _ortools_package_dir = Path(get_package_paths("ortools")[1])
+    _ortools_libs_dir = _ortools_package_dir / ".libs"
+    _ortools_libs = sorted(
+        path for path in _ortools_libs_dir.glob("*") if path.is_file()
+    )
+    if not any(path.name.lower() == "ortools.dll" for path in _ortools_libs):
+        raise SystemExit(
+            "optees.spec: ortools.dll was not found in "
+            f"{_ortools_libs_dir}; contents: {[path.name for path in _ortools_libs]}"
+        )
+
 # ---------------------------------------------------------------------------
 # Analysis
 # ---------------------------------------------------------------------------
 a = Analysis(
     ["src/optees/main.py"],
     pathex=["src"],
-    binaries=[],
+    binaries=[(str(path), ".") for path in _ortools_libs],
     datas=[
         # Bundle the entire assets directory; assets.py resolves it
         # at runtime via sys._MEIPASS / "assets" / rel.
@@ -58,6 +78,19 @@ a = Analysis(
     excludes=["tkinter", "_tkinter"],
     noarchive=False,
 )
+
+if _ortools_libs:
+    # Analysis may have discovered same-named DLLs elsewhere on the runner.
+    # Remove every competing destination and make the wheel copies authoritative.
+    _ortools_names = {path.name.lower() for path in _ortools_libs}
+    a.binaries = [
+        entry
+        for entry in a.binaries
+        if Path(entry[0]).name.lower() not in _ortools_names
+    ]
+    a.binaries += [
+        (path.name, str(path), "BINARY") for path in _ortools_libs
+    ]
 
 pyz = PYZ(a.pure)
 
