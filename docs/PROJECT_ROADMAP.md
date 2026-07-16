@@ -9,6 +9,10 @@ Related documents:
 - `docs/MILP_ROADMAP.md` for MILP-specific completion work;
 - `docs/NLP_FEATURE_PLAN.md` for the Phase 1 nonlinear-programming delivery
   checklist;
+- `docs/PACKING_LOADING_ROADMAP.md` for the geometric packing and container
+  loading horizontal expansion;
+- `docs/LOCAL_AGENT_SERVICE_ROADMAP.md` for the shared headless execution
+  platform, local API, and future agent-facing contracts;
 - `docs/DATASETS.md` for included scientific datasets;
 - `docs/TESTING.md` for the test strategy;
 - `docs/RELEASING.md` for build, signing, and tag verification;
@@ -57,6 +61,13 @@ Programming section, many empty categories, or attractive workflows that have
 no regression evidence. Existing, low-friction benchmark integrations may be
 added during a vertical slice; a difficult external corpus does not block an
 otherwise tested first workflow, but it remains an explicit hardening item.
+
+Packing & Loading is a deliberate exception to the default sequencing. A
+concrete operational use case justifies one focused horizontal expansion before
+the Heuristics slice and generic MILP minimax work. The exception does not lower
+the product standard: the first geometric workflow still requires an exact
+contract, deterministic references, benchmark evidence, and honest solver
+status reporting.
 
 ## Current Baseline
 
@@ -201,9 +212,9 @@ trees, flow, matching, and TSP.
 
 ### Phase 3 - AI & Machine Learning: Educational Foundations
 
-Educational machine learning is the next vertical slice, before heuristics.
-It is a separate local-learning section: it must not be presented as AutoML,
-an LLM provider, or a replacement for the Modeling Assistant.
+Educational machine learning is a separate local-learning section: it must not
+be presented as AutoML, an LLM provider, or a replacement for the Modeling
+Assistant.
 
 The delivery order is deliberately sequential.
 
@@ -227,7 +238,7 @@ must not be treated as a fairness, causality, or deployment claim.
 
 The remaining work is:
 
-1. **Clustering next:** local unsupervised clustering with k-means,
+1. **Clustering next within the AI family:** local unsupervised clustering with k-means,
    user-selected `k`, reproducible seed, feature scaling made visible, inertia
    and silhouette diagnostics, and 2D/3D plots only for the selected displayed
    dimensions.
@@ -246,6 +257,48 @@ activity. Model training remains entirely local.
 **Explicitly deferred:** arbitrary model selection, neural networks, LLM
 providers, automatic feature engineering, opaque scoring, and claims that a
 single metric is sufficient for a real decision.
+
+### Phase 3.25 - Packing & Loading Priority Expansion
+
+A concrete operational use case makes Packing & Loading the next focused
+horizontal expansion before generic MILP minimax work. It remains an educational
+Optees family with dedicated formulation and solution views, while its first
+exact implementations explicitly teach their underlying MILP model.
+
+The implementation starts with orthogonal Single-container 3D Packing, then
+adds Multi-container 3D Packing, human-guided re-optimization, industrial
+constraints and heuristic comparators, and finally non-geometric
+Multi-container Capacity Allocation. The eventual UI orders the simpler
+capacity workflow before the geometric workflows even though it is implemented
+later.
+
+The complete mathematical scope, JSON contracts, UI requirements, solver
+status semantics, performance policy, and sequential checklist are maintained
+in `docs/PACKING_LOADING_ROADMAP.md`.
+
+The declared Phase 1 orthogonal single-container scope is implemented: exact
+MILP solving, optional simple-gravity post-processing, interactive 3D results,
+cooperative cancellation, structural complexity warnings, and an OR-Library
+benchmark source with a bounded CI subset. Physical stability and full-size
+benchmark performance remain explicitly outside that first-phase contract.
+
+### Phase 3.4 - Local Solver Platform
+
+Before adding another major algorithm family, expose the capabilities already
+implemented through a stable application facade, headless CLI, and optional
+authenticated localhost service. This is a cross-cutting refactoring and
+product capability: it reuses existing domain models, JSON importers, use cases,
+ports, adapters, and tests rather than creating a second solver backend.
+
+The MVP first inventories current contracts, defines versioned result codecs,
+adds a capability registry, proves Qt-independent execution, migrates existing
+capabilities, and only then adds the job API and desktop server controls.
+Independent result validation, semantic modeling safeguards, agent-oriented
+documentation, MCP, and composite optimization workflows follow in explicit
+post-MVP phases.
+
+The sequential checklist and API boundaries are maintained in
+`docs/LOCAL_AGENT_SERVICE_ROADMAP.md`.
 
 ### Phase 3.5 - Heuristics & Metaheuristics: First Vertical Slice
 
@@ -295,6 +348,7 @@ order that reuses the new foundations.
 | --- | --- |
 | LP / MILP | Dedicated `MILPSolutionView`, MPS import adapter, threshold-model wizard, linear minimax/maximin, Chebyshev goal programming, and min-max regret where the model is linear. |
 | Knapsack | Multiple-choice Knapsack, additional benchmark suites, and heuristic-versus-exact comparison for instances where DP or MILP becomes expensive. |
+| Packing & Loading | Orthogonal single- and multi-container 3D packing, interactive refinement, industrial constraints, heuristic comparison, and capacity-only allocation. |
 | NLP | Nonlinear constraints, least squares, quadratic programming, nonlinear minimax, and global methods such as differential evolution. |
 | Graph Theory | Bellman-Ford, minimum spanning tree, max flow/min cut, matching, and exact/heuristic TSP comparison. |
 | AI & Machine Learning | Regularization and validation improvements after regression and binary classification, then clustering diagnostics; each expansion keeps local, reproducible data handling. |
