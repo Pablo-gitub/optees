@@ -42,9 +42,15 @@ def _to_html(markdown_text: str) -> str:
     """Convert markdown to HTML.  Falls back to a <pre> block if unavailable."""
     try:
         import markdown  # type: ignore
-        return markdown.markdown(
+        rendered = markdown.markdown(
             markdown_text,
             extensions=["tables", "fenced_code"],
+        )
+        # QTextDocument renders HTML table attributes more reliably than CSS
+        # border-collapse, especially on macOS/Qt dark themes.
+        return rendered.replace(
+            "<table>",
+            '<table border="1" cellspacing="0" cellpadding="6" width="100%">',
         )
     except ImportError:
         import html
@@ -306,3 +312,13 @@ class ClassificationExampleView(LPInfoView):
 class ClassificationProblemDescriptionView(LPInfoView):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__("classification_problem", parent=parent)
+
+
+class PackingExampleView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("packing_example", parent=parent)
+
+
+class PackingProblemDescriptionView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("packing_problem", parent=parent)

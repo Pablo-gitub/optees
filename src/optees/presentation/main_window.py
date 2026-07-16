@@ -22,6 +22,8 @@ from optees.presentation.views.nlp_view import NLPView
 from optees.presentation.views.nlp_solution_view import NLPSolutionView
 from optees.presentation.views.graph_view import GraphView
 from optees.presentation.views.graph_solution_view import GraphSolutionView
+from optees.presentation.views.packing_view import PackingView
+from optees.presentation.views.packing_solution_view import PackingSolutionView
 from optees.presentation.views.regression_view import RegressionView
 from optees.presentation.views.regression_solution_view import RegressionSolutionView
 from optees.presentation.views.classification_view import ClassificationView
@@ -46,6 +48,8 @@ from optees.presentation.views.lp_info_view import (
     RegressionProblemDescriptionView,
     ClassificationExampleView,
     ClassificationProblemDescriptionView,
+    PackingExampleView,
+    PackingProblemDescriptionView,
 )
 from optees.presentation.controllers.lp_controller import LPController
 from optees.presentation.controllers.milp_controller import MILPController
@@ -56,6 +60,9 @@ from optees.application.usecases.solve_nlp_usecase import SolveNLPUseCase
 from optees.application.usecases.solve_shortest_path_usecase import SolveShortestPathUseCase
 from optees.application.usecases.train_regression_usecase import TrainRegressionUseCase
 from optees.application.usecases.train_classification_usecase import TrainClassificationUseCase
+from optees.application.usecases.solve_single_container_packing_usecase import (
+    SolveSingleContainerPackingUseCase,
+)
 from optees.application.usecases.solve_bounded_knapsack_usecase import SolveBoundedKnapsackUseCase
 from optees.application.usecases.solve_fractional_knapsack_usecase import SolveFractionalKnapsackUseCase
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
@@ -74,6 +81,9 @@ from optees.data.adapters.nlp.nlp_solver_adapter import ScipyNLPSolverAdapter
 from optees.data.adapters.graph.dijkstra_solver_adapter import DijkstraSolverAdapter
 from optees.data.adapters.regression.numpy_regression_adapter import NumpyRegressionAdapter
 from optees.data.adapters.classification.numpy_classification_adapter import NumpyClassificationAdapter
+from optees.data.adapters.packing.ortools_single_container_packing_adapter import (
+    OrtoolsSingleContainerPackingAdapter,
+)
 from optees.data.adapters.knapsack.bounded_knapsack_solver_adapter import BoundedKnapsackSolverAdapter
 from optees.data.adapters.knapsack.fractional_knapsack_solver_adapter import FractionalKnapsackSolverAdapter
 from optees.data.adapters.knapsack.knapsack_solver_adapter import KnapsackSolverAdapter
@@ -133,6 +143,11 @@ class MainWindow(QMainWindow):
         self.solve_shortest_path_uc = SolveShortestPathUseCase(self.graph_solver_port)
         self.graph_page.set_solve_usecase(self.solve_shortest_path_uc)
 
+        self.packing_page = PackingView()
+        self.packing_solver_port = OrtoolsSingleContainerPackingAdapter()
+        self.solve_packing_uc = SolveSingleContainerPackingUseCase(self.packing_solver_port)
+        self.packing_page.set_solve_usecase(self.solve_packing_uc)
+
         self.regression_page = RegressionView()
         self.regression_solver_port = NumpyRegressionAdapter()
         self.train_regression_uc = TrainRegressionUseCase(self.regression_solver_port)
@@ -183,6 +198,8 @@ class MainWindow(QMainWindow):
         self.nlp_problem_page = NLPProblemDescriptionView()
         self.graph_example_page = GraphExampleView()
         self.graph_problem_page = GraphProblemDescriptionView()
+        self.packing_example_page = PackingExampleView()
+        self.packing_problem_page = PackingProblemDescriptionView()
         self.regression_example_page = RegressionExampleView()
         self.regression_problem_page = RegressionProblemDescriptionView()
         self.classification_example_page = ClassificationExampleView()
@@ -194,6 +211,7 @@ class MainWindow(QMainWindow):
         self.knapsack_solution_page = KnapsackSolutionView()
         self.nlp_solution_page = NLPSolutionView()
         self.graph_solution_page = GraphSolutionView()
+        self.packing_solution_page = PackingSolutionView()
         self.regression_solution_page = RegressionSolutionView()
         self.classification_solution_page = ClassificationSolutionView()
 
@@ -215,6 +233,10 @@ class MainWindow(QMainWindow):
         self.register_page("graph_example", self.graph_example_page)
         self.register_page("graph_problem", self.graph_problem_page)
         self.register_page("graph_solution", self.graph_solution_page)
+        self.register_page("packing", self.packing_page)
+        self.register_page("packing_example", self.packing_example_page)
+        self.register_page("packing_problem", self.packing_problem_page)
+        self.register_page("packing_solution", self.packing_solution_page)
         self.register_page("regression", self.regression_page)
         self.register_page("regression_example", self.regression_example_page)
         self.register_page("regression_problem", self.regression_problem_page)
@@ -336,6 +358,10 @@ class MainWindow(QMainWindow):
         self.act_knap.triggered.connect(lambda: self.goto("knapsack"))
         menu.addAction(self.act_knap)
 
+        self.act_packing = QAction(S.t("alg.packing"), self)
+        self.act_packing.triggered.connect(lambda: self.goto("packing"))
+        menu.addAction(self.act_packing)
+
         self.drop.setMenu(menu)
         self.toolbar.addWidget(self.drop)
 
@@ -347,13 +373,18 @@ class MainWindow(QMainWindow):
         self.act_graph.triggered.connect(lambda: self.goto("graph"))
         self.toolbar.addAction(self.act_graph)
 
+        self.drop_ml = QToolButton(self)
+        self.drop_ml.setText(S.t("nav.machine_learning").replace("&", "&&"))
+        self.drop_ml.setPopupMode(QToolButton.InstantPopup)
+        ml_menu = QMenu(self.drop_ml)
         self.act_regression = QAction(S.t("alg.regression"), self)
         self.act_regression.triggered.connect(lambda: self.goto("regression"))
-        self.toolbar.addAction(self.act_regression)
-
+        ml_menu.addAction(self.act_regression)
         self.act_classification = QAction(S.t("alg.classification"), self)
         self.act_classification.triggered.connect(lambda: self.goto("classification"))
-        self.toolbar.addAction(self.act_classification)
+        ml_menu.addAction(self.act_classification)
+        self.drop_ml.setMenu(ml_menu)
+        self.toolbar.addWidget(self.drop_ml)
 
         # spacer
         spacer = QWidget(self)
@@ -386,6 +417,8 @@ class MainWindow(QMainWindow):
                     self.milp_page, self.knap_page, self.nlp_page, self.nlp_example_page,
                     self.nlp_problem_page, self.nlp_solution_page, self.graph_page,
                     self.graph_example_page, self.graph_problem_page, self.graph_solution_page,
+                    self.packing_page, self.packing_example_page, self.packing_problem_page,
+                    self.packing_solution_page,
                     self.regression_page, self.regression_example_page,
                     self.regression_problem_page, self.regression_solution_page,
                     self.classification_page, self.classification_example_page,
@@ -406,6 +439,8 @@ class MainWindow(QMainWindow):
         self.act_knap.setText(S.t("alg.knap"))
         self.act_nlp.setText(S.t("alg.nlp"))
         self.act_graph.setText(S.t("alg.graph"))
+        self.act_packing.setText(S.t("alg.packing"))
+        self.drop_ml.setText(S.t("nav.machine_learning").replace("&", "&&"))
         self.act_regression.setText(S.t("alg.regression"))
         self.act_classification.setText(S.t("alg.classification"))
         self.act_settings.setText(S.t("nav.settings"))
@@ -421,6 +456,8 @@ class MainWindow(QMainWindow):
                  self.milp_page, self.knap_page, self.nlp_page, self.nlp_example_page,
                  self.nlp_problem_page, self.nlp_solution_page, self.graph_page,
                  self.graph_example_page, self.graph_problem_page, self.graph_solution_page,
+                 self.packing_page, self.packing_example_page, self.packing_problem_page,
+                 self.packing_solution_page,
                  self.regression_page, self.regression_example_page,
                  self.regression_problem_page, self.regression_solution_page,
                  self.classification_page, self.classification_example_page,

@@ -153,6 +153,24 @@ An external graph dataset will be evaluated in the benchmark-hardening phase.
 It must provide a redistributable source, known reference paths or distances,
 and a bounded CI subset before it is added here.
 
+## Single-Container 3D Packing: OR-Library thpack1
+
+- **Included file:** `tests/data/packing/orlib/thpack1.txt`.
+- **Source:** J. E. Beasley's OR-Library, contributed by M. S. W. Ratcliff.
+- **Reference:** E. E. Bischoff and M. S. W. Ratcliff, *Issues in the
+  Development of Approaches to Container Loading*, OMEGA 23(4), 1995.
+- **Contract:** single rectangular container, rectangular box types, allowed
+  vertical orientations, and volume-utilization maximization.
+- **Tests:** source-format parsing plus an exact two-copy smoke subset derived
+  from problem 1, type 1.
+
+The complete first instance contains 112 physical boxes. Normal CI does not
+run the quadratic pairwise MILP on that full instance. The derived subset has
+an analytic expected objective equal to twice the source box volume; this is
+an implementation regression and is not represented as a published optimum.
+The source URL, checksum, and this distinction are recorded in
+`tests/data/packing/README.md`.
+
 ## Test Data Layout
 
 ```text
@@ -173,6 +191,8 @@ tests/data/
     reference_cases.json            # Analytic OLS regression cases
   classification/
     reference_cases.json            # Logistic-regression reference case
+  packing/
+    orlib/thpack1.txt                # Bischoff/Ratcliff single-container data
 ```
 
 ## Adding A Dataset

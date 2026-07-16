@@ -13,6 +13,7 @@ from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.nlp_view import NLPView
 from optees.presentation.views.graph_view import GraphView
+from optees.presentation.views.packing_view import PackingView
 from optees.presentation.views.regression_view import RegressionView
 from optees.presentation.views.classification_view import ClassificationView
 from optees.presentation.views.home_view import HomePage  # usa lo stesso nome che usi nel MainWindow
@@ -44,6 +45,8 @@ class MainController(QObject):
             home.go_nlp.connect(lambda: self.window.goto("nlp"))
         if hasattr(home, "go_graph"):
             home.go_graph.connect(lambda: self.window.goto("graph"))
+        if hasattr(home, "go_packing"):
+            home.go_packing.connect(lambda: self.window.goto("packing"))
         if hasattr(home, "go_regression"):
             home.go_regression.connect(lambda: self.window.goto("regression"))
         if hasattr(home, "go_classification"):
@@ -128,6 +131,19 @@ class MainController(QObject):
         graph_solution = self.window.page("graph_solution")
         if hasattr(graph_solution, "back_requested"):
             graph_solution.back_requested.connect(lambda: self.window.goto("graph"))
+
+        # Packing & Loading -> exact orthogonal 3D result
+        packing: PackingView = self.window.page("packing")  # type: ignore[assignment]
+        packing.solve_completed.connect(self._on_packing_solved)
+        packing.example_requested.connect(lambda: self.window.goto("packing_example"))
+        packing.problem_description_requested.connect(lambda: self.window.goto("packing_problem"))
+        for name in ("packing_example", "packing_problem"):
+            info_view = self.window.page(name)
+            if hasattr(info_view, "back_requested"):
+                info_view.back_requested.connect(lambda _=False: self.window.goto("packing"))
+        packing_solution = self.window.page("packing_solution")
+        if hasattr(packing_solution, "back_requested"):
+            packing_solution.back_requested.connect(lambda: self.window.goto("packing"))
 
         # AI & Machine Learning -> regression result
         regression: RegressionView = self.window.page("regression")  # type: ignore[assignment]
@@ -276,6 +292,17 @@ class MainController(QObject):
         if hasattr(sol_view, "set_solution"):
             sol_view.set_solution(solution)  # type: ignore[attr-defined]
         self.window.goto("graph_solution")
+
+    def _on_packing_solved(self, solution) -> None:
+        sol_view = self.window.page("packing_solution")
+        try:
+            if hasattr(sol_view, "set_problem"):
+                sol_view.set_problem(self.window.packing_page.current_model())  # type: ignore[attr-defined]
+        except Exception:
+            pass
+        if hasattr(sol_view, "set_solution"):
+            sol_view.set_solution(solution)  # type: ignore[attr-defined]
+        self.window.goto("packing_solution")
 
     def _on_regression_trained(self, solution) -> None:
         sol_view = self.window.page("regression_solution")
