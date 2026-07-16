@@ -214,28 +214,39 @@ of additional capabilities.
 
 ### Phase 2 - Capability Registry And Execution Facade
 
-- [ ] Implement a `CapabilityRegistry` in the application layer.
-- [ ] Register the LP pilot through an explicit composition root.
-- [ ] Implement an `OptimizationService` that validates a payload, creates the
+- [x] Implement a `CapabilityRegistry` in the application layer.
+- [x] Register the LP pilot through an explicit composition root.
+- [x] Implement an `OptimizationService` that validates a payload, creates the
   existing domain model, invokes the existing use case, and serializes the
   result.
-- [ ] Report unavailable optional dependencies through capability metadata and
+- [x] Report unavailable optional dependencies through capability metadata and
   structured errors.
-- [ ] Keep backend selection internal to the registered capability.
-- [ ] Add application tests with fake ports and one real LP integration test.
+- [x] Keep backend selection internal to the registered capability.
+- [x] Add application tests with fake ports and one real LP integration test.
+
+The implementation lives in `application/services` and is assembled by
+`composition/local_agent.py`. Capability discovery exposes stable mathematical
+IDs and versioned JSON schemas, while executable callables and concrete backend
+selection remain private to the registry. The production LP composition checks
+SciPy availability and imports no presentation module.
 
 **Completion:** LP can be executed in process without importing PySide6 or
 interacting with a widget.
 
 ### Phase 3 - Headless CLI Proof
 
-- [ ] Add commands equivalent to `list-capabilities`, `validate`, and `solve`.
-- [ ] Accept existing versioned JSON from stdin or an explicit file path.
-- [ ] Emit only the versioned result or error envelope on stdout.
-- [ ] Send human diagnostics to stderr without leaking complete datasets.
-- [ ] Define stable exit codes for success, invalid input, unavailable
+- [x] Add commands equivalent to `list-capabilities`, `validate`, and `solve`.
+- [x] Accept existing versioned JSON from stdin or an explicit file path.
+- [x] Emit only the versioned result or error envelope on stdout.
+- [x] Send human diagnostics to stderr without leaking complete datasets.
+- [x] Define stable exit codes for success, invalid input, unavailable
   capability, infeasibility, cancellation, and technical failure.
-- [ ] Add subprocess-level tests.
+- [x] Add subprocess-level tests.
+
+The `optees-cli` entry point and `python -m optees.cli` module are documented in
+`docs/local-agent/headless-cli.md`. Operational commands emit one compact JSON
+document on stdout. Infeasible, unbounded, and not-solved executions retain
+their mathematical result envelope and use distinct process exit codes.
 
 **Completion:** the LP pilot can be validated and solved without starting Qt.
 

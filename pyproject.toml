@@ -20,6 +20,9 @@ plot = ["matplotlib"]
 [project.gui-scripts]
 optees = "optees.main:main"
 
+[project.scripts]
+optees-cli = "optees.cli:main"
+
 [tool.setuptools]
 package-dir = {"" = "src"}
 
