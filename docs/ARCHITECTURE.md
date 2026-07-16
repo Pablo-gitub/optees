@@ -10,6 +10,23 @@ Optees is a desktop, open-source tool to help technical and non-technical staff 
 
 ## Layered Model (6 layers)
 
+```mermaid
+flowchart LR
+    Desktop["Desktop UI (PySide6)"] --> Application["Application use cases"]
+    CLI["Headless CLI (planned)"] --> Application
+    REST["Local REST adapter (planned)"] --> Application
+    MCP["MCP adapter (future)"] --> Application
+    Application --> Domain["Domain models and results"]
+    Application --> Ports["Application ports"]
+    Adapters["Solver and infrastructure adapters"] -. implement .-> Ports
+    Adapters --> Utility["Numerical and I/O utilities"]
+    Adapters --> Domain
+    Core["Configuration, strings, shared project services"] --> Desktop
+```
+
+Arrows represent source-level dependencies or calls. Planned adapters remain
+outside the desktop presentation layer and reuse the same application core.
+
 ### Responsibilities
 
 * **Domain**
@@ -22,7 +39,8 @@ Optees is a desktop, open-source tool to help technical and non-technical staff 
   Repositories + Adapters handling external resources: CSV/XLSX, MPS/MAT, Burkardt text, etc. Convert into *canonical dicts* for the Application layer.
 
 * **Presentation**
-  GUI (e.g., PyQt) – Views/Controllers. Only talks to Application Use Cases and maps DTOs ⇄ UI widgets.
+  PySide6 GUI views/controllers. Only talks to Application Use Cases and maps
+  DTOs to and from UI widgets.
 
 * **Core**
   Project-specific shared utilities: logging, string management, configuration & constants, error types.
@@ -81,3 +99,17 @@ tests/
   utility/
 docs/
 ```
+
+## Diagram Convention
+
+Architecture, state, sequence, and data-flow diagrams are written as Mermaid
+fenced blocks directly in Markdown. GitHub renders them natively, while the
+text remains reviewable and diffable.
+
+- Keep the Mermaid source authoritative; do not commit a duplicate image by
+  default.
+- Use quoted node labels when punctuation or parentheses are present.
+- Do not send internal schemas to online rendering services.
+- Export SVG, PNG, or PDF only when a release artifact or offline document
+  requires it. A reproducible local `mermaid-cli` pipeline may be added when
+  that need exists.

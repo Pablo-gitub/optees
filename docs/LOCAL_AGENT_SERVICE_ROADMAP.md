@@ -30,6 +30,32 @@ The server is an inbound adapter. It must not duplicate solver logic or call Qt
 widgets. Desktop, CLI, REST, and future MCP interfaces invoke the same use cases
 and domain models.
 
+The planned headless execution path is:
+
+```mermaid
+sequenceDiagram
+    participant Client as "Local agent or CLI"
+    participant Service as "Inbound adapter"
+    participant Registry as "Capability registry"
+    participant Input as "Problem codec"
+    participant UseCase as "Existing use case"
+    participant Solver as "Solver adapter"
+    participant Result as "Result codec"
+
+    Client->>Service: Discover capability
+    Service->>Registry: Get descriptor
+    Registry-->>Service: Versioned contracts and availability
+    Client->>Service: Validate and submit JSON problem
+    Service->>Input: Parse payload
+    Input-->>Service: Validated domain model
+    Service->>UseCase: Execute model
+    UseCase->>Solver: Solve canonical problem
+    Solver-->>UseCase: Domain-specific outcome
+    UseCase-->>Service: Typed domain result
+    Service->>Result: Serialize result
+    Result-->>Client: Versioned execution envelope
+```
+
 ## Terminology
 
 The public API distinguishes concepts that must not be conflated:
@@ -380,6 +406,27 @@ the interpretation.
 - [ ] Keep MCP as a thin adapter over the same application services.
 - [ ] Do not duplicate registry, validation, or execution logic.
 - [ ] Test tool schemas and behavior against the REST contracts.
+
+## Post-MVP Phase E - Agent Effectiveness Benchmarks
+
+The benchmark protocol and repository layout are defined in
+`docs/AGENT_BENCHMARKS.md`. These experiments measure assisted modeling and
+tool use; they do not replace scientific solver regressions.
+
+- [x] Define paired unaided and Optees-assisted conditions, with an optional
+  tool-available discovery condition.
+- [x] Define scenario, run-manifest, evaluation, privacy, and publication
+  requirements.
+- [ ] Add versioned JSON schemas and a deterministic experiment runner.
+- [ ] Create reviewed synthetic business scenarios in Italian and English.
+- [ ] Implement automated formulation, feasibility, objective, and tool-use
+  evaluators without relying only on the solver being evaluated.
+- [ ] Define and pilot a blinded human-review rubric for assumptions and
+  explanation quality.
+- [ ] Run repeated paired studies across multiple frozen model/provider
+  versions and publish failures as well as successes.
+- [ ] Maintain private holdout scenarios for regression and contamination
+  checks.
 
 ## Future - Composite Optimization Workflows
 

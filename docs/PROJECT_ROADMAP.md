@@ -13,6 +13,8 @@ Related documents:
   loading horizontal expansion;
 - `docs/LOCAL_AGENT_SERVICE_ROADMAP.md` for the shared headless execution
   platform, local API, and future agent-facing contracts;
+- `docs/AGENT_BENCHMARKS.md` for paired experiments measuring whether agents
+  formulate and solve synthetic business problems better with Optees;
 - `docs/DATASETS.md` for included scientific datasets;
 - `docs/TESTING.md` for the test strategy;
 - `docs/RELEASING.md` for build, signing, and tag verification;
@@ -299,6 +301,13 @@ post-MVP phases.
 
 The sequential checklist and API boundaries are maintained in
 `docs/LOCAL_AGENT_SERVICE_ROADMAP.md`.
+
+After stable capability contracts and agent-facing adapters exist, paired
+experimental benchmarks will compare the same frozen synthetic-company
+scenarios under unaided and Optees-assisted conditions. They will report model
+validity, feasibility, objective quality, unsupported assumptions, tool use,
+and explanation accuracy separately. The protocol and repository organization
+are maintained in `docs/AGENT_BENCHMARKS.md`.
 
 ### Phase 3.5 - Heuristics & Metaheuristics: First Vertical Slice
 
