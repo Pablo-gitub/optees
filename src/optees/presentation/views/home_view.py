@@ -61,6 +61,7 @@ class HomePage(QWidget):
     go_knap = Signal()
     go_nlp = Signal()
     go_graph = Signal()
+    go_packing = Signal()
     go_regression = Signal()
     go_classification = Signal()
     update_requested = Signal()
@@ -128,6 +129,11 @@ class HomePage(QWidget):
             S.t("cards.graph.subtitle"),
             icon_path=str(asset("icons/graph.svg")),
         )
+        self.card_packing = CardButton(
+            S.t("cards.packing.title"),
+            S.t("cards.packing.subtitle"),
+            icon_path=str(asset("icons/packing.svg")),
+        )
         self.card_regression = CardButton(
             S.t("cards.regression.title"),
             S.t("cards.regression.subtitle"),
@@ -145,11 +151,12 @@ class HomePage(QWidget):
         self.card_knap.clicked.connect(self.go_knap.emit)
         self.card_nlp.clicked.connect(self.go_nlp.emit)
         self.card_graph.clicked.connect(self.go_graph.emit)
+        self.card_packing.clicked.connect(self.go_packing.emit)
         self.card_regression.clicked.connect(self.go_regression.emit)
         self.card_classification.clicked.connect(self.go_classification.emit)
 
         # add cards to the first optimization category
-        for card in (self.card_lp, self.card_milp, self.card_knap):
+        for card in (self.card_lp, self.card_milp, self.card_knap, self.card_packing):
             self.cat_lin.add_card(card)
 
         self.cat_nlp.add_card(self.card_nlp)
@@ -200,6 +207,11 @@ class HomePage(QWidget):
         self.card_graph._title.setText(f"<span style='font-weight:700'>{S.t('cards.graph.title')}</span>")
         self.card_graph._sub.setText(S.t("cards.graph.subtitle"))
 
+        self.card_packing._title.setText(
+            f"<span style='font-weight:700'>{S.t('cards.packing.title')}</span>"
+        )
+        self.card_packing._sub.setText(S.t("cards.packing.subtitle"))
+
         self.card_regression._title.setText(
             f"<span style='font-weight:700'>{S.t('cards.regression.title')}</span>"
         )
@@ -227,6 +239,7 @@ class HomePage(QWidget):
             self.card_knap,
             self.card_nlp,
             self.card_graph,
+            self.card_packing,
             self.card_regression,
             self.card_classification,
         ):

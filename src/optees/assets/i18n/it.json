@@ -5,6 +5,7 @@
       "linear": "Programmazione Lineare",
       "nlp": "Programmazione Nonlineare",
       "graph": "Teoria dei Grafi",
+      "packing": "Packing e caricamento",
       "ml": "AI & Machine Learning"
     },
     "comingSoon": "In arrivo…"
@@ -29,6 +30,10 @@
     "graph": {
       "title": "Cammino minimo (Dijkstra)",
       "subtitle": "Usa questo metodo per trovare il percorso di costo minimo tra due nodi di un grafo pesato senza archi di peso negativo."
+    },
+    "packing": {
+      "title": "Packing e caricamento 3D",
+      "subtitle": "Posiziona colli rettangolari in un container rispettando dimensioni, rotazioni ammesse e capacita' aggiuntive opzionali."
     },
     "regression": {
       "title": "Regressione lineare",
@@ -55,6 +60,7 @@
     "knap": "Zaino 0/1",
     "nlp": "Programmazione Nonlineare (NLP)",
     "graph": "Cammino minimo (Dijkstra)",
+    "packing": "Packing e caricamento 3D",
     "regression": "Regressione lineare",
     "classification": "Classificazione binaria"
   },
@@ -159,6 +165,11 @@
       "weights": "Ogni peso di un arco deve essere un numero finito non negativo: Dijkstra non puo' usare pesi negativi.",
       "topology": "Dichiara vertici univoci, scegli sorgente e destinazione e assicurati che ogni arco colleghi due vertici distinti dichiarati.",
       "solver": "Il solver per il cammino minimo non e' disponibile in questa sessione dell'app. Riavvia l'applicazione e riprova."
+    },
+    "packing": {
+      "model": "Inserisci dimensioni positive e finite per container e colli, ID e nomi univoci non vuoti, quantita' intere positive e valori finiti non negativi.",
+      "rotations": "Scegli una politica di rotazione supportata. Per Personalizzata, inserisci codici di permutazione XYZ validi separati da virgole.",
+      "resources": "Usa nomi risorsa univoci non vuoti, limiti di capacita' finiti non negativi e consumi finiti non negativi."
     },
     "assistant": {
       "generated_model": "La bozza generata non e' valida per la formulazione selezionata. Controlla il suggerimento e inserisci o importa il modello manualmente."
@@ -806,6 +817,58 @@
       "metrics": { "section": "Metriche di valutazione", "hint": "MAE, MSE e RMSE minori sono migliori sulla stessa scala del target. R-quadrato piu' alto e' migliore, ma puo' non essere disponibile per un target costante.", "partition": "Partizione", "mae": "MAE", "mse": "MSE", "rmse": "RMSE", "r_squared": "R-quadrato", "train": "Training", "test": "Test" },
       "predictions": { "section": "Previsioni e residui", "hint": "Residuo = target reale meno target previsto. Le righe test sono state escluse dall'addestramento.", "row": "Riga", "partition": "Partizione", "actual": "Reale", "predicted": "Previsto", "residual": "Residuo" },
       "plot": { "section": "Adattamento con una feature", "hint": "Questo grafico appare solo se il modello usa una sola feature. Separa osservazioni training e test lasciate fuori.", "unavailable": "Un grafico di adattamento e' disponibile solo quando il modello usa una sola feature e matplotlib e' installato.", "x_axis": "Feature", "y_axis": "Target", "line": "Retta stimata", "train": "Training", "test": "Test" }
+    }
+  },
+  "packing": {
+    "header": {
+      "title": "Packing 3D in singolo container",
+      "section": "Formulazione del problema",
+      "description": "Posiziona colli rettangolari ortogonali in un container senza sovrapposizioni. Scegli se tutti i colli sono obbligatori o se massimizzare il valore caricato.",
+      "example": "Esempio",
+      "problem": "Descrizione problema"
+    },
+    "common": { "select": "Seleziona", "remove_selected": "Rimuovi selezionati" },
+    "import": { "button": "Importa JSON", "dialog": "Apri modello packing", "info_tooltip": "Formato JSON packing" },
+    "container": { "section": "Container", "hint": "Inserisci le dimensioni interne utilizzabili. I colli devono restare interamente in questo volume ortogonale.", "name": "Nome", "length": "Lunghezza", "width": "Larghezza", "height": "Altezza", "info_tooltip": "Dimensioni del container" },
+    "resources": { "section": "Capacita' aggiuntive", "hint": "Limiti aggregati opzionali, come il peso massimo. Ogni capacita' aggiunta crea una colonna di consumo per ciascun collo.", "name": "Risorsa", "limit": "Limite", "add": "Aggiungi capacita'", "unnamed": "Risorsa senza nome", "info_tooltip": "Vincoli di capacita' aggiuntivi" },
+    "items": { "section": "Colli", "hint": "Ogni riga definisce un tipo di collo. La quantita' genera unita' indivisibili; dimensioni e rotazioni ammesse determinano i posizionamenti possibili.", "add": "Aggiungi collo", "info_tooltip": "Colli e politiche di rotazione", "select": "Seleziona", "id": "ID", "name": "Nome", "length": "Lunghezza", "width": "Larghezza", "height": "Altezza", "quantity": "Quantita'", "value": "Valore", "rotation": "Rotazione ammessa", "custom_orientations": "Orientamenti personalizzati", "choose_orientations": "Scegli...", "choose_orientations_tooltip": "Scegli le dimensioni risultanti ammesse", "orientations_selected": "{count} selezionati" },
+    "orientation_dialog": { "title": "Scegli orientamenti ammessi", "hint": "Seleziona ogni orientamento risultante che il collo puo' usare. L, W e H indicano lunghezza, larghezza e altezza originali; i risultati geometricamente duplicati sono gia' rimossi.", "option": "{code}  ->  {length} x {width} x {height}", "confirm": "Applica", "cancel": "Annulla" },
+    "rotation": { "fixed": "Fissa", "keep_upright": "Mantieni verticale", "x_only": "Ruota attorno a X", "y_only": "Ruota attorno a Y", "z_only": "Ruota attorno a Z", "any_orthogonal": "Qualsiasi ortogonale", "custom": "Personalizzata" },
+    "options": { "section": "Opzioni solver", "hint": "Il MILP esatto cresce rapidamente con il numero di colli e orientamenti. Con un limite di tempo puo' restituire la migliore soluzione ammissibile senza provarne l'ottimalita'.", "selection": "Politica di carico", "selection_optional": "Massimizza valore caricato", "selection_all_required": "Richiedi tutti i colli", "gravity": "Gravita'", "gravity_none": "Nessuna gravita'", "gravity_simple": "Gravita' semplice", "time_limit": "Limite tempo (s)", "mip_gap": "Gap MIP relativo", "info_tooltip": "Politica di selezione, gravita' e limiti solver" },
+    "solve": {
+      "button": "Ottimizza caricamento",
+      "running": "Calcolo...",
+      "cancel": "Annulla calcolo",
+      "cancel_requested": "Cancellazione richiesta. Il solver si fermera' al prossimo punto di interruzione supportato.",
+      "cancel_pending": "Il backend attivo non ha confermato l'interruzione; attendo il termine del calcolo.",
+      "model_size": "Modello esatto avviato: {units} unita', {pairs} coppie, circa {variables} variabili.",
+      "long_running": "Il calcolo e' in esecuzione da un minuto. Puoi attendere oppure annullarlo.",
+      "very_long_running": "Il calcolo e' in esecuzione da due minuti. Il tempo varia con macchina e istanza; valuta di annullare e ridurre unita' o orientamenti."
+    },
+    "complexity": {
+      "title": "Modello esatto di packing grande",
+      "moderate": "Il modello contiene {units} unita', {pairs} coppie di colli e {binaries} binarie di separazione. Il tempo esatto puo' variare molto con macchina e istanza. Continuare?",
+      "high": "Il modello contiene {units} unita', {pairs} coppie di colli e {binaries} binarie di separazione. Il MILP esatto puo' richiedere tempo o memoria rilevanti. Imposta un limite di tempo e considera possibile una soluzione ammissibile senza prova di ottimalita'. Continuare?"
+    },
+    "error": { "title": "Problema di packing non valido" },
+    "info": {
+      "close": "Chiudi",
+      "import": { "title": "Contratto JSON packing", "body": "Le integrazioni possono generare questo oggetto JSON versionato e caricarlo con lo stesso importer validato usato dalla GUI. E' un contratto file/dati, non un endpoint HTTP.", "html": "<h3>Payload minimo completo</h3><pre>{\n  &quot;version&quot;: &quot;1&quot;,\n  &quot;problem_type&quot;: &quot;packing&quot;,\n  &quot;variant&quot;: &quot;single_container_3d&quot;,\n  &quot;selection_policy&quot;: &quot;optional&quot;,\n  &quot;gravity_mode&quot;: &quot;simple&quot;,\n  &quot;container&quot;: {\n    &quot;id&quot;: &quot;container-1&quot;,\n    &quot;name&quot;: &quot;Container 1&quot;,\n    &quot;dimensions&quot;: {&quot;length&quot;: 120, &quot;width&quot;: 80, &quot;height&quot;: 100},\n    &quot;capacities&quot;: [{&quot;name&quot;: &quot;peso&quot;, &quot;limit&quot;: 1000}]\n  },\n  &quot;items&quot;: [{\n    &quot;id&quot;: &quot;collo-a&quot;,\n    &quot;name&quot;: &quot;Collo A&quot;,\n    &quot;dimensions&quot;: {&quot;length&quot;: 40, &quot;width&quot;: 30, &quot;height&quot;: 20},\n    &quot;value&quot;: 10,\n    &quot;quantity&quot;: 2,\n    &quot;rotation_policy&quot;: &quot;custom&quot;,\n    &quot;allowed_orientations&quot;: [&quot;LWH&quot;, &quot;WLH&quot;],\n    &quot;consumptions&quot;: [{&quot;name&quot;: &quot;peso&quot;, &quot;amount&quot;: 25}]\n  }],\n  &quot;solver_options&quot;: {&quot;time_limit&quot;: 60, &quot;mip_gap&quot;: 0.01}\n}</pre><h3>Valori enumerati</h3><p><code>selection_policy</code>: <code>optional</code> o <code>all_required</code>. <code>gravity_mode</code>: <code>simple</code> o <code>none</code>. Politiche di rotazione: <code>fixed</code>, <code>keep_upright</code>, <code>x_only</code>, <code>y_only</code>, <code>z_only</code>, <code>any_orthogonal</code> o <code>custom</code>.</p><p>Usa array <code>capacities</code> e <code>consumptions</code> vuoti se non servono risorse aggiuntive. I nomi delle capacita' usati dai colli devono esistere nel container.</p>" },
+      "container": { "title": "Volume utile del container", "body": "Le dimensioni descrivono lo spazio rettangolare disponibile per il solver.", "html": "<h3>Contenimento</h3><p>Per ogni collo caricato, l'origine e' non negativa e il vertice superiore orientato non puo' superare lunghezza, larghezza o altezza del container.</p><h3>Misure fisiche</h3><p>Spessori, tolleranze e distanze di sicurezza devono essere gia' sottratti dalle dimensioni interne inserite.</p>" },
+      "resources": { "title": "Capacita' aggregate", "body": "Le capacita' aggiuntive affiancano alla geometria limiti lineari misurabili.", "html": "<h3>Vincolo lineare</h3><p>Per ogni risorsa nominata, la somma dei consumi delle unita' caricate non puo' superare il limite del container. Esempi tipici sono peso o punti di carico.</p><p>Categorie come fragilita' o incompatibilita' non sono capacita' scalari e richiedono vincoli dedicati.</p>" },
+      "items": { "title": "Colli e rotazioni", "body": "Ogni riga definisce unita' rettangolari indivisibili e i loro orientamenti ortogonali ammessi.", "html": "<h3>Politiche di rotazione</h3><p>Le rotazioni sono allineate agli assi e multiple di 90 gradi. Dimensioni risultanti uguali sono deduplicate automaticamente, quindi un cubo produce un solo orientamento geometrico.</p><h3>Orientamenti personalizzati</h3><p>Usa permutazioni di <code>LWH</code> separate da virgola, ad esempio <code>LWH, WLH</code>. Le lettere indicano quale dimensione originale viene assegnata a lunghezza, larghezza e altezza del container.</p>" },
+      "options": { "title": "Opzioni solver", "body": "Ogni campo modifica una parte diversa del calcolo o delle coordinate mostrate.", "html": "<h3>Politica di carico</h3><p><b>Massimizza valore caricato</b> permette esclusioni e massimizza la somma dei valori unitari. <b>Richiedi tutti i colli</b> verifica la richiesta completa; se inammissibile, Optees esegue un recupero opzionale indicato separatamente.</p><h3>Gravita'</h3><p><b>Nessuna gravita'</b> conserva le coordinate MILP originali. <b>Gravita' semplice</b> abbassa ogni collo mantenendo X/Y e orientamento fino al primo appoggio geometrico. Non e' un modello di stabilita' o portata.</p><h3>Limite tempo (secondi)</h3><p>Inserisci un numero positivo finito oppure lascia vuoto per non imporre un limite applicativo. Al limite il solver puo' restituire una soluzione ammissibile senza ottimalita' provata.</p><h3>Gap MIP relativo</h3><p>Inserisci un valore in <code>[0, 1)</code>; ad esempio <code>0.01</code> significa 1%. Un backend compatibile puo' fermarsi quando la differenza relativa tra incumbent e miglior bound raggiunge questa tolleranza. Valori minori richiedono una prova piu' forte e possono richiedere piu' tempo. Il risultato indica se il backend ha applicato il gap richiesto.</p>" }
+    },
+    "axes": { "length": "Lunghezza", "width": "Larghezza", "height": "Altezza" },
+    "solution": {
+      "title": "Risultato packing 3D", "back": "Indietro", "empty": "Nessun risultato di packing.", "status_line": "Modello richiesto: <b>{status}</b>", "no_incumbent": "Il solver non ha restituito un posizionamento ammissibile.", "recovery_notice": "Il carico completo richiesto non e' ammissibile. La visualizzazione mostra il recupero di valore massimo calcolato separatamente.",
+      "summary": { "section": "Riepilogo soluzione" },
+      "status": { "optimal": "Ottima", "feasible": "Ammissibile, ottimalita' non provata", "infeasible": "Inammissibile", "unbounded": "Illimitata", "not_solved": "Non risolto" },
+      "metrics": "Valore: {objective} | Caricati: {loaded} | Esclusi: {excluded} | Volume usato: {used_volume} | Volume libero: {free_volume} | Miglior bound: {bound} | Gap: {gap} | Tempo: {time} | Gravita': {gravity} | Capacita': {resources}",
+      "safety_notice": "Questo posizionamento e' geometricamente ammissibile per il modello dichiarato. Non certifica stabilita', portata, movimentazione o sicurezza del trasporto.",
+      "visualization": { "section": "Visualizzazione container", "hint": "I colori distinguono i tipi di collo; le coordinate usano l'origine del container (0, 0, 0). Usa la legenda per nascondere un tipo o seleziona una riga per evidenziare una unita'.", "empty": "Risolvi un modello ammissibile per visualizzare il posizionamento.", "unavailable": "Installa matplotlib per visualizzare il posizionamento 3D.", "reset": "Reimposta vista", "show_container": "Container", "show_labels": "Etichette" },
+      "placements": { "section": "Posizionamenti", "item": "Collo", "unit": "Unita'", "x": "X", "y": "Y", "z": "Z", "length": "Lunghezza", "width": "Larghezza", "height": "Altezza", "orientation": "Orientamento", "value": "Valore" },
+      "excluded": { "section": "Unita' escluse", "none": "Nessuna unita' esclusa." }
     }
   },
   "classification": {

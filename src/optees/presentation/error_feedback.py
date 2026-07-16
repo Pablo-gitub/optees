@@ -55,6 +55,13 @@ def localized_error_detail(scope: str, error: Exception | str) -> str:
             return S.t("error_feedback.graph.solver")
         return S.t("error_feedback.graph.topology")
 
+    if scope == "packing_validation":
+        if _contains(detail, "rotation", "orientation"):
+            return S.t("error_feedback.packing.rotations")
+        if _contains(detail, "resource", "capacity", "consumption"):
+            return S.t("error_feedback.packing.resources")
+        return S.t("error_feedback.packing.model")
+
     if scope == "update":
         return S.t(
             "error_feedback.update.download"

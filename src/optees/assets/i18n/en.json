@@ -5,6 +5,7 @@
       "linear": "Linear Programming",
       "nlp": "Nonlinear Programming",
       "graph": "Graph Theory",
+      "packing": "Packing & Loading",
       "ml": "AI & Machine Learning"
     },
     "comingSoon": "Coming soon…"
@@ -29,6 +30,10 @@
     "graph": {
       "title": "Shortest Path (Dijkstra)",
       "subtitle": "Use this method to find the least-cost route between two nodes in a weighted graph with no negative edge weights."
+    },
+    "packing": {
+      "title": "3D Packing & Loading",
+      "subtitle": "Place rectangular items inside one container, respecting dimensions, allowed rotations, and optional resource capacities."
     },
     "regression": {
       "title": "Linear Regression",
@@ -55,6 +60,7 @@
     "knap": "0/1 Knapsack",
     "nlp": "Nonlinear Programming (NLP)",
     "graph": "Shortest Path (Dijkstra)",
+    "packing": "3D Packing & Loading",
     "regression": "Linear Regression",
     "classification": "Binary Classification"
   },
@@ -159,6 +165,11 @@
       "weights": "Every edge weight must be a finite non-negative number because Dijkstra cannot use negative weights.",
       "topology": "Declare unique vertices, choose a source and destination, and ensure every edge joins two declared distinct vertices.",
       "solver": "The shortest-path solver is not available in this application session. Restart the application and try again."
+    },
+    "packing": {
+      "model": "Enter positive finite container and item dimensions, unique non-empty item IDs and names, positive integer quantities, and finite non-negative values.",
+      "rotations": "Choose a supported rotation policy. For Custom, enter valid XYZ permutation codes separated by commas.",
+      "resources": "Use unique non-empty resource names, finite non-negative capacity limits, and finite non-negative consumption values."
     },
     "assistant": {
       "generated_model": "The generated draft is not valid for the selected formulation. Review the recommendation and enter or import the model manually."
@@ -808,6 +819,58 @@
       "metrics": { "section": "Evaluation metrics", "hint": "Lower MAE, MSE, and RMSE are better on the same target scale. Higher R-squared is better, but it may be unavailable for a constant target.", "partition": "Partition", "mae": "MAE", "mse": "MSE", "rmse": "RMSE", "r_squared": "R-squared", "train": "Training", "test": "Test" },
       "predictions": { "section": "Predictions and residuals", "hint": "Residual = actual target minus predicted target. Test rows were excluded from fitting.", "row": "Row", "partition": "Partition", "actual": "Actual", "predicted": "Predicted", "residual": "Residual" },
       "plot": { "section": "One-feature fit", "hint": "This chart is shown only when exactly one feature is selected. It separates training and held-out test observations.", "unavailable": "A fit chart is available only when the model uses exactly one feature and matplotlib is installed.", "x_axis": "Feature", "y_axis": "Target", "line": "Fitted line", "train": "Training", "test": "Test" }
+    }
+  },
+  "packing": {
+    "header": {
+      "title": "Single-container 3D Packing",
+      "section": "Problem formulation",
+      "description": "Place orthogonal rectangular items in one rectangular container without overlap. Choose whether all items are required or the solver should maximize the loaded value.",
+      "example": "Example",
+      "problem": "Problem description"
+    },
+    "common": { "select": "Select", "remove_selected": "Remove selected" },
+    "import": { "button": "Import JSON", "dialog": "Open packing model", "info_tooltip": "Packing JSON format" },
+    "container": { "section": "Container", "hint": "Enter the internal usable dimensions. Items must remain entirely within this orthogonal volume.", "name": "Name", "length": "Length", "width": "Width", "height": "Height", "info_tooltip": "Container dimensions" },
+    "resources": { "section": "Additional capacities", "hint": "Optional aggregate limits such as maximum weight. Each added capacity creates a consumption column for every item.", "name": "Resource", "limit": "Limit", "add": "Add capacity", "unnamed": "Unnamed resource", "info_tooltip": "Additional capacity constraints" },
+    "items": { "section": "Items", "hint": "One row defines an item type. Quantity expands it into indivisible units; dimensions and permitted rotations determine feasible placements.", "add": "Add item", "info_tooltip": "Items and rotation policies", "select": "Select", "id": "ID", "name": "Name", "length": "Length", "width": "Width", "height": "Height", "quantity": "Quantity", "value": "Value", "rotation": "Allowed rotation", "custom_orientations": "Custom orientations", "choose_orientations": "Choose...", "choose_orientations_tooltip": "Choose the permitted resulting dimensions", "orientations_selected": "{count} selected" },
+    "orientation_dialog": { "title": "Choose permitted orientations", "hint": "Select every resulting orientation the item may use. L, W, and H refer to the original length, width, and height; geometrically duplicate results are already removed.", "option": "{code}  ->  {length} x {width} x {height}", "confirm": "Apply", "cancel": "Cancel" },
+    "rotation": { "fixed": "Fixed", "keep_upright": "Keep upright", "x_only": "Rotate around X", "y_only": "Rotate around Y", "z_only": "Rotate around Z", "any_orthogonal": "Any orthogonal", "custom": "Custom" },
+    "options": { "section": "Solver options", "hint": "The exact MILP grows rapidly with item count and orientations. A time limit may return the best feasible incumbent without proving optimality.", "selection": "Loading policy", "selection_optional": "Maximize loaded value", "selection_all_required": "Require every item", "gravity": "Gravity", "gravity_none": "No gravity", "gravity_simple": "Simple gravity", "time_limit": "Time limit (s)", "mip_gap": "Relative MIP gap", "info_tooltip": "Selection policy, gravity, and solver limits" },
+    "solve": {
+      "button": "Optimize packing",
+      "running": "Solving...",
+      "cancel": "Cancel solve",
+      "cancel_requested": "Cancellation requested. The solver will stop at the next supported interruption point.",
+      "cancel_pending": "The active backend did not confirm interruption; waiting for it to return.",
+      "model_size": "Exact model started: {units} units, {pairs} pairs, approximately {variables} variables.",
+      "long_running": "The solve has been running for one minute. You can keep waiting or cancel it.",
+      "very_long_running": "The solve has been running for two minutes. Runtime varies by machine and instance; consider cancelling and reducing units or orientations."
+    },
+    "complexity": {
+      "title": "Large exact packing model",
+      "moderate": "This model contains {units} units, {pairs} item pairs and {binaries} pairwise separation binaries. Exact runtime can vary substantially by machine and instance. Continue?",
+      "high": "This model contains {units} units, {pairs} item pairs and {binaries} pairwise separation binaries. The exact MILP may require substantial time or memory. Set a time limit and expect a feasible incumbent without an optimality proof. Continue?"
+    },
+    "error": { "title": "Invalid packing problem" },
+    "info": {
+      "close": "Close",
+      "import": { "title": "Packing JSON contract", "body": "Integrations can generate this versioned JSON object and load it through the same validated importer used by the GUI. This is a file/data contract, not an HTTP endpoint.", "html": "<h3>Complete minimal payload</h3><pre>{\n  &quot;version&quot;: &quot;1&quot;,\n  &quot;problem_type&quot;: &quot;packing&quot;,\n  &quot;variant&quot;: &quot;single_container_3d&quot;,\n  &quot;selection_policy&quot;: &quot;optional&quot;,\n  &quot;gravity_mode&quot;: &quot;simple&quot;,\n  &quot;container&quot;: {\n    &quot;id&quot;: &quot;container-1&quot;,\n    &quot;name&quot;: &quot;Container 1&quot;,\n    &quot;dimensions&quot;: {&quot;length&quot;: 120, &quot;width&quot;: 80, &quot;height&quot;: 100},\n    &quot;capacities&quot;: [{&quot;name&quot;: &quot;weight&quot;, &quot;limit&quot;: 1000}]\n  },\n  &quot;items&quot;: [{\n    &quot;id&quot;: &quot;box-a&quot;,\n    &quot;name&quot;: &quot;Box A&quot;,\n    &quot;dimensions&quot;: {&quot;length&quot;: 40, &quot;width&quot;: 30, &quot;height&quot;: 20},\n    &quot;value&quot;: 10,\n    &quot;quantity&quot;: 2,\n    &quot;rotation_policy&quot;: &quot;custom&quot;,\n    &quot;allowed_orientations&quot;: [&quot;LWH&quot;, &quot;WLH&quot;],\n    &quot;consumptions&quot;: [{&quot;name&quot;: &quot;weight&quot;, &quot;amount&quot;: 25}]\n  }],\n  &quot;solver_options&quot;: {&quot;time_limit&quot;: 60, &quot;mip_gap&quot;: 0.01}\n}</pre><h3>Enumerated values</h3><p><code>selection_policy</code>: <code>optional</code> or <code>all_required</code>. <code>gravity_mode</code>: <code>simple</code> or <code>none</code>. Rotation policies: <code>fixed</code>, <code>keep_upright</code>, <code>x_only</code>, <code>y_only</code>, <code>z_only</code>, <code>any_orthogonal</code>, or <code>custom</code>.</p><p>Use an empty <code>capacities</code> and <code>consumptions</code> array when no additional resource is needed. Capacity names referenced by items must exist in the container.</p>" },
+      "container": { "title": "Usable container volume", "body": "The dimensions describe the rectangular space available to the solver.", "html": "<h3>Containment</h3><p>For every loaded box, its origin is non-negative and its oriented upper corner cannot exceed container length, width, or height.</p><h3>Physical measurements</h3><p>Wall thickness, clearance, and loading tolerances must already be removed from the entered internal dimensions.</p>" },
+      "resources": { "title": "Aggregate capacities", "body": "Additional capacities complement geometry with measurable linear limits.", "html": "<h3>Linear constraint</h3><p>For each named resource, the sum of loaded-unit consumption cannot exceed the container limit. Typical examples are weight or pallet load points.</p><p>Categories such as fragility or incompatibility are not scalar capacities and require dedicated constraints.</p>" },
+      "items": { "title": "Items and rotations", "body": "Each row defines indivisible rectangular units and their permitted orthogonal orientations.", "html": "<h3>Rotation policies</h3><p>Rotations are axis-aligned multiples of 90 degrees. Equal resulting dimensions are deduplicated automatically, so a cube produces one geometric orientation.</p><h3>Custom orientations</h3><p>Use comma-separated permutations of <code>LWH</code>, for example <code>LWH, WLH</code>. The letters indicate which original dimension is assigned to container length, width, and height.</p>" },
+      "options": { "title": "Solver options", "body": "Each field changes a different part of the solve or the displayed coordinates.", "html": "<h3>Loading policy</h3><p><b>Maximize loaded value</b> permits exclusions and maximizes the sum of unit values. <b>Require every item</b> tests the complete request; if infeasible, Optees runs a separately labelled optional recovery.</p><h3>Gravity</h3><p><b>No gravity</b> preserves raw MILP coordinates. <b>Simple gravity</b> lowers each item at fixed X/Y and orientation to the first geometric support. It is not a stability or load-bearing model.</p><h3>Time limit (seconds)</h3><p>Enter a finite positive number, or leave blank for no application time limit. At the limit the solver may return a feasible incumbent whose optimality is not proven.</p><h3>Relative MIP gap</h3><p>Enter a value in <code>[0, 1)</code>; for example <code>0.01</code> means 1%. A supporting backend may stop when the relative difference between incumbent and best bound reaches this tolerance. Smaller values demand a stronger proof and can take longer. The result reports whether the backend applied the requested gap.</p>" }
+    },
+    "axes": { "length": "Length", "width": "Width", "height": "Height" },
+    "solution": {
+      "title": "3D Packing Result", "back": "Back", "empty": "No packing result yet.", "status_line": "Requested model: <b>{status}</b>", "no_incumbent": "The solver did not return a feasible placement.", "recovery_notice": "The complete requested load is infeasible. The visualization shows the separately computed maximum-value feasible recovery.",
+      "summary": { "section": "Solution summary" },
+      "status": { "optimal": "Optimal", "feasible": "Feasible, not proven optimal", "infeasible": "Infeasible", "unbounded": "Unbounded", "not_solved": "Not solved" },
+      "metrics": "Value: {objective} | Loaded: {loaded} | Excluded: {excluded} | Used volume: {used_volume} | Free volume: {free_volume} | Best bound: {bound} | Gap: {gap} | Time: {time} | Gravity: {gravity} | Capacities: {resources}",
+      "safety_notice": "This placement is geometrically feasible under the declared model. It is not a certification of stability, load bearing, handling, or transport safety.",
+      "visualization": { "section": "Container visualization", "hint": "Colors identify item types; coordinates use the container origin as (0, 0, 0). Use the legend to hide a type or select a row to highlight one unit.", "empty": "Solve a feasible model to display its placement.", "unavailable": "Install matplotlib to display the 3D placement.", "reset": "Reset view", "show_container": "Container", "show_labels": "Labels" },
+      "placements": { "section": "Placements", "item": "Item", "unit": "Unit", "x": "X", "y": "Y", "z": "Z", "length": "Length", "width": "Width", "height": "Height", "orientation": "Orientation", "value": "Value" },
+      "excluded": { "section": "Excluded units", "none": "No excluded units." }
     }
   },
   "classification": {
