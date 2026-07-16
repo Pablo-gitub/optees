@@ -158,30 +158,30 @@ support is represented by `null` or capability metadata, never invented.
 
 ### Phase 0 - Current Contract Inventory
 
-- [ ] Create `docs/local-agent/current-capability-inventory.md`.
-- [ ] Record each capability's domain input, JSON importer, use case, port,
+- [x] Create `docs/local-agent/current-capability-inventory.md`.
+- [x] Record each capability's domain input, JSON importer, use case, port,
   adapter, result type, statuses, diagnostics, dependency requirements, and
   tests.
-- [ ] Identify file-only importers that need an in-memory payload entry point.
-- [ ] Identify outputs that are not directly JSON serializable.
-- [ ] Record cancellation and time-limit support without assuming uniformity.
-- [ ] Confirm capability IDs and avoid exposing backend names as problem types.
+- [x] Identify file-only importers that need an in-memory payload entry point.
+- [x] Identify outputs that are not directly JSON serializable.
+- [x] Record cancellation and time-limit support without assuming uniformity.
+- [x] Confirm capability IDs and avoid exposing backend names as problem types.
 
 **Completion:** every existing workflow has a factual inventory entry and no
 production code has changed.
 
 ### Phase 1 - Versioned Result Codecs
 
-- [ ] Define shared job, mathematical-status, and termination-reason enums.
-- [ ] Define the common execution envelope and structured API error contract.
-- [ ] Define a serializer protocol for domain-specific results.
-- [ ] Select `lp.continuous` as the first pilot because its statuses,
+- [x] Define shared job, mathematical-status, and termination-reason enums.
+- [x] Define the common execution envelope and structured API error contract.
+- [x] Define a serializer protocol for domain-specific results.
+- [x] Select `lp.continuous` as the first pilot because its statuses,
   diagnostics, optimal ranges, and scientific regression cases exercise a
   meaningful contract.
-- [ ] Add an LP result codec without replacing the existing LP domain result.
-- [ ] Test JSON serialization, missing diagnostics, non-finite-number rejection,
+- [x] Add an LP result codec without replacing the existing LP domain result.
+- [x] Test JSON serialization, missing diagnostics, non-finite-number rejection,
   and status mapping.
-- [ ] Keep the LP desktop workflow visibly unchanged.
+- [x] Keep the LP desktop workflow visibly unchanged.
 
 **Explicitly excluded:** CLI, HTTP, job queues, semantic analysis, and migration
 of additional capabilities.

@@ -30,10 +30,11 @@ The implementation order is intentionally different because the first target
 is the more useful geometric workflow:
 
 1. Single-container 3D Packing;
-2. Multi-container 3D Packing;
-3. Interactive refinement;
-4. industrial constraints and heuristic solvers;
-5. Multi-container Capacity Allocation.
+2. support-aware single-container refinement;
+3. Multi-container 3D Packing;
+4. Interactive refinement;
+5. industrial constraints and heuristic solvers;
+6. Multi-container Capacity Allocation.
 
 ## Mathematical Scope
 
@@ -183,7 +184,8 @@ as an integer quantity of indivisible units.
   X/Y and orientation until it reaches the floor or the highest overlapping
   footprint below it.
 - [x] Explicitly delimit simple gravity from support-area, load-bearing,
-  balance, and stability constraints, which remain Phase 4 scope.
+  balance, and stability constraints. Support-aware refinement starts in Phase
+  2; physical and industrial constraints remain Phase 5 scope.
 
 ### Verification
 
@@ -202,7 +204,33 @@ as an integer quantity of indivisible units.
   document its provenance and checksum, and run an explicitly labelled derived
   two-box CI subset with an analytic expected objective.
 
-## Phase 2 - Multi-Container 3D Packing
+## Phase 2 - Support-Aware Single-Container Refinement
+
+This phase improves the visual and geometric quality of the existing optimal
+load before adding container assignment. It does not claim transport safety or
+full static stability.
+
+- [ ] Define bottom-face support area separately from irrelevant side contact.
+- [ ] Preserve the primary loaded-value optimum and every hard feasibility
+  constraint while refining a placement.
+- [ ] Add a deterministic support-aware improvement heuristic after simple
+  gravity, with an explicit seed and reproducible tie-breakers.
+- [ ] Report supported base area and support ratio per loaded item without
+  presenting them as a safety certification.
+- [ ] Reject any candidate move that violates containment, allowed
+  orientation, scalar capacities, or pairwise non-overlap.
+- [ ] Compare the refined placement with the original incumbent and retain the
+  original whenever no measured improvement is found.
+- [ ] Add analytic tests for floor support, partial support, unchanged primary
+  objective, deterministic output, and geometrically blocked placements.
+- [ ] Simplify rotation presets so common axis combinations are directly
+  selectable while the domain continues to store explicit orientation sets.
+
+An exact secondary solve that maximizes support lexicographically is deferred
+to Phase 5. The Phase 2 heuristic must therefore be labelled as placement
+improvement, not as a proof of maximum support.
+
+## Phase 3 - Multi-Container 3D Packing
 
 ### Fixed Container Set
 
@@ -231,7 +259,7 @@ as an integer quantity of indivisible units.
 - [ ] Provide a fleet summary table with value, volume, weight, cost, and proof
   status.
 
-## Phase 3 - Interactive Refinement
+## Phase 4 - Interactive Refinement
 
 Interactive refinement is a human-in-the-loop re-optimization workflow, not a
 claim that Optees inferred physical properties that were absent from the data.
@@ -248,22 +276,25 @@ claim that Optees inferred physical properties that were absent from the data.
   variants of the same packing.
 - [ ] Explain which requirements are hard and which are penalty-based.
 
-## Phase 4 - Industrial Constraints And Heuristics
+## Phase 5 - Industrial Constraints And Heuristics
 
-- [ ] Vertical support mode without claiming full static stability.
-- [ ] Stackability, fragility, incompatibility, and forbidden orientations.
+- [ ] Centre-of-mass projection diagnostics for each item and container.
+- [ ] Configurable minimum support-ratio constraints with explicit modelling
+  assumptions.
+- [ ] Stackability, fragility, incompatibility, forbidden orientations, and
+  load-bearing limits.
 - [ ] Unloading order and destination grouping.
-- [ ] Weight distribution and centre-of-mass diagnostics.
+- [ ] Weight distribution and container-balance objectives.
+- [ ] Optional exact lexicographic re-solve that preserves the proven primary
+  loaded-value optimum before optimizing support or balance.
 - [ ] Optional priority heuristic using available weight, volume, and density
   only as an explicitly labelled proxy when structural data is unavailable.
-- [ ] Load-bearing and support-area constraints only when their assumptions can
-  be stated and tested precisely.
 - [ ] Fast constructive heuristic for larger instances.
 - [ ] Improvement heuristic with seed, time budget, incumbent trace, and
   reproducibility metadata.
 - [ ] Exact-versus-heuristic comparison on small shared instances.
 
-## Phase 5 - Multi-Container Capacity Allocation
+## Phase 6 - Multi-Container Capacity Allocation
 
 This workflow deliberately ignores physical geometry. A scalar volume limit is
 therefore a capacity approximation, not proof that the objects physically fit.
