@@ -8,6 +8,12 @@ from optees.application.codecs.knapsack_bounded_problem_codec import (
 from optees.application.codecs.knapsack_bounded_result_codec import (
     KnapsackBoundedResultCodec,
 )
+from optees.application.codecs.knapsack_unbounded_problem_codec import (
+    knapsack_unbounded_model_from_dict,
+)
+from optees.application.codecs.knapsack_unbounded_result_codec import (
+    KnapsackUnboundedResultCodec,
+)
 from optees.application.codecs.knapsack_zero_one_problem_codec import (
     knapsack_zero_one_model_from_dict,
 )
@@ -21,6 +27,9 @@ from optees.application.ports.bounded_knapsack_solver_port import (
 )
 from optees.application.ports.knapsack_solver_port import KnapsackSolverPort
 from optees.application.ports.lp_solver_port import LPSolverPort
+from optees.application.ports.unbounded_knapsack_solver_port import (
+    UnboundedKnapsackSolverPort,
+)
 from optees.application.services.capability_registry import (
     CapabilityRegistry,
     RegisteredCapability,
@@ -31,16 +40,28 @@ from optees.application.usecases.solve_bounded_knapsack_usecase import (
 )
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
+from optees.application.usecases.solve_unbounded_knapsack_usecase import (
+    SolveUnboundedKnapsackUseCase,
+)
 from optees.data.adapters.knapsack.bounded_knapsack_solver_adapter import (
     BoundedKnapsackSolverAdapter,
 )
 from optees.data.adapters.knapsack.knapsack_solver_adapter import KnapsackSolverAdapter
+from optees.data.adapters.knapsack.unbounded_knapsack_solver_adapter import (
+    UnboundedKnapsackSolverAdapter,
+)
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.domain.entities.knapsack.bounded_solution import BoundedKnapsackSolution
 from optees.domain.entities.knapsack.solution import KnapsackSolution
+from optees.domain.entities.knapsack.unbounded_solution import (
+    UnboundedKnapsackSolution,
+)
 from optees.domain.entities.lp.solution import LPSolution
 from optees.domain.models.knapsack.bounded_knapsack_model import BoundedKnapsackModel
 from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
+from optees.domain.models.knapsack.unbounded_knapsack_model import (
+    UnboundedKnapsackModel,
+)
 from optees.domain.models.lp.lp_model import LPModel
 from optees.utility.lp_json_io import lp_model_from_dict
 
@@ -51,6 +72,8 @@ KNAPSACK_ZERO_ONE_CAPABILITY_ID = "knapsack.zero_one"
 KNAPSACK_ZERO_ONE_BACKEND_ID = "internal.dynamic_programming"
 KNAPSACK_BOUNDED_CAPABILITY_ID = "knapsack.bounded"
 KNAPSACK_BOUNDED_BACKEND_ID = "internal.bounded_dynamic_programming"
+KNAPSACK_UNBOUNDED_CAPABILITY_ID = "knapsack.unbounded"
+KNAPSACK_UNBOUNDED_BACKEND_ID = "internal.unbounded_dynamic_programming"
 
 
 def create_local_optimization_service() -> OptimizationService:
@@ -71,6 +94,11 @@ def create_local_optimization_service() -> OptimizationService:
     registry.register(
         create_knapsack_bounded_registration(
             solver_port=BoundedKnapsackSolverAdapter(),
+        )
+    )
+    registry.register(
+        create_knapsack_unbounded_registration(
+            solver_port=UnboundedKnapsackSolverAdapter(),
         )
     )
     return OptimizationService(registry)
@@ -154,6 +182,30 @@ def create_knapsack_bounded_registration(
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=KNAPSACK_BOUNDED_BACKEND_ID,
+    )
+
+
+def create_knapsack_unbounded_optimization_service(
+    *,
+    solver_port: UnboundedKnapsackSolverPort,
+) -> OptimizationService:
+    registry = CapabilityRegistry()
+    registry.register(create_knapsack_unbounded_registration(solver_port=solver_port))
+    return OptimizationService(registry)
+
+
+def create_knapsack_unbounded_registration(
+    *,
+    solver_port: UnboundedKnapsackSolverPort,
+) -> RegisteredCapability[UnboundedKnapsackModel, UnboundedKnapsackSolution]:
+    use_case = SolveUnboundedKnapsackUseCase(solver_port)
+    codec = KnapsackUnboundedResultCodec()
+    return RegisteredCapability(
+        descriptor=_knapsack_unbounded_descriptor(),
+        parse_problem=knapsack_unbounded_model_from_dict,
+        execute=use_case.execute,
+        serialize_result=codec.serialize,
+        backend_id=KNAPSACK_UNBOUNDED_BACKEND_ID,
     )
 
 
@@ -324,6 +376,76 @@ def _knapsack_bounded_input_schema() -> dict:
 
 
 def _knapsack_bounded_result_schema() -> dict:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+            "objective",
+            "quantities",
+            "selected_indices",
+            "selected_items",
+            "total_value",
+            "total_weight",
+            "remaining_capacity",
+        ],
+        "properties": {
+            "objective": {"type": ["number", "null"]},
+            "quantities": {"type": "array", "items": {"type": "integer"}},
+            "selected_indices": {"type": "array", "items": {"type": "integer"}},
+            "selected_items": {"type": "array"},
+            "total_value": {"type": "number"},
+            "total_weight": {"type": "integer"},
+            "remaining_capacity": {"type": ["integer", "null"]},
+        },
+    }
+
+
+def _knapsack_unbounded_descriptor() -> CapabilityDescriptor:
+    return CapabilityDescriptor(
+        capability_id=KNAPSACK_UNBOUNDED_CAPABILITY_ID,
+        title="Unbounded Knapsack",
+        problem_type="knapsack",
+        contract_version="1",
+        problem_schema_version="1",
+        result_schema_version="1",
+        input_schema=_knapsack_unbounded_input_schema(),
+        result_schema=_knapsack_unbounded_result_schema(),
+        default_options={},
+        available=True,
+        backend_candidates=(KNAPSACK_UNBOUNDED_BACKEND_ID,),
+        supports_time_limit=False,
+        supports_cancellation=False,
+    )
+
+
+def _knapsack_unbounded_input_schema() -> dict:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["version", "problem_type", "variant", "capacity", "items"],
+        "properties": {
+            "version": {"const": "1"},
+            "problem_type": {"const": "knapsack"},
+            "variant": {"const": "unbounded"},
+            "capacity": {"type": "integer", "minimum": 0},
+            "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "object",
+                    "required": ["name", "value", "weight"],
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1},
+                        "value": {"type": "number", "minimum": 0},
+                        "weight": {"type": "integer", "minimum": 0},
+                    },
+                },
+            },
+        },
+    }
+
+
+def _knapsack_unbounded_result_schema() -> dict:
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",

@@ -64,6 +64,7 @@ def test_list_capabilities_emits_one_versioned_json_document():
         "lp.continuous",
         "knapsack.zero_one",
         "knapsack.bounded",
+        "knapsack.unbounded",
     }
 
 
@@ -108,6 +109,45 @@ def test_solve_bounded_knapsack_through_cli():
     assert output["mathematical_status"] == "optimal"
     assert output["result"]["quantities"] == [2, 2]
     assert output["result"]["objective"] == pytest.approx(32.0)
+
+
+def test_solve_unbounded_knapsack_through_cli():
+    payload = {
+        "version": "1",
+        "problem_type": "knapsack",
+        "variant": "unbounded",
+        "capacity": 8,
+        "items": [
+            {"name": "A", "value": 10, "weight": 1},
+            {"name": "B", "value": 30, "weight": 2},
+            {"name": "C", "value": 44, "weight": 3},
+        ],
+    }
+
+    result = _run("solve", "knapsack.unbounded", stdin=json.dumps(payload))
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.SUCCESS
+    assert output["mathematical_status"] == "optimal"
+    assert output["result"]["quantities"] == [0, 4, 0]
+    assert output["result"]["objective"] == pytest.approx(120.0)
+
+
+def test_mathematically_unbounded_knapsack_has_dedicated_exit_code():
+    payload = {
+        "version": "1",
+        "problem_type": "knapsack",
+        "variant": "unbounded",
+        "capacity": 8,
+        "items": [{"name": "Free value", "value": 1, "weight": 0}],
+    }
+
+    result = _run("solve", "knapsack.unbounded", stdin=json.dumps(payload))
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.UNBOUNDED
+    assert output["mathematical_status"] == "unbounded"
+    assert output["result"]["objective"] is None
 
 
 def test_validate_accepts_problem_from_stdin_without_solving():

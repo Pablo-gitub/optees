@@ -67,8 +67,8 @@ replace the versioned result contract.
 
 ## Current Scope
 
-The registry currently exposes `lp.continuous`, `knapsack.zero_one`, and
-`knapsack.bounded`. It intentionally has no HTTP server, queue, persistent job
-state, arbitrary code execution, or unrestricted problem-format conversion.
-Additional capabilities are migrated through the same registry and facade one
-contract at a time.
+The registry currently exposes `lp.continuous`, `knapsack.zero_one`,
+`knapsack.bounded`, and `knapsack.unbounded`. It intentionally has no HTTP
+server, queue, persistent job state, arbitrary code execution, or unrestricted
+problem-format conversion. Additional capabilities are migrated through the
+same registry and facade one contract at a time.

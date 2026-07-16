@@ -7,20 +7,22 @@ from optees.application.codecs.knapsack_result_helpers import (
     not_solved_warning,
 )
 from optees.application.contracts.execution import SerializedResult
-from optees.domain.entities.knapsack.bounded_solution import BoundedKnapsackSolution
+from optees.domain.entities.knapsack.unbounded_solution import (
+    UnboundedKnapsackSolution,
+)
 
 
-class KnapsackBoundedResultCodec:
-    capability_id = "knapsack.bounded"
+class KnapsackUnboundedResultCodec:
+    capability_id = "knapsack.unbounded"
     result_schema_version = "1"
 
-    def serialize(self, solution: BoundedKnapsackSolution) -> SerializedResult:
+    def serialize(self, solution: UnboundedKnapsackSolution) -> SerializedResult:
         return SerializedResult(
             mathematical_status=mathematical_status(solution.status),
             result=integer_quantity_result_payload(solution),
             diagnostics=diagnostics_payload(solution.diagnostics, solution.extras),
             warnings=not_solved_warning(
                 solution.status,
-                solver_label="exact bounded dynamic-programming solver",
+                solver_label="exact unbounded dynamic-programming solver",
             ),
         )
