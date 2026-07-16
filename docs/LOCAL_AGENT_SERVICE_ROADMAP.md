@@ -267,17 +267,22 @@ Suggested order:
 1. [x] 0/1 Knapsack;
 2. [x] Bounded Knapsack;
 3. [x] Unbounded Knapsack;
-4. [ ] Fractional and Multi-dimensional Knapsack;
-5. [ ] MILP;
-6. [ ] Dijkstra;
-7. [ ] NLP;
-8. [ ] Regression and Binary Classification;
-9. [ ] Single-container 3D Packing as the long-running cancellable case.
+4. [x] Fractional Knapsack;
+5. [ ] Multi-dimensional Knapsack;
+6. [ ] MILP;
+7. [ ] Dijkstra;
+8. [ ] NLP;
+9. [ ] Regression and Binary Classification;
+10. [ ] Single-container 3D Packing as the long-running cancellable case.
 
 The Unbounded Knapsack contract preserves integer quantities and reports a
 mathematical `unbounded` outcome when a positive-value, zero-weight item can be
 selected indefinitely. Its production facade is covered by the deterministic
 reference cases already shared with the desktop workflow.
+
+The Fractional Knapsack contract preserves decimal capacities, weights, and
+selection fractions. It exposes the exact density-ordered greedy backend and
+does not coerce continuous decisions into integer quantities.
 
 `knapsack.zero_one` reuses the shared schema-v1 Knapsack importer through an
 application-owned mapper, the existing `SolveKnapsackUseCase`, and the exact

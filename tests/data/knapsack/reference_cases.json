@@ -48,5 +48,29 @@
       "expected_objective": 90,
       "expected_quantities": [6, 0, 0]
     }
+  ],
+  "fractional": [
+    {
+      "id": "classic_density_order",
+      "capacity": 50,
+      "items": [
+        {"name": "A", "value": 60, "weight": 10},
+        {"name": "B", "value": 100, "weight": 20},
+        {"name": "C", "value": 120, "weight": 30}
+      ],
+      "expected_objective": 240,
+      "expected_fractions": [1, 1, 0.6666666666666666]
+    },
+    {
+      "id": "decimal_capacity",
+      "capacity": 5.5,
+      "items": [
+        {"name": "A", "value": 8, "weight": 2},
+        {"name": "B", "value": 9, "weight": 3},
+        {"name": "C", "value": 5, "weight": 2.5}
+      ],
+      "expected_objective": 18,
+      "expected_fractions": [1, 1, 0.2]
+    }
   ]
 }
