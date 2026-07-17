@@ -43,6 +43,10 @@ from optees.application.codecs.milp_problem_codec import milp_model_from_public_
 from optees.application.codecs.milp_result_codec import MILPResultCodec
 from optees.application.codecs.nlp_problem_codec import nlp_model_from_public_dict
 from optees.application.codecs.nlp_result_codec import NLPResultCodec
+from optees.application.codecs.packing_problem_codec import (
+    packing_model_from_public_dict,
+)
+from optees.application.codecs.packing_result_codec import PackingResultCodec
 from optees.application.codecs.regression_problem_codec import (
     regression_model_from_public_dict,
 )
@@ -73,6 +77,7 @@ from optees.application.ports.multi_dimensional_knapsack_solver_port import (
     MultiDimensionalKnapsackSolverPort,
 )
 from optees.application.ports.nlp_solver_port import NLPSolverPort
+from optees.application.ports.packing_solver_port import PackingSolverPort
 from optees.application.ports.regression_solver_port import RegressionSolverPort
 from optees.application.ports.shortest_path_solver_port import ShortestPathSolverPort
 from optees.application.ports.unbounded_knapsack_solver_port import (
@@ -97,6 +102,9 @@ from optees.application.usecases.solve_multi_dimensional_knapsack_capability_use
     SolveMultiDimensionalKnapsackCapabilityUseCase,
 )
 from optees.application.usecases.solve_nlp_usecase import SolveNLPUseCase
+from optees.application.usecases.solve_single_container_packing_usecase import (
+    SolveSingleContainerPackingUseCase,
+)
 from optees.application.usecases.solve_shortest_path_usecase import (
     SolveShortestPathUseCase,
 )
@@ -129,6 +137,9 @@ from optees.data.adapters.knapsack.multi_dimensional_knapsack_solver_adapter imp
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
 from optees.data.adapters.nlp.nlp_solver_adapter import ScipyNLPSolverAdapter
+from optees.data.adapters.packing.ortools_single_container_packing_adapter import (
+    OrtoolsSingleContainerPackingAdapter,
+)
 from optees.data.adapters.regression.numpy_regression_adapter import (
     NumpyRegressionAdapter,
 )
@@ -145,6 +156,7 @@ from optees.domain.entities.knapsack.unbounded_solution import (
 from optees.domain.entities.lp.solution import LPSolution
 from optees.domain.entities.milp.solution import MILPSolution
 from optees.domain.entities.nlp.solution import NLPSolution
+from optees.domain.entities.packing.solution import PackingSolveResult
 from optees.domain.entities.regression.solution import RegressionSolution
 from optees.domain.models.classification.binary_classification_model import (
     BinaryClassificationModel,
@@ -161,6 +173,9 @@ from optees.domain.models.knapsack.unbounded_knapsack_model import (
 from optees.domain.models.lp.lp_model import LPModel
 from optees.domain.models.milp.milp_model import MILPModel
 from optees.domain.models.nlp.nlp_model import NLPModel
+from optees.domain.models.packing.single_container_packing_model import (
+    SingleContainerPackingModel,
+)
 from optees.domain.models.regression.regression_model import RegressionModel
 from optees.utility.lp_json_io import lp_model_from_dict
 
@@ -192,6 +207,9 @@ REGRESSION_CAPABILITY_ID = "ml.regression.linear"
 REGRESSION_BACKEND_ID = "numpy.linear_least_squares"
 CLASSIFICATION_CAPABILITY_ID = "ml.classification.binary_logistic"
 CLASSIFICATION_BACKEND_ID = "numpy.logistic_gradient_descent"
+PACKING_CAPABILITY_ID = "packing.single_container_3d"
+PACKING_ROUTER_ID = "optees.single_container_packing_router"
+PACKING_BACKEND_IDS = ("ortools.scip", "ortools.cbc")
 
 
 def create_local_optimization_service() -> OptimizationService:
@@ -255,6 +273,12 @@ def create_local_optimization_service() -> OptimizationService:
         create_classification_registration(
             solver_port=NumpyClassificationAdapter(),
             dependency_available=find_spec("numpy") is not None,
+        )
+    )
+    registry.register(
+        create_packing_registration(
+            solver_port=OrtoolsSingleContainerPackingAdapter(),
+            dependency_available=find_spec("ortools") is not None,
         )
     )
     return OptimizationService(registry)
@@ -572,6 +596,37 @@ def create_classification_registration(
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=CLASSIFICATION_BACKEND_ID,
+    )
+
+
+def create_packing_optimization_service(
+    *,
+    solver_port: PackingSolverPort,
+    dependency_available: bool = True,
+) -> OptimizationService:
+    registry = CapabilityRegistry()
+    registry.register(
+        create_packing_registration(
+            solver_port=solver_port,
+            dependency_available=dependency_available,
+        )
+    )
+    return OptimizationService(registry)
+
+
+def create_packing_registration(
+    *,
+    solver_port: PackingSolverPort,
+    dependency_available: bool,
+) -> RegisteredCapability[SingleContainerPackingModel, PackingSolveResult]:
+    use_case = SolveSingleContainerPackingUseCase(solver_port)
+    codec = PackingResultCodec()
+    return RegisteredCapability(
+        descriptor=_packing_descriptor(dependency_available=dependency_available),
+        parse_problem=packing_model_from_public_dict,
+        execute=use_case.execute,
+        serialize_result=codec.serialize,
+        backend_id=PACKING_ROUTER_ID,
     )
 
 
@@ -1590,5 +1645,208 @@ def _confusion_schema() -> dict:
         "required": list(fields),
         "properties": {
             key: {"type": "integer", "minimum": 0} for key in fields
+        },
+    }
+
+
+def _packing_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
+    return CapabilityDescriptor(
+        capability_id=PACKING_CAPABILITY_ID,
+        title="Orthogonal single-container 3D packing",
+        problem_type="packing",
+        contract_version="1",
+        problem_schema_version="1",
+        result_schema_version="1",
+        input_schema=_packing_input_schema(),
+        result_schema=_packing_result_schema(),
+        default_options={
+            "selection_policy": "optional",
+            "gravity_mode": "simple",
+        },
+        available=dependency_available,
+        unavailable_reason=(
+            None
+            if dependency_available
+            else "OR-Tools is required by the exact 3D packing backend."
+        ),
+        backend_candidates=PACKING_BACKEND_IDS,
+        supports_time_limit=True,
+        # Public cancellation starts with the Phase 5 job lifecycle.
+        supports_cancellation=False,
+    )
+
+
+def _packing_input_schema() -> dict:
+    dimensions = {
+        "type": "object",
+        "required": ["length", "width", "height"],
+        "properties": {
+            axis: {"type": "number", "exclusiveMinimum": 0}
+            for axis in ("length", "width", "height")
+        },
+    }
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+            "version",
+            "problem_type",
+            "variant",
+            "selection_policy",
+            "gravity_mode",
+            "container",
+            "items",
+        ],
+        "properties": {
+            "version": {"const": "1"},
+            "problem_type": {"const": "packing"},
+            "variant": {"const": "single_container_3d"},
+            "selection_policy": {"enum": ["optional", "all_required"]},
+            "gravity_mode": {"enum": ["none", "simple"]},
+            "container": {
+                "type": "object",
+                "required": ["id", "name", "dimensions", "capacities"],
+                "properties": {
+                    "id": {"type": "string", "minLength": 1},
+                    "name": {"type": "string", "minLength": 1},
+                    "dimensions": dimensions,
+                    "capacities": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["name", "limit"],
+                            "properties": {
+                                "name": {"type": "string", "minLength": 1},
+                                "limit": {"type": "number", "minimum": 0},
+                            },
+                        },
+                    },
+                },
+            },
+            "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "object",
+                    "required": [
+                        "id",
+                        "name",
+                        "dimensions",
+                        "value",
+                        "quantity",
+                        "rotation_policy",
+                        "allowed_orientations",
+                        "consumptions",
+                    ],
+                    "properties": {
+                        "id": {"type": "string", "minLength": 1},
+                        "name": {"type": "string", "minLength": 1},
+                        "dimensions": dimensions,
+                        "value": {"type": "number", "minimum": 0},
+                        "quantity": {"type": "integer", "minimum": 1},
+                        "rotation_policy": {
+                            "enum": [
+                                "fixed",
+                                "keep_upright",
+                                "x_only",
+                                "y_only",
+                                "z_only",
+                                "any_orthogonal",
+                                "custom",
+                            ]
+                        },
+                        "allowed_orientations": {
+                            "type": "array",
+                            "items": {
+                                "enum": [
+                                    "LWH",
+                                    "LHW",
+                                    "WLH",
+                                    "WHL",
+                                    "HLW",
+                                    "HWL",
+                                ]
+                            },
+                        },
+                        "consumptions": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": ["name", "amount"],
+                                "properties": {
+                                    "name": {"type": "string", "minLength": 1},
+                                    "amount": {"type": "number", "minimum": 0},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            "solver_options": {
+                "type": ["object", "null"],
+                "properties": {
+                    "time_limit": {
+                        "type": ["number", "null"],
+                        "exclusiveMinimum": 0,
+                    },
+                    "mip_gap": {
+                        "type": ["number", "null"],
+                        "minimum": 0,
+                        "exclusiveMaximum": 1,
+                    },
+                },
+            },
+        },
+    }
+
+
+def _packing_result_schema() -> dict:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["requested", "recovery"],
+        "properties": {
+            "requested": _packing_solution_schema(),
+            "recovery": {
+                "oneOf": [_packing_solution_schema(), {"type": "null"}]
+            },
+        },
+    }
+
+
+def _packing_solution_schema() -> dict:
+    return {
+        "type": "object",
+        "required": [
+            "objective",
+            "total_value",
+            "used_volume",
+            "placements",
+            "excluded_instance_ids",
+        ],
+        "properties": {
+            "objective": {"type": ["number", "null"]},
+            "total_value": {"type": "number", "minimum": 0},
+            "used_volume": {"type": "number", "minimum": 0},
+            "placements": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": [
+                        "instance_id",
+                        "item_id",
+                        "item_name",
+                        "unit_index",
+                        "orientation_code",
+                        "position",
+                        "dimensions",
+                        "value",
+                    ],
+                },
+            },
+            "excluded_instance_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
         },
     }

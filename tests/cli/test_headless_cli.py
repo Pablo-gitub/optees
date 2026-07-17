@@ -72,6 +72,7 @@ def test_list_capabilities_emits_one_versioned_json_document():
         "nlp.continuous_local",
         "ml.regression.linear",
         "ml.classification.binary_logistic",
+        "packing.single_container_3d",
     }
 
 
@@ -380,6 +381,48 @@ def test_train_binary_logistic_classification_through_cli():
     assert output["result"]["negative_label"] == "no"
     assert output["result"]["positive_label"] == "yes"
     assert output["result"]["test_metrics"]["accuracy"] == pytest.approx(1.0)
+
+
+def test_solve_single_container_packing_through_cli():
+    pytest.importorskip("ortools")
+    payload = {
+        "version": "1",
+        "problem_type": "packing",
+        "variant": "single_container_3d",
+        "selection_policy": "all_required",
+        "gravity_mode": "simple",
+        "container": {
+            "id": "container-1",
+            "name": "Container",
+            "dimensions": {"length": 4, "width": 3, "height": 2},
+            "capacities": [],
+        },
+        "items": [
+            {
+                "id": "box",
+                "name": "Box",
+                "dimensions": {"length": 2, "width": 3, "height": 2},
+                "value": 5,
+                "quantity": 2,
+                "rotation_policy": "fixed",
+                "allowed_orientations": [],
+                "consumptions": [],
+            }
+        ],
+        "solver_options": {"time_limit": 10, "mip_gap": 0.01},
+    }
+
+    result = _run(
+        "solve",
+        "packing.single_container_3d",
+        stdin=json.dumps(payload),
+    )
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.SUCCESS
+    assert output["mathematical_status"] == "optimal"
+    assert len(output["result"]["requested"]["placements"]) == 2
+    assert output["result"]["recovery"] is None
 
 
 def test_validate_accepts_problem_from_stdin_without_solving():

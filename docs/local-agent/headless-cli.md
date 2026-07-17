@@ -77,7 +77,11 @@ nonlinear optimization. NLP results are local numerical candidates and are not
 global-optimality certificates. Educational supervised learning is available
 through `ml.regression.linear` and `ml.classification.binary_logistic`, with
 deterministic splits, coefficients, metrics, and row-level predictions. The
-service intentionally has no HTTP server, queue, persistent job state,
-arbitrary code execution, or unrestricted problem-format conversion.
+registry also exposes `packing.single_container_3d` with orthogonal rotations,
+optional scalar capacities, time limits, simple gravity, and a separately
+labelled maximum-feasible recovery for infeasible all-items requests. Packing
+cancellation is intentionally deferred to the asynchronous job lifecycle. The
+service currently has no HTTP server, queue, persistent job state, arbitrary
+code execution, or unrestricted problem-format conversion.
 Additional capabilities are migrated through the same registry and facade one
 contract at a time.

@@ -273,7 +273,7 @@ Suggested order:
 7. [x] Dijkstra;
 8. [x] NLP;
 9. [x] Regression and Binary Classification;
-10. [ ] Single-container 3D Packing as the long-running cancellable case.
+10. [x] Single-container 3D Packing as the long-running, time-limited case.
 
 The Unbounded Knapsack contract preserves integer quantities and reports a
 mathematical `unbounded` outcome when a positive-value, zero-weight item can be
@@ -315,6 +315,16 @@ and row-level predictions. Binary classification also exposes the training-only
 feature scaling and decision threshold required to reproduce predictions. A
 trained model maps to `feasible`; warnings state that split metrics neither
 establish causality nor guarantee future predictive performance.
+
+`packing.single_container_3d` reuses the schema-v1 packing importer, exact
+OR-Tools formulation, orthogonal rotation policies, scalar capacities, and
+simple-gravity post-processing used by the desktop workflow. The public result
+keeps an infeasible all-items request separate from its optional
+maximum-feasible recovery, so the recovery is never mislabelled as satisfying
+the original request. Time limits and MIP-gap diagnostics are public. The
+backend's cooperative cancellation hook will be exposed only through the
+Phase 5 job lifecycle; the current synchronous capability therefore declares
+`supports_cancellation: false`.
 
 `knapsack.zero_one` reuses the shared schema-v1 Knapsack importer through an
 application-owned mapper, the existing `SolveKnapsackUseCase`, and the exact
