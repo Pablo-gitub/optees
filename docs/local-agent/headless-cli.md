@@ -72,7 +72,10 @@ The registry currently exposes `lp.continuous`, `knapsack.zero_one`,
 also exposes `knapsack.multi_dimensional` for binary, bounded, unbounded, and
 fractional quantity domains, `milp.linear` for mixed-integer linear models, and
 `graph.shortest_path.dijkstra` for directed or undirected graphs with finite
-non-negative weights. It intentionally has no HTTP server, queue, persistent
-job state, arbitrary code execution, or unrestricted problem-format conversion.
+non-negative weights, and `nlp.continuous_local` for safe-expression continuous
+nonlinear optimization. NLP results are local numerical candidates and are not
+global-optimality certificates. The service intentionally has no HTTP server,
+queue, persistent job state, arbitrary code execution, or unrestricted
+problem-format conversion.
 Additional capabilities are migrated through the same registry and facade one
 contract at a time.

@@ -35,6 +35,8 @@ from optees.application.codecs.knapsack_zero_one_result_codec import (
 from optees.application.codecs.lp_result_codec import LPResultCodec
 from optees.application.codecs.milp_problem_codec import milp_model_from_public_dict
 from optees.application.codecs.milp_result_codec import MILPResultCodec
+from optees.application.codecs.nlp_problem_codec import nlp_model_from_public_dict
+from optees.application.codecs.nlp_result_codec import NLPResultCodec
 from optees.application.codecs.shortest_path_problem_codec import (
     shortest_path_model_from_public_dict,
 )
@@ -57,6 +59,7 @@ from optees.application.ports.milp_solver_port import MILPSolverPort
 from optees.application.ports.multi_dimensional_knapsack_solver_port import (
     MultiDimensionalKnapsackSolverPort,
 )
+from optees.application.ports.nlp_solver_port import NLPSolverPort
 from optees.application.ports.shortest_path_solver_port import ShortestPathSolverPort
 from optees.application.ports.unbounded_knapsack_solver_port import (
     UnboundedKnapsackSolverPort,
@@ -79,6 +82,7 @@ from optees.application.usecases.solve_multi_dimensional_knapsack_capability_use
     MultiDimensionalResult,
     SolveMultiDimensionalKnapsackCapabilityUseCase,
 )
+from optees.application.usecases.solve_nlp_usecase import SolveNLPUseCase
 from optees.application.usecases.solve_shortest_path_usecase import (
     SolveShortestPathUseCase,
 )
@@ -101,6 +105,7 @@ from optees.data.adapters.knapsack.multi_dimensional_knapsack_solver_adapter imp
 )
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
+from optees.data.adapters.nlp.nlp_solver_adapter import ScipyNLPSolverAdapter
 from optees.domain.entities.graph.solution import ShortestPathSolution
 from optees.domain.entities.knapsack.bounded_solution import BoundedKnapsackSolution
 from optees.domain.entities.knapsack.fractional_solution import (
@@ -112,6 +117,7 @@ from optees.domain.entities.knapsack.unbounded_solution import (
 )
 from optees.domain.entities.lp.solution import LPSolution
 from optees.domain.entities.milp.solution import MILPSolution
+from optees.domain.entities.nlp.solution import NLPSolution
 from optees.domain.models.graph.shortest_path_model import ShortestPathModel
 from optees.domain.models.knapsack.bounded_knapsack_model import BoundedKnapsackModel
 from optees.domain.models.knapsack.fractional_knapsack_model import (
@@ -123,6 +129,7 @@ from optees.domain.models.knapsack.unbounded_knapsack_model import (
 )
 from optees.domain.models.lp.lp_model import LPModel
 from optees.domain.models.milp.milp_model import MILPModel
+from optees.domain.models.nlp.nlp_model import NLPModel
 from optees.utility.lp_json_io import lp_model_from_dict
 
 
@@ -147,6 +154,8 @@ MILP_ROUTER_ID = "optees.milp_router"
 MILP_BACKEND_IDS = ("ortools.cbc", "ortools.cp_sat")
 DIJKSTRA_CAPABILITY_ID = "graph.shortest_path.dijkstra"
 DIJKSTRA_BACKEND_ID = "internal.dijkstra_heap"
+NLP_CAPABILITY_ID = "nlp.continuous_local"
+NLP_BACKEND_ID = "scipy.optimize.minimize"
 
 
 def create_local_optimization_service() -> OptimizationService:
@@ -193,6 +202,12 @@ def create_local_optimization_service() -> OptimizationService:
     )
     registry.register(
         create_dijkstra_registration(solver_port=DijkstraSolverAdapter())
+    )
+    registry.register(
+        create_nlp_registration(
+            solver_port=ScipyNLPSolverAdapter(),
+            dependency_available=find_spec("scipy") is not None,
+        )
     )
     return OptimizationService(registry)
 
@@ -412,6 +427,37 @@ def create_dijkstra_registration(
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=DIJKSTRA_BACKEND_ID,
+    )
+
+
+def create_nlp_optimization_service(
+    *,
+    solver_port: NLPSolverPort,
+    dependency_available: bool = True,
+) -> OptimizationService:
+    registry = CapabilityRegistry()
+    registry.register(
+        create_nlp_registration(
+            solver_port=solver_port,
+            dependency_available=dependency_available,
+        )
+    )
+    return OptimizationService(registry)
+
+
+def create_nlp_registration(
+    *,
+    solver_port: NLPSolverPort,
+    dependency_available: bool,
+) -> RegisteredCapability[NLPModel, NLPSolution]:
+    use_case = SolveNLPUseCase(solver_port)
+    codec = NLPResultCodec()
+    return RegisteredCapability(
+        descriptor=_nlp_descriptor(dependency_available=dependency_available),
+        parse_problem=nlp_model_from_public_dict,
+        execute=use_case.execute,
+        serialize_result=codec.serialize,
+        backend_id=NLP_BACKEND_ID,
     )
 
 
@@ -1051,5 +1097,102 @@ def _dijkstra_result_schema() -> dict:
             "distance": {"type": ["number", "null"]},
             "path": {"type": "array", "items": {"type": "string"}},
             "hop_count": {"type": "integer", "minimum": 0},
+        },
+    }
+
+
+def _nlp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
+    return CapabilityDescriptor(
+        capability_id=NLP_CAPABILITY_ID,
+        title="Continuous local nonlinear optimization",
+        problem_type="nonlinear_programming",
+        contract_version="1",
+        problem_schema_version="1",
+        result_schema_version="1",
+        input_schema=_nlp_input_schema(),
+        result_schema=_nlp_result_schema(),
+        default_options={
+            "method": "BFGS",
+            "max_iterations": 1000,
+            "tolerance": 1e-8,
+        },
+        available=dependency_available,
+        unavailable_reason=(
+            None
+            if dependency_available
+            else "SciPy is required by the continuous NLP backend."
+        ),
+        backend_candidates=(NLP_BACKEND_ID,),
+        supports_time_limit=False,
+        supports_cancellation=False,
+    )
+
+
+def _nlp_input_schema() -> dict:
+    optional_number = {"type": ["number", "null"]}
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["version", "problem_type", "variables", "objective"],
+        "properties": {
+            "version": {"const": "1"},
+            "problem_type": {"const": "nonlinear_programming"},
+            "variables": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "object",
+                    "required": ["name", "initial"],
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1},
+                        "label": {"type": "string"},
+                        "lb": optional_number,
+                        "ub": optional_number,
+                        "initial": {"type": "number"},
+                    },
+                },
+            },
+            "objective": {
+                "type": "object",
+                "required": ["sense", "expression"],
+                "properties": {
+                    "sense": {"enum": ["min", "max"]},
+                    "expression": {"type": "string", "minLength": 1},
+                },
+            },
+            "solver_options": {
+                "type": ["object", "null"],
+                "properties": {
+                    "method": {"enum": ["BFGS", "Nelder-Mead", "L-BFGS-B"]},
+                    "max_iterations": {"type": "integer", "minimum": 1},
+                    "tolerance": {
+                        "type": ["number", "null"],
+                        "exclusiveMinimum": 0,
+                    },
+                },
+            },
+        },
+    }
+
+
+def _nlp_result_schema() -> dict:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["objective", "variables", "local_candidate"],
+        "properties": {
+            "objective": {"type": ["number", "null"]},
+            "variables": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["name", "value"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "value": {"type": "number"},
+                    },
+                },
+            },
+            "local_candidate": {"type": "boolean"},
         },
     }

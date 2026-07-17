@@ -69,6 +69,7 @@ def test_list_capabilities_emits_one_versioned_json_document():
         "knapsack.multi_dimensional",
         "milp.linear",
         "graph.shortest_path.dijkstra",
+        "nlp.continuous_local",
     }
 
 
@@ -275,6 +276,35 @@ def test_unreachable_dijkstra_path_has_infeasible_exit_code():
     assert result.returncode == ExitCode.INFEASIBLE
     assert output["mathematical_status"] == "infeasible"
     assert output["result"]["path"] == []
+
+
+def test_solve_local_continuous_nlp_through_cli():
+    payload = {
+        "version": "1",
+        "problem_type": "nonlinear_programming",
+        "variables": [
+            {"name": "x", "lb": None, "ub": None, "initial": 0}
+        ],
+        "objective": {"sense": "max", "expression": "10 - (x - 3)**2"},
+        "solver_options": {
+            "method": "BFGS",
+            "max_iterations": 1000,
+            "tolerance": 1e-9,
+        },
+    }
+
+    result = _run("solve", "nlp.continuous_local", stdin=json.dumps(payload))
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.SUCCESS
+    assert output["mathematical_status"] == "feasible"
+    assert output["result"]["local_candidate"] is True
+    assert output["result"]["objective"] == pytest.approx(10.0, abs=1e-6)
+    assert output["result"]["variables"][0]["name"] == "x"
+    assert output["result"]["variables"][0]["value"] == pytest.approx(
+        3.0, abs=1e-5
+    )
+    assert "local numerical candidate" in output["warnings"][0]
 
 
 def test_validate_accepts_problem_from_stdin_without_solving():
