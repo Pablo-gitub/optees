@@ -96,7 +96,7 @@ git clone https://github.com/Pablo-gitub/optees.git
 cd optees
 conda create -n optees python=3.12
 conda activate optees
-python -m pip install -e ".[plot]" pytest pytest-qt
+python -m pip install -e ".[plot,local-service,test]"
 python -m optees.main
 ```
 

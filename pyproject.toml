@@ -21,6 +21,13 @@ local-service = [
     "pydantic>=2.9,<3",
     "uvicorn>=0.34,<1",
 ]
+test = [
+    "httpx>=0.28,<1",
+    "pytest>=8,<9",
+    "pytest-qt>=4.5,<5",
+    "pytest-timeout>=2.4,<3",
+    "pytest-xdist>=3.8,<4",
+]
 
 [project.gui-scripts]
 optees = "optees.main:main"
@@ -40,3 +47,13 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "optees.assets" = ["**/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "gui: PySide6 presentation tests that may construct application windows",
+    "benchmark: measured scientific or external benchmark integrations",
+    "tcp: tests that open temporary loopback sockets or server processes",
+    "timeout: hard wall-time supplied by pytest-timeout",
+]

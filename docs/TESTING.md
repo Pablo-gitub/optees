@@ -68,6 +68,21 @@
 
 ## Commands
 ```bash
+# install reproducible development test dependencies
+python -m pip install -e ".[plot,local-service,test]"
+
+# fast local feedback: no full-window GUI, measured benchmarks, or sockets
+PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark and not tcp"
+
+# presentation behavior (kept serial until isolation is measured)
+PYTHONPATH=src python -m pytest -q -m gui
+
+# scientific/external benchmark integrations
+PYTHONPATH=src python -m pytest -q -m benchmark
+
+# real loopback transport and subprocess lifecycle
+PYTHONPATH=src python -m pytest -q -m tcp
+
 # run the complete suite from a source checkout
 PYTHONPATH=src python -m pytest -q
 
@@ -98,12 +113,23 @@ Profiling showed two distinct expensive groups:
   and commonly require 3–5 seconds per case.
 
 The next test-infrastructure iteration should therefore introduce explicit
-`benchmark` and `gui` groups, measure `pytest-xdist` first on the non-GUI
-subset with two and four workers, and gradually replace full-window fixtures
-with narrower view/controller fixtures. Parallel execution must not become the
-default until isolation is demonstrated. Dependency-based selection remains
+`benchmark`, `gui`, and `tcp` groups. These groups are assigned centrally from
+stable test ownership boundaries in `tests/conftest.py`; unknown markers fail
+collection. The next measured run should compare the non-GUI subset serially,
+with two workers, and with four workers using `--dist loadfile`. Full-window
+tests remain serial until isolation is demonstrated. Over time they should use
+narrower view/controller fixtures. Dependency-based selection remains
 secondary because i18n files, datasets, assets, and dynamic composition are
 material non-code inputs.
+
+Candidate commands for the next measured comparison are intentionally not
+configured as defaults:
+
+```bash
+PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark" --durations=20
+PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark" -n 2 --dist loadfile --durations=20
+PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark" -n 4 --dist loadfile --durations=20
+```
 
 ## Reproducibility
 
