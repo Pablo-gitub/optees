@@ -35,7 +35,16 @@ from optees.application.codecs.knapsack_zero_one_result_codec import (
 from optees.application.codecs.lp_result_codec import LPResultCodec
 from optees.application.codecs.milp_problem_codec import milp_model_from_public_dict
 from optees.application.codecs.milp_result_codec import MILPResultCodec
+from optees.application.codecs.shortest_path_problem_codec import (
+    shortest_path_model_from_public_dict,
+)
+from optees.application.codecs.shortest_path_result_codec import (
+    ShortestPathResultCodec,
+)
 from optees.application.contracts.capability import CapabilityDescriptor
+from optees.application.dtos.multi_dimensional_knapsack_dtos import (
+    MultiDimensionalKnapsackRequest,
+)
 from optees.application.ports.bounded_knapsack_solver_port import (
     BoundedKnapsackSolverPort,
 )
@@ -48,6 +57,7 @@ from optees.application.ports.milp_solver_port import MILPSolverPort
 from optees.application.ports.multi_dimensional_knapsack_solver_port import (
     MultiDimensionalKnapsackSolverPort,
 )
+from optees.application.ports.shortest_path_solver_port import ShortestPathSolverPort
 from optees.application.ports.unbounded_knapsack_solver_port import (
     UnboundedKnapsackSolverPort,
 )
@@ -69,9 +79,13 @@ from optees.application.usecases.solve_multi_dimensional_knapsack_capability_use
     MultiDimensionalResult,
     SolveMultiDimensionalKnapsackCapabilityUseCase,
 )
+from optees.application.usecases.solve_shortest_path_usecase import (
+    SolveShortestPathUseCase,
+)
 from optees.application.usecases.solve_unbounded_knapsack_usecase import (
     SolveUnboundedKnapsackUseCase,
 )
+from optees.data.adapters.graph.dijkstra_solver_adapter import DijkstraSolverAdapter
 from optees.data.adapters.knapsack.bounded_knapsack_solver_adapter import (
     BoundedKnapsackSolverAdapter,
 )
@@ -82,14 +96,12 @@ from optees.data.adapters.knapsack.knapsack_solver_adapter import KnapsackSolver
 from optees.data.adapters.knapsack.unbounded_knapsack_solver_adapter import (
     UnboundedKnapsackSolverAdapter,
 )
-from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.knapsack.multi_dimensional_knapsack_solver_adapter import (
     MultiDimensionalKnapsackSolverAdapter,
 )
+from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
-from optees.application.dtos.multi_dimensional_knapsack_dtos import (
-    MultiDimensionalKnapsackRequest,
-)
+from optees.domain.entities.graph.solution import ShortestPathSolution
 from optees.domain.entities.knapsack.bounded_solution import BoundedKnapsackSolution
 from optees.domain.entities.knapsack.fractional_solution import (
     FractionalKnapsackSolution,
@@ -100,6 +112,7 @@ from optees.domain.entities.knapsack.unbounded_solution import (
 )
 from optees.domain.entities.lp.solution import LPSolution
 from optees.domain.entities.milp.solution import MILPSolution
+from optees.domain.models.graph.shortest_path_model import ShortestPathModel
 from optees.domain.models.knapsack.bounded_knapsack_model import BoundedKnapsackModel
 from optees.domain.models.knapsack.fractional_knapsack_model import (
     FractionalKnapsackModel,
@@ -132,6 +145,8 @@ KNAPSACK_MULTI_DIMENSIONAL_BACKEND_IDS = (
 MILP_CAPABILITY_ID = "milp.linear"
 MILP_ROUTER_ID = "optees.milp_router"
 MILP_BACKEND_IDS = ("ortools.cbc", "ortools.cp_sat")
+DIJKSTRA_CAPABILITY_ID = "graph.shortest_path.dijkstra"
+DIJKSTRA_BACKEND_ID = "internal.dijkstra_heap"
 
 
 def create_local_optimization_service() -> OptimizationService:
@@ -175,6 +190,9 @@ def create_local_optimization_service() -> OptimizationService:
             solver_port=MILPSolverAdapter(),
             dependency_available=find_spec("ortools") is not None,
         )
+    )
+    registry.register(
+        create_dijkstra_registration(solver_port=DijkstraSolverAdapter())
     )
     return OptimizationService(registry)
 
@@ -370,6 +388,30 @@ def create_milp_registration(
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=MILP_ROUTER_ID,
+    )
+
+
+def create_dijkstra_optimization_service(
+    *,
+    solver_port: ShortestPathSolverPort,
+) -> OptimizationService:
+    registry = CapabilityRegistry()
+    registry.register(create_dijkstra_registration(solver_port=solver_port))
+    return OptimizationService(registry)
+
+
+def create_dijkstra_registration(
+    *,
+    solver_port: ShortestPathSolverPort,
+) -> RegisteredCapability[ShortestPathModel, ShortestPathSolution]:
+    use_case = SolveShortestPathUseCase(solver_port)
+    codec = ShortestPathResultCodec()
+    return RegisteredCapability(
+        descriptor=_dijkstra_descriptor(),
+        parse_problem=shortest_path_model_from_public_dict,
+        execute=use_case.execute,
+        serialize_result=codec.serialize,
+        backend_id=DIJKSTRA_BACKEND_ID,
     )
 
 
@@ -931,5 +973,83 @@ def _milp_result_schema() -> dict:
                     },
                 },
             },
+        },
+    }
+
+
+def _dijkstra_descriptor() -> CapabilityDescriptor:
+    return CapabilityDescriptor(
+        capability_id=DIJKSTRA_CAPABILITY_ID,
+        title="Dijkstra shortest path",
+        problem_type="shortest_path",
+        contract_version="1",
+        problem_schema_version="1",
+        result_schema_version="1",
+        input_schema=_dijkstra_input_schema(),
+        result_schema=_dijkstra_result_schema(),
+        default_options={"directed": True},
+        available=True,
+        backend_candidates=(DIJKSTRA_BACKEND_ID,),
+        supports_time_limit=False,
+        supports_cancellation=False,
+    )
+
+
+def _dijkstra_input_schema() -> dict:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+            "version",
+            "problem_type",
+            "directed",
+            "vertices",
+            "edges",
+            "source",
+            "destination",
+        ],
+        "properties": {
+            "version": {"const": "1"},
+            "problem_type": {"const": "shortest_path"},
+            "directed": {"type": "boolean"},
+            "vertices": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "object",
+                    "required": ["id"],
+                    "properties": {
+                        "id": {"type": "string", "minLength": 1},
+                        "label": {"type": "string"},
+                    },
+                },
+            },
+            "edges": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["from", "to", "weight"],
+                    "properties": {
+                        "from": {"type": "string", "minLength": 1},
+                        "to": {"type": "string", "minLength": 1},
+                        "weight": {"type": "number", "minimum": 0},
+                    },
+                },
+            },
+            "source": {"type": "string", "minLength": 1},
+            "destination": {"type": "string", "minLength": 1},
+        },
+    }
+
+
+def _dijkstra_result_schema() -> dict:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["distance", "path", "hop_count"],
+        "properties": {
+            "distance": {"type": ["number", "null"]},
+            "path": {"type": "array", "items": {"type": "string"}},
+            "hop_count": {"type": "integer", "minimum": 0},
         },
     }

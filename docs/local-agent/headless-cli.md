@@ -70,8 +70,9 @@ replace the versioned result contract.
 The registry currently exposes `lp.continuous`, `knapsack.zero_one`,
 `knapsack.bounded`, `knapsack.unbounded`, and `knapsack.fractional`. It
 also exposes `knapsack.multi_dimensional` for binary, bounded, unbounded, and
-fractional quantity domains, plus `milp.linear` for mixed-integer linear
-models. It intentionally has no HTTP server, queue, persistent job state,
-arbitrary code execution, or unrestricted problem-format conversion.
+fractional quantity domains, `milp.linear` for mixed-integer linear models, and
+`graph.shortest_path.dijkstra` for directed or undirected graphs with finite
+non-negative weights. It intentionally has no HTTP server, queue, persistent
+job state, arbitrary code execution, or unrestricted problem-format conversion.
 Additional capabilities are migrated through the same registry and facade one
 contract at a time.

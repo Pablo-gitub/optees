@@ -68,6 +68,7 @@ def test_list_capabilities_emits_one_versioned_json_document():
         "knapsack.fractional",
         "knapsack.multi_dimensional",
         "milp.linear",
+        "graph.shortest_path.dijkstra",
     }
 
 
@@ -222,6 +223,58 @@ def test_solve_milp_through_cli():
     assert result.returncode == ExitCode.SUCCESS
     assert output["mathematical_status"] == "optimal"
     assert output["result"]["objective"] == pytest.approx(11.0)
+
+
+def test_solve_dijkstra_shortest_path_through_cli():
+    payload = {
+        "version": "1",
+        "problem_type": "shortest_path",
+        "directed": True,
+        "vertices": [{"id": node} for node in ["A", "B", "C", "D"]],
+        "edges": [
+            {"from": "A", "to": "B", "weight": 4},
+            {"from": "A", "to": "C", "weight": 1},
+            {"from": "C", "to": "B", "weight": 2},
+            {"from": "B", "to": "D", "weight": 1},
+        ],
+        "source": "A",
+        "destination": "D",
+    }
+
+    result = _run(
+        "solve",
+        "graph.shortest_path.dijkstra",
+        stdin=json.dumps(payload),
+    )
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.SUCCESS
+    assert output["mathematical_status"] == "optimal"
+    assert output["result"]["distance"] == pytest.approx(4.0)
+    assert output["result"]["path"] == ["A", "C", "B", "D"]
+
+
+def test_unreachable_dijkstra_path_has_infeasible_exit_code():
+    payload = {
+        "version": "1",
+        "problem_type": "shortest_path",
+        "directed": True,
+        "vertices": [{"id": "A"}, {"id": "B"}],
+        "edges": [],
+        "source": "A",
+        "destination": "B",
+    }
+
+    result = _run(
+        "solve",
+        "graph.shortest_path.dijkstra",
+        stdin=json.dumps(payload),
+    )
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.INFEASIBLE
+    assert output["mathematical_status"] == "infeasible"
+    assert output["result"]["path"] == []
 
 
 def test_validate_accepts_problem_from_stdin_without_solving():

@@ -270,7 +270,7 @@ Suggested order:
 4. [x] Fractional Knapsack;
 5. [x] Multi-dimensional Knapsack;
 6. [x] MILP;
-7. [ ] Dijkstra;
+7. [x] Dijkstra;
 8. [ ] NLP;
 9. [ ] Regression and Binary Classification;
 10. [ ] Single-container 3D Packing as the long-running cancellable case.
@@ -295,6 +295,12 @@ scientific benchmark.
 integer, and binary variables, solver limits, feasible incumbents, bounds, and
 relative-gap diagnostics. The public boundary rejects duplicate variable names
 and non-finite numeric data before invoking OR-Tools.
+
+`graph.shortest_path.dijkstra` reuses the desktop graph importer and the
+deterministic non-negative shortest-path solver. Its public result includes the
+path, total distance, hop count, and settled-node trace. An unreachable
+destination maps to `infeasible` because no source-to-destination path satisfies
+the requested graph problem.
 
 `knapsack.zero_one` reuses the shared schema-v1 Knapsack importer through an
 application-owned mapper, the existing `SolveKnapsackUseCase`, and the exact
