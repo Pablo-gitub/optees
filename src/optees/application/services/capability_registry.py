@@ -6,6 +6,7 @@ from typing import Any, Generic, TypeVar
 
 from optees.application.contracts.capability import CapabilityDescriptor
 from optees.application.contracts.execution import SerializedResult
+from optees.application.contracts.solution_validation import SolutionValidation
 from optees.application.contracts.json_value import JsonValue
 
 
@@ -22,6 +23,7 @@ class RegisteredCapability(Generic[ModelT, ResultT]):
     execute: Callable[[ModelT], ResultT]
     serialize_result: Callable[[ResultT], SerializedResult]
     backend_id: str
+    validate_result: Callable[[ModelT, SerializedResult], SolutionValidation] | None = None
     cancel_execution: Callable[[], bool] | None = None
 
     def __post_init__(self) -> None:

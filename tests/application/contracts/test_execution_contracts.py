@@ -42,6 +42,8 @@ def test_execution_envelope_is_strict_json_and_keeps_statuses_separate():
     assert payload["mathematical_status"] == "optimal"
     assert payload["termination_reason"] == "completed"
     assert payload["validation"]["status"] == "not_available"
+    assert payload["validation"]["contract_version"] == "1"
+    assert payload["validation"]["limitations"]
 
 
 def test_running_job_can_have_no_mathematical_status_or_termination_reason():

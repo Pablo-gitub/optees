@@ -18,6 +18,7 @@ from optees.application.contracts.execution import (
     TerminationReason,
 )
 from optees.application.contracts.json_value import JsonValue, require_json_value
+from optees.application.contracts.solution_validation import SolutionValidation
 from optees.application.services.capability_registry import CapabilityRegistry
 from optees.core.version import get_app_version
 
@@ -142,6 +143,17 @@ class OptimizationService:
         )
         assert isinstance(normalized_diagnostics, dict)
 
+        validation = SolutionValidation.not_available(
+            "No independent validator is registered for this capability."
+        )
+        if registration.validate_result is not None:
+            try:
+                validation = registration.validate_result(model, serialized)
+            except Exception:
+                validation = SolutionValidation.not_available(
+                    "The independent validator failed internally."
+                )
+
         return ExecutionEnvelope(
             job_id=job_id or self._job_id_factory(),
             capability_id=capability_id,
@@ -150,6 +162,7 @@ class OptimizationService:
             termination_reason=serialized.termination_reason,
             result=serialized.result,
             diagnostics=normalized_diagnostics,
+            validation=validation,
             warnings=serialized.warnings,
             metadata=ExecutionMetadata(
                 optees_version=get_app_version(),

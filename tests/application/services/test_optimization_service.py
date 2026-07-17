@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import importlib.util
 import sys
 
@@ -12,11 +13,17 @@ from optees.application.contracts.execution import (
     MathematicalStatus,
     TerminationReason,
 )
+from optees.application.contracts.solution_validation import (
+    SolutionValidationStatus,
+)
 from optees.application.ports.lp_solver_port import LPSolverPort
+from optees.application.services.capability_registry import CapabilityRegistry
+from optees.application.services.optimization_service import OptimizationService
 from optees.composition.local_agent import (
     LP_BACKEND_ID,
     LP_CAPABILITY_ID,
     create_local_optimization_service,
+    create_lp_registration,
     create_lp_optimization_service,
 )
 
@@ -76,6 +83,7 @@ def test_lp_pilot_executes_with_fake_port_and_returns_versioned_envelope():
     assert outcome.mathematical_status is MathematicalStatus.OPTIMAL
     assert outcome.termination_reason is TerminationReason.COMPLETED
     assert outcome.result["objective"] == pytest.approx(10.0)
+    assert outcome.validation.status is SolutionValidationStatus.VERIFIED
     assert outcome.diagnostics["backend_id"] == LP_BACKEND_ID
     assert outcome.metadata.problem_schema_version == "1"
     assert fake.problem["sense"] == "max"
@@ -186,6 +194,26 @@ def test_technical_execution_error_does_not_leak_exception_message():
     assert "secret dataset" not in str(outcome.to_dict())
 
 
+def test_validator_failure_preserves_the_solver_result_and_is_not_available():
+    registration = create_lp_registration(solver_port=FakeLPSolver())
+    registry = CapabilityRegistry()
+    registry.register(
+        replace(
+            registration,
+            validate_result=lambda _model, _result: 1 / 0,
+        )
+    )
+    service = OptimizationService(registry, job_id_factory=lambda: "job-test")
+
+    outcome = service.solve(LP_CAPABILITY_ID, _valid_payload())
+
+    assert isinstance(outcome, ExecutionEnvelope)
+    assert outcome.mathematical_status is MathematicalStatus.OPTIMAL
+    assert outcome.result["objective"] == pytest.approx(10.0)
+    assert outcome.validation.status is SolutionValidationStatus.NOT_AVAILABLE
+    assert "failed internally" in outcome.validation.limitations[0]
+
+
 @pytest.mark.skipif(
     importlib.util.find_spec("scipy") is None,
     reason="SciPy is not installed.",
@@ -203,6 +231,7 @@ def test_production_composition_solves_reference_lp_without_presentation_imports
     }
     assert isinstance(outcome, ExecutionEnvelope)
     assert outcome.mathematical_status is MathematicalStatus.OPTIMAL
+    assert outcome.validation.status is SolutionValidationStatus.VERIFIED
     assert outcome.result["objective"] == pytest.approx(10.0)
     assert {row["name"]: row["value"] for row in outcome.result["variables"]} == (
         pytest.approx({"x": 2.0, "y": 2.0})

@@ -454,20 +454,75 @@ The MVP is complete only when:
 
 ## Post-MVP Phase A - Independent Solution Validation
 
-- [ ] Define `verified`, `partial`, `failed`, and `not_available` validation
-  states.
-- [ ] Record tolerances and every executed check.
-- [ ] Recompute LP/MILP objectives and verify bounds and constraints.
-- [ ] Verify Knapsack capacity, quantity, selection, and objective invariants.
-- [ ] Verify Dijkstra path continuity, edge existence, and distance.
-- [ ] Verify Packing containment, allowed orientations, scalar capacities, and
-  pairwise non-overlap.
-- [ ] Add appropriate validation for NLP and ML without claiming global
-  optimality, causality, fairness, or production suitability.
-- [ ] Treat result-validation failure as a distinct structured outcome.
+### A0 - Validation Contract And Orchestration
+
+- [x] Define typed `verified`, `partial`, `failed`, and `not_available` states.
+- [x] Record named absolute, relative, integrality, and geometry tolerances when
+  applicable.
+- [x] Record every executed check, its pass/fail state, measurements, and every
+  violation with a stable code and JSON path.
+- [x] Attach validators to capability registrations, after result serialization
+  and independently from backend diagnostics.
+- [x] Preserve mathematical status, job lifecycle, termination reason, and
+  validation status as separate concepts.
+- [x] Convert an unavailable or internally failed validator into an explicit
+  `not_available` report without discarding a solver result.
+
+The versioned validation contract is implemented in the application layer and
+is serialized inside every execution envelope. Validators receive the parsed
+model and the already serialized public result; they do not inspect backend
+residuals or alter solver and job statuses.
+
+### A1 - Linear And Mixed-Integer Models
+
+- [x] For continuous LP candidates, verify the complete variable vector,
+  bounds, every linear constraint, and the recomputed objective.
+- [ ] Extend the same checks to MILP and additionally verify integrality and
+  binary domains.
+- [x] Test LP feasible, tolerance-boundary, objective-mismatch, bound-violation,
+  constraint-violation, infeasible, and unbounded outcomes.
+- [ ] Test the corresponding MILP outcomes and integer-domain failures.
+
+### A2 - Knapsack Family
+
+- [ ] Verify 0/1, Bounded, Unbounded, and Fractional quantity domains,
+  selection consistency, capacity use, residual capacity, and objective.
+- [ ] Verify every capacity dimension and quantity mode for Multi-dimensional
+  Knapsack.
+- [ ] Use the existing Burkardt and OR-Library cases as independent regression
+  inputs without treating a known objective alone as a feasibility proof.
+
+### A3 - Graph And Packing
+
+- [ ] Verify Dijkstra path endpoints, continuity, edge existence, direction,
+  and recomputed distance.
+- [ ] Verify Packing containment, allowed orientations, scalar capacities,
+  pairwise non-overlap, loaded/excluded partition, and objective consistency.
+- [ ] Keep geometric tolerances distinct from scalar objective tolerances.
+
+### A4 - NLP And Educational ML
+
+- [ ] For NLP candidates, verify finite values, declared bounds, and objective
+  recomputation while explicitly declining any independent global-optimality
+  claim.
+- [ ] For Regression and Classification, verify reproducible dimensions,
+  finite parameters, prediction/metric consistency, and split accounting.
+- [ ] Never present these checks as evidence of causality, fairness,
+  generalization, or production suitability.
+
+### A5 - Public Failure Semantics And Documentation
+
+- [ ] Treat failed checks as a distinct `validation.status = failed` outcome;
+  do not relabel the solver's mathematical status or job lifecycle.
+- [ ] Surface failed validation prominently in REST, CLI, and agent guidance.
+- [ ] Add one verified and one failed validation example per capability.
+- [ ] Contract-test OpenAPI and document tolerance/version compatibility.
 
 Independent feasibility validation does not create an independent proof of
-optimality.
+optimality. A `verified` report means that all checks implemented and listed in
+that report passed at the recorded tolerances. It does not mean that omitted
+checks passed, that the backend's optimality certificate was independently
+reproduced, or that the model correctly represents the user's business intent.
 
 ## Post-MVP Phase B - Semantic Modeling Guidance
 

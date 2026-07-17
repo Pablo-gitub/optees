@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 from optees.application.contracts.json_value import JsonValue, dumps_json, require_json_value
+from optees.application.contracts.solution_validation import SolutionValidation
 
 
 class JobStatus(str, Enum):
@@ -70,12 +71,10 @@ class ExecutionEnvelope:
     result: dict[str, JsonValue]
     diagnostics: dict[str, JsonValue]
     metadata: ExecutionMetadata
-    validation: dict[str, JsonValue] = field(
-        default_factory=lambda: {
-            "status": "not_available",
-            "checks": [],
-            "violations": [],
-        }
+    validation: SolutionValidation = field(
+        default_factory=lambda: SolutionValidation.not_available(
+            "No independent validator is registered for this capability."
+        )
     )
     warnings: tuple[str, ...] = ()
     contract_version: str = "1"
@@ -101,7 +100,7 @@ class ExecutionEnvelope:
             ),
             "result": self.result,
             "diagnostics": self.diagnostics,
-            "validation": self.validation,
+            "validation": self.validation.to_dict(),
             "warnings": list(self.warnings),
             "metadata": self.metadata.to_dict(),
         }

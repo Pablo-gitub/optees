@@ -89,6 +89,9 @@ from optees.application.services.capability_registry import (
 )
 from optees.application.services.optimization_service import OptimizationService
 from optees.application.services.local_job_service import LocalJobService
+from optees.application.validation.lp_solution_validator import (
+    LPIndependentSolutionValidator,
+)
 from optees.application.usecases.solve_bounded_knapsack_usecase import (
     SolveBoundedKnapsackUseCase,
 )
@@ -322,6 +325,7 @@ def create_lp_registration(
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=LP_BACKEND_ID,
+        validate_result=LPIndependentSolutionValidator(),
     )
 
 
