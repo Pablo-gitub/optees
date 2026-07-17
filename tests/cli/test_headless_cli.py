@@ -67,6 +67,7 @@ def test_list_capabilities_emits_one_versioned_json_document():
         "knapsack.unbounded",
         "knapsack.fractional",
         "knapsack.multi_dimensional",
+        "milp.linear",
     }
 
 
@@ -199,6 +200,28 @@ def test_solve_binary_multi_dimensional_knapsack_through_cli():
     assert output["mathematical_status"] == "optimal"
     assert output["result"]["objective"] == pytest.approx(22.0)
     assert output["result"]["selected_indices"] == [0, 2]
+
+
+def test_solve_milp_through_cli():
+    pytest.importorskip("ortools")
+    payload = {
+        "version": "1",
+        "variables": [
+            {"name": "x", "lb": 0, "ub": 4, "integrality": "I"},
+            {"name": "open", "lb": 0, "ub": 1, "integrality": "B"},
+        ],
+        "objective": {"sense": "max", "coefficients": [3, -1]},
+        "constraints": [
+            {"coefficients": [1, -4], "relation": "<=", "rhs": 0},
+        ],
+    }
+
+    result = _run("solve", "milp.linear", stdin=json.dumps(payload))
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.SUCCESS
+    assert output["mathematical_status"] == "optimal"
+    assert output["result"]["objective"] == pytest.approx(11.0)
 
 
 def test_validate_accepts_problem_from_stdin_without_solving():

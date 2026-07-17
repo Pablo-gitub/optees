@@ -33,6 +33,8 @@ from optees.application.codecs.knapsack_zero_one_result_codec import (
     KnapsackZeroOneResultCodec,
 )
 from optees.application.codecs.lp_result_codec import LPResultCodec
+from optees.application.codecs.milp_problem_codec import milp_model_from_public_dict
+from optees.application.codecs.milp_result_codec import MILPResultCodec
 from optees.application.contracts.capability import CapabilityDescriptor
 from optees.application.ports.bounded_knapsack_solver_port import (
     BoundedKnapsackSolverPort,
@@ -62,6 +64,7 @@ from optees.application.usecases.solve_fractional_knapsack_usecase import (
 )
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
+from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
 from optees.application.usecases.solve_multi_dimensional_knapsack_capability_usecase import (
     MultiDimensionalResult,
     SolveMultiDimensionalKnapsackCapabilityUseCase,
@@ -96,6 +99,7 @@ from optees.domain.entities.knapsack.unbounded_solution import (
     UnboundedKnapsackSolution,
 )
 from optees.domain.entities.lp.solution import LPSolution
+from optees.domain.entities.milp.solution import MILPSolution
 from optees.domain.models.knapsack.bounded_knapsack_model import BoundedKnapsackModel
 from optees.domain.models.knapsack.fractional_knapsack_model import (
     FractionalKnapsackModel,
@@ -105,6 +109,7 @@ from optees.domain.models.knapsack.unbounded_knapsack_model import (
     UnboundedKnapsackModel,
 )
 from optees.domain.models.lp.lp_model import LPModel
+from optees.domain.models.milp.milp_model import MILPModel
 from optees.utility.lp_json_io import lp_model_from_dict
 
 
@@ -124,6 +129,9 @@ KNAPSACK_MULTI_DIMENSIONAL_BACKEND_IDS = (
     "internal.multidimensional_branch_and_bound",
     "ortools.linear_mixed_integer",
 )
+MILP_CAPABILITY_ID = "milp.linear"
+MILP_ROUTER_ID = "optees.milp_router"
+MILP_BACKEND_IDS = ("ortools.cbc", "ortools.cp_sat")
 
 
 def create_local_optimization_service() -> OptimizationService:
@@ -160,6 +168,12 @@ def create_local_optimization_service() -> OptimizationService:
         create_knapsack_multi_dimensional_registration(
             binary_solver_port=MultiDimensionalKnapsackSolverAdapter(),
             milp_solver_port=MILPSolverAdapter(),
+        )
+    )
+    registry.register(
+        create_milp_registration(
+            solver_port=MILPSolverAdapter(),
+            dependency_available=find_spec("ortools") is not None,
         )
     )
     return OptimizationService(registry)
@@ -325,6 +339,37 @@ def create_knapsack_multi_dimensional_registration(
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=KNAPSACK_MULTI_DIMENSIONAL_ROUTER_ID,
+    )
+
+
+def create_milp_optimization_service(
+    *,
+    solver_port: MILPSolverPort,
+    dependency_available: bool = True,
+) -> OptimizationService:
+    registry = CapabilityRegistry()
+    registry.register(
+        create_milp_registration(
+            solver_port=solver_port,
+            dependency_available=dependency_available,
+        )
+    )
+    return OptimizationService(registry)
+
+
+def create_milp_registration(
+    *,
+    solver_port: MILPSolverPort,
+    dependency_available: bool,
+) -> RegisteredCapability[MILPModel, MILPSolution]:
+    use_case = SolveMILPUseCase(solver_port)
+    codec = MILPResultCodec()
+    return RegisteredCapability(
+        descriptor=_milp_descriptor(dependency_available=dependency_available),
+        parse_problem=milp_model_from_public_dict,
+        execute=use_case.execute,
+        serialize_result=codec.serialize,
+        backend_id=MILP_ROUTER_ID,
     )
 
 
@@ -772,5 +817,119 @@ def _knapsack_multi_dimensional_result_schema() -> dict:
             "selected_items": {"type": "array"},
             "total_value": {"type": "number"},
             "resources": {"type": "array"},
+        },
+    }
+
+
+def _milp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
+    return CapabilityDescriptor(
+        capability_id=MILP_CAPABILITY_ID,
+        title="Mixed-integer linear programming",
+        problem_type="mixed_integer_linear_programming",
+        contract_version="1",
+        problem_schema_version="1",
+        result_schema_version="1",
+        input_schema=_milp_input_schema(),
+        result_schema=_milp_result_schema(),
+        default_options={},
+        available=dependency_available,
+        unavailable_reason=(
+            None
+            if dependency_available
+            else "OR-Tools is required by the MILP backends."
+        ),
+        backend_candidates=MILP_BACKEND_IDS,
+        supports_time_limit=True,
+        supports_cancellation=False,
+    )
+
+
+def _milp_input_schema() -> dict:
+    number_or_null = {"type": ["number", "null"]}
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["version", "variables", "objective", "constraints"],
+        "properties": {
+            "version": {"const": "1"},
+            "variables": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "label": {"type": "string"},
+                        "lb": number_or_null,
+                        "ub": number_or_null,
+                        "integrality": {
+                            "enum": [
+                                "C",
+                                "I",
+                                "B",
+                                "continuous",
+                                "integer",
+                                "binary",
+                            ]
+                        },
+                    },
+                },
+            },
+            "objective": {
+                "type": "object",
+                "required": ["sense", "coefficients"],
+                "properties": {
+                    "sense": {"enum": ["min", "max"]},
+                    "coefficients": {
+                        "type": "array",
+                        "items": number_or_null,
+                    },
+                    "offset": number_or_null,
+                },
+            },
+            "constraints": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["coefficients", "relation", "rhs"],
+                    "properties": {
+                        "coefficients": {
+                            "type": "array",
+                            "items": number_or_null,
+                        },
+                        "relation": {"enum": ["<=", "=", ">="]},
+                        "rhs": number_or_null,
+                    },
+                },
+            },
+            "solver": {
+                "type": ["object", "null"],
+                "properties": {
+                    "time_limit": number_or_null,
+                    "mip_gap": number_or_null,
+                },
+            },
+        },
+    }
+
+
+def _milp_result_schema() -> dict:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["objective", "variables"],
+        "properties": {
+            "objective": {"type": ["number", "null"]},
+            "variables": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["name", "value"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "value": {"type": "number"},
+                    },
+                },
+            },
         },
     }

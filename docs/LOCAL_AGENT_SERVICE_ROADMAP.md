@@ -269,7 +269,7 @@ Suggested order:
 3. [x] Unbounded Knapsack;
 4. [x] Fractional Knapsack;
 5. [x] Multi-dimensional Knapsack;
-6. [ ] MILP;
+6. [x] MILP;
 7. [ ] Dijkstra;
 8. [ ] NLP;
 9. [ ] Regression and Binary Classification;
@@ -290,6 +290,11 @@ bounded and unbounded integers, plus continuous fractional quantities, are
 routed through the existing linear mixed-integer solver formulation. The
 binary integration is checked against the included OR-Library `mknap1`
 scientific benchmark.
+
+`milp.linear` reuses the desktop schema-v1 importer and preserves continuous,
+integer, and binary variables, solver limits, feasible incumbents, bounds, and
+relative-gap diagnostics. The public boundary rejects duplicate variable names
+and non-finite numeric data before invoking OR-Tools.
 
 `knapsack.zero_one` reuses the shared schema-v1 Knapsack importer through an
 application-owned mapper, the existing `SolveKnapsackUseCase`, and the exact
