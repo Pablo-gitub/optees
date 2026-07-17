@@ -13,6 +13,11 @@ class ErrorCode(str, Enum):
     DEPENDENCY_UNAVAILABLE = "dependency_unavailable"
     EXECUTION_FAILED = "execution_failed"
     CANCELLATION_NOT_SUPPORTED = "cancellation_not_supported"
+    JOB_NOT_FOUND = "job_not_found"
+    JOB_RESULT_NOT_READY = "job_result_not_ready"
+    JOB_RESULT_NOT_AVAILABLE = "job_result_not_available"
+    JOB_CAPACITY_EXCEEDED = "job_capacity_exceeded"
+    SERVICE_UNAVAILABLE = "service_unavailable"
     INTERNAL_ERROR = "internal_error"
 
 

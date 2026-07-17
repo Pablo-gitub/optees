@@ -219,7 +219,7 @@ def test_registry_documents_packing_backends_and_current_execution_controls():
 
     assert descriptor["backend_candidates"] == list(PACKING_BACKEND_IDS)
     assert descriptor["supports_time_limit"] is True
-    assert descriptor["supports_cancellation"] is False
+    assert descriptor["supports_cancellation"] is True
     assert descriptor["input_schema"]["properties"]["gravity_mode"] == {
         "enum": ["none", "simple"]
     }

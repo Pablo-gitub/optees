@@ -110,3 +110,17 @@ def test_result_codec_emits_strict_json_for_unbounded_diagnostics():
     assert serialized.result["objective"] is None
     assert serialized.diagnostics["best_bound"] is None
     json.dumps(serialized.diagnostics, allow_nan=False)
+
+
+def test_result_codec_preserves_time_limit_with_feasible_incumbent():
+    solution = MILPSolution.from_utility_tuple(
+        "Feasible",
+        11,
+        {"x": 4, "open": 1},
+        {"backend": "cbc", "termination_reason": "time_limit"},
+    )
+
+    serialized = MILPResultCodec().serialize(solution)
+
+    assert serialized.mathematical_status.value == "feasible"
+    assert serialized.termination_reason.value == "time_limit"

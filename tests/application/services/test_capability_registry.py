@@ -62,3 +62,26 @@ def test_unavailable_descriptor_requires_a_reason():
             result_schema={},
             available=False,
         )
+
+
+def test_cancellable_descriptor_requires_an_executable_callback():
+    descriptor = CapabilityDescriptor(
+        capability_id="test.cancellable",
+        title="Cancellable",
+        problem_type="test",
+        input_schema={},
+        result_schema={},
+        supports_cancellation=True,
+    )
+
+    with pytest.raises(ValueError, match="cancellation callback"):
+        RegisteredCapability(
+            descriptor=descriptor,
+            parse_problem=lambda payload: payload,
+            execute=lambda model: model,
+            serialize_result=lambda result: SerializedResult(
+                mathematical_status=MathematicalStatus.OPTIMAL,
+                result=result,
+            ),
+            backend_id="test.backend",
+        )

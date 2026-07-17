@@ -9,6 +9,7 @@ from optees.application.usecases.solve_single_container_packing_usecase import (
 )
 from optees.data.adapters.packing.ortools_single_container_packing_adapter import (
     OrtoolsSingleContainerPackingAdapter,
+    _reached_time_limit,
 )
 from optees.domain.entities.packing.container import PackingContainer
 from optees.domain.entities.packing.geometry import Dimensions3D
@@ -129,6 +130,18 @@ def test_adapter_forwards_interrupt_to_active_ortools_solver():
 
     assert adapter.cancel() is True
     assert solver.calls == 1
+
+
+def test_adapter_accepts_cancellation_before_solver_registration():
+    adapter = OrtoolsSingleContainerPackingAdapter()
+
+    assert adapter.cancel() is True
+
+
+def test_adapter_marks_only_early_stopped_runs_near_configured_time_limit():
+    assert _reached_time_limit("Feasible", 10, 9500) is True
+    assert _reached_time_limit("Feasible", 10, 1000) is False
+    assert _reached_time_limit("Optimal", 10, 10000) is False
 
 
 def test_weight_capacity_selects_the_most_valuable_feasible_item():

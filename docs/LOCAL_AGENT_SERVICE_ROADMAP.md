@@ -343,16 +343,25 @@ invocable through the same in-process service and CLI.
 
 ### Phase 5 - Local Job Service
 
-- [ ] Define job entities separately from mathematical solver status.
-- [ ] Add an in-memory job repository with bounded retention.
-- [ ] Run at most one heavy job concurrently in the MVP.
-- [ ] Queue additional accepted jobs explicitly.
-- [ ] Preserve backend time limits and cancellation only where genuinely
+- [x] Define job entities separately from mathematical solver status.
+- [x] Add an in-memory job repository with bounded retention.
+- [x] Run at most one heavy job concurrently in the MVP.
+- [x] Queue additional accepted jobs explicitly.
+- [x] Preserve backend time limits and cancellation only where genuinely
   supported.
-- [ ] Return a feasible incumbent when available after a time limit or
+- [x] Return a feasible incumbent when available after a time limit or
   cancellation, without labelling it optimal.
-- [ ] Prevent new work during controlled shutdown.
-- [ ] Add lifecycle, concurrency, cancellation, and retention tests.
+- [x] Prevent new work during controlled shutdown.
+- [x] Add lifecycle, concurrency, cancellation, and retention tests.
+
+`LocalJobService` wraps the synchronous execution facade with one local worker,
+an explicit FIFO queue, bounded in-memory retention, and immutable public job
+snapshots. Operational lifecycle, mathematical outcome, and termination reason
+remain separate. Queued work can always be cancelled; running cancellation is
+advertised only for `packing.single_container_3d`, whose cooperative interrupt
+callback is bound in composition. A retained incumbent after cancellation is
+reported conservatively as `feasible`. The service has no network listener or
+persistent state; those remain Phase 6 concerns.
 
 **Explicitly excluded:** Redis, Celery, external queues, distributed workers,
 and persistent jobs.

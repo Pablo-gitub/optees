@@ -88,6 +88,7 @@ class OptimizationService:
         payload: Mapping[str, object],
         *,
         request_id: str | None = None,
+        job_id: str | None = None,
     ) -> ExecutionOutcome:
         registration = self._registry.get(capability_id)
         if registration is None:
@@ -142,11 +143,11 @@ class OptimizationService:
         assert isinstance(normalized_diagnostics, dict)
 
         return ExecutionEnvelope(
-            job_id=self._job_id_factory(),
+            job_id=job_id or self._job_id_factory(),
             capability_id=capability_id,
             job_status=JobStatus.COMPLETED,
             mathematical_status=serialized.mathematical_status,
-            termination_reason=TerminationReason.COMPLETED,
+            termination_reason=serialized.termination_reason,
             result=serialized.result,
             diagnostics=normalized_diagnostics,
             warnings=serialized.warnings,
@@ -157,6 +158,20 @@ class OptimizationService:
                 result_schema_version=descriptor.result_schema_version,
             ),
         )
+
+    def supports_cancellation(self, capability_id: str) -> bool:
+        registration = self._registry.get(capability_id)
+        return bool(
+            registration is not None
+            and registration.descriptor.supports_cancellation
+            and registration.cancel_execution is not None
+        )
+
+    def cancel(self, capability_id: str) -> bool:
+        registration = self._registry.get(capability_id)
+        if registration is None or registration.cancel_execution is None:
+            return False
+        return bool(registration.cancel_execution())
 
     @staticmethod
     def _capability_not_found(

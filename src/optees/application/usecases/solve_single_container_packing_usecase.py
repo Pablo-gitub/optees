@@ -49,7 +49,10 @@ class SolveSingleContainerPackingUseCase:
         """Cooperatively interrupt the current backend solve."""
         self._cancel_requested.set()
         cancel = getattr(self._solver, "cancel", None)
-        return bool(cancel()) if callable(cancel) else False
+        if not callable(cancel):
+            return False
+        cancel()
+        return True
 
     @staticmethod
     def _solution(raw: Dict[str, Any], gravity_mode: PackingGravityMode) -> PackingSolution:

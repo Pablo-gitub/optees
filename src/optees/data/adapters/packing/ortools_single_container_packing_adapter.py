@@ -24,7 +24,14 @@ class OrtoolsSingleContainerPackingAdapter(PackingSolverPort):
 
     def solve(self, problem: Dict[str, Any]) -> Dict[str, Any]:
         try:
-            return _solve(problem, self._register_solver)
+            result = _solve(problem, self._register_solver)
+            with self._lock:
+                cancel_requested = self._cancel_requested
+            if cancel_requested:
+                extras = dict(result.get("extras", {}) or {})
+                extras["termination_reason"] = "cancelled"
+                result["extras"] = extras
+            return result
         except Exception as exc:
             return {
                 "status": "NotSolved",
@@ -47,7 +54,7 @@ class OrtoolsSingleContainerPackingAdapter(PackingSolverPort):
             self._cancel_requested = True
             solver = self._active_solver
         if solver is None:
-            return False
+            return True
         try:
             return bool(solver.InterruptSolve())
         except Exception:
@@ -218,6 +225,8 @@ def _solve(
         "item_pair_count": len(items) * (len(items) - 1) // 2,
         "separation_binary_count": separation_count,
     }
+    if _reached_time_limit(status, time_limit, extras["wall_time_ms"]):
+        extras["termination_reason"] = "time_limit"
     return {
         "status": status,
         "objective": objective,
@@ -225,6 +234,17 @@ def _solve(
         "excluded_instance_ids": tuple(excluded),
         "extras": extras,
     }
+
+
+def _reached_time_limit(status: str, time_limit: object, wall_time_ms: object) -> bool:
+    if status not in {"Feasible", "NotSolved"} or time_limit is None:
+        return False
+    try:
+        limit_ms = float(time_limit) * 1000.0
+        elapsed_ms = float(wall_time_ms)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return limit_ms > 0 and elapsed_ms >= limit_ms * 0.9
 
 
 def _normalize_item(raw: object, index: int) -> Dict[str, Any]:

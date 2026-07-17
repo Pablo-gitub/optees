@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import math
 
-from optees.application.contracts.execution import MathematicalStatus, SerializedResult
+from optees.application.contracts.execution import (
+    MathematicalStatus,
+    SerializedResult,
+    TerminationReason,
+)
 from optees.application.contracts.json_value import JsonValue, require_json_value
 from optees.domain.entities.packing.solution import (
     PackingSolution,
@@ -53,6 +57,7 @@ class PackingResultCodec:
             result=result,
             diagnostics=diagnostics,
             warnings=_warnings(solve_result),
+            termination_reason=_termination_reason(requested),
         )
 
 
@@ -128,6 +133,15 @@ def _warnings(result: PackingSolveResult) -> tuple[str, ...]:
     if status is MILPSolveStatus.NOT_SOLVED:
         return ("The packing backend produced no usable placement.",)
     return ()
+
+
+def _termination_reason(solution: PackingSolution) -> TerminationReason:
+    value = str(solution.extras.get("termination_reason", "")).strip().lower()
+    if value == TerminationReason.TIME_LIMIT.value:
+        return TerminationReason.TIME_LIMIT
+    if value == TerminationReason.CANCELLED.value:
+        return TerminationReason.CANCELLED
+    return TerminationReason.COMPLETED
 
 
 def _finite(value: object) -> float:

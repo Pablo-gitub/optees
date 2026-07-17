@@ -53,6 +53,7 @@ class SerializedResult:
     result: dict[str, JsonValue]
     diagnostics: dict[str, JsonValue] = field(default_factory=dict)
     warnings: tuple[str, ...] = ()
+    termination_reason: TerminationReason = TerminationReason.COMPLETED
 
     def __post_init__(self) -> None:
         require_json_value(self.result, path="$.result")

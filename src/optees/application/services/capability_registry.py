@@ -22,10 +22,15 @@ class RegisteredCapability(Generic[ModelT, ResultT]):
     execute: Callable[[ModelT], ResultT]
     serialize_result: Callable[[ResultT], SerializedResult]
     backend_id: str
+    cancel_execution: Callable[[], bool] | None = None
 
     def __post_init__(self) -> None:
         if not self.backend_id.strip():
             raise ValueError("backend_id must not be empty.")
+        if self.descriptor.supports_cancellation and self.cancel_execution is None:
+            raise ValueError(
+                "a cancellation callback is required when cancellation is supported"
+            )
 
 
 class CapabilityRegistry:

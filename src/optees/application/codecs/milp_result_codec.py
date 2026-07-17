@@ -2,7 +2,11 @@ from __future__ import annotations
 
 import math
 
-from optees.application.contracts.execution import MathematicalStatus, SerializedResult
+from optees.application.contracts.execution import (
+    MathematicalStatus,
+    SerializedResult,
+    TerminationReason,
+)
 from optees.application.contracts.json_value import JsonValue, require_json_value
 from optees.domain.entities.milp.solution import MILPSolution
 from optees.domain.value_objects.milp.solve_status import MILPSolveStatus
@@ -61,6 +65,7 @@ class MILPResultCodec:
             result=result,
             diagnostics=diagnostics,
             warnings=_warnings(solution.status),
+            termination_reason=_termination_reason(solution),
         )
 
 
@@ -73,6 +78,12 @@ def _warnings(status: MILPSolveStatus) -> tuple[str, ...]:
     if status is MILPSolveStatus.NOT_SOLVED:
         return ("The MILP solver produced no usable solution.",)
     return ()
+
+
+def _termination_reason(solution: MILPSolution) -> TerminationReason:
+    if solution.extras.get("termination_reason") == TerminationReason.TIME_LIMIT.value:
+        return TerminationReason.TIME_LIMIT
+    return TerminationReason.COMPLETED
 
 
 def _finite(value: object, path: str) -> float:

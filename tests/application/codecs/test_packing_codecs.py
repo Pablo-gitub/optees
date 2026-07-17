@@ -164,3 +164,16 @@ def test_result_codec_sanitizes_non_finite_optional_diagnostics():
     assert serialized.diagnostics["requested"]["best_bound"] is None
     assert serialized.diagnostics["requested"]["relative_gap"] is None
     json.dumps(serialized.diagnostics, allow_nan=False)
+
+
+def test_result_codec_preserves_time_limit_termination_reason_with_incumbent():
+    raw = _raw_solution("Feasible")
+    raw["extras"]["termination_reason"] = "time_limit"
+
+    serialized = PackingResultCodec().serialize(
+        PackingSolveResult(PackingSolution.from_solver_result(raw))
+    )
+
+    assert serialized.mathematical_status.value == "feasible"
+    assert serialized.termination_reason.value == "time_limit"
+    assert serialized.result["requested"]["placements"]

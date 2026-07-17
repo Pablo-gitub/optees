@@ -88,6 +88,7 @@ from optees.application.services.capability_registry import (
     RegisteredCapability,
 )
 from optees.application.services.optimization_service import OptimizationService
+from optees.application.services.local_job_service import LocalJobService
 from optees.application.usecases.solve_bounded_knapsack_usecase import (
     SolveBoundedKnapsackUseCase,
 )
@@ -282,6 +283,15 @@ def create_local_optimization_service() -> OptimizationService:
         )
     )
     return OptimizationService(registry)
+
+
+def create_local_job_service(*, capacity: int = 100) -> LocalJobService:
+    from optees.application.services.job_repository import InMemoryJobRepository
+
+    return LocalJobService(
+        create_local_optimization_service(),
+        repository=InMemoryJobRepository(capacity=capacity),
+    )
 
 
 def create_lp_optimization_service(
@@ -627,6 +637,7 @@ def create_packing_registration(
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=PACKING_ROUTER_ID,
+        cancel_execution=use_case.cancel,
     )
 
 
@@ -1671,8 +1682,7 @@ def _packing_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
         ),
         backend_candidates=PACKING_BACKEND_IDS,
         supports_time_limit=True,
-        # Public cancellation starts with the Phase 5 job lifecycle.
-        supports_cancellation=False,
+        supports_cancellation=True,
     )
 
 
