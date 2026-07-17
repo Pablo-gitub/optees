@@ -7,6 +7,7 @@ from optees.application.contracts.json_value import JsonValue, require_json_valu
 
 
 class ErrorCode(str, Enum):
+    AUTHENTICATION_FAILED = "authentication_failed"
     INVALID_REQUEST = "invalid_request"
     VALIDATION_FAILED = "validation_failed"
     CAPABILITY_NOT_FOUND = "capability_not_found"

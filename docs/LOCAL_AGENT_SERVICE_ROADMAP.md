@@ -361,20 +361,21 @@ remain separate. Queued work can always be cancelled; running cancellation is
 advertised only for `packing.single_container_3d`, whose cooperative interrupt
 callback is bound in composition. A retained incumbent after cancellation is
 reported conservatively as `feasible`. The service has no network listener or
-persistent state; those remain Phase 6 concerns.
+persistent state. The network boundary is introduced in Phase 6; persistent
+jobs remain explicitly outside the local-service MVP.
 
 **Explicitly excluded:** Redis, Celery, external queues, distributed workers,
 and persistent jobs.
 
 ### Phase 6 - Local REST API
 
-- [ ] Add FastAPI, Pydantic, and Uvicorn behind a dedicated project dependency
-  extra and package them in release builds that expose the service.
-- [ ] Listen on `127.0.0.1` only.
-- [ ] Require a session bearer token for every endpoint except health.
-- [ ] Disable permissive CORS and enforce JSON content type and request-size
+- [x] Add FastAPI, Pydantic, and Uvicorn behind a dedicated project dependency
+  extra. Release-build integration remains an explicit Phase 7 task.
+- [x] Listen on `127.0.0.1` only.
+- [x] Require a session bearer token for every endpoint except health.
+- [x] Disable permissive CORS and enforce JSON content type and request-size
   limits.
-- [ ] Expose:
+- [x] Expose:
 
 ```text
 GET  /health
@@ -389,10 +390,18 @@ GET  /api/v1/jobs/{job_id}/result
 POST /api/v1/jobs/{job_id}/cancel
 ```
 
-- [ ] Generate and contract-test OpenAPI.
-- [ ] Use structured error responses with request IDs.
-- [ ] Never accept arbitrary executable code or unrestricted filesystem paths.
-- [ ] Add a full server integration test from health check through result.
+- [x] Generate and contract-test OpenAPI.
+- [x] Use structured error responses with request IDs.
+- [x] Never accept arbitrary executable code or unrestricted filesystem paths.
+- [x] Add a full server integration test from health check through result.
+
+The HTTP adapter lives in `optees.interfaces.http` and imports the application
+job service without introducing FastAPI into domain or presentation modules.
+The default FastAPI documentation routes are disabled; the OpenAPI document is
+available through the authenticated `/api/v1/openapi.json` endpoint. Mutating
+routes accept bounded JSON bodies only, and the provided server runner rejects
+all bind addresses except `127.0.0.1`. Process management, token generation,
+desktop controls, and release packaging remain Phase 7 responsibilities.
 
 ### Phase 7 - Server Process, Desktop Settings, And Packaging
 
@@ -415,17 +424,17 @@ POST /api/v1/jobs/{job_id}/cancel
 
 The MVP is complete only when:
 
-1. [ ] every currently registered capability has versioned input and output
+1. [x] every currently registered capability has versioned input and output
    JSON contracts;
-2. [ ] all capabilities can run without Qt through the execution facade and
+2. [x] all capabilities can run without Qt through the execution facade and
    CLI;
-3. [ ] the local authenticated REST service exposes capability discovery,
+3. [x] the local authenticated REST service exposes capability discovery,
    validation, jobs, status, result, and cancellation;
-4. [ ] mathematical status remains distinct from job lifecycle and termination
+4. [x] mathematical status remains distinct from job lifecycle and termination
    reason;
 5. [ ] the desktop can start and stop the service without blocking;
-6. [ ] existing GUI and JSON behavior remains compatible;
-7. [ ] OpenAPI matches the tested endpoints;
+6. [x] existing GUI and JSON behavior remains compatible;
+7. [x] OpenAPI matches the tested endpoints;
 8. [ ] packaged macOS, Windows, and Linux builds include the service entry
    point;
 9. [ ] deterministic and scientific regressions continue to pass;
