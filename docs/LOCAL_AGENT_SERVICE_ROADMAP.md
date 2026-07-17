@@ -405,20 +405,32 @@ desktop controls, and release packaging remain Phase 7 responsibilities.
 
 ### Phase 7 - Server Process, Desktop Settings, And Packaging
 
-- [ ] Run the REST server in a subprocess, not the Qt event loop.
-- [ ] Provide the same server entry point to the desktop manager and headless
+- [x] Run the REST server in a subprocess, not the Qt event loop.
+- [x] Provide the same server entry point to the desktop manager and headless
   CLI.
-- [ ] Implement port validation, automatic fallback, startup health check,
+- [x] Implement port validation, automatic fallback, startup health check,
   controlled shutdown, and failure reporting.
-- [ ] Generate a new token for each server session; do not commit, log, or show
+- [x] Generate a new token for each server session; do not commit, log, or show
   it without an explicit user action.
-- [ ] Add a localized **Local Solver Service** section to Settings with status,
+- [x] Add a localized **Local Solver Service** section to Settings with status,
   actual URL, start, stop, copy URL, copy configuration, and open API docs.
-- [ ] Stop the child service when the desktop application closes.
-- [ ] Update PyInstaller configuration and release CI for server dependencies
+- [x] Stop the child service when the desktop application closes.
+- [x] Update PyInstaller configuration and release CI for server dependencies
   and the headless entry point.
-- [ ] Test occupied ports, invalid custom ports, failed startup, restart,
+- [x] Test occupied ports, invalid custom ports, failed startup, restart,
   shutdown, and invalid tokens.
+
+`LocalServerProcessManager` owns one child process and generates a new token
+for every successful start attempt. The token is passed through the child
+environment rather than process arguments. A Qt controller performs startup
+and health checking outside the UI thread, while Settings exposes credentials
+only through an explicit copy action. The release matrix installs the optional
+service dependencies and smoke-tests the packaged executable against health
+and authenticated capability discovery before creating each installer.
+
+The implementation is complete. Acceptance criterion 8 remains open until a
+tagged GitHub Actions run verifies the packaged behavior on macOS, Windows,
+and Linux.
 
 ## MVP Acceptance Criteria
 
@@ -432,13 +444,13 @@ The MVP is complete only when:
    validation, jobs, status, result, and cancellation;
 4. [x] mathematical status remains distinct from job lifecycle and termination
    reason;
-5. [ ] the desktop can start and stop the service without blocking;
+5. [x] the desktop can start and stop the service without blocking;
 6. [x] existing GUI and JSON behavior remains compatible;
 7. [x] OpenAPI matches the tested endpoints;
 8. [ ] packaged macOS, Windows, and Linux builds include the service entry
    point;
-9. [ ] deterministic and scientific regressions continue to pass;
-10. [ ] limitations and unavailable diagnostics are explicit.
+9. [x] deterministic and scientific regressions continue to pass;
+10. [x] limitations and unavailable diagnostics are explicit.
 
 ## Post-MVP Phase A - Independent Solution Validation
 

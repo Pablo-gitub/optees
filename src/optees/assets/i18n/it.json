@@ -80,6 +80,36 @@
     "update_launching": "Apertura dell'installer. Optees verra' chiusa.",
     "update_unknown": "Non e' stato possibile stabilire se questa e' l'ultima versione.",
     "update_error": "Impossibile controllare gli aggiornamenti: {detail}",
+    "local_service": {
+      "title": "Servizio solver locale",
+      "description": "Avvia un'API autenticata su questo computer per consentire agli agenti software locali di scoprire ed eseguire i solver Optees. Il servizio non ascolta mai al di fuori di 127.0.0.1.",
+      "port": "Porta preferita",
+      "status": "Stato",
+      "url": "URL locale",
+      "start": "Avvia servizio",
+      "stop": "Arresta servizio",
+      "copy_url": "Copia URL",
+      "copy_configuration": "Copia configurazione di connessione",
+      "open_docs": "Apri schema API",
+      "security_note": "A ogni sessione viene generato un nuovo token privato. Viene incluso soltanto quando copi esplicitamente la configurazione di connessione.",
+      "state": {
+        "stopped": "Arrestato",
+        "starting": "Avvio e controllo dello stato in corso...",
+        "running": "In esecuzione",
+        "running_fallback": "In esecuzione sulla porta alternativa {port}, perche' la porta preferita non era disponibile.",
+        "stopping": "Arresto in corso...",
+        "error": "Operazione non riuscita: {detail}",
+        "action_error": "Il servizio e' in esecuzione, ma un'azione non e' riuscita: {detail}"
+      },
+      "errors": {
+        "invalid_token": "Non e' stato possibile generare un token di sessione sicuro.",
+        "start_failed": "Non e' stato possibile avviare il processo del server locale.",
+        "exited_during_startup": "Il server locale si e' chiuso durante l'avvio (codice {detail}).",
+        "health_timeout": "Il server locale non ha superato il controllo dello stato iniziale.",
+        "operation_failed": "L'operazione sul servizio non e' riuscita: {detail}",
+        "openapi_failed": "Non e' stato possibile aprire lo schema API autenticato."
+      }
+    },
     "lang": {
       "english": "Inglese",
       "italian": "Italiano"

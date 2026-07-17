@@ -61,11 +61,21 @@
 - `tests/presentation/test_classification_flow_happy.py`: Home navigation,
   train flow, imported data, localized documentation, and decision-boundary
   result view.
+- `tests/interfaces/http/` and
+  `tests/application/services/test_local_server_process*.py`: authenticated
+  REST contracts, real loopback transport, subprocess lifecycle, occupied-port
+  fallback, session-token replacement, OpenAPI access, and shutdown.
 
 ## Commands
 ```bash
 # run the complete suite from a source checkout
 PYTHONPATH=src python -m pytest -q
+
+# profile the slowest tests while running the authoritative complete suite
+PYTHONPATH=src python -m pytest -q --durations=40
+
+# rerun only the previous failures and stop at the first new failure
+PYTHONPATH=src python -m pytest -q --lf -x
 
 # run the scientific/reference knapsack tests
 PYTHONPATH=src python -m pytest -q \
@@ -75,6 +85,25 @@ PYTHONPATH=src python -m pytest -q \
   tests/application/usecases/test_solve_multi_dimensional_knapsack_orlib.py \
   tests/application/usecases/test_solve_knapsack_reference_cases.py
 ```
+
+## Runtime Baseline
+
+The Phase 7 baseline on an Apple Silicon development machine is 883 passed,
+6 skipped, and 3 third-party SWIG deprecation warnings in about 6 minutes.
+Profiling showed two distinct expensive groups:
+
+- scientific MIPLIB and Burkardt integrations account for roughly 96 seconds
+  across the six slowest cases;
+- localized presentation flows repeatedly construct the complete `MainWindow`
+  and commonly require 3–5 seconds per case.
+
+The next test-infrastructure iteration should therefore introduce explicit
+`benchmark` and `gui` groups, measure `pytest-xdist` first on the non-GUI
+subset with two and four workers, and gradually replace full-window fixtures
+with narrower view/controller fixtures. Parallel execution must not become the
+default until isolation is demonstrated. Dependency-based selection remains
+secondary because i18n files, datasets, assets, and dynamic composition are
+material non-code inputs.
 
 ## Reproducibility
 

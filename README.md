@@ -43,6 +43,9 @@ reproducible optimization tools without sending data to a cloud service.
   JSON rather than maintaining ad-hoc scripts for every small model.
 - **English and Italian:** the application, its explanations, and its local
   assistant support both languages.
+- **Local solver API:** packaged builds can start an authenticated loopback
+  service from Settings, allowing local scripts and software agents to discover
+  and execute the same versioned solver contracts without driving the GUI.
 
 ## See It In Action
 
@@ -97,6 +100,12 @@ python -m pip install -e ".[plot]" pytest pytest-qt
 python -m optees.main
 ```
 
+To develop or use the optional local solver API, install the dedicated extra:
+
+```bash
+python -m pip install -e ".[plot,local-service]"
+```
+
 Run the complete test suite from a source checkout:
 
 ```bash
@@ -129,6 +138,7 @@ model is suitable for a consequential real-world decision. In particular:
 - [Project roadmap](docs/PROJECT_ROADMAP.md)
 - [Datasets and formats](docs/DATASETS.md)
 - [Testing strategy](docs/TESTING.md)
+- [Local solver service](docs/local-agent/server-process-and-desktop.md)
 - [Release procedure](docs/RELEASING.md)
 - [Website deployment](docs/WEBSITE_DEPLOYMENT.md)
 

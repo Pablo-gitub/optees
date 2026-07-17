@@ -80,6 +80,36 @@
     "update_launching": "Opening the installer. Optees will close now.",
     "update_unknown": "Could not determine whether this is the latest version.",
     "update_error": "Could not check updates: {detail}",
+    "local_service": {
+      "title": "Local Solver Service",
+      "description": "Start an authenticated API on this computer so local software agents can discover and run Optees solvers. The service never listens outside 127.0.0.1.",
+      "port": "Preferred port",
+      "status": "Status",
+      "url": "Local URL",
+      "start": "Start service",
+      "stop": "Stop service",
+      "copy_url": "Copy URL",
+      "copy_configuration": "Copy connection configuration",
+      "open_docs": "Open API schema",
+      "security_note": "A new private token is generated for every session. It is included only when you explicitly copy the connection configuration.",
+      "state": {
+        "stopped": "Stopped",
+        "starting": "Starting and checking health...",
+        "running": "Running",
+        "running_fallback": "Running on fallback port {port} because the preferred port was unavailable.",
+        "stopping": "Stopping...",
+        "error": "Failed: {detail}",
+        "action_error": "Service is running, but an action failed: {detail}"
+      },
+      "errors": {
+        "invalid_token": "A secure session token could not be generated.",
+        "start_failed": "The local server process could not be started.",
+        "exited_during_startup": "The local server exited during startup (code {detail}).",
+        "health_timeout": "The local server did not pass its startup health check.",
+        "operation_failed": "The service operation failed: {detail}",
+        "openapi_failed": "The authenticated API schema could not be opened."
+      }
+    },
     "lang": {
       "english": "English",
       "italian": "Italiano"

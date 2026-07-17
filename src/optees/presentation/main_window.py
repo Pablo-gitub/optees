@@ -96,6 +96,8 @@ from optees.data.adapters.assistant import RuleBasedAssistantAdapter
 from optees.presentation.views.lp_solution_view.lp_solution_view import LPSolutionView
 from optees.presentation.controllers.main_controller import MainController
 from optees.presentation.controllers.update_controller import UpdateController
+from optees.presentation.controllers.local_server_controller import LocalServerController
+from optees.application.services.local_server_process import LocalServerProcessManager
 
 
 class MainWindow(QMainWindow):
@@ -188,6 +190,12 @@ class MainWindow(QMainWindow):
         )
         self.knap_page.set_multi_dimensional_milp_solve_usecase(self.solve_milp_uc)
         self.settings_page = SettingsView()
+        self.local_server_manager = LocalServerProcessManager()
+        self.local_server_controller = LocalServerController(
+            self.settings_page,
+            self.local_server_manager,
+            self,
+        )
         self.lp_example_page = LPExampleView()
         self.lp_problem_page = LPProblemDescriptionView()
         self.milp_example_page = MILPExampleView()
@@ -285,6 +293,10 @@ class MainWindow(QMainWindow):
         self.main_controller = MainController(self)
         if packaged and not updates_disabled:
             QTimer.singleShot(900, self.update_controller.check_for_updates)
+
+    def closeEvent(self, event) -> None:
+        self.local_server_controller.shutdown()
+        super().closeEvent(event)
 
     # --- page registry ---
     def register_page(self, name: str, widget: QWidget) -> None:

@@ -1,15 +1,36 @@
 from __future__ import annotations
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QComboBox, QFormLayout
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtWidgets import (
+    QComboBox,
+    QFormLayout,
+    QGroupBox,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSpinBox,
+    QVBoxLayout,
+    QWidget,
+)
 
 from PySide6.QtCore import QLocale
 
 from optees.core.version import get_app_version
 from optees.core.string_manager import strings as S
 from optees.presentation.error_feedback import localized_error_detail
+from optees.application.services.local_server_process import (
+    DEFAULT_LOCAL_SERVER_PORT,
+    LocalServerSnapshot,
+    LocalServerState,
+)
 
 
 class SettingsView(QWidget):
+    service_start_requested = Signal(int)
+    service_stop_requested = Signal()
+    service_copy_url_requested = Signal()
+    service_copy_configuration_requested = Signal()
+    service_open_docs_requested = Signal()
+
     """
     Settings page: currently only language selection.
     Future settings can be added here.
@@ -58,6 +79,69 @@ class SettingsView(QWidget):
         form.addRow(self.lbl_version, self.value_version)
         form.addRow(self.lbl_update, self.value_update)
         root.addLayout(form)
+
+        self.service_group = QGroupBox(self)
+        service_layout = QVBoxLayout(self.service_group)
+        self.service_description = QLabel(self.service_group)
+        self.service_description.setWordWrap(True)
+        service_layout.addWidget(self.service_description)
+
+        service_form = QFormLayout()
+        self.service_port_label = QLabel(self.service_group)
+        self.service_port = QSpinBox(self.service_group)
+        self.service_port.setObjectName("localServerPort")
+        self.service_port.setRange(1024, 65535)
+        self.service_port.setValue(DEFAULT_LOCAL_SERVER_PORT)
+        self.service_status_label = QLabel(self.service_group)
+        self.service_status_value = QLabel(self.service_group)
+        self.service_status_value.setObjectName("localServerStatus")
+        self.service_status_value.setWordWrap(True)
+        self.service_url_label = QLabel(self.service_group)
+        self.service_url_value = QLabel("-", self.service_group)
+        self.service_url_value.setObjectName("localServerUrl")
+        self.service_url_value.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        service_form.addRow(self.service_port_label, self.service_port)
+        service_form.addRow(self.service_status_label, self.service_status_value)
+        service_form.addRow(self.service_url_label, self.service_url_value)
+        service_layout.addLayout(service_form)
+
+        primary_actions = QHBoxLayout()
+        secondary_actions = QHBoxLayout()
+        self.service_start_button = QPushButton(self.service_group)
+        self.service_start_button.setObjectName("localServerStartButton")
+        self.service_stop_button = QPushButton(self.service_group)
+        self.service_stop_button.setObjectName("localServerStopButton")
+        self.service_copy_url_button = QPushButton(self.service_group)
+        self.service_copy_url_button.setObjectName("localServerCopyUrlButton")
+        self.service_copy_config_button = QPushButton(self.service_group)
+        self.service_copy_config_button.setObjectName("localServerCopyConfigButton")
+        self.service_open_docs_button = QPushButton(self.service_group)
+        self.service_open_docs_button.setObjectName("localServerOpenDocsButton")
+        primary_actions.addWidget(self.service_start_button)
+        primary_actions.addWidget(self.service_stop_button)
+        primary_actions.addStretch(1)
+        secondary_actions.addWidget(self.service_copy_url_button)
+        secondary_actions.addWidget(self.service_copy_config_button)
+        secondary_actions.addWidget(self.service_open_docs_button)
+        secondary_actions.addStretch(1)
+        service_layout.addLayout(primary_actions)
+        service_layout.addLayout(secondary_actions)
+
+        self.service_security_note = QLabel(self.service_group)
+        self.service_security_note.setWordWrap(True)
+        service_layout.addWidget(self.service_security_note)
+        root.addWidget(self.service_group)
+
+        self.service_start_button.clicked.connect(
+            lambda: self.service_start_requested.emit(self.service_port.value())
+        )
+        self.service_stop_button.clicked.connect(self.service_stop_requested)
+        self.service_copy_url_button.clicked.connect(self.service_copy_url_requested)
+        self.service_copy_config_button.clicked.connect(
+            self.service_copy_configuration_requested
+        )
+        self.service_open_docs_button.clicked.connect(self.service_open_docs_requested)
+        self._service_snapshot = LocalServerSnapshot(LocalServerState.STOPPED)
         root.addStretch(1)
 
         # listen to changes in language/theme globally
@@ -85,6 +169,19 @@ class SettingsView(QWidget):
         self.lbl_choose.setText(S.t("settings.choose_language"))
         self.lbl_version.setText(S.t("settings.version_label"))
         self.lbl_update.setText(S.t("settings.update_label"))
+        self.service_group.setTitle(S.t("settings.local_service.title"))
+        self.service_description.setText(S.t("settings.local_service.description"))
+        self.service_port_label.setText(S.t("settings.local_service.port"))
+        self.service_status_label.setText(S.t("settings.local_service.status"))
+        self.service_url_label.setText(S.t("settings.local_service.url"))
+        self.service_start_button.setText(S.t("settings.local_service.start"))
+        self.service_stop_button.setText(S.t("settings.local_service.stop"))
+        self.service_copy_url_button.setText(S.t("settings.local_service.copy_url"))
+        self.service_copy_config_button.setText(
+            S.t("settings.local_service.copy_configuration")
+        )
+        self.service_open_docs_button.setText(S.t("settings.local_service.open_docs"))
+        self.service_security_note.setText(S.t("settings.local_service.security_note"))
         # update combo labels according to current language
         labels = {
             "en": S.t("settings.lang.english"),
@@ -93,6 +190,41 @@ class SettingsView(QWidget):
         for i, (code, _) in enumerate(self._langs):
             self.combo_lang.setItemText(i, labels.get(code, code))
         self._refresh_update_text()
+        self.set_service_snapshot(self._service_snapshot)
+
+    def set_service_snapshot(self, snapshot: LocalServerSnapshot) -> None:
+        self._service_snapshot = snapshot
+        state = snapshot.state
+        if state is LocalServerState.ERROR:
+            error_key = snapshot.error_code or "operation_failed"
+            detail = S.t(
+                f"settings.local_service.errors.{error_key}",
+                detail=snapshot.message or "-",
+            )
+            status = S.t("settings.local_service.state.error", detail=detail)
+        else:
+            status = S.t(f"settings.local_service.state.{state.value}")
+        if state is LocalServerState.RUNNING and snapshot.used_fallback_port:
+            status = S.t(
+                "settings.local_service.state.running_fallback",
+                port=snapshot.actual_port,
+            )
+        self.service_status_value.setText(status)
+        self.service_url_value.setText(snapshot.url or "-")
+        running = state is LocalServerState.RUNNING
+        busy = state in {LocalServerState.STARTING, LocalServerState.STOPPING}
+        self.service_port.setEnabled(not running and not busy)
+        self.service_start_button.setEnabled(not running and not busy)
+        self.service_stop_button.setEnabled(running)
+        self.service_copy_url_button.setEnabled(running)
+        self.service_copy_config_button.setEnabled(running)
+        self.service_open_docs_button.setEnabled(running)
+
+    def set_service_action_error(self, error_code: str) -> None:
+        detail = S.t(f"settings.local_service.errors.{error_code}", detail="-")
+        self.service_status_value.setText(
+            S.t("settings.local_service.state.action_error", detail=detail)
+        )
 
     def refresh_theme(self) -> None:
         # if needed, apply theme-related changes here

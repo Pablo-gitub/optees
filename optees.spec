@@ -72,6 +72,9 @@ a = Analysis(
         # Markdown extensions loaded by name at runtime
         "markdown.extensions.tables",
         "markdown.extensions.fenced_code",
+        # Optional local solver service, dispatched by the packaged GUI binary.
+        "optees.local_server",
+        "optees.interfaces.http.local_api",
     ],
     hookspath=[],
     runtime_hooks=[],

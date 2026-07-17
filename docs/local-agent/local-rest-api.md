@@ -29,15 +29,19 @@ service is unused.
   unrestricted filesystem paths.
 - Jobs and tokens are in-memory session data and are not persisted.
 
-Token generation and process supervision become automatic in Phase 7. For
-development, start the adapter explicitly:
+Packaged builds generate and supervise a tokenized child process through the
+desktop Settings page. Source and wheel installations can start the same
+headless entry point explicitly:
 
 ```bash
 export OPTEES_TOKEN="$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
-python -c 'import os; from optees.interfaces.http import run_local_api; run_local_api(token=os.environ["OPTEES_TOKEN"])'
+OPTEES_LOCAL_SERVER_TOKEN="${OPTEES_TOKEN}" optees-server --port 8765
 ```
 
 The default URL is `http://127.0.0.1:8765`.
+
+See [Server Process And Desktop Controls](server-process-and-desktop.md) for
+the GUI workflow, copied connection contract, lifecycle, and limitations.
 
 ## Workflow
 

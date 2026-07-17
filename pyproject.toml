@@ -27,6 +27,7 @@ optees = "optees.main:main"
 
 [project.scripts]
 optees-cli = "optees.cli:main"
+optees-server = "optees.local_server:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
