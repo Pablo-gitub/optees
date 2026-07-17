@@ -70,6 +70,8 @@ def test_list_capabilities_emits_one_versioned_json_document():
         "milp.linear",
         "graph.shortest_path.dijkstra",
         "nlp.continuous_local",
+        "ml.regression.linear",
+        "ml.classification.binary_logistic",
     }
 
 
@@ -305,6 +307,79 @@ def test_solve_local_continuous_nlp_through_cli():
         3.0, abs=1e-5
     )
     assert "local numerical candidate" in output["warnings"][0]
+
+
+def test_train_linear_regression_through_cli():
+    payload = {
+        "version": "1",
+        "problem_type": "regression",
+        "dataset": {
+            "feature_names": ["size"],
+            "target_name": "price",
+            "rows": [
+                {"features": [value], "target": 2 + 3 * value}
+                for value in range(1, 9)
+            ],
+        },
+        "training_options": {
+            "method": "OLS",
+            "test_fraction": 0.25,
+            "random_seed": 17,
+            "ridge_alpha": 1,
+        },
+    }
+
+    result = _run("solve", "ml.regression.linear", stdin=json.dumps(payload))
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.SUCCESS
+    assert output["mathematical_status"] == "feasible"
+    assert output["result"]["trained_model"] is True
+    assert output["result"]["intercept"] == pytest.approx(2.0)
+    assert output["result"]["coefficients"][0]["value"] == pytest.approx(3.0)
+
+
+def test_train_binary_logistic_classification_through_cli():
+    payload = {
+        "version": "1",
+        "problem_type": "binary_classification",
+        "dataset": {
+            "feature_names": ["score"],
+            "target_name": "approved",
+            "rows": [
+                {"features": [0], "target": "no"},
+                {"features": [1], "target": "no"},
+                {"features": [2], "target": "no"},
+                {"features": [3], "target": "no"},
+                {"features": [7], "target": "yes"},
+                {"features": [8], "target": "yes"},
+                {"features": [9], "target": "yes"},
+                {"features": [10], "target": "yes"},
+            ],
+        },
+        "training_options": {
+            "method": "LogisticRegression",
+            "test_fraction": 0.25,
+            "random_seed": 17,
+            "learning_rate": 0.1,
+            "max_iterations": 2000,
+            "l2_alpha": 0,
+        },
+    }
+
+    result = _run(
+        "solve",
+        "ml.classification.binary_logistic",
+        stdin=json.dumps(payload),
+    )
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.SUCCESS
+    assert output["mathematical_status"] == "feasible"
+    assert output["result"]["trained_model"] is True
+    assert output["result"]["negative_label"] == "no"
+    assert output["result"]["positive_label"] == "yes"
+    assert output["result"]["test_metrics"]["accuracy"] == pytest.approx(1.0)
 
 
 def test_validate_accepts_problem_from_stdin_without_solving():

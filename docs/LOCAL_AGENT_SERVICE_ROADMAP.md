@@ -272,7 +272,7 @@ Suggested order:
 6. [x] MILP;
 7. [x] Dijkstra;
 8. [x] NLP;
-9. [ ] Regression and Binary Classification;
+9. [x] Regression and Binary Classification;
 10. [ ] Single-container 3D Packing as the long-running cancellable case.
 
 The Unbounded Knapsack contract preserves integer quantities and reports a
@@ -307,6 +307,14 @@ and SciPy methods used by the desktop NLP workflow. A converged result is
 reported as a local `feasible` candidate rather than a globally `optimal`
 solution. Iteration limits and failures remain explicit in diagnostics and
 warnings.
+
+`ml.regression.linear` and `ml.classification.binary_logistic` reuse the
+desktop schema-v1 datasets, deterministic train/test splits, and transparent
+NumPy implementations. Their results expose coefficients, held-out metrics,
+and row-level predictions. Binary classification also exposes the training-only
+feature scaling and decision threshold required to reproduce predictions. A
+trained model maps to `feasible`; warnings state that split metrics neither
+establish causality nor guarantee future predictive performance.
 
 `knapsack.zero_one` reuses the shared schema-v1 Knapsack importer through an
 application-owned mapper, the existing `SolveKnapsackUseCase`, and the exact

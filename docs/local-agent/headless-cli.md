@@ -74,8 +74,10 @@ fractional quantity domains, `milp.linear` for mixed-integer linear models, and
 `graph.shortest_path.dijkstra` for directed or undirected graphs with finite
 non-negative weights, and `nlp.continuous_local` for safe-expression continuous
 nonlinear optimization. NLP results are local numerical candidates and are not
-global-optimality certificates. The service intentionally has no HTTP server,
-queue, persistent job state, arbitrary code execution, or unrestricted
-problem-format conversion.
+global-optimality certificates. Educational supervised learning is available
+through `ml.regression.linear` and `ml.classification.binary_logistic`, with
+deterministic splits, coefficients, metrics, and row-level predictions. The
+service intentionally has no HTTP server, queue, persistent job state,
+arbitrary code execution, or unrestricted problem-format conversion.
 Additional capabilities are migrated through the same registry and facade one
 contract at a time.
