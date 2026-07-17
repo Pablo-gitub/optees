@@ -268,7 +268,7 @@ Suggested order:
 2. [x] Bounded Knapsack;
 3. [x] Unbounded Knapsack;
 4. [x] Fractional Knapsack;
-5. [ ] Multi-dimensional Knapsack;
+5. [x] Multi-dimensional Knapsack;
 6. [ ] MILP;
 7. [ ] Dijkstra;
 8. [ ] NLP;
@@ -283,6 +283,13 @@ reference cases already shared with the desktop workflow.
 The Fractional Knapsack contract preserves decimal capacities, weights, and
 selection fractions. It exposes the exact density-ordered greedy backend and
 does not coerce continuous decisions into integer quantities.
+
+The Multi-dimensional Knapsack capability preserves the desktop workflow's
+four decision domains. Binary models use the internal exact branch-and-bound;
+bounded and unbounded integers, plus continuous fractional quantities, are
+routed through the existing linear mixed-integer solver formulation. The
+binary integration is checked against the included OR-Library `mknap1`
+scientific benchmark.
 
 `knapsack.zero_one` reuses the shared schema-v1 Knapsack importer through an
 application-owned mapper, the existing `SolveKnapsackUseCase`, and the exact

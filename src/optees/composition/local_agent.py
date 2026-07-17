@@ -14,6 +14,12 @@ from optees.application.codecs.knapsack_fractional_problem_codec import (
 from optees.application.codecs.knapsack_fractional_result_codec import (
     KnapsackFractionalResultCodec,
 )
+from optees.application.codecs.knapsack_multi_dimensional_problem_codec import (
+    knapsack_multi_dimensional_request_from_dict,
+)
+from optees.application.codecs.knapsack_multi_dimensional_result_codec import (
+    KnapsackMultiDimensionalResultCodec,
+)
 from optees.application.codecs.knapsack_unbounded_problem_codec import (
     knapsack_unbounded_model_from_dict,
 )
@@ -36,6 +42,10 @@ from optees.application.ports.fractional_knapsack_solver_port import (
 )
 from optees.application.ports.knapsack_solver_port import KnapsackSolverPort
 from optees.application.ports.lp_solver_port import LPSolverPort
+from optees.application.ports.milp_solver_port import MILPSolverPort
+from optees.application.ports.multi_dimensional_knapsack_solver_port import (
+    MultiDimensionalKnapsackSolverPort,
+)
 from optees.application.ports.unbounded_knapsack_solver_port import (
     UnboundedKnapsackSolverPort,
 )
@@ -52,6 +62,10 @@ from optees.application.usecases.solve_fractional_knapsack_usecase import (
 )
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
+from optees.application.usecases.solve_multi_dimensional_knapsack_capability_usecase import (
+    MultiDimensionalResult,
+    SolveMultiDimensionalKnapsackCapabilityUseCase,
+)
 from optees.application.usecases.solve_unbounded_knapsack_usecase import (
     SolveUnboundedKnapsackUseCase,
 )
@@ -66,6 +80,13 @@ from optees.data.adapters.knapsack.unbounded_knapsack_solver_adapter import (
     UnboundedKnapsackSolverAdapter,
 )
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
+from optees.data.adapters.knapsack.multi_dimensional_knapsack_solver_adapter import (
+    MultiDimensionalKnapsackSolverAdapter,
+)
+from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
+from optees.application.dtos.multi_dimensional_knapsack_dtos import (
+    MultiDimensionalKnapsackRequest,
+)
 from optees.domain.entities.knapsack.bounded_solution import BoundedKnapsackSolution
 from optees.domain.entities.knapsack.fractional_solution import (
     FractionalKnapsackSolution,
@@ -97,6 +118,12 @@ KNAPSACK_UNBOUNDED_CAPABILITY_ID = "knapsack.unbounded"
 KNAPSACK_UNBOUNDED_BACKEND_ID = "internal.unbounded_dynamic_programming"
 KNAPSACK_FRACTIONAL_CAPABILITY_ID = "knapsack.fractional"
 KNAPSACK_FRACTIONAL_BACKEND_ID = "internal.fractional_greedy_density"
+KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID = "knapsack.multi_dimensional"
+KNAPSACK_MULTI_DIMENSIONAL_ROUTER_ID = "optees.multidimensional_router"
+KNAPSACK_MULTI_DIMENSIONAL_BACKEND_IDS = (
+    "internal.multidimensional_branch_and_bound",
+    "ortools.linear_mixed_integer",
+)
 
 
 def create_local_optimization_service() -> OptimizationService:
@@ -127,6 +154,12 @@ def create_local_optimization_service() -> OptimizationService:
     registry.register(
         create_knapsack_fractional_registration(
             solver_port=FractionalKnapsackSolverAdapter(),
+        )
+    )
+    registry.register(
+        create_knapsack_multi_dimensional_registration(
+            binary_solver_port=MultiDimensionalKnapsackSolverAdapter(),
+            milp_solver_port=MILPSolverAdapter(),
         )
     )
     return OptimizationService(registry)
@@ -258,6 +291,40 @@ def create_knapsack_fractional_registration(
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=KNAPSACK_FRACTIONAL_BACKEND_ID,
+    )
+
+
+def create_knapsack_multi_dimensional_optimization_service(
+    *,
+    binary_solver_port: MultiDimensionalKnapsackSolverPort,
+    milp_solver_port: MILPSolverPort,
+) -> OptimizationService:
+    registry = CapabilityRegistry()
+    registry.register(
+        create_knapsack_multi_dimensional_registration(
+            binary_solver_port=binary_solver_port,
+            milp_solver_port=milp_solver_port,
+        )
+    )
+    return OptimizationService(registry)
+
+
+def create_knapsack_multi_dimensional_registration(
+    *,
+    binary_solver_port: MultiDimensionalKnapsackSolverPort,
+    milp_solver_port: MILPSolverPort,
+) -> RegisteredCapability[MultiDimensionalKnapsackRequest, MultiDimensionalResult]:
+    use_case = SolveMultiDimensionalKnapsackCapabilityUseCase(
+        binary_solver_port,
+        milp_solver_port,
+    )
+    codec = KnapsackMultiDimensionalResultCodec()
+    return RegisteredCapability(
+        descriptor=_knapsack_multi_dimensional_descriptor(),
+        parse_problem=knapsack_multi_dimensional_request_from_dict,
+        execute=use_case.execute,
+        serialize_result=codec.serialize,
+        backend_id=KNAPSACK_MULTI_DIMENSIONAL_ROUTER_ID,
     )
 
 
@@ -591,5 +658,119 @@ def _knapsack_fractional_result_schema() -> dict:
             "total_value": {"type": "number"},
             "total_weight": {"type": "number"},
             "remaining_capacity": {"type": ["number", "null"]},
+        },
+    }
+
+
+def _knapsack_multi_dimensional_descriptor() -> CapabilityDescriptor:
+    return CapabilityDescriptor(
+        capability_id=KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID,
+        title="Multi-dimensional Knapsack",
+        problem_type="knapsack",
+        contract_version="1",
+        problem_schema_version="1",
+        result_schema_version="1",
+        input_schema=_knapsack_multi_dimensional_input_schema(),
+        result_schema=_knapsack_multi_dimensional_result_schema(),
+        default_options={"domain": "zero_one"},
+        available=True,
+        backend_candidates=KNAPSACK_MULTI_DIMENSIONAL_BACKEND_IDS,
+        supports_time_limit=False,
+        supports_cancellation=False,
+    )
+
+
+def _knapsack_multi_dimensional_input_schema() -> dict:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+            "version",
+            "problem_type",
+            "variant",
+            "domain",
+            "resources",
+            "items",
+        ],
+        "properties": {
+            "version": {"const": "1"},
+            "problem_type": {"const": "knapsack"},
+            "variant": {"const": "multi_dimensional"},
+            "domain": {
+                "enum": ["zero_one", "bounded", "unbounded", "fractional"]
+            },
+            "resources": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "object",
+                    "required": ["name", "capacity"],
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1},
+                        "capacity": {"type": "number", "minimum": 0},
+                    },
+                },
+            },
+            "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "type": "object",
+                    "required": ["name", "value", "usage"],
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1},
+                        "value": {"type": "number", "minimum": 0},
+                        "usage": {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {"type": "number", "minimum": 0},
+                        },
+                        "max_quantity": {
+                            "oneOf": [
+                                {"type": "number", "minimum": 0},
+                                {"const": "inf"},
+                            ]
+                        },
+                    },
+                },
+            },
+        },
+        "allOf": [
+            {
+                "if": {"properties": {"domain": {"const": "bounded"}}},
+                "then": {
+                    "properties": {
+                        "items": {
+                            "items": {"required": ["max_quantity"]},
+                        }
+                    }
+                },
+            }
+        ],
+    }
+
+
+def _knapsack_multi_dimensional_result_schema() -> dict:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": [
+            "objective",
+            "quantities",
+            "selected_indices",
+            "selected_items",
+            "total_value",
+            "resources",
+        ],
+        "properties": {
+            "objective": {"type": ["number", "null"]},
+            "quantities": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 0},
+            },
+            "selected_indices": {"type": "array", "items": {"type": "integer"}},
+            "selected_items": {"type": "array"},
+            "total_value": {"type": "number"},
+            "resources": {"type": "array"},
         },
     }

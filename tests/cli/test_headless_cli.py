@@ -66,6 +66,7 @@ def test_list_capabilities_emits_one_versioned_json_document():
         "knapsack.bounded",
         "knapsack.unbounded",
         "knapsack.fractional",
+        "knapsack.multi_dimensional",
     }
 
 
@@ -171,6 +172,33 @@ def test_solve_fractional_knapsack_through_cli():
     assert output["mathematical_status"] == "optimal"
     assert output["result"]["fractions"] == pytest.approx([1.0, 1.0, 2 / 3])
     assert output["result"]["objective"] == pytest.approx(240.0)
+
+
+def test_solve_binary_multi_dimensional_knapsack_through_cli():
+    payload = {
+        "version": "1",
+        "problem_type": "knapsack",
+        "variant": "multi_dimensional",
+        "domain": "zero_one",
+        "resources": [
+            {"name": "weight", "capacity": 10},
+            {"name": "volume", "capacity": 6},
+        ],
+        "items": [
+            {"name": "A", "value": 8, "usage": [4, 1.5]},
+            {"name": "B", "value": 9, "usage": [5, 2]},
+            {"name": "C", "value": 14, "usage": [6, 4.5]},
+            {"name": "D", "value": 7, "usage": [3, 2]},
+        ],
+    }
+
+    result = _run("solve", "knapsack.multi_dimensional", stdin=json.dumps(payload))
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.SUCCESS
+    assert output["mathematical_status"] == "optimal"
+    assert output["result"]["objective"] == pytest.approx(22.0)
+    assert output["result"]["selected_indices"] == [0, 2]
 
 
 def test_validate_accepts_problem_from_stdin_without_solving():
