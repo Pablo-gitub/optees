@@ -17,6 +17,9 @@ Related documents:
   platform update handoff, and packaged acceptance testing;
 - `docs/AGENT_BENCHMARKS.md` for paired experiments measuring whether agents
   formulate and solve synthetic business problems better with Optees;
+- `docs/DOCUMENTATION_WEBSITE_RELEASE_ROADMAP.md` for the post-refactoring
+  documentation audit, architecture diagrams, landing refresh, release
+  coordination, and public demonstration sequence;
 - `docs/DATASETS.md` for included scientific datasets;
 - `docs/TESTING.md` for the test strategy;
 - `docs/RELEASING.md` for build, signing, and tag verification;
@@ -311,6 +314,16 @@ and client compatibility.
 
 The sequential checklist and API boundaries are maintained in
 `docs/LOCAL_AGENT_SERVICE_ROADMAP.md`.
+
+The next product-facing step is a packaged Local Agent desktop module using
+Ollama on the same computer. Source checkouts and normal Python installations
+already expose the experimental `optees.ollama_chat` harness, but native
+PyInstaller releases do not expose that console entry point. The desktop module
+will reuse the validated application services directly, add model discovery
+and bounded background execution, and make the workflow available without a
+terminal, REST token, or source tree. OpenAI GPT client configuration and a
+matching capability-discovery test remain a later compatibility task until a
+specific supported local integration surface has been selected and verified.
 
 After stable capability contracts and agent-facing adapters exist, paired
 experimental benchmarks will compare the same frozen synthetic-company

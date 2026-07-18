@@ -30,6 +30,23 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
 - Multi-dimensional Knapsack: exact 0/1 branch-and-bound; the formulation UI
   delegates bounded and unbounded domains to MILP and fractional domains to LP.
 
+### Single-Container 3D Packing
+
+- Orthogonal placement of indivisible rectangular boxes inside one rectangular
+  container, with duplicate dimensions removed from each item's admissible
+  orientation set.
+- Fixed, axis-specific, paired-axis, and unrestricted orthogonal rotation
+  policies; diagonal placement is intentionally unsupported.
+- Optional scalar capacities such as weight, selectable all-required or
+  maximum-loaded-value policies, and no-gravity or simple-gravity modes.
+- OR-Tools MILP backend with time limit, relative MIP gap, cooperative
+  cancellation, complexity warnings, and a maximum-feasible recovery solve
+  when the requested all-required model is infeasible.
+- Result contract keeps requested and recovery solutions separate and reports
+  placements, exclusions, used volume, objective, bound, gap, and diagnostics.
+- The 3D result view is an educational orthogonal packing visualization, not a
+  complete physical-stability simulation.
+
 ### Continuous Nonlinear Programming
 
 - Scalar continuous objectives with optional box bounds and a required feasible

@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <strong>Model, solve, and understand optimization problems locally.</strong><br />
-  An open-source desktop workbench for operations research and educational machine learning.
+  <strong>A local optimization workbench and solver platform for people, software, and AI agents.</strong><br />
+  Model visually, expose versioned solvers through REST or MCP, and inspect every result without sending business data to a solver cloud.
 </p>
 
 <p align="center">
@@ -14,41 +14,89 @@
   <a href="https://github.com/Pablo-gitub/optees/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="Apache 2.0 license" /></a>
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB.svg" alt="Python 3.12 or later" />
   <img src="https://img.shields.io/badge/runs-100%25%20locally-0E8A5A.svg" alt="Runs locally" />
+  <img src="https://img.shields.io/badge/local%20API-REST-2563EB.svg" alt="Authenticated local REST API" />
+  <img src="https://img.shields.io/badge/agent%20tools-MCP-7C3AED.svg" alt="Local MCP tools" />
 </p>
 
 <p align="center">
   <a href="https://optees.it">Website</a> ·
   <a href="https://github.com/Pablo-gitub/optees/releases">Download desktop builds</a> ·
+  <a href="docs/AGENTS_SERVICE_CONFIG.md">Connect an agent</a> ·
   <a href="docs/PROJECT_ROADMAP.md">Roadmap</a> ·
   <a href="docs/ALGORITHMS.md">Algorithms</a>
 </p>
 
-Optees turns mathematical models into an inspectable desktop workflow. Build a
-model in a guided interface, solve it locally with an appropriate engine, then
-read an explanation of the result instead of receiving only a number. It is
-for students learning the methods and for practitioners who need transparent,
-reproducible optimization tools without sending data to a cloud service.
+Optees gives the same tested optimization core two interfaces. People can
+formulate problems in a guided bilingual desktop application, visualize the
+solution, and study the mathematics. Scripts and compatible AI agents can
+discover 12 versioned capabilities, inspect their exact schemas, validate a
+formulation, execute a job, and retrieve a structured result without driving
+the GUI.
+
+| Desktop workbench | Local solver platform |
+| --- | --- |
+| Guided LP, MILP, Knapsack, NLP, graph, ML, and 3D Packing workflows | Capability discovery through CLI, authenticated loopback REST, and private MCP stdio |
+| Examples, mathematical descriptions, JSON import, diagnostics, and solution visualizations | Versioned problem/result contracts, exact-payload validation, asynchronous jobs, cancellation where supported, and structured failures |
+| Deterministic bilingual Modeling Assistant with no LLM or cloud dependency | Local agents can compose atomic solvers while Optees remains responsible for validation and calculation |
+
+## Built For Local Agent Workflows
+
+An agent does not need to guess an Optees payload or calculate the answer
+itself. The integration contract requires it to inspect the live capability,
+validate the exact formulation, and only then submit a solver job.
+
+```mermaid
+flowchart LR
+    User["Business problem and local data"] --> Agent["Local software or AI agent"]
+    Agent --> Discover["Discover 12 capabilities"]
+    Discover --> Inspect["Inspect versioned schema"]
+    Inspect --> Validate["Validate exact payload"]
+    Validate --> Solve["Run Optees solver job"]
+    Solve --> Verify["Read status, result, and validation"]
+    Verify --> Agent
+    Agent --> Report["Explanation, report, or next solver step"]
+```
+
+- **Authenticated local REST API:** start a loopback-only server from Settings
+  for scripts, IDE tools, and local applications.
+- **Private MCP stdio server:** compatible desktop agents can launch Optees,
+  discover tools, validate formulations, execute jobs, and orchestrate multiple
+  capabilities without receiving a REST bearer token.
+- **Agent-safe sequencing:** descriptor inspection and successful validation of
+  the unchanged payload are required before execution.
+- **Structured guarantees:** job lifecycle, mathematical status, solver
+  diagnostics, and independent validation availability are reported as
+  separate fields rather than compressed into one success flag.
+- **Composable methods:** an agent can use Regression, MILP, Packing, Graph, or
+  other registered capabilities in sequence while each atomic calculation
+  remains reproducible and inspectable.
+
+Claude Desktop/Cowork and the experimental Ollama harness have completed local
+vertical tests. See the [agent service configuration guide](docs/AGENTS_SERVICE_CONFIG.md)
+and the [agent benchmark protocol](docs/AGENT_BENCHMARKS.md). MCP and Ollama
+entry points are currently documented for source or Python-package installs;
+native-installer acceptance is tracked separately and is not implied here.
 
 ## Why Optees
 
-- **Local and private:** formulations, datasets, and solver runs stay on the
-  machine. The Modeling Assistant is rule-based and sends no prompt outside
-  the app.
-- **Educational by design:** examples, mathematical explanations, result
-  contracts, diagnostics, and visualizations make assumptions visible.
+- **One solver core, several clients:** the GUI, CLI, REST service, and MCP
+  server reuse the same application services and versioned contracts.
+- **Ready for assisted problem solving:** agents can move from natural-language
+  requirements to a validated mathematical formulation instead of inventing a
+  result from prose.
+- **Local solver core:** formulations and solver jobs are processed on the
+  machine. The built-in Modeling Assistant is rule-based and sends no prompt
+  outside the app; an optional external agent remains subject to that client's
+  own data and model policy.
 - **Honest result views:** an LP optimum, a feasible MILP incumbent, an NLP
   local numerical candidate, and a predictive ML fit are deliberately not
   presented as the same kind of guarantee.
-- **Structured workflows:** use the formulation screens or import versioned
-  JSON rather than maintaining ad-hoc scripts for every small model.
+- **Educational by design:** examples, mathematical explanations, result
+  contracts, diagnostics, and visualizations make assumptions visible.
+- **Structured workflows:** use formulation screens, versioned JSON, or public
+  service contracts rather than maintaining ad-hoc scripts around each solver.
 - **English and Italian:** the application, its explanations, and its local
   assistant support both languages.
-- **Local solver API:** packaged builds can start an authenticated loopback
-  service from Settings, allowing local scripts and software agents to discover
-  and execute the same versioned solver contracts without driving the GUI.
-- **Local MCP integration:** compatible desktop agents can launch Optees over a
-  private stdio channel, discover solver schemas, validate formulations, and
-  orchestrate multiple capabilities without sharing a REST token.
 
 ## See It In Action
 
@@ -73,6 +121,7 @@ More real application screens and platform downloads are available on the
 | **Linear Programming (LP)** | Continuous LP through SciPy/HiGHS, feasibility and status reporting, optimal-solution ranges when multiple optima exist, JSON import, and 2D/3D educational views where applicable. |
 | **Mixed-Integer Linear Programming (MILP)** | Continuous, integer, and binary variables through OR-Tools, solver controls, and educational formulation/result views. |
 | **Knapsack** | 0/1, Bounded, Unbounded, Fractional, and Multi-dimensional variants with capacity and item visualizations. |
+| **Single-container 3D Packing** | Orthogonal box placement with per-item rotation policies, optional scalar capacities, selectable loading and gravity policies, maximum-feasible recovery, and an inspectable 3D result. |
 | **Continuous Nonlinear Programming (NLP)** | Safe scalar expressions, optional box bounds, BFGS/Nelder-Mead/L-BFGS-B, objective plots, and a clear local-candidate contract. |
 | **Graph Theory** | Dijkstra shortest paths on directed or undirected graphs with finite, non-negative weights, route reconstruction, and graph visualization. |
 | **Linear Regression** | Local OLS and Ridge regression for numeric tables, deterministic train/test splits, residuals, metrics, and a one-feature fit chart. |
@@ -110,8 +159,9 @@ python -m pip install -e ".[plot,local-service]"
 ```
 
 To connect a local MCP client such as Claude Desktop or Cowork, install the
-`mcp` extra and follow the [Claude configuration guide](docs/CLAUDE_CONFIG.md).
-The guide includes a discovery test and reviewed single-solver and
+`mcp` extra and follow the [agent service configuration guide](docs/AGENTS_SERVICE_CONFIG.md).
+The guide also records the experimental Ollama workflow, the future OpenAI GPT
+compatibility test, a discovery check, and reviewed single-solver and
 regression-to-MILP examples.
 
 Run the complete test suite from a source checkout:
@@ -141,13 +191,16 @@ model is suitable for a consequential real-world decision. In particular:
 
 ## Documentation
 
+- [Documentation index](docs/README.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [Algorithms](docs/ALGORITHMS.md)
 - [Project roadmap](docs/PROJECT_ROADMAP.md)
+- [Documentation, website, release, and demonstration roadmap](docs/DOCUMENTATION_WEBSITE_RELEASE_ROADMAP.md)
+- [Documentation truth audit](docs/DOCUMENTATION_AUDIT.md)
 - [Datasets and formats](docs/DATASETS.md)
 - [Testing strategy](docs/TESTING.md)
 - [Local solver service](docs/local-agent/server-process-and-desktop.md)
-- [Claude Desktop and Cowork configuration](docs/CLAUDE_CONFIG.md)
+- [Agent service configuration](docs/AGENTS_SERVICE_CONFIG.md)
 - [Local MCP stdio server](docs/local-agent/mcp-stdio.md)
 - [Agent benchmark protocol](docs/AGENT_BENCHMARKS.md)
 - [Experimental Ollama agent harness](docs/local-agent/ollama-d0-harness.md)
