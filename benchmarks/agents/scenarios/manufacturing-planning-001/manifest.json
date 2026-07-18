@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "scenario_id": "manufacturing-planning-001",
+  "scenario_group_id": "fictional-manufacturing-planning",
+  "title": "Fictitious manufacturer demand and production planning",
+  "language": "en",
+  "expertise_level": "business_user",
+  "expected_capabilities_single": ["milp.linear"],
+  "expected_capabilities_orchestration": [
+    "ml.regression.linear",
+    "milp.linear"
+  ],
+  "synthetic_data": true,
+  "generator_seed": 1042,
+  "clarifications_expected": [],
+  "tags": ["manufacturing", "regression", "milp", "orchestration"]
+}

@@ -6,6 +6,16 @@ solving the same synthetic business scenarios without Optees and with Optees.
 The protocol, repository structure, metrics, privacy rules, and publication
 gate are defined in [`docs/AGENT_BENCHMARKS.md`](../../docs/AGENT_BENCHMARKS.md).
 
-No executable scenario corpus has been added yet. Scientific solver datasets
-remain under `tests/data/` and are documented in `docs/DATASETS.md`; they must
-not be mixed with these agent-effectiveness experiments.
+The first executable scenario is
+[`manufacturing-planning-001`](scenarios/manufacturing-planning-001/README.md).
+It covers a direct MILP task and a regression-to-MILP orchestration task using
+fully synthetic company data.
+
+The first recorded exploratory integration run is
+[`claude-cowork-manufacturing-2026-07-18`](studies/claude-cowork-manufacturing-2026-07-18/README.md).
+It preserves Claude-generated DOCX/PDF reports and their hashes while clearly
+recording the metadata still missing for a publishable paired benchmark.
+
+Scientific solver datasets remain under `tests/data/` and are documented in
+`docs/DATASETS.md`; they must not be mixed with these agent-effectiveness
+experiments.

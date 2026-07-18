@@ -52,6 +52,10 @@ No URL or bearer token is required. The MCP client launches the process and
 owns its stdin/stdout channel. Do not paste the REST authorization token into
 this configuration.
 
+For tested Claude Desktop and Cowork setup steps, configuration placement,
+connection verification, and example runs, see
+[`docs/CLAUDE_CONFIG.md`](../CLAUDE_CONFIG.md).
+
 ## Tool Workflow
 
 The server exposes these allowlisted tools:

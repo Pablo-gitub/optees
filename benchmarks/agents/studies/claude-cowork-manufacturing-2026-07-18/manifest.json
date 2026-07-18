@@ -1,0 +1,40 @@
+{
+  "schema_version": "1",
+  "study_id": "claude-cowork-manufacturing-2026-07-18",
+  "status": "exploratory",
+  "date": "2026-07-18",
+  "scenario_id": "manufacturing-planning-001",
+  "condition": "optees_required",
+  "provider": "Anthropic",
+  "client": "Claude Desktop Cowork local mode",
+  "model_id": "not_recorded",
+  "optees_version": "0.8.0",
+  "optees_reference_commit": "f992c567c17104ae092e77c3541b0ee781a594e9",
+  "manual_review": {
+    "rubric_score": 100,
+    "rubric_maximum": 100,
+    "numerical_ground_truth_match": true,
+    "notes": [
+      "The direct report leaves a mostly empty final page after a split table.",
+      "The run is not publication-ready because required provider and repetition metadata were not recorded."
+    ]
+  },
+  "outputs": [
+    {
+      "path": "outputs/Northstar_Production_Plan_Report.docx",
+      "sha256": "14a754c206c55cfa7dded222f619efef2e880014cec5ecabe38b122157e9ba7e"
+    },
+    {
+      "path": "outputs/Northstar_Production_Plan_Report.pdf",
+      "sha256": "57b3fc5a51cf80c29b1b58681001d51954919b8427c810358c3a844623f6704f"
+    },
+    {
+      "path": "outputs/Northstar_Forecast_Production_Plan_Report.docx",
+      "sha256": "0c0de9d7d8fcbc2c506ddc07e4179a23093b2b48f695b08eb002c12268e5c6f2"
+    },
+    {
+      "path": "outputs/Northstar_Forecast_Production_Plan_Report.pdf",
+      "sha256": "357e4980def8f8c1f2289cc89c5dea917571d03394f162d9a876681bdc53dbb3"
+    }
+  ]
+}

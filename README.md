@@ -46,6 +46,9 @@ reproducible optimization tools without sending data to a cloud service.
 - **Local solver API:** packaged builds can start an authenticated loopback
   service from Settings, allowing local scripts and software agents to discover
   and execute the same versioned solver contracts without driving the GUI.
+- **Local MCP integration:** compatible desktop agents can launch Optees over a
+  private stdio channel, discover solver schemas, validate formulations, and
+  orchestrate multiple capabilities without sharing a REST token.
 
 ## See It In Action
 
@@ -106,6 +109,11 @@ To develop or use the optional local solver API, install the dedicated extra:
 python -m pip install -e ".[plot,local-service]"
 ```
 
+To connect a local MCP client such as Claude Desktop or Cowork, install the
+`mcp` extra and follow the [Claude configuration guide](docs/CLAUDE_CONFIG.md).
+The guide includes a discovery test and reviewed single-solver and
+regression-to-MILP examples.
+
 Run the complete test suite from a source checkout:
 
 ```bash
@@ -139,6 +147,9 @@ model is suitable for a consequential real-world decision. In particular:
 - [Datasets and formats](docs/DATASETS.md)
 - [Testing strategy](docs/TESTING.md)
 - [Local solver service](docs/local-agent/server-process-and-desktop.md)
+- [Claude Desktop and Cowork configuration](docs/CLAUDE_CONFIG.md)
+- [Local MCP stdio server](docs/local-agent/mcp-stdio.md)
+- [Agent benchmark protocol](docs/AGENT_BENCHMARKS.md)
 - [Experimental Ollama agent harness](docs/local-agent/ollama-d0-harness.md)
 - [Release procedure](docs/RELEASING.md)
 - [Website deployment](docs/WEBSITE_DEPLOYMENT.md)
