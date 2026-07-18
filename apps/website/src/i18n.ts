@@ -14,6 +14,7 @@ export type PreviewId =
   | "lpSolution"
   | "knapsack"
   | "knapsackSolution"
+  | "packingSolution"
   | "nlpSolution"
   | "regressionSolution"
   | "classificationSolution"
@@ -365,7 +366,7 @@ export const copy: Record<Language, SiteCopy> = {
           description:
             "Integer, binary and continuous variables together, with solver controls for time limits and MIP gap.",
           details: ["CP-SAT / CBC", "Feasible status", "MIPLIB dataset"],
-          preview: "home",
+          preview: "packingSolution",
         },
         {
           id: "knapsack",
@@ -502,6 +503,13 @@ export const copy: Record<Language, SiteCopy> = {
           title: "Read the result at a glance",
           body: "Capacity usage, selected items and value-to-weight charts sit right next to the decision table.",
           alt: "Optees Knapsack solution view with capacity usage and value charts",
+        },
+        {
+          id: "packingSolution",
+          window: "Optees — 3D Packing result",
+          title: "Inspect the physical placement",
+          body: "Review loaded and excluded items, resource use, coordinates, orientations, and the orthogonal arrangement inside the container.",
+          alt: "Optees single-container 3D Packing solution with three grounded rectangular items, placement coordinates, and capacity summary",
         },
         {
           id: "nlpSolution",
@@ -797,7 +805,7 @@ export const copy: Record<Language, SiteCopy> = {
           description:
             "Variabili intere, binarie e continue insieme, con controlli del solver per limite di tempo e MIP gap.",
           details: ["CP-SAT / CBC", "Stato ammissibile", "Dataset MIPLIB"],
-          preview: "home",
+          preview: "packingSolution",
         },
         {
           id: "knapsack",
@@ -934,6 +942,13 @@ export const copy: Record<Language, SiteCopy> = {
           title: "Leggi il risultato a colpo d'occhio",
           body: "Uso della capacità, oggetti selezionati e grafici valore/peso sono accanto alla tabella delle decisioni.",
           alt: "Vista soluzione Knapsack in Optees con uso della capacità e grafici dei valori",
+        },
+        {
+          id: "packingSolution",
+          window: "Optees — Risultato Packing 3D",
+          title: "Ispeziona il posizionamento fisico",
+          body: "Controlla colli caricati ed esclusi, uso delle risorse, coordinate, orientamenti e disposizione ortogonale nel container.",
+          alt: "Soluzione Packing 3D in singolo container di Optees con tre colli rettangolari a terra, coordinate e riepilogo capacità",
         },
         {
           id: "nlpSolution",

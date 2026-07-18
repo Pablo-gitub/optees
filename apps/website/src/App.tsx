@@ -43,6 +43,7 @@ const previewAssets: Record<PreviewId, string> = {
   lpSolution: "screenshots/optees-lp-solution.png",
   knapsack: "screenshots/optees-knapsack.png",
   knapsackSolution: "screenshots/optees-knapsack-solution.png",
+  packingSolution: "screenshots/optees-packing-solution.png",
   nlpSolution: "screenshots/optees-nlp-solution.png",
   regressionSolution: "screenshots/optees-regression-solution.png",
   classificationSolution: "screenshots/optees-classification-solution.png",

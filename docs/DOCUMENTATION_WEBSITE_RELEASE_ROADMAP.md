@@ -92,7 +92,7 @@ entire source tree.
 
 - [x] Add single-container 3D Packing to the algorithm catalogue and update the
   application-catalogue screenshot.
-- [ ] Capture a dedicated Packing 3D solution screenshot with non-trivial,
+- [x] Capture a dedicated Packing 3D solution screenshot with non-trivial,
   readable placements.
 - [x] Present the local solver platform as a primary product capability:
   discovery, versioned schemas, exact validation, asynchronous jobs,
@@ -112,9 +112,8 @@ entire source tree.
 
 The production build and SEO renderer pass. Browser verification covered
 English and Italian at 1440 x 1000 and 390 x 844, with no console errors or
-visible horizontal overflow. The remaining Phase 3 item is deliberately kept
-open until a representative Packing 3D result can replace a generic catalogue
-capture.
+visible horizontal overflow. The Packing 3D catalogue entry and product tour
+now use a dedicated result capture with grounded, non-overlapping placements.
 
 **Exit criterion:** the single-page site accurately represents the desktop
 workflows and local solver platform available at the intended release commit.
