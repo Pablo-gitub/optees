@@ -145,6 +145,43 @@ def test_rule_based_assistant_classifies_prompt_family_and_variant(
     assert analysis.reasons
 
 
+@pytest.mark.parametrize(
+    ("language", "prompt"),
+    [
+        (
+            "en",
+            "I manufacture two products. Product A earns a profit of 30, requires "
+            "2 machine hours, and at most 4 units can be produced. Product B earns "
+            "a profit of 40, requires 4 machine hours, and at most 5 units can be "
+            "produced. I have 18 machine hours available. Quantities may be "
+            "fractional and must be non-negative. Use the available Optees tools to "
+            "identify and inspect the appropriate solver, formulate the versioned "
+            "problem, validate the exact payload before solving, and execute it.",
+        ),
+        (
+            "it",
+            "Produco due prodotti. Il prodotto A genera un profitto di 30, richiede "
+            "2 ore macchina e se ne possono produrre al massimo 4 unita. Il prodotto "
+            "B genera un profitto di 40, richiede 4 ore macchina e se ne possono "
+            "produrre al massimo 5 unita. Ho 18 ore macchina disponibili. Le quantita "
+            "possono essere frazionarie e devono essere non negative. Usa gli strumenti "
+            "Optees disponibili per identificare il solver appropriato, formulare il "
+            "problema versionato, validarlo ed eseguirlo.",
+        ),
+    ],
+)
+def test_production_mix_with_fractional_quantities_is_lp_not_knapsack(
+    assistant: RuleBasedAssistantAdapter,
+    language: str,
+    prompt: str,
+) -> None:
+    analysis = assistant.analyze(prompt, language)
+
+    assert analysis.family == "lp"
+    assert analysis.variant == "standard_lp"
+    assert analysis.reasons
+
+
 _HUMAN_DESCRIPTION_SCENARIOS = [
     (
         "continuous_production_mix",

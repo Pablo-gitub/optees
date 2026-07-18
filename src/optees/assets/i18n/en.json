@@ -89,9 +89,10 @@
       "start": "Start service",
       "stop": "Stop service",
       "copy_url": "Copy URL",
+      "copy_authorization": "Copy authorization",
       "copy_configuration": "Copy connection configuration",
       "open_docs": "Open API schema",
-      "security_note": "A new private token is generated for every session. It is included only when you explicitly copy the connection configuration.",
+      "security_note": "A new private token is generated for every session. It is exposed only when you explicitly copy the authorization value or connection configuration.",
       "state": {
         "stopped": "Stopped",
         "starting": "Starting and checking health...",

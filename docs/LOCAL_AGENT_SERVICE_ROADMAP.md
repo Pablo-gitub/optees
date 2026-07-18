@@ -477,11 +477,105 @@ residuals or alter solver and job statuses.
 
 - [x] For continuous LP candidates, verify the complete variable vector,
   bounds, every linear constraint, and the recomputed objective.
-- [ ] Extend the same checks to MILP and additionally verify integrality and
+- [x] Extend the same checks to MILP and additionally verify integrality and
   binary domains.
 - [x] Test LP feasible, tolerance-boundary, objective-mismatch, bound-violation,
   constraint-violation, infeasible, and unbounded outcomes.
-- [ ] Test the corresponding MILP outcomes and integer-domain failures.
+- [x] Test the corresponding MILP outcomes and integer-domain failures.
+
+The MILP validator composes the independent LP checks for the shared linear
+polyhedron and objective, then verifies general-integer and binary domains from
+the serialized incumbent with a separately recorded integrality tolerance. It
+does not inspect backend residuals, bounds, gaps, or optimality claims.
+
+### A1.5 - D0 Local Agent Loop Proof
+
+Do not wait for the complete MCP phase before testing whether an actual local
+agent can use Optees correctly. Once the LP validation path is stable, build a
+small provider-specific experiment around Ollama's tool-calling API. This is an
+early end-to-end proof of the agent workflow, not a second execution backend and
+not a production chat feature.
+
+- [x] Add a minimal local chat harness for an Ollama model that advertises the
+  `tools` capability; freeze the first experiment on `qwen2.5-coder:7b` and
+  record its exact model digest.
+- [x] Expose an allowlisted tool facade for capability listing, descriptor
+  retrieval, problem validation, job creation, job status, result retrieval,
+  and cancellation.
+- [x] Keep the Optees base URL and bearer token inside the harness. Never place
+  the token in model messages, tool results, transcripts, or benchmark output.
+- [x] Require capability discovery and successful problem validation before
+  job creation; return structured Optees errors without silently repairing or
+  retrying the model's payload.
+- [x] Bound tool-call count, execution time, and polling; preserve cancellation
+  and job semantics from the existing application services.
+- [x] Add deterministic tests with fake Ollama and Optees transports.
+- [x] Complete an end-to-end test against a local model that emits native
+  structured `message.tool_calls`.
+- [x] Prove one small LP workflow from an English natural-language prompt.
+- [ ] Prove one clarification workflow with materially missing data.
+- [x] Repeat the frozen LP workflow with a smaller tool-capable model suitable
+  for ordinary office hardware and record its correctness outcome.
+- [ ] Add automated latency measurements to the formal comparative benchmark.
+- [x] Record prompt, frozen model identity, tool calls, redacted arguments,
+  Optees contract versions, validation report, and final response so the run is
+  reproducible and suitable for the later agent benchmark runner.
+
+The harness may initially be terminal-based. The standard Ollama chat UI is not
+an integration surface because selecting a tool-capable model there does not
+register Optees tools. This proof validates local orchestration and the Optees
+REST/application contracts; it does not by itself validate MCP or hosted-agent
+connectivity. Setup, security boundaries, and the first frozen prompt are
+documented in `docs/local-agent/ollama-d0-harness.md`.
+
+The first live compatibility probe froze `qwen2.5-coder:7b` at digest
+`dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364`.
+Although Ollama advertises its `tools` capability, both the Optees prompt and a
+single-tool minimal probe returned a JSON-looking request inside
+`message.content` without a structured `message.tool_calls` field. The harness
+correctly executed no tool. Text is not silently promoted to an executable tool
+call; the complete live LP and clarification proofs remain open for a model
+with reliable native tool calling or a separately reviewed compatibility mode.
+
+The subsequent `qwen3.5:9b` probe, digest
+`6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`,
+completed the native structured-tool loop: capability discovery, descriptor
+inspection, exact payload validation, job creation, status polling, result
+retrieval, and independent-validation reporting. It selected `lp.continuous`
+for a continuous production mix and returned `product_a = 4`,
+`product_b = 2.5`, and objective `220`, with mathematical status `optimal` and
+independent validation `verified`. After the result-contract correction, it
+also reported `optimal_face.analysis_status = computed`, no alternate optimum,
+dimension zero, and therefore correctly identified the solution as unique.
+The formal comparative benchmark rerun must still enable the opt-in transcript
+and automated latency measurement.
+
+The office-hardware probe with `granite3.3:2b`, digest
+`07bd1f170855240f9e162bf54ea494a8bc1c73d8cbd1365d7fccbeb7d2504947`,
+did not emit native tool calls. It rendered JSON-looking calls as assistant
+text, selected MIP despite explicitly fractional production quantities, and
+invented a non-contract payload. The harness executed zero tools, which is the
+required safe failure. The redacted run is preserved in
+`benchmarks/agents/runs/granite3.3-2b-lp-optimal-face.jsonl`; this model is not
+compatible with the D0 workflow for the frozen LP scenario.
+
+### A1.6 - Minimal MCP Vertical Slice
+
+After D0 proves the workflow, expose the same allowlisted facade through a
+minimal local MCP server so compatible desktop and IDE clients can invoke
+Optees without custom Ollama code.
+
+- [ ] Implement capability discovery, validation, job creation, status, result,
+  and cancellation as thin MCP tools over the existing application services.
+- [ ] Reuse the same tool names, schemas, redaction policy, and orchestration
+  invariants exercised by D0; do not call the REST API internally when direct
+  application services are available.
+- [ ] Add MCP protocol and schema tests plus one local end-to-end smoke test.
+- [ ] Document stdio/local-process configuration separately from the REST
+  connection configuration.
+- [ ] State explicitly that this vertical slice proves local tool access but
+  does not yet provide the complete agent guidance, compatibility, packaging,
+  and client matrix assigned to Phase D.
 
 ### A2 - Knapsack Family
 
@@ -562,13 +656,16 @@ the interpretation.
   the REST service targets local clients, IDEs, scripts, and desktop agents.
 - [ ] Update the website only after packaged service behavior is verified.
 
-## Post-MVP Phase D - MCP Adapter
+## Post-MVP Phase D - MCP Adapter Hardening And Full Coverage
 
-- [ ] Expose capability discovery, validation, job creation, status, result,
-  and cancellation as MCP tools.
+- [ ] Harden the A1.6 MCP vertical slice and expose every stable capability.
 - [ ] Keep MCP as a thin adapter over the same application services.
 - [ ] Do not duplicate registry, validation, or execution logic.
 - [ ] Test tool schemas and behavior against the REST contracts.
+- [ ] Add packaged-build acceptance tests and a documented compatibility matrix
+  for supported local MCP clients.
+- [ ] Integrate the semantic guidance and agent documentation produced by
+  Phases B and C without changing the underlying solver contracts.
 
 ## Post-MVP Phase E - Agent Effectiveness Benchmarks
 

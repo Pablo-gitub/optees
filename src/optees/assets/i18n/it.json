@@ -89,9 +89,10 @@
       "start": "Avvia servizio",
       "stop": "Arresta servizio",
       "copy_url": "Copia URL",
+      "copy_authorization": "Copia autorizzazione",
       "copy_configuration": "Copia configurazione di connessione",
       "open_docs": "Apri schema API",
-      "security_note": "A ogni sessione viene generato un nuovo token privato. Viene incluso soltanto quando copi esplicitamente la configurazione di connessione.",
+      "security_note": "A ogni sessione viene generato un nuovo token privato. Viene mostrato soltanto quando copi esplicitamente l'autorizzazione o la configurazione di connessione.",
       "state": {
         "stopped": "Arrestato",
         "starting": "Avvio e controllo dello stato in corso...",

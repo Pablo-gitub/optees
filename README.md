@@ -139,6 +139,7 @@ model is suitable for a consequential real-world decision. In particular:
 - [Datasets and formats](docs/DATASETS.md)
 - [Testing strategy](docs/TESTING.md)
 - [Local solver service](docs/local-agent/server-process-and-desktop.md)
+- [Experimental Ollama agent harness](docs/local-agent/ollama-d0-harness.md)
 - [Release procedure](docs/RELEASING.md)
 - [Website deployment](docs/WEBSITE_DEPLOYMENT.md)
 

@@ -92,6 +92,9 @@ from optees.application.services.local_job_service import LocalJobService
 from optees.application.validation.lp_solution_validator import (
     LPIndependentSolutionValidator,
 )
+from optees.application.validation.milp_solution_validator import (
+    MILPIndependentSolutionValidator,
+)
 from optees.application.usecases.solve_bounded_knapsack_usecase import (
     SolveBoundedKnapsackUseCase,
 )
@@ -489,6 +492,7 @@ def create_milp_registration(
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=MILP_ROUTER_ID,
+        validate_result=MILPIndependentSolutionValidator(),
     )
 
 
@@ -670,16 +674,89 @@ def _lp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
 
 
 def _lp_input_schema() -> dict:
+    number_or_null = {"type": ["number", "null"]}
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
         "required": ["version", "variables", "objective", "constraints"],
         "properties": {
-            "version": {"const": "1"},
-            "variables": {"type": "array", "minItems": 1},
-            "objective": {"type": "object"},
-            "constraints": {"type": "array"},
+            "version": {
+                "const": "1",
+                "description": "Continuous LP problem schema version.",
+            },
+            "variables": {
+                "type": "array",
+                "minItems": 1,
+                "description": (
+                    "Decision variables in the order used by every coefficient array. "
+                    "Use null for an unbounded lower or upper bound."
+                ),
+                "items": {
+                    "type": "object",
+                    "required": ["name", "lb", "ub"],
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1},
+                        "label": {"type": "string"},
+                        "lb": number_or_null,
+                        "ub": number_or_null,
+                    },
+                },
+            },
+            "objective": {
+                "type": "object",
+                "required": ["sense", "coefficients"],
+                "description": (
+                    "Linear objective. coefficients must contain exactly one finite "
+                    "number per variable, in variables order."
+                ),
+                "properties": {
+                    "sense": {"enum": ["min", "max"]},
+                    "coefficients": {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {"type": "number"},
+                    },
+                    "offset": {"type": "number", "default": 0},
+                },
+            },
+            "constraints": {
+                "type": "array",
+                "description": (
+                    "Linear constraints. Each coefficients array must contain exactly "
+                    "one finite number per variable, in variables order."
+                ),
+                "items": {
+                    "type": "object",
+                    "required": ["coefficients", "relation", "rhs"],
+                    "properties": {
+                        "coefficients": {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {"type": "number"},
+                        },
+                        "relation": {"enum": ["<=", "=", ">="]},
+                        "rhs": {"type": "number"},
+                    },
+                },
+            },
         },
+        "examples": [
+            {
+                "version": "1",
+                "variables": [
+                    {"name": "product_a", "label": "Product A", "lb": 0, "ub": 4},
+                    {"name": "product_b", "label": "Product B", "lb": 0, "ub": 5},
+                ],
+                "objective": {
+                    "sense": "max",
+                    "coefficients": [30, 40],
+                    "offset": 0,
+                },
+                "constraints": [
+                    {"coefficients": [2, 4], "relation": "<=", "rhs": 18}
+                ],
+            }
+        ],
     }
 
 
@@ -690,9 +767,85 @@ def _lp_result_schema() -> dict:
         "required": ["objective", "variables", "optimal_face"],
         "properties": {
             "objective": {"type": ["number", "null"]},
-            "objective_sense": {"type": ["string", "null"]},
-            "variables": {"type": "array"},
-            "optimal_face": {"type": "object"},
+            "objective_sense": {"enum": ["min", "max", None]},
+            "variables": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["name", "value"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "value": {"type": "number"},
+                    },
+                },
+            },
+            "optimal_face": {
+                "type": "object",
+                "description": (
+                    "Analysis of all solutions with the reported optimal objective. "
+                    "Uniqueness is established only when analysis_status is computed, "
+                    "has_alternate_optimum is false, and dimension is zero."
+                ),
+                "required": [
+                    "analysis_status",
+                    "has_alternate_optimum",
+                    "dimension",
+                    "ranges",
+                    "varying_variables",
+                    "extreme_points",
+                    "auxiliary_failures",
+                ],
+                "properties": {
+                    "analysis_status": {
+                        "enum": ["computed", "partial", "skipped", "not_available"]
+                    },
+                    "has_alternate_optimum": {"type": ["boolean", "null"]},
+                    "dimension": {"type": ["integer", "null"], "minimum": 0},
+                    "ranges": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "variable",
+                                "minimum",
+                                "minimum_unbounded",
+                                "maximum",
+                                "maximum_unbounded",
+                                "width",
+                                "width_unbounded",
+                                "is_fixed",
+                            ],
+                            "properties": {
+                                "variable": {"type": "string"},
+                                "minimum": {"type": ["number", "null"]},
+                                "minimum_unbounded": {"type": "boolean"},
+                                "maximum": {"type": ["number", "null"]},
+                                "maximum_unbounded": {"type": "boolean"},
+                                "width": {"type": ["number", "null"]},
+                                "width_unbounded": {"type": "boolean"},
+                                "is_fixed": {"type": ["boolean", "null"]},
+                            },
+                        },
+                    },
+                    "varying_variables": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                    "extreme_points": {
+                        "type": ["object", "null"],
+                        "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {"type": "number"},
+                        },
+                    },
+                    "auxiliary_failures": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                    "range_tolerance": {"type": ["number", "null"]},
+                    "skip_reason": {"type": ["string", "null"]},
+                },
+            },
         },
     }
 

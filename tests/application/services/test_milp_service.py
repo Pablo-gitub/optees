@@ -56,6 +56,14 @@ def test_milp_capability_maps_public_contract_through_solver_port():
     assert isinstance(outcome, ExecutionEnvelope)
     assert outcome.mathematical_status.value == "feasible"
     assert outcome.result["objective"] == pytest.approx(11.0)
+    assert outcome.validation.status.value == "verified"
+    assert [check.code for check in outcome.validation.checks] == [
+        "milp.variable_vector",
+        "milp.bounds",
+        "milp.integrality",
+        "milp.constraints",
+        "milp.objective",
+    ]
     assert solver.problem["sense"] == "max"
     assert solver.problem["integrality"] == ["I", "B"]
     assert solver.problem["bounds"] == [(0.0, 4.0), (0.0, 1.0)]

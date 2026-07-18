@@ -461,6 +461,12 @@ class RuleBasedAssistantAdapter:
         ):
             scores[_FAMILY_LP] += 9
 
+        # Divisible production quantities do not make a problem fractional
+        # knapsack. Products sharing manufacturing resources, with profit per
+        # unit and continuous quantities, form a continuous production-mix LP.
+        if _has_continuous_production_mix_markers(text):
+            scores[_FAMILY_LP] += 14
+
         # Classification predicts a named outcome rather than a continuous
         # quantity. Requiring a prediction and binary-outcome signal avoids
         # interpreting ordinary yes/no optimization decisions as a dataset task.
@@ -930,6 +936,51 @@ def _has_fractional_knapsack_markers(text: str) -> bool:
             "una parte di",
             "parte di ciascun",
         ),
+    )
+
+
+def _has_continuous_production_mix_markers(text: str) -> bool:
+    return (
+        _has_any(
+            text,
+            (
+                "manufacture",
+                "manufacturing",
+                "produce",
+                "produced",
+                "production",
+                "produrre",
+                "prodotto",
+                "prodotti",
+                "produzione",
+            ),
+        )
+        and _has_any(text, ("profit", "profitto", "margine", "margin"))
+        and _has_any(
+            text,
+            (
+                "machine hour",
+                "machine hours",
+                "labor hour",
+                "labor hours",
+                "ore macchina",
+                "ora macchina",
+                "ore di lavoro",
+                "materia prima",
+                "raw material",
+            ),
+        )
+        and _has_any(
+            text,
+            (
+                "fractional",
+                "continuous",
+                "decimal quantities",
+                "quantita frazionarie",
+                "quantita continue",
+                "quantita decimali",
+            ),
+        )
     )
 
 

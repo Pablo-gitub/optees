@@ -64,6 +64,7 @@ def test_settings_controls_emit_requested_port_without_showing_a_token(qtbot):
 
     assert emitted.args == [9021]
     assert "token" not in view.service_status_value.text().lower()
+    assert view.service_copy_authorization_button.isEnabled() is False
     assert view.service_copy_config_button.isEnabled() is False
 
 
@@ -85,6 +86,9 @@ def test_controller_starts_copies_configuration_stops_and_shuts_down(qtbot):
     assert manager.started_ports == [9030]
     assert copied["authorization"] == "Bearer private-session-token"
     assert view.service_url_value.text() == "http://127.0.0.1:9030"
+
+    qtbot.mouseClick(view.service_copy_authorization_button, Qt.LeftButton)
+    assert QApplication.clipboard().text() == "Bearer private-session-token"
 
     qtbot.mouseClick(view.service_stop_button, Qt.LeftButton)
     qtbot.waitUntil(

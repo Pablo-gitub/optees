@@ -102,6 +102,34 @@ def test_capability_discovery_does_not_expose_backend_as_problem_type():
     assert descriptor["available"] is True
 
 
+def test_lp_capability_exposes_an_agent_ready_problem_schema_and_example():
+    service = create_lp_optimization_service(solver_port=FakeLPSolver())
+
+    descriptor = service.list_capabilities()[0]
+    schema = descriptor["input_schema"]
+    example = schema["examples"][0]
+
+    assert schema["properties"]["variables"]["items"]["required"] == [
+        "name",
+        "lb",
+        "ub",
+    ]
+    assert schema["properties"]["objective"]["required"] == [
+        "sense",
+        "coefficients",
+    ]
+    assert schema["properties"]["constraints"]["items"]["required"] == [
+        "coefficients",
+        "relation",
+        "rhs",
+    ]
+    optimal_face = descriptor["result_schema"]["properties"]["optimal_face"]
+    assert "analysis_status" in optimal_face["required"]
+    assert "has_alternate_optimum" in optimal_face["required"]
+    assert "ranges" in optimal_face["required"]
+    assert service.validate(LP_CAPABILITY_ID, example).to_dict()["valid"] is True
+
+
 def test_invalid_lp_payload_returns_validation_details_without_calling_solver():
     fake = FakeLPSolver()
     service = create_lp_optimization_service(solver_port=fake)

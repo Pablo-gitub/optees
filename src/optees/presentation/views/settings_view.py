@@ -28,6 +28,7 @@ class SettingsView(QWidget):
     service_start_requested = Signal(int)
     service_stop_requested = Signal()
     service_copy_url_requested = Signal()
+    service_copy_authorization_requested = Signal()
     service_copy_configuration_requested = Signal()
     service_open_docs_requested = Signal()
 
@@ -115,12 +116,17 @@ class SettingsView(QWidget):
         self.service_copy_url_button.setObjectName("localServerCopyUrlButton")
         self.service_copy_config_button = QPushButton(self.service_group)
         self.service_copy_config_button.setObjectName("localServerCopyConfigButton")
+        self.service_copy_authorization_button = QPushButton(self.service_group)
+        self.service_copy_authorization_button.setObjectName(
+            "localServerCopyAuthorizationButton"
+        )
         self.service_open_docs_button = QPushButton(self.service_group)
         self.service_open_docs_button.setObjectName("localServerOpenDocsButton")
         primary_actions.addWidget(self.service_start_button)
         primary_actions.addWidget(self.service_stop_button)
         primary_actions.addStretch(1)
         secondary_actions.addWidget(self.service_copy_url_button)
+        secondary_actions.addWidget(self.service_copy_authorization_button)
         secondary_actions.addWidget(self.service_copy_config_button)
         secondary_actions.addWidget(self.service_open_docs_button)
         secondary_actions.addStretch(1)
@@ -137,6 +143,9 @@ class SettingsView(QWidget):
         )
         self.service_stop_button.clicked.connect(self.service_stop_requested)
         self.service_copy_url_button.clicked.connect(self.service_copy_url_requested)
+        self.service_copy_authorization_button.clicked.connect(
+            self.service_copy_authorization_requested
+        )
         self.service_copy_config_button.clicked.connect(
             self.service_copy_configuration_requested
         )
@@ -177,6 +186,9 @@ class SettingsView(QWidget):
         self.service_start_button.setText(S.t("settings.local_service.start"))
         self.service_stop_button.setText(S.t("settings.local_service.stop"))
         self.service_copy_url_button.setText(S.t("settings.local_service.copy_url"))
+        self.service_copy_authorization_button.setText(
+            S.t("settings.local_service.copy_authorization")
+        )
         self.service_copy_config_button.setText(
             S.t("settings.local_service.copy_configuration")
         )
@@ -217,6 +229,7 @@ class SettingsView(QWidget):
         self.service_start_button.setEnabled(not running and not busy)
         self.service_stop_button.setEnabled(running)
         self.service_copy_url_button.setEnabled(running)
+        self.service_copy_authorization_button.setEnabled(running)
         self.service_copy_config_button.setEnabled(running)
         self.service_open_docs_button.setEnabled(running)
 

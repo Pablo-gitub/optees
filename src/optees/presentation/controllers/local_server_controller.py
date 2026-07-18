@@ -36,6 +36,7 @@ class LocalServerController(QObject):
         view.service_start_requested.connect(self.start)
         view.service_stop_requested.connect(self.stop)
         view.service_copy_url_requested.connect(self.copy_url)
+        view.service_copy_authorization_requested.connect(self.copy_authorization)
         view.service_copy_configuration_requested.connect(self.copy_configuration)
         view.service_open_docs_requested.connect(self.open_docs)
         view.set_service_snapshot(manager.snapshot)
@@ -74,6 +75,14 @@ class LocalServerController(QObject):
     def copy_configuration(self) -> None:
         try:
             QApplication.clipboard().setText(self._manager.connection_json())
+        except RuntimeError as exc:
+            self._fail_operation(str(exc))
+
+    def copy_authorization(self) -> None:
+        try:
+            QApplication.clipboard().setText(
+                self._manager.connection().authorization
+            )
         except RuntimeError as exc:
             self._fail_operation(str(exc))
 

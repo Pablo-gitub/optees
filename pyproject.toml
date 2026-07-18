@@ -35,6 +35,7 @@ optees = "optees.main:main"
 [project.scripts]
 optees-cli = "optees.cli:main"
 optees-server = "optees.local_server:main"
+optees-ollama-chat = "optees.ollama_chat:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
