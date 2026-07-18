@@ -1,9 +1,9 @@
 # Optees
 
-Optees is an open-source desktop operations-research toolkit. It provides local
-workflows for Linear Programming, Mixed-Integer Linear Programming, five
-Knapsack variants, continuous Nonlinear Programming, and Dijkstra shortest
-paths on non-negative weighted graphs.
+Optees is an open-source desktop operations-research workbench and local solver
+platform. People can formulate and inspect problems visually; scripts and AI
+agents can discover, validate, execute, and verify versioned solver contracts
+through CLI, authenticated loopback REST, or private MCP stdio.
 
 ## Released Capabilities
 
@@ -12,12 +12,30 @@ paths on non-negative weighted graphs.
 - MILP with continuous, integer, and binary variables, time limits, and MIP
   gap controls.
 - Knapsack 0/1, Bounded, Unbounded, Fractional, and Multi-dimensional.
+- Orthogonal single-container 3D Packing with allowed rotations, optional
+  capacities, selection policies, and simple gravity.
 - Continuous NLP using BFGS, Nelder-Mead, or L-BFGS-B. Results are local
   numerical candidates, not global-optimality certificates.
 - Dijkstra shortest paths for directed or undirected graphs with finite,
   non-negative weights.
+- Educational Linear Regression and Binary Logistic Classification with
+  reproducible held-out evaluation.
 - A fully local, deterministic rule-based modeling assistant for LP, MILP,
-  and Knapsack recommendations and validated JSON drafts.
+  Knapsack, NLP, graph, and educational ML recommendations and validated JSON
+  drafts where supported. This assistant is not an LLM.
+
+## Local Agent Service
+
+- 12 versioned capability descriptors with input and result JSON schemas.
+- Exact payload validation before solver execution.
+- Asynchronous local jobs with separate lifecycle, mathematical, termination,
+  and solution-validation statuses.
+- Independent result checks currently registered for LP and MILP.
+- REST binds only to 127.0.0.1 and requires a per-session bearer token.
+- MCP uses a private stdio subprocess and does not open a network port.
+- Hosted agents cannot access a user's localhost without an explicit bridge.
+
+Agent setup: https://github.com/Pablo-gitub/optees/blob/main/docs/AGENTS_SERVICE_CONFIG.md
 
 ## Links
 

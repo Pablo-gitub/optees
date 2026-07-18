@@ -90,23 +90,31 @@ entire source tree.
 
 ## Phase 3 - First Landing-Page Refresh
 
-- [ ] Add single-container 3D Packing to the algorithm catalogue and capture a
-  readable application screenshot with non-trivial placements.
-- [ ] Present the local solver platform as a primary product capability:
+- [x] Add single-container 3D Packing to the algorithm catalogue and update the
+  application-catalogue screenshot.
+- [ ] Capture a dedicated Packing 3D solution screenshot with non-trivial,
+  readable placements.
+- [x] Present the local solver platform as a primary product capability:
   discovery, versioned schemas, exact validation, asynchronous jobs,
   independent result checks, and local execution.
-- [ ] Explain REST loopback and MCP stdio without implying that arbitrary
+- [x] Explain REST loopback and MCP stdio without implying that arbitrary
   hosted agents can access the user's localhost.
-- [ ] Distinguish the deterministic Modeling Assistant from optional external
+- [x] Distinguish the deterministic Modeling Assistant from optional external
   or local LLM agents.
-- [ ] Add a concise `Discover -> Inspect -> Validate -> Solve -> Verify` visual
+- [x] Add a concise `Discover -> Inspect -> Validate -> Solve -> Verify` visual
   flow.
-- [ ] Update English and Italian copy, feature counts, screenshots, SEO
+- [x] Update English and Italian copy, feature counts, screenshots, SEO
   metadata, structured data, `llms.txt`, and sitemap content together.
-- [ ] Mark source-only or preview integrations honestly until native-package
+- [x] Mark source-only or preview integrations honestly until native-package
   acceptance tests pass.
-- [ ] Verify desktop and mobile layouts, accessibility, reduced motion, links,
+- [x] Verify desktop and mobile layouts, accessibility, reduced motion, links,
   and production build output.
+
+The production build and SEO renderer pass. Browser verification covered
+English and Italian at 1440 x 1000 and 390 x 844, with no console errors or
+visible horizontal overflow. The remaining Phase 3 item is deliberately kept
+open until a representative Packing 3D result can replace a generic catalogue
+capture.
 
 **Exit criterion:** the single-page site accurately represents the desktop
 workflows and local solver platform available at the intended release commit.

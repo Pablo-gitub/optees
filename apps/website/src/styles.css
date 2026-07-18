@@ -808,6 +808,141 @@ main,
   line-height: 1.6;
 }
 
+/* ---- Local agent platform --------------------------------------------- */
+
+.agent-platform-section {
+  border-block: 1px solid var(--border);
+  background: rgba(4, 7, 16, 0.42);
+}
+
+.agent-platform-shell {
+  display: grid;
+  gap: 34px;
+  width: min(var(--maxw), 100%);
+  margin: 0 auto;
+}
+
+.agent-surfaces {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: rgba(3, 6, 16, 0.46);
+}
+
+.agent-surfaces article {
+  position: relative;
+  min-height: 210px;
+  padding: 30px;
+}
+
+.agent-surfaces article + article {
+  border-left: 1px solid var(--border);
+}
+
+.agent-surface-index {
+  display: block;
+  margin-bottom: 28px;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.agent-surfaces h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.22rem;
+}
+
+.agent-surfaces p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.agent-flow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-block: 1px solid var(--border);
+}
+
+.agent-flow li {
+  position: relative;
+  min-height: 180px;
+  padding: 28px 22px;
+}
+
+.agent-flow li + li {
+  border-left: 1px solid var(--border);
+}
+
+.agent-flow li > span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(87, 211, 255, 0.38);
+  border-radius: 50%;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+}
+
+.agent-flow strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.agent-flow p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.agent-boundaries {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.agent-boundaries > div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+}
+
+.agent-boundaries svg {
+  width: 24px;
+  height: 24px;
+  color: var(--cyan);
+}
+
+.agent-boundaries p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.agent-boundaries strong {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--text);
+  font-family: var(--font-display);
+}
+
 /* ---- Algorithms --------------------------------------------------------- */
 
 .algorithm-layout {
@@ -1699,6 +1834,35 @@ main,
     grid-template-columns: 1fr;
   }
 
+  .agent-surfaces {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-surfaces article {
+    min-height: 0;
+  }
+
+  .agent-surfaces article + article {
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
+
+  .agent-flow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .agent-flow li + li {
+    border-left: 0;
+  }
+
+  .agent-flow li:nth-child(even) {
+    border-left: 1px solid var(--border);
+  }
+
+  .agent-flow li:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
+  }
+
   .machine-learning-workflows {
     grid-template-columns: 1fr;
   }
@@ -1745,6 +1909,10 @@ main,
     grid-template-columns: 1fr;
   }
 
+  .agent-boundaries {
+    grid-template-columns: 1fr;
+  }
+
   .workflow-steps li:not(:last-child)::after {
     display: none;
   }
@@ -1780,6 +1948,21 @@ main,
 
   .bento-openSource .bento-icon {
     margin-bottom: 18px;
+  }
+
+  .agent-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-flow li,
+  .agent-flow li:nth-child(even),
+  .agent-flow li:nth-child(n + 3) {
+    min-height: 0;
+    border-left: 0;
+  }
+
+  .agent-flow li + li {
+    border-top: 1px solid var(--border);
   }
 
   .topbar-actions .button.compact {

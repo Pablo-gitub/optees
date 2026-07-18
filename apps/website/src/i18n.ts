@@ -1,5 +1,13 @@
 export type Language = "en" | "it";
-export type AlgorithmId = "lp" | "milp" | "knapsack" | "nlp" | "regression" | "classification" | "graph";
+export type AlgorithmId =
+  | "lp"
+  | "milp"
+  | "knapsack"
+  | "packing"
+  | "nlp"
+  | "regression"
+  | "classification"
+  | "graph";
 export type PreviewId =
   | "home"
   | "assistant"
@@ -76,6 +84,7 @@ type SiteCopy = {
     brandAria: string;
     sectionsAria: string;
     features: string;
+    agents: string;
     algorithms: string;
     machineLearning: string;
     previews: string;
@@ -111,6 +120,17 @@ type SiteCopy = {
     title: string;
     body: string;
     items: FeatureCopy[];
+  };
+  agentPlatform: {
+    eyebrow: string;
+    title: string;
+    body: string;
+    boundary: string;
+    surfaces: Array<{ title: string; body: string }>;
+    flowAria: string;
+    steps: Array<{ label: string; body: string }>;
+    assistantTitle: string;
+    assistantBody: string;
   };
   algorithms: {
     eyebrow: string;
@@ -191,17 +211,18 @@ type SiteCopy = {
 export const copy: Record<Language, SiteCopy> = {
   en: {
     meta: {
-      title: "Optees — Open-Source Operations Research Software",
+      title: "Optees — Local Optimization Workbench and Solver Platform",
       description:
-        "Free, open-source desktop app for Linear Programming, Mixed-Integer Programming, Knapsack, continuous Nonlinear Programming, educational Linear Regression, Binary Classification and Dijkstra shortest paths. Model and solve locally with a guided assistant and educational solution views.",
+        "Open-source desktop optimization workbench and local solver platform for people, scripts, and AI agents, with 12 versioned capabilities through GUI, CLI, REST, and MCP.",
       ogDescription:
-        "Model, solve and understand LP, MILP, Knapsack, continuous NLP, Linear Regression, Binary Classification and Dijkstra shortest paths in a private local desktop app.",
+        "Model visually or expose 12 versioned local solver capabilities to scripts and AI agents through authenticated REST and private MCP stdio.",
     },
     nav: {
       aria: "Primary navigation",
       brandAria: "Optees home",
       sectionsAria: "Page sections",
       features: "Why Optees",
+      agents: "Agent tools",
       algorithms: "Algorithms",
       machineLearning: "AI & Machine Learning",
       previews: "Screens",
@@ -219,17 +240,17 @@ export const copy: Record<Language, SiteCopy> = {
       },
     },
     hero: {
-      badge: "Open source · Cross-platform · Runs 100% locally",
-      title: "Operations research,",
-      titleAccent: "made effortless.",
+      badge: "Open source · Desktop + agent tools · Runs locally",
+      title: "Optees:",
+      titleAccent: "optimization for people and agents.",
       copy:
-        "Optees turns operations-research methods into a desktop app anyone can use. Model LP, MILP and five Knapsack variants, explore continuous nonlinear objectives, fit transparent regression and binary classification, or find a Dijkstra shortest path — then understand every result without scripting.",
+        "Model and understand optimization problems in the desktop workbench, or expose the same 12 versioned solver capabilities to local scripts and AI agents through CLI, authenticated REST, and private MCP stdio.",
       source: "Star on GitHub",
       stackLabel: "Powered by",
-      stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Dijkstra", "Netlib"],
+      stack: ["SciPy", "HiGHS", "OR-Tools", "FastAPI", "MCP"],
       metricsAria: "Project highlights",
       metrics: [
-        { value: "7", label: "Algorithm workflows, ready to use" },
+        { value: "12", label: "Versioned solver capabilities" },
         { value: "5", label: "Knapsack variants in one flow" },
         { value: "100%", label: "Local & private, no cloud" },
       { value: "Apache 2.0", label: "Free and open source" },
@@ -272,7 +293,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "local",
           title: "Private by design",
           body:
-            "Everything runs on your machine. No accounts, no uploads, no cloud — your data never leaves your desktop.",
+            "Solvers run on your machine. No solver cloud or required account: the desktop, CLI, REST service, and MCP server reuse the same local core.",
         },
         {
           id: "openSource",
@@ -281,6 +302,39 @@ export const copy: Record<Language, SiteCopy> = {
             "Released under an open license. Read the code, file issues, follow the roadmap and shape where Optees goes next.",
         },
       ],
+    },
+    agentPlatform: {
+      eyebrow: "Local solver platform",
+      title: "Give agents tools, not guessed answers",
+      body:
+        "Optees exposes the same tested solver core used by the desktop app as discoverable, versioned tools. An agent can inspect a schema, validate the exact problem, run it asynchronously, and report the solver result with its mathematical and independent-validation status.",
+      boundary:
+        "Local means local: REST listens only on 127.0.0.1 with a per-session bearer token, while MCP uses a private stdio subprocess. A hosted agent cannot reach your localhost unless you deliberately provide a bridge. Agent entry points are currently verified for source and pip installs; native-package acceptance is tracked separately.",
+      surfaces: [
+        {
+          title: "Authenticated REST",
+          body: "Start the loopback service from Settings for local scripts, applications, and tool harnesses.",
+        },
+        {
+          title: "Private MCP stdio",
+          body: "Let a compatible desktop agent launch Optees directly without opening a port or receiving a REST token.",
+        },
+        {
+          title: "CLI and JSON",
+          body: "Validate and solve versioned payloads from shell scripts and repeatable automation.",
+        },
+      ],
+      flowAria: "Safe local agent execution flow",
+      steps: [
+        { label: "Discover", body: "List available capabilities and runtime limits." },
+        { label: "Inspect", body: "Read the selected input and result schemas." },
+        { label: "Validate", body: "Check the exact versioned payload before execution." },
+        { label: "Solve", body: "Create a local job and follow its lifecycle." },
+        { label: "Verify", body: "Read mathematical status and independent checks when available." },
+      ],
+      assistantTitle: "Two assistants, two different roles",
+      assistantBody:
+        "The in-app Modeling Assistant is deterministic pattern matching and never calls an LLM. External agents and the optional Ollama harness are separate clients: they may reason over your request, but Optees remains responsible for strict contracts and mathematical execution.",
     },
     algorithms: {
       eyebrow: "Algorithms",
@@ -323,6 +377,17 @@ export const copy: Record<Language, SiteCopy> = {
             "0/1, bounded, unbounded, fractional and multi-dimensional variants unified in one workflow with JSON import.",
           details: ["JSON import", "Capacity charts", "Variant switch"],
           preview: "knapsackSolution",
+        },
+        {
+          id: "packing",
+          label: "Single-container 3D Packing",
+          short: "3DP",
+          status: "Available",
+          formula: "max Σ vᵢ·loadᵢ  s.t. orthogonal fit and no overlap",
+          description:
+            "Place indivisible rectangular items in one container with allowed orthogonal rotations, optional capacities, selection policies, and simple gravity.",
+          details: ["Orthogonal rotations", "Simple gravity", "Interactive 3D result"],
+          preview: "home",
         },
         {
           id: "nlp",
@@ -404,6 +469,13 @@ export const copy: Record<Language, SiteCopy> = {
         "Each workspace focuses on one part of the learning process: formulate a model, run a local method, then inspect how the result was obtained.",
       items: [
         {
+          id: "home",
+          window: "Optees — Algorithm catalogue",
+          title: "Choose the mathematical workflow",
+          body: "The desktop catalogue now includes 3D Packing alongside LP, MILP, Knapsack, NLP, graph, and educational machine-learning workflows.",
+          alt: "Optees algorithm catalogue with Linear Programming, MILP, Knapsack, 3D Packing, NLP, graph, regression, and classification",
+        },
+        {
           id: "assistant",
           window: "Optees — Modeling Assistant",
           title: "Describe the decision in your own words",
@@ -469,12 +541,12 @@ export const copy: Record<Language, SiteCopy> = {
         {
           number: "01",
           title: "Formulate",
-          body: "Enter variables, bounds, objectives, constraints, Knapsack items or a weighted graph — or import a versioned JSON model.",
+          body: "Enter variables, bounds, objectives, constraints, Knapsack items, packing boxes, or a weighted graph — or import versioned JSON.",
         },
         {
           number: "02",
           title: "Solve",
-          body: "Run the appropriate local engine: SciPy/HiGHS, OR-Tools, a dedicated Knapsack solver, a SciPy numerical method, or Dijkstra.",
+          body: "Run the appropriate local engine: SciPy/HiGHS, OR-Tools, dedicated Knapsack methods, SciPy numerical optimization, or Dijkstra.",
         },
         {
           number: "03",
@@ -511,7 +583,7 @@ export const copy: Record<Language, SiteCopy> = {
       items: [
         {
           q: "What is Optees?",
-          a: "Optees is a free, open-source desktop app for operations research and educational machine learning. You can model, solve and inspect LP, MILP, five Knapsack variants, continuous Nonlinear Programming, Linear Regression, Binary Classification and Dijkstra shortest-path problems without writing code.",
+          a: "Optees is a free, open-source operations-research workbench and local solver platform. Its desktop app covers LP, MILP, five Knapsack variants, single-container 3D Packing, continuous NLP, Linear Regression, Binary Classification, and Dijkstra shortest paths.",
         },
         {
           q: "Who is it for?",
@@ -528,6 +600,10 @@ export const copy: Record<Language, SiteCopy> = {
         {
           q: "Do I need to know how to code?",
           a: "No. A guided assistant helps you choose the right algorithm and fill in structured inputs, so you can optimize without scripting.",
+        },
+        {
+          q: "Can an AI agent use Optees?",
+          a: "Yes, when the agent runs locally or has an explicit local bridge. Optees exposes versioned solvers through authenticated loopback REST and private MCP stdio. The agent formulates and explains; Optees validates and executes the mathematical problem locally.",
         },
         {
           q: "What is coming next?",
@@ -567,17 +643,18 @@ export const copy: Record<Language, SiteCopy> = {
   },
   it: {
     meta: {
-      title: "Optees — Software Open Source per Ricerca Operativa",
+      title: "Optees — Ambiente di Ottimizzazione e Piattaforma Solver Locale",
       description:
-        "App desktop gratuita e open source per Programmazione Lineare, Intera Mista, Knapsack, Programmazione Non Lineare continua, Regressione Lineare didattica, Classificazione Binaria e cammini minimi di Dijkstra. Modella e risolvi in locale con assistente guidato e viste didattiche.",
+        "Ambiente desktop open source e piattaforma solver locale per persone, script e agenti AI, con 12 capability versionate tramite GUI, CLI, REST e MCP.",
       ogDescription:
-        "Modella, risolvi e comprendi LP, MILP, Knapsack, NLP continua, Regressione Lineare, Classificazione Binaria e cammini minimi di Dijkstra in un'app desktop privata e locale.",
+        "Modella visivamente o esponi 12 capability solver locali e versionate a script e agenti AI tramite REST autenticata e MCP stdio privato.",
     },
     nav: {
       aria: "Navigazione principale",
       brandAria: "Home di Optees",
       sectionsAria: "Sezioni della pagina",
       features: "Perché Optees",
+      agents: "Strumenti per agenti",
       algorithms: "Algoritmi",
       machineLearning: "AI e Machine Learning",
       previews: "Schermate",
@@ -595,17 +672,17 @@ export const copy: Record<Language, SiteCopy> = {
       },
     },
     hero: {
-      badge: "Open source · Multipiattaforma · Gira 100% in locale",
-      title: "La ricerca operativa,",
-      titleAccent: "resa semplice.",
+      badge: "Open source · Desktop + agenti · Esecuzione locale",
+      title: "Optees:",
+      titleAccent: "ottimizzazione per persone e agenti.",
       copy:
-        "Optees trasforma metodi di ricerca operativa in un'app desktop alla portata di tutti. Modella LP, MILP e cinque varianti Knapsack, esplora obiettivi non lineari continui, adatta regressione e classificazione binaria trasparenti o trova un cammino minimo con Dijkstra, poi comprendi ogni risultato senza scrivere codice.",
+        "Modella e comprendi problemi di ottimizzazione nell'ambiente desktop, oppure esponi le stesse 12 capability versionate a script e agenti AI locali tramite CLI, REST autenticata e MCP stdio privato.",
       source: "Metti una stella su GitHub",
       stackLabel: "Basato su",
-      stack: ["SciPy", "HiGHS", "OR-Tools", "CP-SAT", "Dijkstra", "Netlib"],
+      stack: ["SciPy", "HiGHS", "OR-Tools", "FastAPI", "MCP"],
       metricsAria: "Punti chiave del progetto",
       metrics: [
-        { value: "7", label: "Flussi algoritmici pronti all'uso" },
+        { value: "12", label: "Capability solver versionate" },
         { value: "5", label: "Varianti Knapsack in un solo flusso" },
         { value: "100%", label: "Locale e privato, nessun cloud" },
       { value: "Apache 2.0", label: "Gratuito e open source" },
@@ -648,7 +725,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "local",
           title: "Privato per definizione",
           body:
-            "Tutto gira sul tuo computer. Nessun account, nessun upload, nessun cloud: i tuoi dati non lasciano mai il desktop.",
+            "I solver girano sul tuo computer. Nessun solver cloud o account obbligatorio: desktop, CLI, servizio REST e server MCP riusano lo stesso core locale.",
         },
         {
           id: "openSource",
@@ -657,6 +734,39 @@ export const copy: Record<Language, SiteCopy> = {
             "Rilasciato con licenza aperta. Leggi il codice, apri issue, segui la roadmap e contribuisci a decidere il futuro di Optees.",
         },
       ],
+    },
+    agentPlatform: {
+      eyebrow: "Piattaforma solver locale",
+      title: "Dai agli agenti strumenti, non risposte inventate",
+      body:
+        "Optees espone lo stesso core testato dell'app desktop come strumenti scopribili e versionati. Un agente può ispezionare uno schema, validare il problema esatto, eseguirlo in modo asincrono e riportare risultato, stato matematico e stato della validazione indipendente.",
+      boundary:
+        "Locale significa locale: REST ascolta solo su 127.0.0.1 con token Bearer di sessione, mentre MCP usa un processo stdio privato. Un agente ospitato non può raggiungere il tuo localhost senza un bridge configurato esplicitamente. Gli entry point per agenti sono al momento verificati nelle installazioni da sorgente e pip; l'accettazione nei pacchetti nativi è tracciata separatamente.",
+      surfaces: [
+        {
+          title: "REST autenticata",
+          body: "Avvia il servizio loopback dalle Impostazioni per script, applicazioni e tool harness locali.",
+        },
+        {
+          title: "MCP stdio privato",
+          body: "Permetti a un agente desktop compatibile di avviare Optees senza aprire porte né ricevere token REST.",
+        },
+        {
+          title: "CLI e JSON",
+          body: "Valida e risolvi payload versionati da script shell e automazioni ripetibili.",
+        },
+      ],
+      flowAria: "Flusso sicuro di esecuzione per agenti locali",
+      steps: [
+        { label: "Scopri", body: "Elenca capability disponibili e limiti runtime." },
+        { label: "Ispeziona", body: "Leggi gli schemi di input e risultato scelti." },
+        { label: "Valida", body: "Controlla il payload versionato esatto prima dell'esecuzione." },
+        { label: "Risolvi", body: "Crea un job locale e seguine il ciclo di vita." },
+        { label: "Verifica", body: "Leggi stato matematico e controlli indipendenti disponibili." },
+      ],
+      assistantTitle: "Due assistenti, due ruoli diversi",
+      assistantBody:
+        "L'Assistente di modellazione interno usa pattern deterministici e non chiama mai un LLM. Gli agenti esterni e l'harness Ollama opzionale sono client separati: possono ragionare sulla richiesta, mentre Optees resta responsabile di contratti rigorosi ed esecuzione matematica.",
     },
     algorithms: {
       eyebrow: "Algoritmi",
@@ -699,6 +809,17 @@ export const copy: Record<Language, SiteCopy> = {
             "Varianti 0/1, bounded, unbounded, fractional e multi-dimensional unificate in un unico flusso con import JSON.",
           details: ["Import JSON", "Grafici di capacità", "Switch variante"],
           preview: "knapsackSolution",
+        },
+        {
+          id: "packing",
+          label: "Packing 3D in singolo container",
+          short: "3DP",
+          status: "Disponibile",
+          formula: "max Σ vᵢ·caricaᵢ  s.t. posizionamento ortogonale e non sovrapposizione",
+          description:
+            "Posiziona colli rettangolari indivisibili in un container con rotazioni ortogonali ammesse, capacità opzionali, politiche di selezione e gravità semplice.",
+          details: ["Rotazioni ortogonali", "Gravità semplice", "Risultato 3D interattivo"],
+          preview: "home",
         },
         {
           id: "nlp",
@@ -780,6 +901,13 @@ export const copy: Record<Language, SiteCopy> = {
         "Ogni ambiente si concentra su una parte del percorso di apprendimento: formula il modello, esegui un metodo locale e ispeziona come e' stato ottenuto il risultato.",
       items: [
         {
+          id: "home",
+          window: "Optees — Catalogo algoritmi",
+          title: "Scegli il flusso matematico",
+          body: "Il catalogo desktop include ora Packing 3D insieme a LP, MILP, Knapsack, NLP, grafi e flussi didattici di machine learning.",
+          alt: "Catalogo algoritmi di Optees con Programmazione Lineare, MILP, Knapsack, Packing 3D, NLP, grafi, regressione e classificazione",
+        },
+        {
           id: "assistant",
           window: "Optees — Assistente di modellazione",
           title: "Descrivi la decisione con parole tue",
@@ -845,12 +973,12 @@ export const copy: Record<Language, SiteCopy> = {
         {
           number: "01",
           title: "Formula",
-          body: "Inserisci variabili, bounds, obiettivi, vincoli, oggetti Knapsack o un grafo pesato — oppure importa un modello JSON versionato.",
+          body: "Inserisci variabili, bounds, obiettivi, vincoli, oggetti Knapsack, colli da posizionare o un grafo pesato — oppure importa JSON versionato.",
         },
         {
           number: "02",
           title: "Risolvi",
-          body: "Esegui il motore locale adatto: SciPy/HiGHS, OR-Tools, un solver Knapsack dedicato, un metodo numerico SciPy o Dijkstra.",
+          body: "Esegui il motore locale adatto: SciPy/HiGHS, OR-Tools, metodi Knapsack dedicati, ottimizzazione numerica SciPy o Dijkstra.",
         },
         {
           number: "03",
@@ -887,7 +1015,7 @@ export const copy: Record<Language, SiteCopy> = {
       items: [
         {
           q: "Cos'è Optees?",
-          a: "Optees e' un'app desktop gratuita e open source per ricerca operativa e machine learning didattico. Puoi modellare, risolvere e ispezionare LP, MILP, cinque varianti Knapsack, Programmazione Non Lineare continua, Regressione Lineare, Classificazione Binaria e cammini minimi di Dijkstra senza scrivere codice.",
+          a: "Optees e' un ambiente open source per ricerca operativa e una piattaforma solver locale. L'app desktop copre LP, MILP, cinque varianti Knapsack, Packing 3D in singolo container, NLP continua, Regressione Lineare, Classificazione Binaria e cammini minimi di Dijkstra.",
         },
         {
           q: "A chi è rivolto?",
@@ -904,6 +1032,10 @@ export const copy: Record<Language, SiteCopy> = {
         {
           q: "Devo saper programmare?",
           a: "No. Un assistente guidato ti aiuta a scegliere l'algoritmo giusto e a inserire input strutturati, così ottimizzi senza scrivere codice.",
+        },
+        {
+          q: "Un agente AI può usare Optees?",
+          a: "Sì, quando l'agente gira in locale o dispone di un bridge locale esplicito. Optees espone solver versionati tramite REST loopback autenticata e MCP stdio privato. L'agente formula e spiega; Optees valida ed esegue il problema matematico in locale.",
         },
         {
           q: "Cosa arriverà in futuro?",

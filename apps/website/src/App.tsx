@@ -516,6 +516,7 @@ function App() {
           </a>
           <nav className="nav-links" aria-label={t.nav.sectionsAria}>
             <a href="#features">{t.nav.features}</a>
+            <a href="#agent-platform">{t.nav.agents}</a>
             <a href="#algorithms">{t.nav.algorithms}</a>
             <a href="#machine-learning">{t.nav.machineLearning}</a>
             <a href="#previews">{t.nav.previews}</a>
@@ -581,7 +582,10 @@ function App() {
                 className="hero-shot"
                 title={t.hero.shotCaption}
                 src={assetUrl(previewAssets.lpSolution)}
-                alt={t.previews.items[1].alt}
+                  alt={
+                    t.previews.items.find((item) => item.id === "lpSolution")
+                      ?.alt ?? ""
+                  }
                 eager
               />
               <div className="float-card float-status" aria-hidden="true">
@@ -632,6 +636,57 @@ function App() {
                 <p>{feature.body}</p>
               </article>
             ))}
+          </div>
+        </section>
+
+        {/* LOCAL AGENT PLATFORM ---------------------------------------- */}
+        <section
+          id="agent-platform"
+          className="section agent-platform-section"
+          aria-labelledby="agent-platform-title"
+        >
+          <div className="section-heading" data-reveal>
+            <p className="eyebrow">{t.agentPlatform.eyebrow}</p>
+            <h2 id="agent-platform-title">{t.agentPlatform.title}</h2>
+            <p>{t.agentPlatform.body}</p>
+          </div>
+
+          <div className="agent-platform-shell" data-reveal>
+            <div className="agent-surfaces">
+              {t.agentPlatform.surfaces.map((surface, index) => (
+                <article key={surface.title}>
+                  <span className="agent-surface-index" aria-hidden="true">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <h3>{surface.title}</h3>
+                  <p>{surface.body}</p>
+                </article>
+              ))}
+            </div>
+
+            <ol className="agent-flow" aria-label={t.agentPlatform.flowAria}>
+              {t.agentPlatform.steps.map((step, index) => (
+                <li key={step.label}>
+                  <span>{index + 1}</span>
+                  <strong>{step.label}</strong>
+                  <p>{step.body}</p>
+                </li>
+              ))}
+            </ol>
+
+            <div className="agent-boundaries">
+              <div>
+                <Icon name="local" />
+                <p>{t.agentPlatform.boundary}</p>
+              </div>
+              <div>
+                <Icon name="assistant" />
+                <p>
+                  <strong>{t.agentPlatform.assistantTitle}</strong>
+                  {t.agentPlatform.assistantBody}
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
