@@ -21,8 +21,10 @@ local-service = [
     "pydantic>=2.9,<3",
     "uvicorn>=0.34,<1",
 ]
+mcp = ["mcp>=1.27,<2"]
 test = [
     "httpx>=0.28,<1",
+    "mcp>=1.27,<2",
     "pytest>=8,<9",
     "pytest-qt>=4.5,<5",
     "pytest-timeout>=2.4,<3",
@@ -36,6 +38,7 @@ optees = "optees.main:main"
 optees-cli = "optees.cli:main"
 optees-server = "optees.local_server:main"
 optees-ollama-chat = "optees.ollama_chat:main"
+optees-mcp = "optees.mcp_server:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

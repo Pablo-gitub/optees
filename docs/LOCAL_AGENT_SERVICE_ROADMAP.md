@@ -565,17 +565,27 @@ After D0 proves the workflow, expose the same allowlisted facade through a
 minimal local MCP server so compatible desktop and IDE clients can invoke
 Optees without custom Ollama code.
 
-- [ ] Implement capability discovery, validation, job creation, status, result,
+- [x] Implement capability discovery, validation, job creation, status, result,
   and cancellation as thin MCP tools over the existing application services.
-- [ ] Reuse the same tool names, schemas, redaction policy, and orchestration
+- [x] Reuse the same tool names, schemas, redaction policy, and orchestration
   invariants exercised by D0; do not call the REST API internally when direct
   application services are available.
-- [ ] Add MCP protocol and schema tests plus one local end-to-end smoke test.
-- [ ] Document stdio/local-process configuration separately from the REST
+- [x] Add MCP protocol and schema tests plus one local end-to-end smoke test.
+- [x] Document stdio/local-process configuration separately from the REST
   connection configuration.
-- [ ] State explicitly that this vertical slice proves local tool access but
+- [x] State explicitly that this vertical slice proves local tool access but
   does not yet provide the complete agent guidance, compatibility, packaging,
   and client matrix assigned to Phase D.
+
+The vertical slice is implemented by `optees-mcp`, a private stdio process that
+wraps `LocalJobService` directly. It opens no port, needs no REST bearer token,
+and preserves the D0 requirement to inspect the full capability descriptor and
+validate the exact payload before creating a job. Protocol tests negotiate a
+real MCP session, inspect all seven published schemas, and complete the frozen
+continuous-LP workflow through a subprocess. Setup and current limitations are
+documented in `docs/local-agent/mcp-stdio.md`. Native installer inclusion,
+client-specific guidance, and the complete compatibility matrix remain Phase D
+work rather than implicit claims of this proof.
 
 ### A2 - Knapsack Family
 

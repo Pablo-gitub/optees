@@ -13,9 +13,9 @@ Optees is a desktop, open-source tool to help technical and non-technical staff 
 ```mermaid
 flowchart LR
     Desktop["Desktop UI (PySide6)"] --> Application["Application use cases"]
-    CLI["Headless CLI (planned)"] --> Application
-    REST["Local REST adapter (planned)"] --> Application
-    MCP["MCP adapter (future)"] --> Application
+    CLI["Headless CLI"] --> Application
+    REST["Authenticated local REST adapter"] --> Application
+    MCP["Local MCP stdio adapter"] --> Application
     Application --> Domain["Domain models and results"]
     Application --> Ports["Application ports"]
     Adapters["Solver and infrastructure adapters"] -. implement .-> Ports
