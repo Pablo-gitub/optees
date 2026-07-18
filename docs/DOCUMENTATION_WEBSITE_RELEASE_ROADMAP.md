@@ -62,26 +62,27 @@ phase with an explicit verification gate.
 
 ## Phase 2 - Architecture Documentation And Mermaid
 
-- [ ] Rewrite `docs/ARCHITECTURE.md` around the current source tree and runtime
+- [x] Rewrite `docs/ARCHITECTURE.md` around the current source tree and runtime
   boundaries instead of the original desktop-only structure.
-- [ ] Add a system-context diagram covering the user, desktop GUI, CLI, REST,
+- [x] Add a system-context diagram covering the user, desktop GUI, CLI, REST,
   MCP, local LLM harness, application services, solver adapters, and external
   numerical engines.
-- [ ] Add a Clean Architecture dependency diagram with explicit ports and
+- [x] Add a Clean Architecture dependency diagram with explicit ports and
   adapters.
-- [ ] Add a curated UML class diagram for `CapabilityRegistry`,
+- [x] Add a curated UML class diagram for `CapabilityRegistry`,
   `OptimizationService`, `LocalJobService`, serializers, validators, and
   registered capability adapters.
-- [ ] Add the discovery, validation, asynchronous execution, independent
+- [x] Add the discovery, validation, asynchronous execution, independent
   result validation, and result-retrieval sequence.
-- [ ] Add a job-state diagram that keeps transport lifecycle separate from
+- [x] Add a job-state diagram that keeps transport lifecycle separate from
   mathematical status.
-- [ ] Add REST, MCP stdio, and direct desktop-service runtime diagrams.
-- [ ] Add a composed-workflow diagram such as forecasting to MILP planning to
+- [x] Add REST, MCP stdio, and direct desktop-service runtime diagrams.
+- [x] Add a composed-workflow diagram such as forecasting to MILP planning to
   3D Packing, clearly marking agent orchestration as external to atomic solver
   correctness.
 - [ ] Verify every Mermaid block through GitHub-compatible rendering or a
-  reviewed local Mermaid toolchain.
+  reviewed local Mermaid toolchain. All nine blocks passed local structural
+  review; no Mermaid renderer is currently installed in the repository.
 
 **Exit criterion:** a contributor can identify ownership, dependency direction,
 execution flow, status boundaries, and extension points without reading the

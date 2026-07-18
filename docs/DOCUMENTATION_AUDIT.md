@@ -44,9 +44,9 @@ feature counts.
 
 ### P0 - Must Be Corrected Before The Next Public Release
 
-1. `docs/ARCHITECTURE.md` still describes the original desktop-oriented layout,
-   calls it a six-layer model while showing additional runtime boundaries, and
-   contains an obsolete `Actually folders` section.
+1. Resolved: `docs/ARCHITECTURE.md` now describes the shared desktop and local
+   solver platform, current source ownership, runtime boundaries, and extension
+   points.
 2. The landing page omits Packing 3D and does not explain the local solver API,
    MCP integration, independent result validation, or agent workflow.
 3. Agent setup was split by client. This audit resolves the entry-point problem
@@ -61,18 +61,19 @@ feature counts.
 
 ### P1 - Required For Documentation Quality
 
-1. README architecture and agent sections need links to one unified setup
-   guide and a concise explanation of REST versus MCP security boundaries.
-2. The architecture needs curated Mermaid context, dependency, class,
-   sequence, state, and composed-workflow diagrams.
+1. Resolved: README architecture and agent sections link to the unified setup
+   guide and distinguish REST loopback from private MCP stdio.
+2. Resolved: `docs/ARCHITECTURE.md` now documents the current runtime with
+   curated Mermaid context, dependency, class, sequence, state, transport, and
+   composed-workflow diagrams.
 3. The website's numeric workflow count is manually maintained and already
    excludes Packing 3D. Counts should be derived from one reviewed content
    list or updated with an explicit test.
 4. Website claims about benchmark validation must distinguish scientific or
    external benchmark datasets from analytic and deterministic regression
    cases.
-5. Documentation lacks one audience-oriented index separating end-user,
-   contributor, agent-integration, benchmark, and release-maintainer paths.
+5. Resolved: `docs/README.md` provides audience-oriented paths for end users,
+   contributors, agent integrators, benchmark authors, and release maintainers.
 
 ### P2 - Public Demonstration Work
 
