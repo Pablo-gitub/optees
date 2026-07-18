@@ -3,6 +3,11 @@
 This document closes the loop between the source version, packaged application,
 GitHub Release, and in-app update checker.
 
+The current procedure describes the artifacts that exist today. Planned native
+installer, updater, CI, and packaged acceptance hardening is tracked separately
+in `docs/NATIVE_DISTRIBUTION_ROADMAP.md`; do not describe those planned
+capabilities as already released.
+
 ## Release Invariants
 
 For a release `vX.Y.Z`:

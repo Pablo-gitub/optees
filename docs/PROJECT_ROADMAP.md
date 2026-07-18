@@ -13,6 +13,8 @@ Related documents:
   loading horizontal expansion;
 - `docs/LOCAL_AGENT_SERVICE_ROADMAP.md` for the shared headless execution
   platform, local API, and future agent-facing contracts;
+- `docs/NATIVE_DISTRIBUTION_ROADMAP.md` for native installers, release CI,
+  platform update handoff, and packaged acceptance testing;
 - `docs/AGENT_BENCHMARKS.md` for paired experiments measuring whether agents
   formulate and solve synthetic business problems better with Optees;
 - `docs/DATASETS.md` for included scientific datasets;
@@ -299,6 +301,14 @@ Independent result validation, semantic modeling safeguards, agent-oriented
 documentation, MCP, and composite optimization workflows follow in explicit
 post-MVP phases.
 
+An early local-agent proof is intentionally inserted after the first complete
+LP validator instead of waiting for the final MCP phase. A small Ollama harness
+will exercise discovery, validation, asynchronous execution, independent result
+validation, and explanation as one reproducible loop. A minimal MCP vertical
+slice follows over the same allowlisted tool facade; the later MCP phase remains
+responsible for hardening, complete capability coverage, packaging, guidance,
+and client compatibility.
+
 The sequential checklist and API boundaries are maintained in
 `docs/LOCAL_AGENT_SERVICE_ROADMAP.md`.
 
@@ -308,6 +318,20 @@ scenarios under unaided and Optees-assisted conditions. They will report model
 validity, feasibility, objective quality, unsupported assumptions, tool use,
 and explanation accuracy separately. The protocol and repository organization
 are maintained in `docs/AGENT_BENCHMARKS.md`.
+
+### Phase 3.45 - Native Distribution And Update Hardening
+
+After the local solver platform is merged, release engineering takes priority
+over another functional expansion. Windows must gain a real per-user installer;
+macOS and Linux must retain explicit native or portable contracts; and the
+updater must distinguish a verified download, an installation handoff, and a
+confirmed installed update.
+
+The work also introduces a test-gated release workflow, pinned packaging inputs,
+final-artifact solver smoke tests, fail-closed checksum verification, and a
+recorded clean-machine acceptance matrix. Implementation starts from `main` on
+`codex/native-installers`. The sequential plan and platform exit criteria are
+maintained in `docs/NATIVE_DISTRIBUTION_ROADMAP.md`.
 
 ### Phase 3.5 - Heuristics & Metaheuristics: First Vertical Slice
 
