@@ -52,9 +52,9 @@ No URL or bearer token is required. The MCP client launches the process and
 owns its stdin/stdout channel. Do not paste the REST authorization token into
 this configuration.
 
-For tested Claude Desktop and Cowork setup steps, configuration placement,
-connection verification, and example runs, see
-[`docs/CLAUDE_CONFIG.md`](../CLAUDE_CONFIG.md).
+For shared agent setup, tested Claude Desktop and Cowork steps, Ollama launch
+instructions, future OpenAI GPT validation, and example runs, see the
+[agent service configuration guide](../AGENTS_SERVICE_CONFIG.md).
 
 ## Tool Workflow
 
@@ -80,7 +80,8 @@ memory, and terminates when the client closes the channel. It cannot make a
 cloud-hosted agent reach services on the user's localhost; the MCP client
 itself must run locally and support local process servers.
 
-This vertical slice proves local MCP discovery and one complete LP execution.
-It does not yet certify every MCP client, package the server in every native
-installer, provide complete agent guidance, or replace the broader hardening
-work assigned to Post-MVP Phase D.
+The server discovers every capability registered by the shared composition
+root. Automated MCP sequencing and one complete LP execution provide the first
+vertical regression path; broader capability and client compatibility still
+requires the Phase D matrix. This work does not yet certify every MCP client or
+package the server in every native installer.

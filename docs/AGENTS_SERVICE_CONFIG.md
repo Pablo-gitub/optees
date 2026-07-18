@@ -1,4 +1,27 @@
-# Claude Desktop And Cowork Configuration
+# Agent Service Configuration
+
+This is the common setup guide for connecting local software agents to Optees.
+All integrations use the same versioned capability contracts, but they do not
+share the same transport or authentication requirements.
+
+| Client | Transport | REST token | Current status |
+| --- | --- | --- | --- |
+| Claude Desktop / Cowork | MCP stdio | No | Tested locally on macOS |
+| Ollama D0 harness | Authenticated loopback REST | Yes | Experimental source/Python-package workflow |
+| OpenAI GPT client | To be selected and verified | To be determined | Planned compatibility test |
+
+General rules:
+
+- Keep network services bound to `127.0.0.1`.
+- Never place a REST bearer token in an MCP stdio configuration.
+- Require capability discovery, descriptor inspection, exact payload
+  validation, execution, and result retrieval in that order.
+- Treat mathematical status and independent validation status as separate
+  claims.
+- Do not assume that a hosted chat can reach localhost or launch a local MCP
+  process.
+
+## Claude Desktop And Cowork
 
 Claude Desktop can launch Optees as a private local MCP server. Claude calls
 the same versioned capabilities used by the desktop application, CLI, and
@@ -9,7 +32,7 @@ This integration has been tested with Claude Desktop Cowork in local mode on
 macOS. Cloud-hosted sessions that cannot launch local processes cannot use this
 configuration.
 
-## 1. Install The MCP Extra
+### 1. Install The MCP Extra
 
 From an Optees source checkout:
 
@@ -20,7 +43,7 @@ python -m pip install -e ".[mcp]"
 For a packaged Python installation, ensure that `optees-mcp` is available in
 the environment that Claude Desktop will launch.
 
-## 2. Open Claude's Configuration
+### 2. Open Claude's Configuration
 
 In Claude Desktop:
 
@@ -35,7 +58,7 @@ On macOS this file is normally located at:
 ~/Library/Application Support/Claude/claude_desktop_config.json
 ```
 
-## 3. Add The Optees Server
+### 3. Add The Optees Server
 
 `mcpServers` must be a top-level property, alongside existing properties such
 as `preferences`. Do not place it inside `preferences`.
@@ -98,7 +121,7 @@ at the root. For example:
 The final file must remain valid JSON. In particular, keep commas between
 top-level properties and use JSON booleans such as `true`, not Markdown text.
 
-## 4. Restart And Verify
+### 4. Restart And Verify
 
 Fully quit Claude Desktop, reopen it, and start a new local chat or Cowork
 session. Then send this exact discovery prompt:
@@ -141,7 +164,7 @@ The Claude connector directory may show only Anthropic and partner
 connectors. A local MCP process does not need to appear in that directory to
 work; the explicit tool call above is the relevant verification.
 
-## 5. Expected Tool Workflow
+### 5. Expected Tool Workflow
 
 For a solver task, Claude should:
 
@@ -155,7 +178,7 @@ For a solver task, Claude should:
 
 Changing the payload after validation requires a new validation call.
 
-## Tested Manufacturing Examples
+### Tested Manufacturing Examples
 
 The first exploratory Cowork study uses a fully synthetic manufacturing
 workbook and two tasks:
@@ -183,7 +206,7 @@ the exact Claude model identifier and repeated controlled trials were not
 recorded. Future studies will add more scenarios, agents, repetitions, and
 unaided controls.
 
-## Troubleshooting
+### Claude Troubleshooting
 
 - Confirm that `mcpServers` is at the JSON root and that the file parses.
 - Use absolute paths for both Python and `PYTHONPATH`.
@@ -192,3 +215,58 @@ unaided controls.
 - Fully quit Claude instead of closing only the current window.
 - Do not paste the REST API bearer token into the MCP configuration. The MCP
   process uses its private stdio channel and needs no network credential.
+
+## Ollama Local Harness
+
+The standard Ollama chat application does not know about Optees tools. The D0
+harness connects a tool-capable local model to the authenticated Optees REST
+service and enforces descriptor inspection and exact-payload validation.
+
+From a source checkout:
+
+```bash
+cd /absolute/path/to/optees
+PYTHONPATH=src python -m optees.ollama_chat --model qwen3.5:9b
+```
+
+From a Python package installed with `pip`:
+
+```bash
+optees-ollama-chat --model qwen3.5:9b
+```
+
+Before launching the harness, start the local solver service in Optees
+Settings and copy either the authorization value or the complete connection
+configuration. Input is hidden in the terminal. The native PyInstaller
+artifacts do not currently expose this chat command; a packaged Local Agent
+desktop module is planned.
+
+The reviewed D0 prompt, model compatibility results, transcript policy, and
+security behavior are documented in
+[Ollama D0 local agent harness](local-agent/ollama-d0-harness.md).
+
+## OpenAI GPT Clients
+
+OpenAI GPT integration is planned but not yet certified. Before publishing a
+configuration, Optees must select a supported local client or MCP surface and
+record the exact client, model, transport, authentication boundary, and
+localhost limitations.
+
+The first acceptance check will use this prompt:
+
+```text
+Use the Optees tools to list all available solver capabilities.
+Do not answer from your own knowledge: call optees_list_capabilities.
+```
+
+A successful response must be based on the returned 12 capability descriptors,
+not on model memory. No speculative JSON configuration should be copied into
+this guide before that workflow succeeds from a clean setup.
+
+## Shared Technical References
+
+- [MCP stdio server](local-agent/mcp-stdio.md)
+- [Authenticated local REST API](local-agent/local-rest-api.md)
+- [Desktop server controls](local-agent/server-process-and-desktop.md)
+- [Ollama D0 harness](local-agent/ollama-d0-harness.md)
+- [Agent benchmark protocol](AGENT_BENCHMARKS.md)

@@ -184,7 +184,8 @@ support is represented by `null` or capability metadata, never invented.
 
 ### Phase 0 - Current Contract Inventory
 
-- [x] Create `docs/local-agent/current-capability-inventory.md`.
+- [x] Create the historical
+  `docs/local-agent/pre-service-capability-inventory.md` baseline.
 - [x] Record each capability's domain input, JSON importer, use case, port,
   adapter, result type, statuses, diagnostics, dependency requirements, and
   tests.
@@ -650,7 +651,57 @@ guaranteed automatically. The service validates the received model and applies
 deterministic safeguards; the user or calling agent remains responsible for
 the interpretation.
 
-## Post-MVP Phase C - Agent Documentation And Integration
+## Post-MVP Phase C - Local Desktop Agent And Integration
+
+### C0 - Local Ollama Desktop Module
+
+Promote the successful D0 terminal proof into an actual Optees desktop module.
+The first supported provider is Ollama running on the same computer. This is a
+local LLM-assisted workflow and must remain visibly distinct from the existing
+deterministic, rule-based Modeling Assistant.
+
+- [ ] Extract the provider-neutral conversation loop from the terminal harness
+  into an application service that does not depend on Qt or terminal input.
+- [ ] Reuse `LocalJobService` directly inside the desktop process instead of
+  requiring the user to start the REST server and copy a bearer token.
+- [ ] Add a dedicated **Local Agent** view with conversation history, model
+  selector, connection status, stop action, and concise tool-progress events.
+- [ ] Discover locally installed Ollama models and show whether each model
+  advertises native tool support; do not imply that advertised support
+  guarantees correct tool calls.
+- [ ] Keep the model endpoint loopback-only by default and never include Optees
+  credentials, hidden instructions, or unrelated application state in model
+  messages.
+- [ ] Execute model and solver work outside the Qt UI thread with bounded
+  turns, tool calls, polling, timeout, and cooperative cancellation.
+- [ ] Require capability inspection and exact-payload validation before every
+  job, preserving the same state machine and safe failure used by D0 and MCP.
+- [ ] Make transcript persistence opt-in, warn that prompts may contain
+  business data, and redact credentials and internal transport details.
+- [ ] Add English and Italian UI strings, provider setup guidance, empty/error
+  states, and explicit statements about local-model quality limitations.
+- [ ] Add deterministic fake-provider tests, GUI flow tests, and one real
+  opt-in Ollama smoke test outside the default CI suite.
+- [ ] Include the module and its runtime imports in PyInstaller builds, then
+  test the complete workflow from installed macOS, Windows, and Linux
+  artifacts.
+- [ ] Do not bundle Ollama or a language model with Optees initially; detect a
+  missing Ollama service and provide platform-appropriate setup guidance.
+
+Current launch matrix:
+
+| Distribution | Current command | Status |
+| --- | --- | --- |
+| Source checkout | `PYTHONPATH=src python -m optees.ollama_chat --model qwen3.5:9b` | Available for development |
+| Python package installed with `pip` | `optees-ollama-chat --model qwen3.5:9b` | Available through the console entry point |
+| Native PyInstaller release | None | Not yet packaged; use the future desktop module |
+
+The native-release gap is intentional documentation of current behavior, not
+an instruction to unpack an installer and search for internal Python modules.
+The desktop module is the supported product direction for users who install a
+DMG, Windows installer/ZIP, or Linux package.
+
+### C1 - Agent Documentation And External Integration
 
 - [ ] Generate technical API documentation from tested Pydantic models and
   FastAPI endpoints.
@@ -674,6 +725,15 @@ the interpretation.
 - [ ] Test tool schemas and behavior against the REST contracts.
 - [ ] Add packaged-build acceptance tests and a documented compatibility matrix
   for supported local MCP clients.
+- [ ] Test and document an OpenAI GPT integration through a currently supported
+  OpenAI local-client or MCP surface. Record the exact client, model, transport,
+  authentication boundary, and limitations instead of assuming that ChatGPT
+  can launch local stdio servers or reach localhost.
+- [ ] Add an OpenAI-specific discovery smoke test equivalent to the Claude
+  check: the agent must call `optees_list_capabilities` and report the returned
+  contracts rather than answer from memorized knowledge.
+- [ ] Preserve a reviewed GPT configuration example and at least one complete
+  synthetic solver run only after the integration works from a clean setup.
 - [ ] Integrate the semantic guidance and agent documentation produced by
   Phases B and C without changing the underlying solver contracts.
 

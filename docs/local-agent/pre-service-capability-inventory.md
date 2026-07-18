@@ -1,9 +1,11 @@
-# Current Capability Inventory
+# Pre-Service Capability Inventory
 
-This inventory records the contracts that exist in Optees 0.8.0 before the
-local solver service introduces public execution envelopes. It is descriptive,
-not aspirational: backend availability, status semantics, diagnostics, and
-tests are taken from the current code.
+This historical inventory records the contracts that existed in Optees 0.8.0
+before the local solver service introduced public execution envelopes. It is
+retained as design evidence for the refactoring and must not be treated as the
+current public-service contract. Current capability descriptors are produced by
+`src/optees/composition/local_agent.py` and exposed through CLI, REST, and MCP
+discovery.
 
 ## Cross-Cutting Findings
 

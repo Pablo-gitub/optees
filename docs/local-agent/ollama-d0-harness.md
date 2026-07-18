@@ -31,8 +31,8 @@ this harness for the D0 experiment.
 1. Start the Optees local solver service from Settings.
 2. Keep it bound to `127.0.0.1`; do not expose it on the network.
 3. Run `ollama list` and select an installed model with tool support. The first
-   frozen experiment uses `qwen2.5-coder:7b`, digest
-   `dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364`.
+   successful native-tool experiment uses `qwen3.5:9b`, digest
+   `6488c96fa5faab64bb65cbd30d4289e20e6130ef535a93ef9a49f42eda893ea7`.
 4. In Optees, click **Copy authorization** or **Copy connection
    configuration**. The harness accepts either the authorization value, the
    complete JSON object, or only its bearer token through hidden terminal
@@ -41,14 +41,22 @@ this harness for the D0 experiment.
 From a source checkout:
 
 ```bash
-PYTHONPATH=src python -m optees.ollama_chat --model qwen2.5-coder:7b
+cd /absolute/path/to/optees
+PYTHONPATH=src python -m optees.ollama_chat --model qwen3.5:9b
 ```
 
-From an installed package:
+From a package installed into a Python environment with `pip`:
 
 ```bash
-optees-ollama-chat --model qwen2.5-coder:7b
+optees-ollama-chat --model qwen3.5:9b
 ```
+
+The `optees-ollama-chat` console entry point is not currently exposed by the
+native PyInstaller releases. Users of the macOS, Windows, and Linux desktop
+artifacts should not be asked to locate source modules inside the application
+bundle. The planned Local Agent desktop module will provide this workflow from
+the installed GUI; until then, interactive Ollama testing requires either a
+source checkout or a normal Python package installation.
 
 The token is retained by the local tool facade and added only to Optees HTTP
 headers. It is not sent to Ollama, included in tool arguments, or written to
@@ -135,7 +143,7 @@ Use transcript recording only with synthetic or approved data:
 
 ```bash
 PYTHONPATH=src python -m optees.ollama_chat \
-  --model qwen2.5-coder:7b \
+  --model qwen3.5:9b \
   --transcript benchmarks/agents/runs/local-d0.jsonl
 ```
 
