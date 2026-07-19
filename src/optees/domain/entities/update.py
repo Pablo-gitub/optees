@@ -54,6 +54,7 @@ class UpdateHandoffMethod(str, Enum):
 
 
 class UpdateExecutionState(str, Enum):
+    DOWNLOADING = "downloading"
     DOWNLOADED = "downloaded"
     VERIFICATION_FAILED = "verification_failed"
     INSTALLER_LAUNCHED = "installer_launched"
@@ -86,6 +87,16 @@ class UpdateHandoffResult:
     local_path: str
     state: UpdateExecutionState
     started: bool
+
+
+@dataclass(frozen=True)
+class UpdateExecutionSnapshot:
+    plan: UpdatePlan
+    state: UpdateExecutionState
+    local_path: Optional[str] = None
+    bytes_downloaded: int = 0
+    total_bytes: Optional[int] = None
+    message: str = ""
 
 
 @dataclass(frozen=True)

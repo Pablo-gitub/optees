@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from optees.application.ports.update_provider_port import UpdateProviderPort
+from optees.application.ports.update_provider_port import (
+    DownloadProgressCallback,
+    UpdateProviderPort,
+)
 from optees.domain.entities.update import UpdateCheckResult
 
 
@@ -12,7 +15,13 @@ class DownloadUpdateUseCase:
     def __init__(self, provider: UpdateProviderPort) -> None:
         self._provider = provider
 
-    def execute(self, result: UpdateCheckResult, destination_dir: Path) -> Path:
+    def execute(
+        self,
+        result: UpdateCheckResult,
+        destination_dir: Path,
+        *,
+        progress: DownloadProgressCallback | None = None,
+    ) -> Path:
         if not result.update_available or result.asset is None:
             raise ValueError("No compatible update asset is available.")
 
@@ -24,4 +33,5 @@ class DownloadUpdateUseCase:
             result.asset,
             destination_dir,
             checksum_asset=checksum_asset,
+            progress=progress,
         )

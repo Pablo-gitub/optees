@@ -77,6 +77,11 @@
     "update_available": "E' disponibile la versione {version}.",
     "update_unsupported": "E' disponibile la versione {version}, ma non c'e' un pacchetto di rilascio compatibile con questa piattaforma.",
     "update_downloading": "Download della versione {version} in corso...",
+    "update_downloading_progress": "Download della versione {version}: {percent}%",
+    "update_downloading_bytes": "Download della versione {version}: {downloaded}",
+    "update_downloaded": "Il pacchetto di rilascio e' stato scaricato e verificato.",
+    "update_verification_failed": "Il pacchetto scaricato non ha superato la verifica di integrita' e non e' stato aperto.",
+    "update_manual_action_required": "Il pacchetto verificato e' stato aperto. Completa i passaggi di installazione o sostituzione della piattaforma.",
     "update_launching": "Apertura del pacchetto scaricato. Completa i passaggi di sostituzione della piattaforma dopo la chiusura di Optees.",
     "update_unknown": "Non e' stato possibile stabilire se questa e' l'ultima versione.",
     "update_error": "Impossibile controllare gli aggiornamenti: {detail}",
@@ -119,7 +124,9 @@
   "updates": {
     "banner": {
       "available": "E' disponibile un aggiornamento: versione {version}. Scarica l'aggiornamento",
-      "downloading": "Download aggiornamento {version} in corso..."
+      "downloading": "Download aggiornamento {version} in corso...",
+      "downloading_progress": "Download aggiornamento {version}: {percent}%",
+      "downloading_bytes": "Download aggiornamento {version}: {downloaded}"
     }
   },
   "assistant": {

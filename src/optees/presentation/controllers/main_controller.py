@@ -17,6 +17,7 @@ from optees.presentation.views.regression_view import RegressionView
 from optees.presentation.views.classification_view import ClassificationView
 from optees.presentation.views.home_view import HomePage  # usa lo stesso nome che usi nel MainWindow
 from optees.core.string_manager import strings as S
+from optees.domain.entities.update import UpdateExecutionState
 from optees.utility.knapsack_json_io import knapsack_problem_from_dict
 from optees.utility.lp_json_io import lp_model_from_dict
 from optees.utility.milp_json_io import milp_model_from_dict
@@ -386,6 +387,8 @@ class MainController(QObject):
         update_controller.check_completed.connect(self._on_update_check_completed)
         update_controller.check_failed.connect(self._on_update_check_failed)
         update_controller.download_started.connect(self._on_update_download_started)
+        update_controller.execution_state_changed.connect(self._on_update_execution_state)
+        update_controller.download_progress.connect(self._on_update_download_progress)
         update_controller.handoff_completed.connect(self._on_update_handoff_completed)
         update_controller.download_failed.connect(self._on_update_download_failed)
 
@@ -427,9 +430,42 @@ class MainController(QObject):
         if hasattr(settings, "set_update_error"):
             settings.set_update_error(message)
 
+    def _on_update_execution_state(self, snapshot) -> None:
+        settings = self.window.page("settings")
+        state = getattr(snapshot, "state", None)
+        if state is UpdateExecutionState.DOWNLOADED and hasattr(
+            settings, "set_update_downloaded"
+        ):
+            settings.set_update_downloaded(getattr(snapshot, "local_path", ""))
+        elif state is UpdateExecutionState.VERIFICATION_FAILED and hasattr(
+            settings, "set_update_verification_failed"
+        ):
+            settings.set_update_verification_failed(getattr(snapshot, "message", ""))
+        elif state is UpdateExecutionState.MANUAL_ACTION_REQUIRED and hasattr(
+            settings, "set_update_manual_action_required"
+        ):
+            settings.set_update_manual_action_required(
+                getattr(snapshot, "local_path", "")
+            )
+
+    def _on_update_download_progress(self, downloaded: int, total: int) -> None:
+        home = self.window.page("home")
+        settings = self.window.page("settings")
+        if hasattr(home, "set_update_download_progress"):
+            home.set_update_download_progress(downloaded, total)
+        if hasattr(settings, "set_update_download_progress"):
+            settings.set_update_download_progress(downloaded, total)
+
     def _on_update_handoff_completed(self, outcome) -> None:
         settings = self.window.page("settings")
-        if hasattr(settings, "set_update_launching"):
+        state = getattr(outcome, "state", None)
+        if state is UpdateExecutionState.MANUAL_ACTION_REQUIRED and hasattr(
+            settings, "set_update_manual_action_required"
+        ):
+            settings.set_update_manual_action_required(
+                getattr(outcome, "local_path", "")
+            )
+        elif hasattr(settings, "set_update_launching"):
             settings.set_update_launching(getattr(outcome, "local_path", ""))
 
         if getattr(outcome, "started", False):

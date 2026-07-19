@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -35,12 +36,15 @@ class FakeUpdateProvider:
         destination_dir: Path,
         *,
         checksum_asset: ReleaseAsset | None = None,
+        progress: Callable[[int, int | None], None] | None = None,
     ) -> Path:
         self.downloaded = asset
         self.checksum = checksum_asset
         destination_dir.mkdir(parents=True, exist_ok=True)
         path = destination_dir / asset.name
         path.write_bytes(b"installer")
+        if progress is not None:
+            progress(len(b"installer"), len(b"installer"))
         return path
 
 

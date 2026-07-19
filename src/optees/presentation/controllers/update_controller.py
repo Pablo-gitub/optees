@@ -5,9 +5,7 @@ import threading
 from PySide6.QtCore import QObject, Signal
 
 from optees.application.usecases.check_for_updates_usecase import CheckForUpdatesUseCase
-from optees.application.usecases.download_update_usecase import DownloadUpdateUseCase
-from optees.application.usecases.handoff_update_usecase import HandoffUpdateUseCase
-from optees.application.services.update_staging import UpdateStagingService
+from optees.application.usecases.execute_update_usecase import ExecuteUpdateUseCase
 from optees.domain.entities.update import UpdateCheckResult
 
 
@@ -17,22 +15,20 @@ class UpdateController(QObject):
     check_completed = Signal(object)
     check_failed = Signal(str)
     download_started = Signal(object)
+    execution_state_changed = Signal(object)
+    download_progress = Signal(int, int)
     handoff_completed = Signal(object)
     download_failed = Signal(str)
 
     def __init__(
         self,
         check_usecase: CheckForUpdatesUseCase,
-        download_usecase: DownloadUpdateUseCase,
-        handoff_usecase: HandoffUpdateUseCase,
-        staging_service: UpdateStagingService,
+        execute_usecase: ExecuteUpdateUseCase,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self._check_usecase = check_usecase
-        self._download_usecase = download_usecase
-        self._handoff_usecase = handoff_usecase
-        self._staging_service = staging_service
+        self._execute_usecase = execute_usecase
         self._last_result: UpdateCheckResult | None = None
         self._checking = False
         self._downloading = False
@@ -76,11 +72,13 @@ class UpdateController(QObject):
 
     def _run_download(self, result: UpdateCheckResult) -> None:
         try:
-            if result.plan is None:
-                raise ValueError("The selected update has no platform handoff plan.")
-            target_dir = self._staging_service.directory_for(result.plan)
-            path = self._download_usecase.execute(result, target_dir)
-            outcome = self._handoff_usecase.execute(result.plan, path)
+            outcome = self._execute_usecase.execute(
+                result,
+                on_state=self.execution_state_changed.emit,
+                on_progress=lambda downloaded, total: self.download_progress.emit(
+                    downloaded, total if total is not None else -1
+                ),
+            )
             self.handoff_completed.emit(outcome)
         except Exception as exc:
             self.download_failed.emit(str(exc))

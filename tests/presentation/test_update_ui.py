@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QPushButton
 
 from optees.core.string_manager import strings as S
-from optees.domain.entities.update import AppRelease, ReleaseAsset, UpdateCheckResult
+from optees.domain.entities.update import (
+    AppRelease,
+    ReleaseAsset,
+    UpdateCheckResult,
+    UpdateExecutionState,
+)
 
 
 def _update_result(version: str = "0.2.0") -> UpdateCheckResult:
@@ -53,6 +60,45 @@ def test_settings_shows_update_status(window):
     assert window.settings_page.value_update.text() == S.t(
         "settings.update_error",
         detail=S.t("error_feedback.update.check"),
+    )
+
+
+def test_update_progress_is_visible_in_home_and_settings(window):
+    result = _update_result("0.3.0")
+    window.home_page.set_update_available(result)
+    window.home_page.set_update_download_in_progress(result)
+    window.home_page.set_update_download_progress(25, 100)
+    window.settings_page.set_update_status(result)
+    window.settings_page.set_update_download_progress(25, 100)
+
+    button = window.home_page.findChild(QPushButton, "updateBannerButton")
+    assert "25%" in button.text()
+    assert "25%" in window.settings_page.value_update.text()
+
+
+def test_settings_distinguishes_verification_and_manual_handoff(window):
+    window.settings_page.set_update_verification_failed("bad digest")
+    assert window.settings_page.value_update.text() == S.t(
+        "settings.update_verification_failed"
+    )
+
+    window.settings_page.set_update_manual_action_required("/tmp/optees.dmg")
+    assert window.settings_page.value_update.text() == S.t(
+        "settings.update_manual_action_required"
+    )
+
+
+def test_manual_handoff_completion_keeps_manual_action_message(window):
+    window.main_controller._on_update_handoff_completed(
+        SimpleNamespace(
+            state=UpdateExecutionState.MANUAL_ACTION_REQUIRED,
+            local_path="/tmp/optees.dmg",
+            started=False,
+        )
+    )
+
+    assert window.settings_page.value_update.text() == S.t(
+        "settings.update_manual_action_required"
     )
 
 

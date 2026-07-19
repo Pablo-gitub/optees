@@ -85,6 +85,7 @@ class HomePage(QWidget):
 
         self._update_result = None
         self._update_downloading = False
+        self._update_progress: tuple[int, int] | None = None
         self.update_banner = QPushButton()
         self.update_banner.setObjectName("updateBannerButton")
         self.update_banner.setCursor(Qt.PointingHandCursor)
@@ -248,6 +249,7 @@ class HomePage(QWidget):
     def set_update_available(self, result) -> None:
         self._update_result = result
         self._update_downloading = False
+        self._update_progress = None
         self.update_banner.setEnabled(True)
         self.update_banner.setVisible(True)
         self._refresh_update_banner_text()
@@ -256,12 +258,19 @@ class HomePage(QWidget):
         if result is not None:
             self._update_result = result
         self._update_downloading = True
+        self._update_progress = None
         self.update_banner.setEnabled(False)
         self.update_banner.setVisible(True)
         self._refresh_update_banner_text()
 
+    def set_update_download_progress(self, downloaded: int, total: int) -> None:
+        self._update_downloading = True
+        self._update_progress = (max(0, downloaded), total)
+        self._refresh_update_banner_text()
+
     def hide_update_banner(self) -> None:
         self._update_downloading = False
+        self._update_progress = None
         self._update_result = None
         self.update_banner.setVisible(False)
 
@@ -270,6 +279,27 @@ class HomePage(QWidget):
             return
         version = getattr(self._update_result, "latest_version", None) or "-"
         if self._update_downloading:
-            self.update_banner.setText(S.t("updates.banner.downloading", version=version))
+            downloaded, total = self._update_progress or (0, -1)
+            if total > 0:
+                percent = min(100, round(downloaded * 100 / total))
+                self.update_banner.setText(
+                    S.t(
+                        "updates.banner.downloading_progress",
+                        version=version,
+                        percent=percent,
+                    )
+                )
+            else:
+                self.update_banner.setText(
+                    S.t(
+                        "updates.banner.downloading_bytes",
+                        version=version,
+                        downloaded=_format_megabytes(downloaded),
+                    )
+                )
         else:
             self.update_banner.setText(S.t("updates.banner.available", version=version))
+
+
+def _format_megabytes(byte_count: int) -> str:
+    return f"{max(0, byte_count) / (1024 * 1024):.1f} MB"

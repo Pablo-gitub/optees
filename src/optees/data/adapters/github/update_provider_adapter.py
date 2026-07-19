@@ -8,7 +8,12 @@ from typing import Any, Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from optees.application.ports.update_provider_port import UpdateProviderPort
+from optees.application.ports.update_provider_port import (
+    DownloadProgressCallback,
+    UpdateDownloadError,
+    UpdateProviderPort,
+    UpdateVerificationError,
+)
 from optees.domain.entities.update import AppRelease, ReleaseAsset
 
 
@@ -42,13 +47,14 @@ class GitHubUpdateProvider(UpdateProviderPort):
         destination_dir: Path,
         *,
         checksum_asset: Optional[ReleaseAsset] = None,
+        progress: Optional[DownloadProgressCallback] = None,
     ) -> Path:
         destination_dir = Path(destination_dir)
         destination_dir.mkdir(parents=True, exist_ok=True)
 
         _validate_asset_name(asset.name)
         if asset.size is not None and asset.size > self._max_asset_bytes:
-            raise ValueError(
+            raise UpdateDownloadError(
                 f"Update asset exceeds the {self._max_asset_bytes}-byte download limit."
             )
 
@@ -57,6 +63,8 @@ class GitHubUpdateProvider(UpdateProviderPort):
         temp.unlink(missing_ok=True)
 
         downloaded = 0
+        if progress is not None:
+            progress(0, asset.size)
         try:
             with self._open(asset.download_url) as response:
                 with temp.open("wb") as fh:
@@ -66,11 +74,15 @@ class GitHubUpdateProvider(UpdateProviderPort):
                             break
                         downloaded += len(chunk)
                         if downloaded > self._max_asset_bytes:
-                            raise ValueError("Update download exceeded its maximum size.")
+                            raise UpdateDownloadError(
+                                "Update download exceeded its maximum size."
+                            )
                         fh.write(chunk)
+                        if progress is not None:
+                            progress(downloaded, asset.size)
 
             if asset.size is not None and downloaded != asset.size:
-                raise ValueError(
+                raise UpdateDownloadError(
                     f"Update size mismatch for {asset.name}: "
                     f"expected {asset.size}, got {downloaded}."
                 )
@@ -78,12 +90,12 @@ class GitHubUpdateProvider(UpdateProviderPort):
             if checksum_asset is not None:
                 expected = self._expected_sha256(checksum_asset, asset.name)
                 if expected is None:
-                    raise ValueError(
+                    raise UpdateVerificationError(
                         f"SHA256SUMS has no entry for update asset {asset.name}."
                     )
                 actual = _sha256_file(temp)
                 if actual.lower() != expected.lower():
-                    raise ValueError(
+                    raise UpdateVerificationError(
                         f"Checksum mismatch for {asset.name}: expected {expected}, got {actual}"
                     )
 
@@ -101,7 +113,9 @@ class GitHubUpdateProvider(UpdateProviderPort):
         with self._open(checksum_asset.download_url) as response:
             payload = response.read(self.MAX_CHECKSUM_BYTES + 1)
         if len(payload) > self.MAX_CHECKSUM_BYTES:
-            raise ValueError("SHA256SUMS exceeds the maximum supported size.")
+            raise UpdateVerificationError(
+                "SHA256SUMS exceeds the maximum supported size."
+            )
         text = payload.decode("utf-8", errors="replace")
         return parse_sha256sums(text).get(target_name)
 
@@ -175,9 +189,9 @@ def _sha256_file(path: Path) -> str:
 
 def _validate_asset_name(name: str) -> None:
     if not name or Path(name).name != name or name in {".", ".."}:
-        raise ValueError("Update asset name is not a safe filename.")
+        raise UpdateDownloadError("Update asset name is not a safe filename.")
     if "/" in name or "\\" in name:
-        raise ValueError("Update asset name is not a safe filename.")
+        raise UpdateDownloadError("Update asset name is not a safe filename.")
 
 
 def _optional_int(value: object) -> Optional[int]:

@@ -103,7 +103,7 @@ commit or from unreviewed rolling packaging inputs.
   passing generic filesystem paths through the presentation layer.
 - [x] Keep operating-system process launching behind a dedicated port instead
   of placing platform behavior in the Qt controller.
-- [ ] Represent `downloaded`, `verification_failed`, `installer_launched`,
+- [x] Represent `downloading`, `downloaded`, `verification_failed`, `installer_launched`,
   `manual_action_required`, and `replacement_scheduled` as distinct states.
 - [x] Use a persistent staging location appropriate to the current user rather
   than relying on the system temporary directory for the only copy.
@@ -111,10 +111,10 @@ commit or from unreviewed rolling packaging inputs.
   the selected artifact.
 - [x] Enforce an expected artifact name, a bounded download size, safe filename
   handling, and cleanup of stale partial downloads.
-- [ ] Report download progress and do not close Optees until the native handoff
+- [x] Report download progress and do not close Optees until the native handoff
   is known to have started successfully.
-- [ ] Keep update checks disabled for source/development runs.
-- [ ] Unit-test platform and architecture selection, verification failure,
+- [x] Keep update checks disabled for source/development runs.
+- [x] Unit-test platform and architecture selection, verification failure,
   process-launch failure, and every state transition.
 
 **Exit criterion:** the core update flow is deterministic and testable without
