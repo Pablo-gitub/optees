@@ -5,13 +5,15 @@ import tomllib
 
 from optees import __version__
 from optees.core.build_metadata import macos_info_plist, windows_version_info_text
+from optees.core.release_version import display_release_version, numeric_release_version
 
 
 def test_macos_bundle_metadata_uses_the_application_version():
     metadata = macos_info_plist()
 
-    assert metadata["CFBundleVersion"] == __version__
-    assert metadata["CFBundleShortVersionString"] == __version__
+    assert metadata["CFBundleVersion"] == numeric_release_version(__version__)
+    assert metadata["CFBundleShortVersionString"] == numeric_release_version(__version__)
+    assert display_release_version(__version__) in metadata["CFBundleGetInfoString"]
     assert metadata["CFBundleName"] == "Optees"
     assert metadata["LSMinimumSystemVersion"] == "13.0"
 
@@ -27,8 +29,9 @@ def test_pyinstaller_spec_uses_shared_macos_metadata():
 def test_windows_executable_metadata_uses_the_application_version():
     metadata = windows_version_info_text()
 
-    assert f"StringStruct('FileVersion', '{__version__}')" in metadata
-    assert f"StringStruct('ProductVersion', '{__version__}')" in metadata
+    display_version = display_release_version(__version__)
+    assert f"StringStruct('FileVersion', '{display_version}')" in metadata
+    assert f"StringStruct('ProductVersion', '{display_version}')" in metadata
     assert "StringStruct('OriginalFilename', 'optees.exe')" in metadata
 
 

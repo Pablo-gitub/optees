@@ -6,6 +6,10 @@
   #error SourceDir must point to the PyInstaller onedir output
 #endif
 
+#ifndef AppNumericVersion
+  #error AppNumericVersion must be supplied by the release build
+#endif
+
 #define AppName "Optees"
 #define AppPublisher "Optees contributors"
 #define AppUrl "https://github.com/Pablo-gitub/optees"
@@ -29,8 +33,8 @@ ArchitecturesInstallIn64BitMode=x64compatible
 OutputBaseFilename=optees-windows-x64-setup
 SetupIconFile=..\..\src\optees\assets\logo\dark\optees.ico
 UninstallDisplayIcon={app}\{#AppExecutable}
-VersionInfoVersion={#AppVersion}
-VersionInfoProductVersion={#AppVersion}
+VersionInfoVersion={#AppNumericVersion}
+VersionInfoProductVersion={#AppNumericVersion}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

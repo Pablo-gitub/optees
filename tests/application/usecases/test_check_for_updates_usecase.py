@@ -182,7 +182,10 @@ def test_linux_plan_accepts_amd64_alias_and_describes_appimage_handoff():
         ("v0.2.0", "0.1.9", True),
         ("0.1.0", "0.1.0", False),
         ("0.1.0", "0.1.1", False),
-        ("1.0", "0.9.9", True),
+        ("1.0.0", "0.9.9", True),
+        ("v0.9.0-rc.2", "0.9.0rc1", True),
+        ("v0.9.0", "0.9.0rc2", True),
+        ("v0.9.0-rc.1", "0.9.0", False),
     ],
 )
 def test_is_newer_version(candidate, current, expected):

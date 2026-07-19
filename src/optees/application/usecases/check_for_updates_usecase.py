@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import platform
-import re
 from typing import Optional
 
 from optees.application.ports.update_provider_port import UpdateProviderPort
+from optees.core.release_version import release_version_key
 from optees.domain.entities.update import (
     AppRelease,
     CpuArchitecture,
@@ -20,11 +20,9 @@ from optees.domain.entities.update import (
 class CheckForUpdatesUseCase:
     """Compare the local app version with the latest GitHub release.
 
-    Release tags are expected in the CI/CD form `vMAJOR.MINOR.PATCH`. The
-    comparison is deliberately small and deterministic: it strips the optional
-    leading `v`, ignores build metadata, and compares the numeric release tuple.
-    Pre-release ordering is not used here because the GitHub `latest` endpoint
-    already ignores pre-releases.
+    Release tags use `vMAJOR.MINOR.PATCH` or `vMAJOR.MINOR.PATCH-rc.N`.
+    Comparison is strict and deterministic, including release-candidate order;
+    a stable release follows every candidate with the same numeric base.
     """
 
     def __init__(
@@ -177,15 +175,4 @@ def _normalize_architecture(value: str) -> Optional[CpuArchitecture]:
 
 
 def is_newer_version(candidate: str, current: str) -> bool:
-    return _version_tuple(candidate) > _version_tuple(current)
-
-
-def _version_tuple(value: str) -> tuple[int, int, int]:
-    text = (value or "").strip()
-    if text.startswith(("v", "V")):
-        text = text[1:]
-    text = text.split("+", 1)[0].split("-", 1)[0]
-    nums = [int(part) for part in re.findall(r"\d+", text)[:3]]
-    while len(nums) < 3:
-        nums.append(0)
-    return tuple(nums[:3])  # type: ignore[return-value]
+    return release_version_key(candidate) > release_version_key(current)

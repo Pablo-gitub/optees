@@ -10,15 +10,22 @@ from __future__ import annotations
 from typing import Any
 
 from optees import __version__
+from optees.core.release_version import (
+    display_release_version,
+    numeric_release_version,
+    release_version_components,
+)
 
 
 def macos_info_plist() -> dict[str, Any]:
     """Return the macOS bundle metadata for the current Optees version."""
+    native_version = numeric_release_version(__version__)
     return {
         "CFBundleName": "Optees",
         "CFBundleDisplayName": "Optees",
-        "CFBundleVersion": __version__,
-        "CFBundleShortVersionString": __version__,
+        "CFBundleVersion": native_version,
+        "CFBundleShortVersionString": native_version,
+        "CFBundleGetInfoString": f"Optees {display_release_version(__version__)}",
         "NSHighResolutionCapable": True,
         "NSPrincipalClass": "NSApplication",
         "NSAppleScriptEnabled": False,
@@ -28,10 +35,10 @@ def macos_info_plist() -> dict[str, Any]:
 
 def windows_version_info_text() -> str:
     """Return a PyInstaller version resource using the application version."""
-    parts = [int(part) for part in __version__.split(".")]
-    if len(parts) != 3:
-        raise ValueError("Optees version must use MAJOR.MINOR.PATCH format.")
+    major, minor, patch, _rc_number = release_version_components(__version__)
+    parts = (major, minor, patch)
     numeric_version = ", ".join(str(part) for part in (*parts, 0))
+    display_version = display_release_version(__version__)
     return f"""VSVersionInfo(
   ffi=FixedFileInfo(
     filevers=({numeric_version}),
@@ -50,11 +57,11 @@ def windows_version_info_text() -> str:
         [
           StringStruct('CompanyName', 'Optees contributors'),
           StringStruct('FileDescription', 'Optees optimization workbench'),
-          StringStruct('FileVersion', '{__version__}'),
+          StringStruct('FileVersion', '{display_version}'),
           StringStruct('InternalName', 'optees'),
           StringStruct('OriginalFilename', 'optees.exe'),
           StringStruct('ProductName', 'Optees'),
-          StringStruct('ProductVersion', '{__version__}')
+          StringStruct('ProductVersion', '{display_version}')
         ]
       )
     ]),

@@ -44,13 +44,7 @@ jobs:
 
       - name: Validate release tag against application version
         shell: bash
-        run: |
-          APP_VERSION="$(PYTHONPATH=src python -c 'import optees; print(optees.__version__)')"
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          if [[ "${APP_VERSION}" != "${TAG_VERSION}" ]]; then
-            echo "Release tag ${TAG_VERSION} does not match Optees ${APP_VERSION}." >&2
-            exit 1
-          fi
+        run: PYTHONPATH=src python -m optees.core.release_version "${GITHUB_REF_NAME}"
 
       - name: Run authoritative test suite
         run: xvfb-run -a python -m pytest -q
@@ -282,10 +276,12 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $version = python -c "import optees; print(optees.__version__)"
+          $version = python -c "import optees; from optees.core.release_version import display_release_version; print(display_release_version(optees.__version__))"
+          $numericVersion = python -c "import optees; from optees.core.release_version import numeric_release_version; print(numeric_release_version(optees.__version__))"
           $sourceDir = (Resolve-Path 'dist\optees').Path
           $outputDir = (Resolve-Path '.').Path
-          iscc "/DAppVersion=$version" "/DSourceDir=$sourceDir" "/O$outputDir" `
+          iscc "/DAppVersion=$version" "/DAppNumericVersion=$numericVersion" `
+            "/DSourceDir=$sourceDir" "/O$outputDir" `
             packaging\windows\optees.iss
 
           if (-not (Test-Path 'optees-windows-x64-setup.exe' -PathType Leaf)) {

@@ -33,11 +33,13 @@ new release-candidate artifact check before a stable tag is published.
 
 ## Release Invariants
 
-For a release `vX.Y.Z`:
+For a stable release `vX.Y.Z` or candidate `vX.Y.Z-rc.N`:
 
-1. `src/optees/__init__.py` must contain `__version__ = "X.Y.Z"`.
-2. The Git tag `vX.Y.Z` must point to the commit containing that version.
-3. `optees.spec` imports the same version for the macOS bundle metadata; do not
+1. `src/optees/__init__.py` must contain the PEP 440 equivalent: `X.Y.Z` for a
+   stable release or `X.Y.ZrcN` for a candidate.
+2. The corresponding Git tag must point to the commit containing that version.
+   CI rejects mismatched stable and RC spellings before packaging.
+3. `optees.spec` derives native numeric metadata from the same version; do not
    insert a version string into the spec file.
 4. The GitHub Release must include the platform artifacts and `SHA256SUMS`.
 
@@ -64,9 +66,10 @@ test -f dist/optees.app/Contents/Resources/assets/i18n/it.json
 test -f dist/optees.app/Contents/Resources/assets/icons/assistant.png
 ```
 
-`CFBundleVersion` and `CFBundleShortVersionString` must equal the version in
-`src/optees/__init__.py`. The command also verifies that PyInstaller bundles
-the JSON locales and the Modeling Assistant icon.
+`CFBundleVersion` and `CFBundleShortVersionString` must equal the numeric base
+version in `src/optees/__init__.py`; candidate identity remains available in
+`CFBundleGetInfoString` and in the application. The command also verifies that
+PyInstaller bundles the JSON locales and the Modeling Assistant icon.
 
 For a local smoke launch without opening a visible desktop window, use a
 short-lived offscreen process only as an additional diagnostic. The normal
