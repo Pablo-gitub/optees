@@ -136,7 +136,7 @@ workflows and local solver platform available at the intended release commit.
   third-party warnings.
 
 - [x] Complete the local-service branch documentation and test gates.
-- [ ] Merge the stable local solver platform into `main`.
+- [x] Merge the stable local solver platform into `main`.
 - [ ] Create `codex/native-installers` from the updated `main`.
 - [ ] Complete the P0 items in `docs/NATIVE_DISTRIBUTION_ROADMAP.md`, including
   test-gated releases, final-artifact smoke tests, checksum behavior, Windows
