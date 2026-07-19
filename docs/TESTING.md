@@ -83,6 +83,20 @@ PYTHONPATH=src python -m pytest -q -m benchmark
 # real loopback transport and subprocess lifecycle
 PYTHONPATH=src python -m pytest -q -m tcp
 
+# local solver platform integration gate (contracts, codecs, services, CLI,
+# REST, MCP, Ollama harness, server settings, and packaged entry points)
+PYTHONPATH=src python -m pytest -q \
+  tests/application/contracts \
+  tests/application/codecs \
+  tests/application/validation \
+  tests/application/services \
+  tests/cli \
+  tests/interfaces \
+  tests/presentation/test_local_server_settings.py \
+  tests/test_local_server_entrypoint.py \
+  tests/test_local_server_packaging_contract.py \
+  tests/adapters/test_rule_based_assistant_adapter.py
+
 # run the complete suite from a source checkout
 PYTHONPATH=src python -m pytest -q
 

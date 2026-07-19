@@ -120,6 +120,19 @@ workflows and local solver platform available at the intended release commit.
 
 ## Phase 4 - Main Integration And Native Distribution
 
+### Local-Service Readiness Record - 2026-07-19
+
+- The production landing build and SEO renderer pass after the agent-platform
+  refresh.
+- The focused local solver platform gate passes 326 tests: 324 contract,
+  codec, validation, service, CLI, REST, MCP, Ollama-harness, packaging, and
+  desktop-settings tests plus 2 real loopback TCP tests.
+- The remaining warnings are the three known third-party OR-Tools SWIG
+  deprecations; no Optees warning or test failure is present in this gate.
+- The authoritative complete suite remains required before merging into
+  `main`. It is intentionally kept separate because it also runs the measured
+  scientific benchmarks and all full-window presentation flows.
+
 - [ ] Complete the local-service branch documentation and test gates.
 - [ ] Merge the stable local solver platform into `main`.
 - [ ] Create `codex/native-installers` from the updated `main`.
