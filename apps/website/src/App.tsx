@@ -131,6 +131,13 @@ function Icon({ name }: { name: IconName }) {
         <path d="M9.5 10.5h.01M12 10.5h.01M14.5 10.5h.01" />
       </>
     ),
+    agentPlatform: (
+      <>
+        <rect x="4" y="5" width="16" height="12" rx="2" />
+        <path d="M8 21h8M12 17v4" />
+        <path d="m8 11 2 2 3-4 3 3" />
+      </>
+    ),
     educational: (
       <>
         <path d="M12 4 2.5 8.5 12 13l9.5-4.5L12 4Z" />
@@ -540,7 +547,8 @@ function App() {
             <a className="ghost-link" href={repositoryUrl} aria-label="GitHub">
               <Icon name="github" />
             </a>
-            <a className="button primary compact" href={downloadHref}>
+            <a className="button primary compact topbar-download" href={downloadHref}>
+              <Icon name="download" />
               {t.nav.getApp}
             </a>
           </div>
@@ -633,8 +641,27 @@ function App() {
                 <span className="bento-icon">
                   <Icon name={feature.id} />
                 </span>
-                <h3>{feature.title}</h3>
-                <p>{feature.body}</p>
+                <div className="bento-card-copy">
+                  {feature.kicker && <span className="bento-kicker">{feature.kicker}</span>}
+                  <h3>{feature.title}</h3>
+                  <p>{feature.body}</p>
+                </div>
+                {feature.highlights && (
+                  <ul className="bento-highlights" aria-label={feature.title}>
+                    {feature.highlights.map((highlight) => (
+                      <li key={highlight}>
+                        <Icon name="check" />
+                        {highlight}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {feature.cta && (
+                  <a className="bento-cta" href="#agent-platform">
+                    {feature.cta}
+                    <Icon name="arrow" />
+                  </a>
+                )}
               </article>
             ))}
           </div>

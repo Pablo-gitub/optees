@@ -189,6 +189,11 @@ main,
   font-size: 0.9rem;
 }
 
+.topbar-download {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .button.primary {
   color: #f4f8ff;
   background: var(--grad-brand);
@@ -745,6 +750,87 @@ main,
 .bento-assistant,
 .bento-educational {
   grid-column: span 3;
+}
+
+.bento-agentPlatform {
+  grid-column: span 6;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.35fr) minmax(230px, 0.65fr);
+  gap: 8px 24px;
+  align-items: center;
+  border-color: rgba(87, 211, 255, 0.28);
+  background:
+    linear-gradient(115deg, rgba(76, 123, 255, 0.16), rgba(87, 211, 255, 0.05)),
+    var(--panel);
+}
+
+.bento-agentPlatform .bento-icon {
+  grid-row: span 2;
+  align-self: start;
+  margin-bottom: 0;
+}
+
+.bento-card-copy {
+  min-width: 0;
+}
+
+.bento-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bento-agentPlatform h3 {
+  font-size: 1.42rem;
+}
+
+.bento-highlights {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bento-highlights li {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.bento-highlights svg {
+  flex: 0 0 auto;
+  width: 17px;
+  height: 17px;
+  color: var(--green);
+}
+
+.bento-cta {
+  grid-column: 3;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  justify-self: start;
+  color: var(--cyan);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.bento-cta svg {
+  width: 17px;
+  height: 17px;
+  transition: transform 0.2s ease;
+}
+
+.bento-cta:hover svg {
+  transform: translateX(3px);
 }
 
 .bento-variants,
@@ -1818,6 +1904,20 @@ main,
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .bento-agentPlatform {
+    grid-column: span 2;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .bento-agentPlatform .bento-icon {
+    grid-row: span 3;
+  }
+
+  .bento-highlights,
+  .bento-cta {
+    grid-column: 2;
+  }
+
   .bento-assistant,
   .bento-educational,
   .bento-variants,
@@ -1885,7 +1985,7 @@ main,
   }
 }
 
-@media (max-width: 820px) {
+@media (max-width: 1100px) {
   .nav-links {
     display: none;
   }
@@ -1944,6 +2044,21 @@ main,
   .bento-openSource {
     grid-column: span 1;
     grid-template-columns: 1fr;
+  }
+
+  .bento-agentPlatform {
+    grid-column: span 1;
+    grid-template-columns: 1fr;
+  }
+
+  .bento-agentPlatform .bento-icon {
+    grid-row: auto;
+    margin-bottom: 10px;
+  }
+
+  .bento-highlights,
+  .bento-cta {
+    grid-column: 1;
   }
 
   .bento-openSource .bento-icon {

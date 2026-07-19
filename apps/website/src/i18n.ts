@@ -20,6 +20,7 @@ export type PreviewId =
   | "classificationSolution"
   | "graphSolution";
 export type FeatureId =
+  | "agentPlatform"
   | "assistant"
   | "educational"
   | "variants"
@@ -61,6 +62,9 @@ type FeatureCopy = {
   id: FeatureId;
   title: string;
   body: string;
+  kicker?: string;
+  highlights?: string[];
+  cta?: string;
 };
 
 type WorkflowStepCopy = {
@@ -266,6 +270,15 @@ export const copy: Record<Language, SiteCopy> = {
       body:
         "Most solvers hand you a number. Optees hands you the model, the solution and the reasoning behind it — built for teams, students and analysts alike.",
       items: [
+        {
+          id: "agentPlatform",
+          kicker: "Business automation",
+          title: "A local solver platform for AI agents",
+          body:
+            "Use Optees as a private optimization backend for operational workflows. Local agents and applications can discover 12 versioned capabilities, validate exact JSON contracts, run solver jobs, and inspect mathematical and independent-validation statuses.",
+          highlights: ["12 versioned capabilities", "Authenticated REST", "Private MCP stdio"],
+          cta: "Explore agent integration",
+        },
         {
           id: "assistant",
           title: "Local modeling assistant",
@@ -705,6 +718,15 @@ export const copy: Record<Language, SiteCopy> = {
       body:
         "La maggior parte dei solver ti restituisce un numero. Optees ti restituisce il modello, la soluzione e il ragionamento dietro di essa — pensato per team, studenti e analisti.",
       items: [
+        {
+          id: "agentPlatform",
+          kicker: "Automazione aziendale",
+          title: "Una piattaforma solver locale per agenti AI",
+          body:
+            "Usa Optees come backend di ottimizzazione privato per workflow operativi. Agenti e applicazioni locali possono scoprire 12 capability versionate, validare contratti JSON esatti, eseguire job e leggere stato matematico e validazione indipendente.",
+          highlights: ["12 capability versionate", "REST autenticata", "MCP stdio privato"],
+          cta: "Esplora l'integrazione agentica",
+        },
         {
           id: "assistant",
           title: "Assistente di modellazione locale",
