@@ -16,8 +16,8 @@ class DownloadUpdateUseCase:
         if not result.update_available or result.asset is None:
             raise ValueError("No compatible update asset is available.")
 
-        checksum_asset = None
-        if result.release is not None:
+        checksum_asset = result.plan.checksum_asset if result.plan is not None else None
+        if checksum_asset is None and result.release is not None:
             checksum_asset = result.release.asset_named("SHA256SUMS")
 
         return self._provider.download_asset(

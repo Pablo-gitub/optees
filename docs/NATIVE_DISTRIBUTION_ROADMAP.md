@@ -95,9 +95,12 @@ commit or from unreviewed rolling packaging inputs.
 
 ## Phase 2 - Platform-Aware Update Orchestration
 
-- [ ] Replace the generic download-and-open flow with an application-layer
-  update plan that records platform, architecture, artifact kind, destination,
-  verification requirements, handoff method, and whether manual action remains.
+- [x] Replace generic asset selection with an application-layer update plan
+  and continue migrating the download-and-open flow. The plan records
+  platform, architecture, artifact kind, staging subdirectory, checksum,
+  handoff method, and whether manual action remains.
+- [ ] Complete use of the update plan through download and handoff instead of
+  passing generic filesystem paths through the presentation layer.
 - [ ] Keep operating-system process launching behind a dedicated port instead
   of placing platform behavior in the Qt controller.
 - [ ] Represent `downloaded`, `verification_failed`, `installer_launched`,
