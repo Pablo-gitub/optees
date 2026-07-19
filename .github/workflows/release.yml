@@ -92,12 +92,18 @@ jobs:
       # ── Python dependencies ───────────────────────────────────────────────
       - name: Install Python dependencies
         run: |
-          pip install --upgrade pip
-          pip install ".[plot,local-service]" pyinstaller pyinstaller-hooks-contrib
+          python -m pip install --upgrade pip
+          python -m pip install ".[plot,local-service]"
+          python -m pip install --requirement packaging/requirements-build.txt
+
+      - name: Report packaging toolchain
+        run: |
+          python -m PyInstaller --version
+          python -c "import _pyinstaller_hooks_contrib; print(_pyinstaller_hooks_contrib.__version__)"
 
       # ── Build ─────────────────────────────────────────────────────────────
       - name: Build with PyInstaller
-        run: pyinstaller optees.spec --noconfirm
+        run: python -m PyInstaller optees.spec --noconfirm
 
       - name: Smoke test packaged local service (Linux)
         if: runner.os == 'Linux'
@@ -238,8 +244,12 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          wget -q -O appimagetool.AppImage \
-            https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+          APPIMAGETOOL_VERSION="1.9.1"
+          APPIMAGETOOL_SHA256="ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0"
+          curl --fail --location --show-error \
+            --output appimagetool.AppImage \
+            "https://github.com/AppImage/appimagetool/releases/download/${APPIMAGETOOL_VERSION}/appimagetool-x86_64.AppImage"
+          echo "${APPIMAGETOOL_SHA256}  appimagetool.AppImage" | sha256sum --check --strict
           chmod +x appimagetool.AppImage
 
       - name: Build AppImage (Linux)

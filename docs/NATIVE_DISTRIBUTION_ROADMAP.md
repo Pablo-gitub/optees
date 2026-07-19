@@ -79,11 +79,11 @@ documented without relying on assumptions from the build workflow.
   define scheduled or merge-gate jobs for GUI, benchmark, and TCP groups.
 - [x] Make the release workflow depend on a successful test gate for the exact
   release commit.
-- [ ] Pin PyInstaller, its hooks, and platform packaging tools to reviewed
+- [x] Pin PyInstaller, its hooks, and platform packaging tools to reviewed
   versions.
-- [ ] Replace the rolling AppImageKit `continuous` download with a pinned
+- [x] Replace the rolling AppImageKit `continuous` download with a pinned
   version and verified checksum.
-- [ ] Introduce a reviewed build dependency lock or constraints file while
+- [x] Introduce a reviewed build dependency lock or constraints file while
   keeping runtime compatibility policy explicit in `pyproject.toml`.
 - [ ] Consider pinning third-party GitHub Actions by commit SHA and document the
   update process.

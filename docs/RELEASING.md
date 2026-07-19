@@ -14,6 +14,17 @@ native-installer, updater, and packaged-acceptance hardening is tracked in
 `docs/NATIVE_DISTRIBUTION_ROADMAP.md`; do not describe those planned
 capabilities as already released.
 
+## Reproducible Packaging Inputs
+
+Runtime compatibility remains declared in `pyproject.toml`. Native-release
+tools are intentionally separate and exactly pinned in
+`packaging/requirements-build.txt`; changing those versions requires review and
+new artifact verification on Windows, macOS, and Linux.
+
+The Linux workflow downloads `appimagetool` 1.9.1 from the official
+`AppImage/appimagetool` release and checks its published SHA-256 digest before
+executing it. Do not replace this with a `continuous` or latest-release URL.
+
 ## Release Invariants
 
 For a release `vX.Y.Z`:
@@ -34,6 +45,7 @@ Run this from the project root in the `optees` environment:
 
 ```bash
 PYTHONPATH=src python -m pytest -q
+python -m pip install --requirement packaging/requirements-build.txt
 python -m PyInstaller optees.spec --noconfirm --clean
 ```
 
