@@ -24,7 +24,7 @@ jobs:
 
     steps:
       - name: Checkout tagged source
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Validate landing version tag
         shell: bash
@@ -35,7 +35,7 @@ jobs:
           fi
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
@@ -53,7 +53,7 @@ jobs:
 
       - name: Deploy Firebase Hosting live channel
         id: firebase_deploy
-        uses: FirebaseExtended/action-hosting-deploy@v0
+        uses: FirebaseExtended/action-hosting-deploy@7c850a480ce753f4f06f010801fc5a43787740bb # v0
         with:
           entryPoint: .
           projectId: optees-1acac

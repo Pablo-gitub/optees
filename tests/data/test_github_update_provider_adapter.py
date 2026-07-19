@@ -1,9 +1,20 @@
 from __future__ import annotations
 
+import hashlib
+from io import BytesIO
+
+import pytest
+
+from optees.application.ports.update_provider_port import (
+    UpdateDownloadError,
+    UpdateVerificationError,
+)
 from optees.data.adapters.github.update_provider_adapter import (
+    GitHubUpdateProvider,
     parse_sha256sums,
     release_from_github_json,
 )
+from optees.domain.entities.update import ReleaseAsset
 
 
 def test_release_from_github_json_maps_assets():
@@ -42,3 +53,74 @@ def test_parse_sha256sums_supports_standard_output():
 
     assert checksums["optees-macos-arm64.dmg"] == digest
     assert checksums["optees-linux-x86_64.AppImage"] == "b" * 64
+
+
+def test_download_verifies_checksum_and_replaces_partial_file(monkeypatch, tmp_path):
+    payload = b"verified release"
+    digest = hashlib.sha256(payload).hexdigest()
+    responses = {
+        "https://example.test/package": payload,
+        "https://example.test/checksums": f"{digest}  package.bin\n".encode(),
+    }
+    provider = GitHubUpdateProvider(max_asset_bytes=1024)
+    monkeypatch.setattr(provider, "_open", lambda url: BytesIO(responses[url]))
+    (tmp_path / "package.bin.part").write_bytes(b"stale")
+    progress = []
+
+    path = provider.download_asset(
+        ReleaseAsset("package.bin", "https://example.test/package", size=len(payload)),
+        tmp_path,
+        checksum_asset=ReleaseAsset("SHA256SUMS", "https://example.test/checksums"),
+        progress=lambda downloaded, total: progress.append((downloaded, total)),
+    )
+
+    assert path.read_bytes() == payload
+    assert not (tmp_path / "package.bin.part").exists()
+    assert progress == [(0, len(payload)), (len(payload), len(payload))]
+
+
+def test_download_fails_closed_when_checksum_entry_is_missing(monkeypatch, tmp_path):
+    provider = GitHubUpdateProvider(max_asset_bytes=1024)
+    responses = {
+        "https://example.test/package": b"release",
+        "https://example.test/checksums": f"{'a' * 64}  another.bin\n".encode(),
+    }
+    monkeypatch.setattr(provider, "_open", lambda url: BytesIO(responses[url]))
+
+    with pytest.raises(UpdateVerificationError, match="no entry"):
+        provider.download_asset(
+            ReleaseAsset("package.bin", "https://example.test/package"),
+            tmp_path,
+            checksum_asset=ReleaseAsset("SHA256SUMS", "https://example.test/checksums"),
+        )
+
+    assert not (tmp_path / "package.bin.part").exists()
+
+
+@pytest.mark.parametrize("name", ["../package.bin", "/tmp/package.bin", "dir/package.bin"])
+def test_download_rejects_unsafe_asset_names(name, tmp_path):
+    with pytest.raises(UpdateDownloadError, match="safe filename"):
+        GitHubUpdateProvider().download_asset(
+            ReleaseAsset(name, "https://example.test/package"), tmp_path
+        )
+
+
+def test_download_rejects_asset_larger_than_limit(tmp_path):
+    with pytest.raises(UpdateDownloadError, match="download limit"):
+        GitHubUpdateProvider(max_asset_bytes=4).download_asset(
+            ReleaseAsset("package.bin", "https://example.test/package", size=5),
+            tmp_path,
+        )
+
+
+def test_download_removes_partial_file_on_size_mismatch(monkeypatch, tmp_path):
+    provider = GitHubUpdateProvider(max_asset_bytes=1024)
+    monkeypatch.setattr(provider, "_open", lambda _url: BytesIO(b"short"))
+
+    with pytest.raises(UpdateDownloadError, match="size mismatch"):
+        provider.download_asset(
+            ReleaseAsset("package.bin", "https://example.test/package", size=10),
+            tmp_path,
+        )
+
+    assert not (tmp_path / "package.bin.part").exists()

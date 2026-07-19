@@ -55,6 +55,8 @@ the packaged-artifact acceptance matrix.
 - [Project roadmap](PROJECT_ROADMAP.md)
 - [Documentation, website, release, and demonstration roadmap](DOCUMENTATION_WEBSITE_RELEASE_ROADMAP.md)
 - [Native distribution roadmap](NATIVE_DISTRIBUTION_ROADMAP.md)
+- [Native distribution factual audit](NATIVE_DISTRIBUTION_AUDIT.md): current
+  artifact behavior, updater limitations, and clean-account acceptance matrix.
 - [Packing and loading roadmap](PACKING_LOADING_ROADMAP.md)
 - [MILP roadmap](MILP_ROADMAP.md)
 - [MILP feature plan](MILP_FEATURE_PLAN.md)
@@ -65,4 +67,5 @@ the packaged-artifact acceptance matrix.
 
 - [Release procedure](RELEASING.md)
 - [Native distribution roadmap](NATIVE_DISTRIBUTION_ROADMAP.md)
+- [Native distribution factual audit](NATIVE_DISTRIBUTION_AUDIT.md)
 - [Website deployment](WEBSITE_DEPLOYMENT.md)

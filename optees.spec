@@ -17,7 +17,7 @@ from PyInstaller.utils.hooks import get_package_paths
 _project_root = Path(SPECPATH).resolve()
 sys.path.insert(0, str(_project_root / "src"))
 
-from optees.core.build_metadata import macos_info_plist
+from optees.core.build_metadata import macos_info_plist, windows_version_info_text
 
 # ---------------------------------------------------------------------------
 # Platform icon
@@ -27,6 +27,12 @@ _icon = (
     "src/optees/assets/logo/dark/optees.icns"   if sys.platform == "darwin" else
     "src/optees/assets/logo/dark/appicon_256.png"
 )
+
+_version_file = None
+if sys.platform == "win32":
+    _version_file = _project_root / "build" / "windows" / "version_info.txt"
+    _version_file.parent.mkdir(parents=True, exist_ok=True)
+    _version_file.write_text(windows_version_info_text(), encoding="utf-8")
 
 # The Windows OR-Tools wheel stores its complete native dependency set under
 # ortools/.libs. That directory is not a normal DLL search path, so PyInstaller
@@ -111,6 +117,7 @@ exe = EXE(
     upx=False,          # UPX can break PySide6 binaries on some platforms
     console=False,      # no terminal window for a GUI app
     icon=_icon,
+    version=str(_version_file) if _version_file is not None else None,
 )
 
 # ---------------------------------------------------------------------------

@@ -8,6 +8,8 @@ testing. It does not change solver behavior or the local-service API.
 Implementation starts from `main` on a dedicated `codex/native-installers`
 branch after the local solver platform has been merged. The current artifacts
 remain available until their replacements pass the acceptance matrix.
+Source-derived baseline evidence and the manual clean-account matrix are kept
+in [NATIVE_DISTRIBUTION_AUDIT.md](NATIVE_DISTRIBUTION_AUDIT.md).
 
 ## Current Baseline
 
@@ -55,8 +57,8 @@ same-platform asset must not be selected while silently ignoring architecture.
 
 ## Phase 0 - Merge Gate And Factual Audit
 
-- [ ] Merge the local solver platform into `main` with a clean full-suite run.
-- [ ] Create `codex/native-installers` from the updated `main`.
+- [x] Merge the local solver platform into `main` with a clean full-suite run.
+- [x] Create `codex/native-installers` from the updated `main`.
 - [ ] Record the exact behavior of every currently published artifact on a
   clean operating-system account.
 - [ ] Record where the current updater downloads files and what application the
@@ -71,19 +73,19 @@ documented without relying on assumptions from the build workflow.
 
 ## Phase 1 - Continuous Integration And Reproducible Build Inputs
 
-- [ ] Add a CI workflow for pull requests and pushes independently from tagged
+- [x] Add a CI workflow for pull requests and pushes independently from tagged
   release publication.
-- [ ] Run the fast non-GUI suite on every supported development change and
+- [x] Run the fast non-GUI suite on every supported development change and
   define scheduled or merge-gate jobs for GUI, benchmark, and TCP groups.
-- [ ] Make the release workflow depend on a successful test gate for the exact
+- [x] Make the release workflow depend on a successful test gate for the exact
   release commit.
-- [ ] Pin PyInstaller, its hooks, and platform packaging tools to reviewed
+- [x] Pin PyInstaller, its hooks, and platform packaging tools to reviewed
   versions.
-- [ ] Replace the rolling AppImageKit `continuous` download with a pinned
+- [x] Replace the rolling AppImageKit `continuous` download with a pinned
   version and verified checksum.
-- [ ] Introduce a reviewed build dependency lock or constraints file while
+- [x] Introduce a reviewed build dependency lock or constraints file while
   keeping runtime compatibility policy explicit in `pyproject.toml`.
-- [ ] Consider pinning third-party GitHub Actions by commit SHA and document the
+- [x] Pin third-party GitHub Actions by commit SHA and document the
   update process.
 - [ ] Generate `SHA256SUMS` only after every final artifact has passed its
   platform smoke test.
@@ -93,23 +95,26 @@ commit or from unreviewed rolling packaging inputs.
 
 ## Phase 2 - Platform-Aware Update Orchestration
 
-- [ ] Replace the generic download-and-open flow with an application-layer
-  update plan that records platform, architecture, artifact kind, destination,
-  verification requirements, handoff method, and whether manual action remains.
-- [ ] Keep operating-system process launching behind a dedicated port instead
+- [x] Replace generic asset selection with an application-layer update plan
+  and continue migrating the download-and-open flow. The plan records
+  platform, architecture, artifact kind, staging subdirectory, checksum,
+  handoff method, and whether manual action remains.
+- [x] Complete use of the update plan through download and handoff instead of
+  passing generic filesystem paths through the presentation layer.
+- [x] Keep operating-system process launching behind a dedicated port instead
   of placing platform behavior in the Qt controller.
-- [ ] Represent `downloaded`, `verification_failed`, `installer_launched`,
+- [x] Represent `downloading`, `downloaded`, `verification_failed`, `installer_launched`,
   `manual_action_required`, and `replacement_scheduled` as distinct states.
-- [ ] Use a persistent staging location appropriate to the current user rather
+- [x] Use a persistent staging location appropriate to the current user rather
   than relying on the system temporary directory for the only copy.
-- [ ] Fail closed when `SHA256SUMS` exists but contains no matching entry for
+- [x] Fail closed when `SHA256SUMS` exists but contains no matching entry for
   the selected artifact.
-- [ ] Enforce an expected artifact name, a bounded download size, safe filename
+- [x] Enforce an expected artifact name, a bounded download size, safe filename
   handling, and cleanup of stale partial downloads.
-- [ ] Report download progress and do not close Optees until the native handoff
+- [x] Report download progress and do not close Optees until the native handoff
   is known to have started successfully.
-- [ ] Keep update checks disabled for source/development runs.
-- [ ] Unit-test platform and architecture selection, verification failure,
+- [x] Keep update checks disabled for source/development runs.
+- [x] Unit-test platform and architecture selection, verification failure,
   process-launch failure, and every state transition.
 
 **Exit criterion:** the core update flow is deterministic and testable without
@@ -117,20 +122,21 @@ starting Qt or performing a real network request.
 
 ## Phase 3 - Windows Native Installer
 
-- [ ] Add a versioned Inno Setup script under `packaging/windows/`.
-- [ ] Install per user under Local AppData without requiring administrator
+- [x] Add a versioned Inno Setup script under `packaging/windows/`.
+- [x] Install per user under Local AppData without requiring administrator
   privileges.
-- [ ] Register Optees in Windows installed-app management with publisher,
+- [x] Register Optees in Windows installed-app management with publisher,
   version, icon, uninstall command, and stable application identity.
-- [ ] Add a Start Menu shortcut and make a desktop shortcut opt-in.
-- [ ] Preserve user configuration across upgrades and uninstall only files
+- [x] Add a Start Menu shortcut and make a desktop shortcut opt-in.
+- [x] Preserve user configuration across upgrades and uninstall only files
   owned by the installer.
-- [ ] Build `optees-windows-x64-setup.exe` in GitHub Actions and retain the ZIP
+- [x] Build `optees-windows-x64-setup.exe` in GitHub Actions and retain the ZIP
   only when explicitly labelled **Portable**.
-- [ ] Update release discovery to prefer the setup executable.
+- [x] Update release discovery to prefer the setup executable.
 - [ ] Launch the visible installer for updates, close the running application
-  safely, and verify the new version on the next start.
-- [ ] Add Windows version metadata to the executable and installer.
+  safely, and verify the new version on the next start. Launch and safe close
+  are implemented; post-install version confirmation remains.
+- [x] Add Windows version metadata to the executable and installer.
 - [ ] Add code signing when a suitable certificate becomes available; until
   then document the SmartScreen limitation without implying trust certification.
 

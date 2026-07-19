@@ -145,6 +145,21 @@ PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark" -n 2 --dist lo
 PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark" -n 4 --dist loadfile --durations=20
 ```
 
+## Continuous Integration Gates
+
+`.github/workflows/ci.yml` runs independently from release publication:
+
+- the fast non-GUI, non-benchmark, non-TCP group runs on every pull request and
+  push to `main`;
+- GUI tests run under Xvfb on every pull request and push to `main`;
+- real loopback and subprocess tests run in their own job;
+- scientific benchmark tests run on the weekly schedule and through manual
+  workflow dispatch.
+
+The tagged release workflow has a separate authoritative gate. It checks out
+the exact tagged commit, installs all test extras, runs the complete suite
+under Xvfb, and only then permits the platform build matrix to start.
+
 ## Reproducibility
 
 * Pin Python and core dependencies in the project environment.

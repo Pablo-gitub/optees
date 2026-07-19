@@ -285,6 +285,31 @@ class SettingsView(QWidget):
         if version:
             self._latest_version = version
         self._update_state = "downloading"
+        self._update_message = ""
+        self._refresh_update_text()
+
+    def set_update_download_progress(self, downloaded: int, total: int) -> None:
+        self._update_state = "downloading_progress"
+        if total > 0:
+            percent = min(100, round(max(0, downloaded) * 100 / total))
+            self._update_message = str(percent)
+        else:
+            self._update_message = f"{max(0, downloaded) / (1024 * 1024):.1f} MB"
+        self._refresh_update_text()
+
+    def set_update_downloaded(self, path: str) -> None:
+        self._update_state = "downloaded"
+        self._update_message = path
+        self._refresh_update_text()
+
+    def set_update_verification_failed(self, detail: str) -> None:
+        self._update_state = "verification_failed"
+        self._update_message = detail
+        self._refresh_update_text()
+
+    def set_update_manual_action_required(self, path: str) -> None:
+        self._update_state = "manual_action_required"
+        self._update_message = path
         self._refresh_update_text()
 
     def set_update_launching(self, path: str) -> None:
@@ -311,6 +336,25 @@ class SettingsView(QWidget):
             text = S.t("settings.update_unsupported", version=latest)
         elif self._update_state == "downloading":
             text = S.t("settings.update_downloading", version=latest)
+        elif self._update_state == "downloading_progress":
+            if self._update_message.endswith("MB"):
+                text = S.t(
+                    "settings.update_downloading_bytes",
+                    version=latest,
+                    downloaded=self._update_message,
+                )
+            else:
+                text = S.t(
+                    "settings.update_downloading_progress",
+                    version=latest,
+                    percent=self._update_message,
+                )
+        elif self._update_state == "downloaded":
+            text = S.t("settings.update_downloaded")
+        elif self._update_state == "verification_failed":
+            text = S.t("settings.update_verification_failed")
+        elif self._update_state == "manual_action_required":
+            text = S.t("settings.update_manual_action_required")
         elif self._update_state == "launching":
             text = S.t("settings.update_launching")
         elif self._update_state == "error":
