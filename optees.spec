@@ -55,8 +55,14 @@ if sys.platform == "win32":
 # ---------------------------------------------------------------------------
 # Analysis
 # ---------------------------------------------------------------------------
+_entry_scripts = ["src/optees/main.py"]
+if sys.platform == "win32":
+    # Keep the headless service on a console-subsystem executable. The GUI
+    # launches it with CREATE_NO_WINDOW, while CI can capture startup errors.
+    _entry_scripts.append("src/optees/local_server.py")
+
 a = Analysis(
-    ["src/optees/main.py"],
+    _entry_scripts,
     pathex=["src"],
     binaries=[(str(path), ".") for path in _ortools_libs],
     datas=[
@@ -103,12 +109,14 @@ if _ortools_libs:
 
 pyz = PYZ(a.pure)
 
+_gui_scripts = [a.scripts[0]] if sys.platform == "win32" else a.scripts
+
 # ---------------------------------------------------------------------------
 # Executable
 # ---------------------------------------------------------------------------
 exe = EXE(
     pyz,
-    a.scripts,
+    _gui_scripts,
     [],
     exclude_binaries=True,
     name="optees",
@@ -120,11 +128,28 @@ exe = EXE(
     version=str(_version_file) if _version_file is not None else None,
 )
 
+_executables = [exe]
+if sys.platform == "win32":
+    server_exe = EXE(
+        pyz,
+        [a.scripts[1]],
+        [],
+        exclude_binaries=True,
+        name="optees-server",
+        debug=False,
+        strip=False,
+        upx=False,
+        console=True,
+        icon=_icon,
+        version=str(_version_file),
+    )
+    _executables.append(server_exe)
+
 # ---------------------------------------------------------------------------
 # Collected directory (all platforms)
 # ---------------------------------------------------------------------------
 coll = COLLECT(
-    exe,
+    *_executables,
     a.binaries,
     a.datas,
     strip=False,

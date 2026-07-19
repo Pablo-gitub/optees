@@ -18,3 +18,14 @@ def test_pyinstaller_dispatches_the_headless_server_entrypoint():
 
     assert '"optees.local_server"' in spec
     assert 'arguments[0] == "--local-server"' in main
+
+
+def test_windows_bundle_has_a_diagnostic_headless_companion():
+    spec = (ROOT / "optees.spec").read_text(encoding="utf-8")
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+
+    assert 'name="optees-server"' in spec
+    assert "console=True" in spec
+    assert "dist\\optees\\optees-server.exe" in workflow
+    assert "RedirectStandardError" in workflow
+    assert "if ($server.HasExited)" in workflow

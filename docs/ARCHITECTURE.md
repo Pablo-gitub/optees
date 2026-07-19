@@ -66,6 +66,10 @@ host a remote solver service and does not make a cloud agent able to reach
 
 Python entry points are defined in `pyproject.toml`. Availability in a native
 PyInstaller artifact must be verified separately during release acceptance.
+The Windows native bundle includes a console-subsystem `optees-server.exe`
+companion. The GUI launches it without a visible console, while packaging smoke
+tests can capture deterministic startup diagnostics independently from the
+windowed `optees.exe` bootloader.
 
 ## Dependency Model
 

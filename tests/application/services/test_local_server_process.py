@@ -158,12 +158,20 @@ def test_stop_and_restart_replace_the_session_token(monkeypatch):
     assert first_authorization != second_authorization
 
 
-def test_packaged_and_source_commands_use_the_same_server_entry_point(monkeypatch):
+def test_packaged_and_source_commands_use_the_supported_server_entry_point(monkeypatch):
     monkeypatch.setattr(module.sys, "frozen", False, raising=False)
     source = module._server_command(9000)
+
     monkeypatch.setattr(module.sys, "frozen", True, raising=False)
-    packaged = module._server_command(9000)
+    monkeypatch.setattr(module.sys, "platform", "darwin")
+    packaged_app = module._server_command(9000)
+
+    monkeypatch.setattr(module.sys, "platform", "win32")
+    monkeypatch.setattr(module.sys, "executable", r"C:\Program Files\Optees\optees.exe")
+    packaged_windows = module._server_command(9000)
 
     assert source[1:3] == ["-m", "optees.local_server"]
-    assert packaged[1] == "--local-server"
-    assert source[-4:] == packaged[-4:]
+    assert packaged_app[1] == "--local-server"
+    assert packaged_windows[0].endswith("optees-server.exe")
+    assert "--local-server" not in packaged_windows
+    assert source[-4:] == packaged_app[-4:] == packaged_windows[-4:]

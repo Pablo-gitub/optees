@@ -161,15 +161,25 @@ jobs:
         shell: pwsh
         run: |
           $env:OPTEES_LOCAL_SERVER_TOKEN = 'release-smoke-token-00000000000000000000000000000000'
+          $stdout = Join-Path $env:RUNNER_TEMP 'optees-server.stdout.log'
+          $stderr = Join-Path $env:RUNNER_TEMP 'optees-server.stderr.log'
           $server = Start-Process `
-            -FilePath 'dist\optees\optees.exe' `
-            -ArgumentList '--local-server', '--port', '18765', '--log-level', 'error' `
+            -FilePath 'dist\optees\optees-server.exe' `
+            -ArgumentList '--port', '18765', '--log-level', 'error' `
+            -NoNewWindow `
+            -RedirectStandardOutput $stdout `
+            -RedirectStandardError $stderr `
             -PassThru
           try {
             $healthy = $false
             for ($attempt = 0; $attempt -lt 40; $attempt++) {
+              if ($server.HasExited) {
+                throw "Packaged local service exited with code $($server.ExitCode)."
+              }
               try {
-                Invoke-RestMethod 'http://127.0.0.1:18765/health' | Out-Null
+                Invoke-RestMethod `
+                  -ConnectionTimeoutSeconds 1 `
+                  -Uri 'http://127.0.0.1:18765/health' | Out-Null
                 $healthy = $true
                 break
               } catch {
@@ -185,6 +195,14 @@ jobs:
               -Uri 'http://127.0.0.1:18765/api/v1/capabilities' | Out-Null
           } finally {
             Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
+            if (Test-Path $stdout) {
+              Write-Host '--- optees-server stdout ---'
+              Get-Content $stdout
+            }
+            if (Test-Path $stderr) {
+              Write-Host '--- optees-server stderr ---'
+              Get-Content $stderr
+            }
           }
 
       - name: Verify bundled OR-Tools libraries (Windows)

@@ -122,6 +122,12 @@ starting Qt or performing a real network request.
 
 ## Phase 3 - Windows Native Installer
 
+Release-candidate note: `v0.9.0-rc.1` built macOS and Linux successfully but
+failed the Windows packaged-service smoke test. RC2 moves the headless service
+to a dedicated executable and makes Windows startup failures observable in the
+workflow log; final Windows acceptance remains pending until that pipeline and
+the clean-machine checklist pass.
+
 - [x] Add a versioned Inno Setup script under `packaging/windows/`.
 - [x] Install per user under Local AppData without requiring administrator
   privileges.
@@ -137,6 +143,9 @@ starting Qt or performing a real network request.
   safely, and verify the new version on the next start. Launch and safe close
   are implemented; post-install version confirmation remains.
 - [x] Add Windows version metadata to the executable and installer.
+- [x] Package the local API as a dedicated `optees-server.exe` companion so the
+  GUI can start it without a console and release smoke tests can capture
+  startup failures from the headless process.
 - [ ] Add code signing when a suitable certificate becomes available; until
   then document the SmartScreen limitation without implying trust certification.
 

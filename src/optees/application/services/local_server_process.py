@@ -6,6 +6,7 @@ import secrets
 import socket
 import subprocess
 import sys
+from pathlib import Path
 from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from enum import Enum
@@ -264,6 +265,9 @@ def _validated_port(value: int) -> int:
 def _server_command(port: int) -> list[str]:
     arguments = ["--port", str(port), "--log-level", "warning"]
     if getattr(sys, "frozen", False):
+        if sys.platform == "win32":
+            companion = Path(sys.executable).with_name("optees-server.exe")
+            return [str(companion), *arguments]
         return [sys.executable, "--local-server", *arguments]
     return [sys.executable, "-m", "optees.local_server", *arguments]
 
