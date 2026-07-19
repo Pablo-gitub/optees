@@ -129,11 +129,13 @@ workflows and local solver platform available at the intended release commit.
   desktop-settings tests plus 2 real loopback TCP tests.
 - The remaining warnings are the three known third-party OR-Tools SWIG
   deprecations; no Optees warning or test failure is present in this gate.
-- The authoritative complete suite remains required before merging into
-  `main`. It is intentionally kept separate because it also runs the measured
-  scientific benchmarks and all full-window presentation flows.
+- The authoritative source suite completed with 922 passed and 6 skipped. Its
+  two loopback tests could not bind sockets inside the restricted test sandbox;
+  the same tests passed separately with loopback access enabled. The combined
+  integration record is therefore 924 passed, 6 skipped, and the same three
+  third-party warnings.
 
-- [ ] Complete the local-service branch documentation and test gates.
+- [x] Complete the local-service branch documentation and test gates.
 - [ ] Merge the stable local solver platform into `main`.
 - [ ] Create `codex/native-installers` from the updated `main`.
 - [ ] Complete the P0 items in `docs/NATIVE_DISTRIBUTION_ROADMAP.md`, including
