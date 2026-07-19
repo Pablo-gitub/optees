@@ -85,7 +85,7 @@ documented without relying on assumptions from the build workflow.
   version and verified checksum.
 - [x] Introduce a reviewed build dependency lock or constraints file while
   keeping runtime compatibility policy explicit in `pyproject.toml`.
-- [ ] Consider pinning third-party GitHub Actions by commit SHA and document the
+- [x] Pin third-party GitHub Actions by commit SHA and document the
   update process.
 - [ ] Generate `SHA256SUMS` only after every final artifact has passed its
   platform smoke test.

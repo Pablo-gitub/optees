@@ -25,6 +25,12 @@ The Linux workflow downloads `appimagetool` 1.9.1 from the official
 `AppImage/appimagetool` release and checks its published SHA-256 digest before
 executing it. Do not replace this with a `continuous` or latest-release URL.
 
+Every third-party GitHub Action is referenced by an immutable commit SHA, with
+the corresponding major tag retained as an inline comment. Dependabot checks
+these references weekly. Review proposed updates against the upstream release
+notes and require CI to pass; packaging-related action updates also require a
+new release-candidate artifact check before a stable tag is published.
+
 ## Release Invariants
 
 For a release `vX.Y.Z`:
