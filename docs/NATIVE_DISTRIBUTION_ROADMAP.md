@@ -73,11 +73,11 @@ documented without relying on assumptions from the build workflow.
 
 ## Phase 1 - Continuous Integration And Reproducible Build Inputs
 
-- [ ] Add a CI workflow for pull requests and pushes independently from tagged
+- [x] Add a CI workflow for pull requests and pushes independently from tagged
   release publication.
-- [ ] Run the fast non-GUI suite on every supported development change and
+- [x] Run the fast non-GUI suite on every supported development change and
   define scheduled or merge-gate jobs for GUI, benchmark, and TCP groups.
-- [ ] Make the release workflow depend on a successful test gate for the exact
+- [x] Make the release workflow depend on a successful test gate for the exact
   release commit.
 - [ ] Pin PyInstaller, its hooks, and platform packaging tools to reviewed
   versions.

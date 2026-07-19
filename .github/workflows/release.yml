@@ -14,8 +14,40 @@ permissions:
 # Build job — runs in parallel on all three platforms
 # ---------------------------------------------------------------------------
 jobs:
+  quality-gate:
+    name: Test release commit
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout tagged commit
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install Qt runtime
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            xvfb libgl1-mesa-glx libegl1 \
+            libxcb-xinerama0 libxkbcommon-x11-0 \
+            libxcb-icccm4 libxcb-image0 libxcb-keysyms1 \
+            libxcb-randr0 libxcb-render-util0 \
+            libxcb-shape0 libxcb-xfixes0
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ".[plot,local-service,test]"
+
+      - name: Run authoritative test suite
+        run: xvfb-run -a python -m pytest -q
+
   build:
     name: Build · ${{ matrix.label }}
+    needs: quality-gate
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

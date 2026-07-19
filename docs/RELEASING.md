@@ -3,9 +3,15 @@
 This document closes the loop between the source version, packaged application,
 GitHub Release, and in-app update checker.
 
-The current procedure describes the artifacts that exist today. Planned native
-installer, updater, CI, and packaged acceptance hardening is tracked separately
-in `docs/NATIVE_DISTRIBUTION_ROADMAP.md`; do not describe those planned
+Every version tag is tested before packaging. The release workflow runs the
+authoritative complete suite against the exact tagged commit; Windows, macOS,
+and Linux builds cannot start unless that gate succeeds. Pull requests and
+pushes to `main` also use the independent CI workflow documented in
+`docs/TESTING.md`.
+
+The current procedure describes the artifacts that exist today. Remaining
+native-installer, updater, and packaged-acceptance hardening is tracked in
+`docs/NATIVE_DISTRIBUTION_ROADMAP.md`; do not describe those planned
 capabilities as already released.
 
 ## Release Invariants
