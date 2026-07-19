@@ -132,7 +132,9 @@ def _select_artifact_contract(
                 UpdateArtifactKind.WINDOWS_INSTALLER,
                 UpdateHandoffMethod.LAUNCH_INSTALLER,
             )
-        portable = release.asset_named("optees-windows-x64.zip")
+        portable = release.asset_named(
+            "optees-windows-x64-portable.zip"
+        ) or release.asset_named("optees-windows-x64.zip")
         if portable is not None:
             return (
                 portable,

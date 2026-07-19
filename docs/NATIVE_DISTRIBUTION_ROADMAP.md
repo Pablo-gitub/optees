@@ -122,20 +122,21 @@ starting Qt or performing a real network request.
 
 ## Phase 3 - Windows Native Installer
 
-- [ ] Add a versioned Inno Setup script under `packaging/windows/`.
-- [ ] Install per user under Local AppData without requiring administrator
+- [x] Add a versioned Inno Setup script under `packaging/windows/`.
+- [x] Install per user under Local AppData without requiring administrator
   privileges.
-- [ ] Register Optees in Windows installed-app management with publisher,
+- [x] Register Optees in Windows installed-app management with publisher,
   version, icon, uninstall command, and stable application identity.
-- [ ] Add a Start Menu shortcut and make a desktop shortcut opt-in.
-- [ ] Preserve user configuration across upgrades and uninstall only files
+- [x] Add a Start Menu shortcut and make a desktop shortcut opt-in.
+- [x] Preserve user configuration across upgrades and uninstall only files
   owned by the installer.
-- [ ] Build `optees-windows-x64-setup.exe` in GitHub Actions and retain the ZIP
+- [x] Build `optees-windows-x64-setup.exe` in GitHub Actions and retain the ZIP
   only when explicitly labelled **Portable**.
-- [ ] Update release discovery to prefer the setup executable.
+- [x] Update release discovery to prefer the setup executable.
 - [ ] Launch the visible installer for updates, close the running application
-  safely, and verify the new version on the next start.
-- [ ] Add Windows version metadata to the executable and installer.
+  safely, and verify the new version on the next start. Launch and safe close
+  are implemented; post-install version confirmation remains.
+- [x] Add Windows version metadata to the executable and installer.
 - [ ] Add code signing when a suitable certificate becomes available; until
   then document the SmartScreen limitation without implying trust certification.
 

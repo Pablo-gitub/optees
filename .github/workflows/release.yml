@@ -42,6 +42,16 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install ".[plot,local-service,test]"
 
+      - name: Validate release tag against application version
+        shell: bash
+        run: |
+          APP_VERSION="$(PYTHONPATH=src python -c 'import optees; print(optees.__version__)')"
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [[ "${APP_VERSION}" != "${TAG_VERSION}" ]]; then
+            echo "Release tag ${TAG_VERSION} does not match Optees ${APP_VERSION}." >&2
+            exit 1
+          fi
+
       - name: Run authoritative test suite
         run: xvfb-run -a python -m pytest -q
 
@@ -59,7 +69,7 @@ jobs:
 
           - os: windows-latest
             label: Windows (x64)
-            artifact: optees-windows-x64.zip
+            artifact: optees-windows-x64-setup.exe
 
           - os: macos-14
             label: macOS Apple Silicon
@@ -260,12 +270,35 @@ jobs:
           ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 \
             ./appimagetool.AppImage AppDir optees-linux-x86_64.AppImage
 
-      # ── Package: Windows → zip ────────────────────────────────────────────
-      - name: Package Windows build
+      # ── Package: Windows → native installer + explicit portable ZIP ──────
+      - name: Install pinned Inno Setup (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >-
+          choco install innosetup --version=6.7.1 --yes --no-progress
+          --allow-downgrade
+
+      - name: Build Windows installer
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Compress-Archive -Path dist\optees -DestinationPath optees-windows-x64.zip
+          $version = python -c "import optees; print(optees.__version__)"
+          $sourceDir = (Resolve-Path 'dist\optees').Path
+          $outputDir = (Resolve-Path '.').Path
+          iscc "/DAppVersion=$version" "/DSourceDir=$sourceDir" "/O$outputDir" `
+            packaging\windows\optees.iss
+
+          if (-not (Test-Path 'optees-windows-x64-setup.exe' -PathType Leaf)) {
+            throw 'Inno Setup did not produce optees-windows-x64-setup.exe'
+          }
+
+      - name: Package Windows portable build
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path dist\optees\* `
+            -DestinationPath optees-windows-x64-portable.zip
 
       # ── macOS: Developer ID signing + notarization when secrets exist ─────
       # Apple Gatekeeper accepts apps distributed outside the Mac App Store only
@@ -425,6 +458,13 @@ jobs:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.artifact }}
 
+      - name: Upload Windows portable artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: optees-windows-x64-portable.zip
+          path: optees-windows-x64-portable.zip
+
 # ---------------------------------------------------------------------------
 # Release job — runs after all builds succeed
 # ---------------------------------------------------------------------------
@@ -458,7 +498,8 @@ jobs:
             | Platform | File | Notes |
             |---|---|---|
             | macOS 14+ (Apple Silicon) | `optees-macos-arm64.dmg` | Open DMG → drag `optees.app` to Applications |
-            | Windows 10/11 (x64) | `optees-windows-x64.zip` | Unzip → run `optees.exe` |
+            | Windows 10/11 (x64) | `optees-windows-x64-setup.exe` | Per-user installer; no administrator privileges required |
+            | Windows 10/11 (x64, portable) | `optees-windows-x64-portable.zip` | Unzip and run `optees.exe`; no installation or automatic replacement |
             | Linux (x86_64) | `optees-linux-x86_64.AppImage` | See instructions below |
 
             ### macOS
@@ -469,6 +510,9 @@ jobs:
             may still require **right-click `optees.app` → Open** on first launch.
 
             ### Windows
+            Use `optees-windows-x64-setup.exe` for a normal per-user
+            installation under Local AppData. The portable ZIP is intended for
+            temporary or restricted environments and is not an installer.
             Windows Defender SmartScreen may warn about an unrecognised publisher.
             Click **More info → Run anyway**.
 

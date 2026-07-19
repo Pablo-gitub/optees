@@ -4,7 +4,7 @@ from pathlib import Path
 import tomllib
 
 from optees import __version__
-from optees.core.build_metadata import macos_info_plist
+from optees.core.build_metadata import macos_info_plist, windows_version_info_text
 
 
 def test_macos_bundle_metadata_uses_the_application_version():
@@ -22,6 +22,21 @@ def test_pyinstaller_spec_uses_shared_macos_metadata():
     assert "_project_root = Path(SPECPATH).resolve()" in spec
     assert "from optees.core.build_metadata import macos_info_plist" in spec
     assert "info_plist=macos_info_plist()" in spec
+
+
+def test_windows_executable_metadata_uses_the_application_version():
+    metadata = windows_version_info_text()
+
+    assert f"StringStruct('FileVersion', '{__version__}')" in metadata
+    assert f"StringStruct('ProductVersion', '{__version__}')" in metadata
+    assert "StringStruct('OriginalFilename', 'optees.exe')" in metadata
+
+
+def test_pyinstaller_spec_generates_windows_version_metadata():
+    spec = Path("optees.spec").read_text(encoding="utf-8")
+
+    assert "windows_version_info_text" in spec
+    assert 'version=str(_version_file) if _version_file is not None else None' in spec
 
 
 def test_project_declares_the_milp_runtime_backend():

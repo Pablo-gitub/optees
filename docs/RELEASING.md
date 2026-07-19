@@ -81,10 +81,10 @@ elsewhere on the runner. This prevents a package that either misses
 `ortools.dll` or combines it with unrelated Abseil/Protobuf builds.
 
 The release workflow compares the SHA-256 hash of every bundled OR-Tools DLL
-with the installed wheel before creating `optees-windows-x64.zip`. A missing or
-different file fails the platform build. This integrity check verifies bundle
-provenance; a future packaged `--selftest` command should additionally execute
-a tiny MILP to verify runtime loading end to end.
+with the installed wheel before creating the native installer and portable
+ZIP. A missing or different file fails the platform build. This integrity
+check verifies bundle provenance; a future packaged `--selftest` command
+should additionally execute a tiny MILP to verify runtime loading end to end.
 
 ## Publish A Release
 
@@ -101,7 +101,8 @@ Pushing the tag starts `.github/workflows/release.yml`. The workflow builds:
 | Platform | Artifact |
 | --- | --- |
 | macOS 14+ Apple Silicon | `optees-macos-arm64.dmg` |
-| Windows x64 | `optees-windows-x64.zip` |
+| Windows x64 | `optees-windows-x64-setup.exe` |
+| Windows x64, portable | `optees-windows-x64-portable.zip` |
 | Linux x86_64 | `optees-linux-x86_64.AppImage` |
 
 The release job then creates `SHA256SUMS` and attaches it with the artifacts.
@@ -116,7 +117,8 @@ ad-hoc signs the bundle; Gatekeeper may require right-clicking the application
 and choosing **Open**.
 
 The updater downloads and checksum-verifies the release artifact, opens it with
-the operating system, and then closes Optees. Platform installation remains an
-operating-system workflow: dragging the app from a DMG on macOS, extracting the
-Windows archive, or replacing/running the AppImage on Linux. It does not
-silently overwrite a running installation.
+the operating system, and then closes Optees. On Windows, the preferred artifact
+is the visible per-user Inno Setup installer; the ZIP remains an explicitly
+portable fallback. On macOS and Linux, installation remains an operating-system
+workflow: dragging the app from a DMG or replacing/running the AppImage. Optees
+does not silently overwrite a running installation.
