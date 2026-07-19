@@ -8,6 +8,8 @@ testing. It does not change solver behavior or the local-service API.
 Implementation starts from `main` on a dedicated `codex/native-installers`
 branch after the local solver platform has been merged. The current artifacts
 remain available until their replacements pass the acceptance matrix.
+Source-derived baseline evidence and the manual clean-account matrix are kept
+in [NATIVE_DISTRIBUTION_AUDIT.md](NATIVE_DISTRIBUTION_AUDIT.md).
 
 ## Current Baseline
 
@@ -55,8 +57,8 @@ same-platform asset must not be selected while silently ignoring architecture.
 
 ## Phase 0 - Merge Gate And Factual Audit
 
-- [ ] Merge the local solver platform into `main` with a clean full-suite run.
-- [ ] Create `codex/native-installers` from the updated `main`.
+- [x] Merge the local solver platform into `main` with a clean full-suite run.
+- [x] Create `codex/native-installers` from the updated `main`.
 - [ ] Record the exact behavior of every currently published artifact on a
   clean operating-system account.
 - [ ] Record where the current updater downloads files and what application the

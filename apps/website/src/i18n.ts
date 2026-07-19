@@ -580,7 +580,7 @@ export const copy: Record<Language, SiteCopy> = {
       eyebrow: "Download",
       title: "Get Optees on your desktop",
       body:
-        "Packaged builds are published on GitHub Releases. Install once and the app can check for updates and guide you to the newest installer.",
+        "Packaged builds are published on GitHub Releases. Install once and the app can check for updates and guide you to the newest platform package.",
       latestRelease: "Latest release: {version}",
       fallbackRelease: "Open GitHub to see the latest release",
       checkingRelease: "Checking the latest release…",
@@ -1028,7 +1028,7 @@ export const copy: Record<Language, SiteCopy> = {
       eyebrow: "Download",
       title: "Porta Optees sul tuo desktop",
       body:
-        "Le build pacchettizzate sono pubblicate su GitHub Releases. Installa una volta e l'app può controllare gli aggiornamenti e guidarti al nuovo installer.",
+        "Le build pacchettizzate sono pubblicate su GitHub Releases. Installa una volta e l'app può controllare gli aggiornamenti e guidarti al nuovo pacchetto per la tua piattaforma.",
       latestRelease: "Ultima release: {version}",
       fallbackRelease: "Apri GitHub per vedere l'ultima release",
       checkingRelease: "Controllo dell'ultima release…",
