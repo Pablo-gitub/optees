@@ -8,6 +8,7 @@ from PySide6.QtCore import QObject, Signal
 
 from optees.application.usecases.check_for_updates_usecase import CheckForUpdatesUseCase
 from optees.application.usecases.download_update_usecase import DownloadUpdateUseCase
+from optees.application.usecases.handoff_update_usecase import HandoffUpdateUseCase
 from optees.domain.entities.update import UpdateCheckResult
 
 
@@ -17,18 +18,20 @@ class UpdateController(QObject):
     check_completed = Signal(object)
     check_failed = Signal(str)
     download_started = Signal(object)
-    download_completed = Signal(str)
+    handoff_completed = Signal(object)
     download_failed = Signal(str)
 
     def __init__(
         self,
         check_usecase: CheckForUpdatesUseCase,
         download_usecase: DownloadUpdateUseCase,
+        handoff_usecase: HandoffUpdateUseCase,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self._check_usecase = check_usecase
         self._download_usecase = download_usecase
+        self._handoff_usecase = handoff_usecase
         self._last_result: UpdateCheckResult | None = None
         self._checking = False
         self._downloading = False
@@ -76,7 +79,10 @@ class UpdateController(QObject):
             version = result.latest_version or "latest"
             target_dir = base_dir / version
             path = self._download_usecase.execute(result, target_dir)
-            self.download_completed.emit(str(path))
+            if result.plan is None:
+                raise ValueError("The selected update has no platform handoff plan.")
+            outcome = self._handoff_usecase.execute(result.plan, path)
+            self.handoff_completed.emit(outcome)
         except Exception as exc:
             self.download_failed.emit(str(exc))
         finally:

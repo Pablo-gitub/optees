@@ -53,6 +53,14 @@ class UpdateHandoffMethod(str, Enum):
     OPEN_PORTABLE_PACKAGE = "open_portable_package"
 
 
+class UpdateExecutionState(str, Enum):
+    DOWNLOADED = "downloaded"
+    VERIFICATION_FAILED = "verification_failed"
+    INSTALLER_LAUNCHED = "installer_launched"
+    MANUAL_ACTION_REQUIRED = "manual_action_required"
+    REPLACEMENT_SCHEDULED = "replacement_scheduled"
+
+
 @dataclass(frozen=True)
 class UpdatePlan:
     """Deterministic platform contract for one release artifact.
@@ -70,6 +78,14 @@ class UpdatePlan:
     staging_subdirectory: str
     checksum_asset: Optional[ReleaseAsset] = None
     manual_action_required: bool = True
+
+
+@dataclass(frozen=True)
+class UpdateHandoffResult:
+    plan: UpdatePlan
+    local_path: str
+    state: UpdateExecutionState
+    started: bool
 
 
 @dataclass(frozen=True)

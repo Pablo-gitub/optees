@@ -99,9 +99,9 @@ commit or from unreviewed rolling packaging inputs.
   and continue migrating the download-and-open flow. The plan records
   platform, architecture, artifact kind, staging subdirectory, checksum,
   handoff method, and whether manual action remains.
-- [ ] Complete use of the update plan through download and handoff instead of
+- [x] Complete use of the update plan through download and handoff instead of
   passing generic filesystem paths through the presentation layer.
-- [ ] Keep operating-system process launching behind a dedicated port instead
+- [x] Keep operating-system process launching behind a dedicated port instead
   of placing platform behavior in the Qt controller.
 - [ ] Represent `downloaded`, `verification_failed`, `installer_launched`,
   `manual_action_required`, and `replacement_scheduled` as distinct states.

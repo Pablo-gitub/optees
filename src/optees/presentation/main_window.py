@@ -72,6 +72,7 @@ from optees.application.usecases.solve_multi_dimensional_knapsack_usecase import
 from optees.application.usecases.solve_unbounded_knapsack_usecase import SolveUnboundedKnapsackUseCase
 from optees.application.usecases.check_for_updates_usecase import CheckForUpdatesUseCase
 from optees.application.usecases.download_update_usecase import DownloadUpdateUseCase
+from optees.application.usecases.handoff_update_usecase import HandoffUpdateUseCase
 from optees.application.usecases.analyze_problem_description_usecase import (
     AnalyzeProblemDescriptionUseCase,
 )
@@ -92,6 +93,7 @@ from optees.data.adapters.knapsack.multi_dimensional_knapsack_solver_adapter imp
 )
 from optees.data.adapters.knapsack.unbounded_knapsack_solver_adapter import UnboundedKnapsackSolverAdapter
 from optees.data.adapters.github.update_provider_adapter import GitHubUpdateProvider
+from optees.data.adapters.system import DesktopUpdateHandoffAdapter
 from optees.data.adapters.assistant import RuleBasedAssistantAdapter
 from optees.presentation.views.lp_solution_view.lp_solution_view import LPSolutionView
 from optees.presentation.controllers.main_controller import MainController
@@ -275,9 +277,12 @@ class MainWindow(QMainWindow):
             current_version=get_app_version(),
         )
         self.download_update_uc = DownloadUpdateUseCase(self.update_provider)
+        self.update_handoff = DesktopUpdateHandoffAdapter()
+        self.handoff_update_uc = HandoffUpdateUseCase(self.update_handoff)
         self.update_controller = UpdateController(
             self.check_updates_uc,
             self.download_update_uc,
+            self.handoff_update_uc,
             self,
         )
         packaged = is_packaged_app()
