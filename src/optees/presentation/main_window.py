@@ -73,6 +73,7 @@ from optees.application.usecases.solve_unbounded_knapsack_usecase import SolveUn
 from optees.application.usecases.check_for_updates_usecase import CheckForUpdatesUseCase
 from optees.application.usecases.download_update_usecase import DownloadUpdateUseCase
 from optees.application.usecases.handoff_update_usecase import HandoffUpdateUseCase
+from optees.application.services.update_staging import UpdateStagingService
 from optees.application.usecases.analyze_problem_description_usecase import (
     AnalyzeProblemDescriptionUseCase,
 )
@@ -279,10 +280,12 @@ class MainWindow(QMainWindow):
         self.download_update_uc = DownloadUpdateUseCase(self.update_provider)
         self.update_handoff = DesktopUpdateHandoffAdapter()
         self.handoff_update_uc = HandoffUpdateUseCase(self.update_handoff)
+        self.update_staging = UpdateStagingService()
         self.update_controller = UpdateController(
             self.check_updates_uc,
             self.download_update_uc,
             self.handoff_update_uc,
+            self.update_staging,
             self,
         )
         packaged = is_packaged_app()

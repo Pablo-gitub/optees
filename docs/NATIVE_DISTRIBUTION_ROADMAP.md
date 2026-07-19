@@ -105,11 +105,11 @@ commit or from unreviewed rolling packaging inputs.
   of placing platform behavior in the Qt controller.
 - [ ] Represent `downloaded`, `verification_failed`, `installer_launched`,
   `manual_action_required`, and `replacement_scheduled` as distinct states.
-- [ ] Use a persistent staging location appropriate to the current user rather
+- [x] Use a persistent staging location appropriate to the current user rather
   than relying on the system temporary directory for the only copy.
-- [ ] Fail closed when `SHA256SUMS` exists but contains no matching entry for
+- [x] Fail closed when `SHA256SUMS` exists but contains no matching entry for
   the selected artifact.
-- [ ] Enforce an expected artifact name, a bounded download size, safe filename
+- [x] Enforce an expected artifact name, a bounded download size, safe filename
   handling, and cleanup of stale partial downloads.
 - [ ] Report download progress and do not close Optees until the native handoff
   is known to have started successfully.

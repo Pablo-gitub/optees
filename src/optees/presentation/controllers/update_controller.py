@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import tempfile
 import threading
-from pathlib import Path
 
 from PySide6.QtCore import QObject, Signal
 
 from optees.application.usecases.check_for_updates_usecase import CheckForUpdatesUseCase
 from optees.application.usecases.download_update_usecase import DownloadUpdateUseCase
 from optees.application.usecases.handoff_update_usecase import HandoffUpdateUseCase
+from optees.application.services.update_staging import UpdateStagingService
 from optees.domain.entities.update import UpdateCheckResult
 
 
@@ -26,12 +25,14 @@ class UpdateController(QObject):
         check_usecase: CheckForUpdatesUseCase,
         download_usecase: DownloadUpdateUseCase,
         handoff_usecase: HandoffUpdateUseCase,
+        staging_service: UpdateStagingService,
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self._check_usecase = check_usecase
         self._download_usecase = download_usecase
         self._handoff_usecase = handoff_usecase
+        self._staging_service = staging_service
         self._last_result: UpdateCheckResult | None = None
         self._checking = False
         self._downloading = False
@@ -75,12 +76,10 @@ class UpdateController(QObject):
 
     def _run_download(self, result: UpdateCheckResult) -> None:
         try:
-            base_dir = Path(tempfile.gettempdir()) / "optees-updates"
-            version = result.latest_version or "latest"
-            target_dir = base_dir / version
-            path = self._download_usecase.execute(result, target_dir)
             if result.plan is None:
                 raise ValueError("The selected update has no platform handoff plan.")
+            target_dir = self._staging_service.directory_for(result.plan)
+            path = self._download_usecase.execute(result, target_dir)
             outcome = self._handoff_usecase.execute(result.plan, path)
             self.handoff_completed.emit(outcome)
         except Exception as exc:
