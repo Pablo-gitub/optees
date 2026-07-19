@@ -36,3 +36,8 @@ integer production optimum `A = 18`, `B = 6`, objective `1050`.
 
 An exploratory Claude Cowork run and its generated reports are archived in
 [`claude-cowork-manufacturing-2026-07-18`](../../studies/claude-cowork-manufacturing-2026-07-18/README.md).
+
+An exploratory local Qwen run through the Ollama D0 harness is archived in
+[`qwen-ollama-manufacturing-2026-07-20`](../../studies/qwen-ollama-manufacturing-2026-07-20/README.md).
+That run uses the same direct-task numbers in its prompt and therefore validates
+the agent-to-Optees execution loop, not workbook extraction.

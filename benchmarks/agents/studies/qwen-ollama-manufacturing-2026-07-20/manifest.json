@@ -1,0 +1,49 @@
+{
+  "schema_version": "1",
+  "study_id": "qwen-ollama-manufacturing-2026-07-20",
+  "status": "exploratory",
+  "date": "2026-07-20",
+  "scenario_id": "manufacturing-planning-001",
+  "task": "direct_production_plan_prompt",
+  "condition": "optees_required",
+  "provider": "Ollama local",
+  "client": "Optees D0 terminal harness",
+  "model_id": "qwen3.5:9b",
+  "model_digest_prefix": "6488c96fa5fa",
+  "optees_version": "0.9.0rc3",
+  "optees_reference_commit": "5cf478e14547e70ca8de59b0c4cf0ca582e5bfd2",
+  "input_mode": "natural_language_prompt_with_all_numeric_data",
+  "workbook_ingestion_tested": false,
+  "expected_capabilities": ["milp.linear"],
+  "observed_tool_sequence": [
+    "optees_list_capabilities",
+    "optees_get_capability",
+    "optees_validate_problem",
+    "optees_create_job",
+    "optees_get_job_status",
+    "optees_get_job_result"
+  ],
+  "manual_review": {
+    "numerical_ground_truth_match": true,
+    "capability_match": true,
+    "reported_solution": {
+      "product_a": 24,
+      "product_b": 3,
+      "objective": 1125
+    },
+    "reported_mathematical_status": "optimal",
+    "reported_independent_validation_status": "verified",
+    "notes": [
+      "The response makes an intermediate machine-hour arithmetic error and immediately corrects it.",
+      "The final global-optimality wording is more cautious than the solver status and zero gap warrant.",
+      "Raw tool payloads, latency, token usage, repeated trials, and an unaided control condition were not recorded.",
+      "The run did not ingest an Excel workbook because all numerical inputs were included in the prompt."
+    ]
+  },
+  "outputs": [
+    {
+      "path": "outputs/terminal-transcript.txt",
+      "sha256": "3983dc2cdd98310be8574c89b85ae67ae77dfd00d3da44d4ae20680f1ea09464"
+    }
+  ]
+}

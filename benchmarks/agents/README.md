@@ -16,6 +16,12 @@ The first recorded exploratory integration run is
 It preserves Claude-generated DOCX/PDF reports and their hashes while clearly
 recording the metadata still missing for a publishable paired benchmark.
 
+The first recorded local-LLM solver run is
+[`qwen-ollama-manufacturing-2026-07-20`](studies/qwen-ollama-manufacturing-2026-07-20/README.md).
+It preserves an Optees D0/Qwen terminal transcript, a ground-truth review, and
+known response defects. Its prompt contains the numerical inputs, so it tests
+the agent-to-solver loop but not Excel ingestion.
+
 Scientific solver datasets remain under `tests/data/` and are documented in
 `docs/DATASETS.md`; they must not be mixed with these agent-effectiveness
 experiments.
