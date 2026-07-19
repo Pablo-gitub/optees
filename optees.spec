@@ -109,7 +109,27 @@ if _ortools_libs:
 
 pyz = PYZ(a.pure)
 
-_gui_scripts = [a.scripts[0]] if sys.platform == "win32" else a.scripts
+if sys.platform == "win32":
+    # Analysis prepends PyInstaller runtime hooks to ``a.scripts``. Select the
+    # two application entry points by source path instead of relying on their
+    # position, then retain every runtime hook in both executables.
+    _main_entry = (_project_root / "src" / "optees" / "main.py").resolve()
+    _server_entry = (_project_root / "src" / "optees" / "local_server.py").resolve()
+
+    def _scripts_for(entrypoint, excluded_entrypoint):
+        selected = [
+            script
+            for script in a.scripts
+            if Path(script[1]).resolve() != excluded_entrypoint
+        ]
+        if not any(Path(script[1]).resolve() == entrypoint for script in selected):
+            raise SystemExit(f"optees.spec: missing entry point {entrypoint}")
+        return selected
+
+    _gui_scripts = _scripts_for(_main_entry, _server_entry)
+    _server_scripts = _scripts_for(_server_entry, _main_entry)
+else:
+    _gui_scripts = a.scripts
 
 # ---------------------------------------------------------------------------
 # Executable
@@ -132,7 +152,7 @@ _executables = [exe]
 if sys.platform == "win32":
     server_exe = EXE(
         pyz,
-        [a.scripts[1]],
+        _server_scripts,
         [],
         exclude_binaries=True,
         name="optees-server",

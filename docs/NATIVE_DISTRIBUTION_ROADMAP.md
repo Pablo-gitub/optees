@@ -123,10 +123,12 @@ starting Qt or performing a real network request.
 ## Phase 3 - Windows Native Installer
 
 Release-candidate note: `v0.9.0-rc.1` built macOS and Linux successfully but
-failed the Windows packaged-service smoke test. RC2 moves the headless service
-to a dedicated executable and makes Windows startup failures observable in the
-workflow log; final Windows acceptance remains pending until that pipeline and
-the clean-machine checklist pass.
+failed the Windows packaged-service smoke test. RC2 made startup failures
+observable and revealed that the companion executable selected a PyInstaller
+runtime hook by positional index instead of `local_server.py`. RC3 selects both
+Windows entry points by source path while preserving their runtime hooks. Final
+Windows acceptance remains pending until that pipeline and the clean-machine
+checklist pass.
 
 - [x] Add a versioned Inno Setup script under `packaging/windows/`.
 - [x] Install per user under Local AppData without requiring administrator

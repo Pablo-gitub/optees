@@ -29,3 +29,12 @@ def test_windows_bundle_has_a_diagnostic_headless_companion():
     assert "dist\\optees\\optees-server.exe" in workflow
     assert "RedirectStandardError" in workflow
     assert "if ($server.HasExited)" in workflow
+
+
+def test_windows_entrypoints_are_selected_by_path_not_toc_position():
+    spec = (ROOT / "optees.spec").read_text(encoding="utf-8")
+
+    assert "_main_entry" in spec
+    assert "_server_entry" in spec
+    assert "_server_scripts" in spec
+    assert "[a.scripts[" not in spec
