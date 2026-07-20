@@ -7,7 +7,7 @@ individual technical documents.
 
 ## Verified Baseline
 
-- Application version: `0.9.0rc4` from `src/optees/__init__.py`.
+- Application version: `0.9.0` from `src/optees/__init__.py`.
 - Registered local-service capabilities: 12 from
   `src/optees/composition/local_agent.py`.
 - Public execution surfaces: desktop GUI, headless CLI, authenticated local
