@@ -32,7 +32,25 @@ This integration has been tested with Claude Desktop Cowork in local mode on
 macOS. Cloud-hosted sessions that cannot launch local processes cannot use this
 configuration.
 
-### 1. Install The MCP Extra
+### 1. Select The Installed MCP Command
+
+Native Optees packages include a dedicated MCP stdio entry point. Do not use
+`optees-server` in Claude's MCP configuration: that executable is the
+authenticated REST service and requires a session token.
+
+Use the command matching the installation:
+
+| Installation | Claude `command` | Claude `args` |
+| --- | --- | --- |
+| Windows installer | `%LOCALAPPDATA%\\Programs\\Optees\\optees-mcp.exe` | `[]` |
+| Windows portable ZIP | Absolute extracted path to `optees-mcp.exe` | `[]` |
+| macOS DMG installation | `/Applications/optees.app/Contents/MacOS/optees-mcp` | `[]` |
+| Linux AppImage | Absolute path to the AppImage | `["--mcp-server"]` |
+
+These paths apply to native releases that include the packaged MCP companion.
+Older releases may require the source/Python installation below.
+
+### 2. Install From Source Or Python Package
 
 From an Optees source checkout:
 
@@ -40,10 +58,10 @@ From an Optees source checkout:
 python -m pip install -e ".[mcp]"
 ```
 
-For a packaged Python installation, ensure that `optees-mcp` is available in
-the environment that Claude Desktop will launch.
+For a Python package installation, ensure that `optees-mcp` is available in the
+environment that Claude Desktop will launch.
 
-### 2. Open Claude's Configuration
+### 3. Open Claude's Configuration
 
 In Claude Desktop:
 
@@ -58,7 +76,7 @@ On macOS this file is normally located at:
 ~/Library/Application Support/Claude/claude_desktop_config.json
 ```
 
-### 3. Add The Optees Server
+### 4. Add The Optees Server
 
 `mcpServers` must be a top-level property, alongside existing properties such
 as `preferences`. Do not place it inside `preferences`.
@@ -79,6 +97,20 @@ For an installed Optees command, add:
 Use `command -v optees-mcp` in a terminal to find the absolute command path.
 An absolute path is more reliable than depending on the graphical
 application's `PATH`.
+
+For a Linux AppImage, keep the AppImage in a stable user-owned location and
+configure its MCP dispatcher explicitly:
+
+```json
+{
+  "mcpServers": {
+    "optees": {
+      "command": "/absolute/path/to/optees-linux-x86_64.AppImage",
+      "args": ["--mcp-server"]
+    }
+  }
+}
+```
 
 During source development, point Claude at the Python interpreter from the
 Optees environment and at the absolute repository source directory:
@@ -121,7 +153,7 @@ at the root. For example:
 The final file must remain valid JSON. In particular, keep commas between
 top-level properties and use JSON booleans such as `true`, not Markdown text.
 
-### 4. Restart And Verify
+### 5. Restart And Verify
 
 Fully quit Claude Desktop, reopen it, and start a new local chat or Cowork
 session. Then send this exact discovery prompt:
@@ -212,9 +244,14 @@ unaided controls.
 - Use absolute paths for both Python and `PYTHONPATH`.
 - Confirm that the selected interpreter can run
   `python -m optees.mcp_server` and has the `mcp` extra installed.
+- For a native installation, confirm that the configured `optees-mcp`
+  companion exists and is executable. On Linux, confirm that the AppImage is
+  executable and that `--mcp-server` is present in `args`.
 - Fully quit Claude instead of closing only the current window.
 - Do not paste the REST API bearer token into the MCP configuration. The MCP
   process uses its private stdio channel and needs no network credential.
+- If the error mentions `OPTEES_LOCAL_SERVER_TOKEN`, Claude is launching
+  `optees-server` by mistake. Replace it with the MCP command above.
 
 ## Ollama Local Harness
 

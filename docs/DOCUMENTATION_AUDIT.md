@@ -7,16 +7,15 @@ individual technical documents.
 
 ## Verified Baseline
 
-- Application version: `0.8.0` from `src/optees/__init__.py`.
+- Application version: `0.9.0rc4` from `src/optees/__init__.py`.
 - Registered local-service capabilities: 12 from
   `src/optees/composition/local_agent.py`.
 - Public execution surfaces: desktop GUI, headless CLI, authenticated local
   REST API, local MCP stdio server, and experimental Ollama D0 harness.
 - Python console entry points: `optees`, `optees-cli`, `optees-server`,
   `optees-mcp`, and `optees-ollama-chat`.
-- Native PyInstaller artifacts currently expose the desktop application and
-  its internal local-server dispatch, but not a user-facing Ollama chat
-  command.
+- Native PyInstaller artifacts expose the desktop application, local REST
+  service, and MCP stdio companion, but not a user-facing Ollama chat command.
 
 ## Capability Coverage
 
@@ -55,9 +54,9 @@ feature counts.
 4. The capability inventory was a pre-local-service snapshot whose title
    implied current truth. It is now retained explicitly as
    `docs/local-agent/pre-service-capability-inventory.md`.
-5. Public release claims must be checked against final PyInstaller artifacts;
-   Python entry points available after `pip install` are not automatically
-   available in native installers.
+5. Resolved for MCP: release CI initializes and calls capability discovery on
+   the packaged companion for every native platform. Other Python entry points
+   still require explicit packaging and artifact-level acceptance.
 
 ### P1 - Required For Documentation Quality
 

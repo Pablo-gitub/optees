@@ -64,11 +64,12 @@ host a remote solver service and does not make a cloud agent able to reach
 | `optees-mcp` | Agent-owned stdio subprocess | MCP tools | Native local agent integration |
 | `optees-ollama-chat` | Local harness plus REST server | Ollama tools mapped to REST | Experimental local-LLM evaluation |
 
-Python entry points are defined in `pyproject.toml`. Availability in a native
-PyInstaller artifact must be verified separately during release acceptance.
-The Windows native bundle includes a console-subsystem `optees-server.exe`
-companion. The GUI launches it without a visible console, while packaging smoke
-tests can capture deterministic startup diagnostics independently from the
+Python entry points are defined in `pyproject.toml`. Native PyInstaller
+artifacts package a dedicated MCP stdio companion on Windows, macOS, and Linux;
+release CI initializes it and calls capability discovery on every platform.
+The Windows bundle also includes the console-subsystem `optees-server.exe`
+REST companion. The GUI launches it without a visible console, while packaging
+smoke tests capture deterministic startup diagnostics independently from the
 windowed `optees.exe` bootloader.
 
 ## Dependency Model

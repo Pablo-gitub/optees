@@ -97,7 +97,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install ".[plot,local-service]"
+          python -m pip install ".[plot,local-service,mcp]"
           python -m pip install --requirement packaging/requirements-build.txt
 
       - name: Report packaging toolchain
@@ -108,6 +108,20 @@ jobs:
       # ── Build ─────────────────────────────────────────────────────────────
       - name: Build with PyInstaller
         run: python -m PyInstaller optees.spec --noconfirm
+
+      - name: Smoke test packaged MCP companion (Linux)
+        if: runner.os == 'Linux'
+        run: python packaging/smoke_mcp.py dist/optees/optees-mcp
+
+      - name: Smoke test packaged MCP companion (macOS)
+        if: runner.os == 'macOS'
+        run: >-
+          python packaging/smoke_mcp.py
+          dist/optees.app/Contents/MacOS/optees-mcp
+
+      - name: Smoke test packaged MCP companion (Windows)
+        if: runner.os == 'Windows'
+        run: python packaging/smoke_mcp.py dist\optees\optees-mcp.exe
 
       - name: Smoke test packaged local service (Linux)
         if: runner.os == 'Linux'
@@ -244,6 +258,10 @@ jobs:
           cat > AppDir/AppRun << 'APPRUN'
           #!/bin/bash
           HERE="$(dirname "$(readlink -f "${0}")")"
+          if [[ "${1:-}" == "--mcp-server" ]]; then
+            shift
+            exec "${HERE}/optees-mcp" "$@"
+          fi
           exec "${HERE}/optees" "$@"
           APPRUN
           chmod +x AppDir/AppRun
@@ -281,6 +299,13 @@ jobs:
           # APPIMAGE_EXTRACT_AND_RUN avoids needing FUSE on the CI runner
           ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 \
             ./appimagetool.AppImage AppDir optees-linux-x86_64.AppImage
+
+      - name: Smoke test final AppImage MCP entry point (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          APPIMAGE_EXTRACT_AND_RUN=1 python packaging/smoke_mcp.py \
+            ./optees-linux-x86_64.AppImage --mcp-server
 
       # ── Package: Windows → native installer + explicit portable ZIP ──────
       - name: Install pinned Inno Setup (Windows)

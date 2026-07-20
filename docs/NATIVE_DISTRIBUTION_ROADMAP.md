@@ -148,6 +148,8 @@ checklist pass.
 - [x] Package the local API as a dedicated `optees-server.exe` companion so the
   GUI can start it without a console and release smoke tests can capture
   startup failures from the headless process.
+- [x] Package a distinct `optees-mcp.exe` stdio companion for local agents;
+  never configure the token-authenticated REST executable as an MCP server.
 - [ ] Add code signing when a suitable certificate becomes available; until
   then document the SmartScreen limitation without implying trust certification.
 
@@ -171,6 +173,8 @@ uninstall without leaving application binaries behind.
   drag/replace step instead of claiming automatic installation.
 - [ ] Test replacement of an existing `/Applications/Optees.app` copy and
   confirm that user settings survive.
+- [x] Include `Contents/MacOS/optees-mcp` and smoke-test capability discovery
+  from the packaged bundle before DMG creation.
 
 **Acceptance tests:** clean-account installation, first launch with quarantine
 attributes, manual update over an older version, local-service startup, one
@@ -192,6 +196,8 @@ solver job, and removal of the application bundle.
   instructions without closing the current application prematurely.
 - [ ] Evaluate a Debian package only as an additional distribution channel,
   not as a replacement claimed to support every Linux distribution.
+- [x] Expose the bundled MCP stdio companion through the stable AppImage
+  argument `--mcp-server` and smoke-test the final AppImage entry point.
 
 **Acceptance tests:** Ubuntu LTS CI plus manual verification on at least one
 non-Debian desktop distribution; launch, desktop integration where promised,

@@ -584,8 +584,9 @@ and preserves the D0 requirement to inspect the full capability descriptor and
 validate the exact payload before creating a job. Protocol tests negotiate a
 real MCP session, inspect all seven published schemas, and complete the frozen
 continuous-LP workflow through a subprocess. Setup and current limitations are
-documented in `docs/local-agent/mcp-stdio.md`. Native installer inclusion,
-client-specific guidance, and the complete compatibility matrix remain Phase D
+documented in `docs/local-agent/mcp-stdio.md`. Native installer inclusion is
+now enforced by packaged MCP smoke tests on Windows, macOS, and Linux;
+client-specific guidance and the complete compatibility matrix remain Phase D
 work rather than implicit claims of this proof.
 
 ### A2 - Knapsack Family

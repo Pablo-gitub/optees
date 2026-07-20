@@ -73,9 +73,9 @@ flowchart LR
 
 Claude Desktop/Cowork and the experimental Ollama harness have completed local
 vertical tests. See the [agent service configuration guide](docs/AGENTS_SERVICE_CONFIG.md)
-and the [agent benchmark protocol](docs/AGENT_BENCHMARKS.md). MCP and Ollama
-entry points are currently documented for source or Python-package installs;
-native-installer acceptance is tracked separately and is not implied here.
+and the [agent benchmark protocol](docs/AGENT_BENCHMARKS.md). Native release
+artifacts include a dedicated MCP stdio entry point; clean-machine client
+acceptance remains required before each stable release.
 
 ## Why Optees
 

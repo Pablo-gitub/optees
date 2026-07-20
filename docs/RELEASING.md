@@ -89,6 +89,23 @@ ZIP. A missing or different file fails the platform build. This integrity
 check verifies bundle provenance; a future packaged `--selftest` command
 should additionally execute a tiny MILP to verify runtime loading end to end.
 
+### Native MCP companion
+
+Every native artifact must expose MCP stdio independently from the
+token-authenticated REST service. Release CI starts the packaged MCP entry
+point, initializes an MCP client session, lists its tools, and calls
+`optees_list_capabilities`. Linux repeats this check against the final AppImage
+through `--mcp-server`.
+
+Expected installed entry points are:
+
+- Windows: `optees-mcp.exe` beside `optees.exe`;
+- macOS: `optees.app/Contents/MacOS/optees-mcp`;
+- Linux: `optees-linux-x86_64.AppImage --mcp-server`.
+
+An `OPTEES_LOCAL_SERVER_TOKEN` error means the REST companion was launched by
+mistake and is a release-acceptance failure for an MCP configuration.
+
 ## Publish A Release
 
 After the version-bump commit and all checks succeed:
@@ -110,7 +127,9 @@ Pushing the tag starts `.github/workflows/release.yml`. The workflow builds:
 
 The release job then creates `SHA256SUMS` and attaches it with the artifacts.
 Check the completed GitHub Action and download the macOS DMG for a manual
-install/update test before announcing the release.
+install/update test before announcing the release. On each platform, also
+configure a local MCP client against the packaged entry point and run
+`optees_list_capabilities` before promoting a release candidate.
 
 ## Signing And Update Handoff
 

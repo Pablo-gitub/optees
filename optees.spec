@@ -55,7 +55,10 @@ if sys.platform == "win32":
 # ---------------------------------------------------------------------------
 # Analysis
 # ---------------------------------------------------------------------------
-_entry_scripts = ["src/optees/main.py"]
+_entry_scripts = [
+    "src/optees/main.py",
+    "src/optees/mcp_server.py",
+]
 if sys.platform == "win32":
     # Keep the headless service on a console-subsystem executable. The GUI
     # launches it with CREATE_NO_WINDOW, while CI can capture startup errors.
@@ -109,27 +112,33 @@ if _ortools_libs:
 
 pyz = PYZ(a.pure)
 
+# Analysis prepends PyInstaller runtime hooks to ``a.scripts``. Select each
+# application entry point by source path and retain every runtime hook instead
+# of relying on unstable table-of-contents positions.
+_main_entry = (_project_root / "src" / "optees" / "main.py").resolve()
+_mcp_entry = (_project_root / "src" / "optees" / "mcp_server.py").resolve()
+_application_entries = {_main_entry, _mcp_entry}
 if sys.platform == "win32":
-    # Analysis prepends PyInstaller runtime hooks to ``a.scripts``. Select the
-    # two application entry points by source path instead of relying on their
-    # position, then retain every runtime hook in both executables.
-    _main_entry = (_project_root / "src" / "optees" / "main.py").resolve()
     _server_entry = (_project_root / "src" / "optees" / "local_server.py").resolve()
+    _application_entries.add(_server_entry)
 
-    def _scripts_for(entrypoint, excluded_entrypoint):
-        selected = [
-            script
-            for script in a.scripts
-            if Path(script[1]).resolve() != excluded_entrypoint
-        ]
-        if not any(Path(script[1]).resolve() == entrypoint for script in selected):
-            raise SystemExit(f"optees.spec: missing entry point {entrypoint}")
-        return selected
 
-    _gui_scripts = _scripts_for(_main_entry, _server_entry)
-    _server_scripts = _scripts_for(_server_entry, _main_entry)
-else:
-    _gui_scripts = a.scripts
+def _scripts_for(entrypoint):
+    selected = [
+        script
+        for script in a.scripts
+        if Path(script[1]).resolve() not in _application_entries
+        or Path(script[1]).resolve() == entrypoint
+    ]
+    if not any(Path(script[1]).resolve() == entrypoint for script in selected):
+        raise SystemExit(f"optees.spec: missing entry point {entrypoint}")
+    return selected
+
+
+_gui_scripts = _scripts_for(_main_entry)
+_mcp_scripts = _scripts_for(_mcp_entry)
+if sys.platform == "win32":
+    _server_scripts = _scripts_for(_server_entry)
 
 # ---------------------------------------------------------------------------
 # Executable
@@ -149,6 +158,20 @@ exe = EXE(
 )
 
 _executables = [exe]
+mcp_exe = EXE(
+    pyz,
+    _mcp_scripts,
+    [],
+    exclude_binaries=True,
+    name="optees-mcp",
+    debug=False,
+    strip=False,
+    upx=False,
+    console=True,
+    icon=_icon,
+    version=str(_version_file) if _version_file is not None else None,
+)
+_executables.append(mcp_exe)
 if sys.platform == "win32":
     server_exe = EXE(
         pyz,

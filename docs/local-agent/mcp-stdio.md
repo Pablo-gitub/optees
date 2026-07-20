@@ -7,7 +7,20 @@ internally.
 
 ## Install
 
-Install Optees with the optional MCP dependency:
+Native releases expose MCP without requiring a separate Python installation:
+
+| Platform | Command |
+| --- | --- |
+| Windows installer | `%LOCALAPPDATA%\\Programs\\Optees\\optees-mcp.exe` |
+| macOS | `/Applications/optees.app/Contents/MacOS/optees-mcp` |
+| Linux AppImage | `/absolute/path/to/optees-linux-x86_64.AppImage --mcp-server` |
+
+`optees-server` is not interchangeable with `optees-mcp`. It exposes the REST
+API, requires a session bearer token, and must not be configured as an MCP
+stdio process.
+
+For source development or a Python package installation, install Optees with
+the optional MCP dependency:
 
 ```bash
 python -m pip install -e ".[mcp]"
@@ -26,6 +39,20 @@ For an installed Optees package, register this local process in an MCP client:
     "optees": {
       "command": "optees-mcp",
       "args": []
+    }
+  }
+}
+```
+
+For the Linux AppImage, use the AppImage as the command and pass the dispatcher
+argument separately:
+
+```json
+{
+  "mcpServers": {
+    "optees": {
+      "command": "/absolute/path/to/optees-linux-x86_64.AppImage",
+      "args": ["--mcp-server"]
     }
   }
 }
@@ -83,5 +110,6 @@ itself must run locally and support local process servers.
 The server discovers every capability registered by the shared composition
 root. Automated MCP sequencing and one complete LP execution provide the first
 vertical regression path; broader capability and client compatibility still
-requires the Phase D matrix. This work does not yet certify every MCP client or
-package the server in every native installer.
+requires the Phase D matrix. Native release CI launches the packaged companion
+on Windows, macOS, and Linux and requires successful capability discovery. A
+manual clean-machine Claude test remains part of release-candidate acceptance.

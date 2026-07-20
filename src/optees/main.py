@@ -10,6 +10,11 @@ def main(argv: list[str] | None = None) -> int:
         from optees.local_server import main as server_main
 
         return server_main(arguments[1:])
+    if arguments and arguments[0] == "--mcp-server":
+        from optees.mcp_server import main as mcp_main
+
+        mcp_main()
+        return 0
 
     logging.basicConfig(level=os.getenv("OPTEES_LOG", "WARNING").upper())
     from PySide6.QtGui import QIcon
