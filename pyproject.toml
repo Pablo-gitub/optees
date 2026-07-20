@@ -7,6 +7,7 @@ name = "optees"
 dynamic = ["version"]
 requires-python = ">=3.12"
 dependencies = [
+    "certifi>=2025.1.31",
     "PySide6",
     "numpy",
     "scipy",

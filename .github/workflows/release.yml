@@ -109,6 +109,27 @@ jobs:
       - name: Build with PyInstaller
         run: python -m PyInstaller optees.spec --noconfirm
 
+      - name: Smoke test packaged update HTTPS (Linux)
+        if: runner.os == 'Linux'
+        run: dist/optees/optees --update-probe
+
+      - name: Smoke test packaged update HTTPS (macOS)
+        if: runner.os == 'macOS'
+        run: dist/optees.app/Contents/MacOS/optees --update-probe
+
+      - name: Smoke test packaged update HTTPS (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $process = Start-Process `
+            -FilePath 'dist\optees\optees.exe' `
+            -ArgumentList '--update-probe' `
+            -Wait `
+            -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "Packaged update HTTPS probe failed with exit code $($process.ExitCode)."
+          }
+
       - name: Smoke test packaged MCP companion (Linux)
         if: runner.os == 'Linux'
         run: python packaging/smoke_mcp.py dist/optees/optees-mcp

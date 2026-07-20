@@ -125,6 +125,12 @@ Pushing the tag starts `.github/workflows/release.yml`. The workflow builds:
 | Windows x64, portable | `optees-windows-x64-portable.zip` |
 | Linux x86_64 | `optees-linux-x86_64.AppImage` |
 
+Before packaging, each native build runs the bundled executable's
+`--update-probe`. This verifies that the packaged CA bundle can establish an
+HTTPS connection to the public GitHub Releases endpoint; a source-only network
+check is not sufficient because frozen Python runtimes have different default
+certificate paths.
+
 The release job then creates `SHA256SUMS` and attaches it with the artifacts.
 Check the completed GitHub Action and download the macOS DMG for a manual
 install/update test before announcing the release. On each platform, also

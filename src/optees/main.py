@@ -6,6 +6,16 @@ import os
 
 def main(argv: list[str] | None = None) -> int:
     arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments == ["--update-probe"]:
+        from optees.data.adapters.github.update_provider_adapter import (
+            GitHubUpdateProvider,
+        )
+
+        release = GitHubUpdateProvider().get_latest_release()
+        if not release.tag_name:
+            raise RuntimeError("The GitHub update endpoint returned no release tag.")
+        print(f"GitHub update endpoint reachable: {release.tag_name}")
+        return 0
     if arguments and arguments[0] == "--local-server":
         from optees.local_server import main as server_main
 

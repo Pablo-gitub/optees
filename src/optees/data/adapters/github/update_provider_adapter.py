@@ -3,10 +3,13 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import ssl
 from pathlib import Path
 from typing import Any, Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+
+import certifi
 
 from optees.application.ports.update_provider_port import (
     DownloadProgressCallback,
@@ -33,6 +36,7 @@ class GitHubUpdateProvider(UpdateProviderPort):
         self._repository = repository
         self._timeout_seconds = float(timeout_seconds)
         self._max_asset_bytes = int(max_asset_bytes)
+        self._ssl_context = ssl.create_default_context(cafile=certifi.where())
         if self._max_asset_bytes <= 0:
             raise ValueError("max_asset_bytes must be positive.")
 
@@ -132,7 +136,11 @@ class GitHubUpdateProvider(UpdateProviderPort):
             },
         )
         try:
-            return urlopen(request, timeout=self._timeout_seconds)
+            return urlopen(
+                request,
+                timeout=self._timeout_seconds,
+                context=self._ssl_context,
+            )
         except HTTPError as exc:
             raise RuntimeError(f"GitHub release request failed with HTTP {exc.code}") from exc
         except URLError as exc:

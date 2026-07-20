@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import hashlib
+import ssl
 from io import BytesIO
 
 import pytest
+
+import optees.data.adapters.github.update_provider_adapter as update_provider_module
 
 from optees.application.ports.update_provider_port import (
     UpdateDownloadError,
@@ -15,6 +18,24 @@ from optees.data.adapters.github.update_provider_adapter import (
     release_from_github_json,
 )
 from optees.domain.entities.update import ReleaseAsset
+
+
+def test_provider_uses_bundled_ca_context_for_https(monkeypatch):
+    captured = {}
+
+    def fake_urlopen(request, *, timeout, context):
+        captured.update(request=request, timeout=timeout, context=context)
+        return BytesIO(b"{}")
+
+    monkeypatch.setattr(update_provider_module, "urlopen", fake_urlopen)
+    provider = GitHubUpdateProvider(timeout_seconds=3)
+
+    with provider._open("https://api.github.com/example") as response:
+        assert response.read() == b"{}"
+
+    assert captured["timeout"] == 3
+    assert captured["context"].verify_mode == ssl.CERT_REQUIRED
+    assert captured["context"].check_hostname is True
 
 
 def test_release_from_github_json_maps_assets():
