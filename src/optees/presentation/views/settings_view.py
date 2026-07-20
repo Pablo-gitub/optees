@@ -24,6 +24,7 @@ from optees.application.services.local_server_process import (
 )
 
 GITHUB_REPOSITORY_URL = "https://github.com/Pablo-gitub/optees"
+OPTEES_WEBSITE_URL = "https://optees.it"
 LINKEDIN_PROFILE_URL = "https://www.linkedin.com/in/paolo-pietrelli"
 INSTAGRAM_PROFILE_URL = "https://www.instagram.com/ing_paolo_pietrelli/"
 PERSONAL_WEBSITE_URL = "https://paolopietrelli.com"
@@ -165,6 +166,11 @@ class SettingsView(QWidget):
             "icons/github.svg",
             GITHUB_REPOSITORY_URL,
         )
+        self.optees_website_button = self._make_external_link_button(
+            "settingsOpteesWebsiteLink",
+            "icons/website.svg",
+            OPTEES_WEBSITE_URL,
+        )
         self.linkedin_link_button = self._make_external_link_button(
             "settingsLinkedinLink",
             "icons/linkedin.svg",
@@ -181,6 +187,7 @@ class SettingsView(QWidget):
             PERSONAL_WEBSITE_URL,
         )
         footer.addWidget(self.github_link_button)
+        footer.addWidget(self.optees_website_button)
         footer.addWidget(self.linkedin_link_button)
         footer.addWidget(self.instagram_link_button)
         footer.addWidget(self.personal_link_button)
@@ -248,6 +255,13 @@ class SettingsView(QWidget):
         self.github_link_button.setText(S.t("settings.links.github"))
         self.github_link_button.setToolTip(S.t("settings.links.github_tooltip"))
         self.github_link_button.setAccessibleName(S.t("settings.links.github_tooltip"))
+        self.optees_website_button.setText(S.t("settings.links.optees_website"))
+        self.optees_website_button.setToolTip(
+            S.t("settings.links.optees_website_tooltip")
+        )
+        self.optees_website_button.setAccessibleName(
+            S.t("settings.links.optees_website_tooltip")
+        )
         self.linkedin_link_button.setText(S.t("settings.links.linkedin"))
         self.linkedin_link_button.setToolTip(S.t("settings.links.linkedin_tooltip"))
         self.linkedin_link_button.setAccessibleName(

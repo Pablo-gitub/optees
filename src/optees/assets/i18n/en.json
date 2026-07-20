@@ -88,6 +88,8 @@
     "links": {
       "github": "Optees on GitHub",
       "github_tooltip": "Open the Optees repository on GitHub",
+      "optees_website": "optees.it",
+      "optees_website_tooltip": "Open the official Optees website",
       "linkedin": "LinkedIn",
       "linkedin_tooltip": "Open Paolo Pietrelli's LinkedIn profile",
       "instagram": "Instagram",
