@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import os
 import sys
 from pathlib import Path
@@ -23,6 +24,10 @@ from optees.domain.entities.graph.vertex import GraphVertex
 from optees.domain.entities.knapsack.item import KnapsackItem
 from optees.domain.entities.nlp.objective import NLPObjective
 from optees.domain.entities.nlp.variable import NLPVariable
+from optees.domain.entities.packing.container import PackingContainer
+from optees.domain.entities.packing.geometry import Dimensions3D
+from optees.domain.entities.packing.item import PackingItem
+from optees.domain.entities.packing.resource import ResourceCapacity, ResourceConsumption
 from optees.domain.entities.lp.constraint import Constraint
 from optees.domain.entities.lp.objective import Objective
 from optees.domain.entities.lp.variable import Variable
@@ -30,6 +35,9 @@ from optees.domain.models.knapsack.knapsack01_model import Knapsack01Model
 from optees.domain.models.lp.lp_model import LPModel
 from optees.domain.models.graph.shortest_path_model import ShortestPathModel
 from optees.domain.models.nlp.nlp_model import NLPModel, NLPOptions
+from optees.domain.models.packing.single_container_packing_model import (
+    SingleContainerPackingModel,
+)
 from optees.domain.models.regression.regression_model import RegressionModel, RegressionOptions
 from optees.domain.entities.regression.dataset import RegressionDataset
 from optees.domain.models.classification.binary_classification_model import (
@@ -42,6 +50,7 @@ from optees.domain.value_objects.lp.bounds import Bounds
 from optees.domain.value_objects.lp.objective_sense import ObjectiveSense
 from optees.domain.value_objects.lp.relation import Relation
 from optees.domain.value_objects.nlp.solver_method import NLPSolverMethod
+from optees.domain.value_objects.packing.rotation_policy import RotationPolicy
 from optees.presentation.main_window import MainWindow
 
 
@@ -171,7 +180,54 @@ def _classification_model() -> BinaryClassificationModel:
     )
 
 
+def _packing_model() -> SingleContainerPackingModel:
+    return SingleContainerPackingModel.from_parts(
+        PackingContainer.from_parts(
+            "container-1",
+            "Demo container",
+            Dimensions3D(10, 8, 6),
+            [ResourceCapacity("weight", 30)],
+        ),
+        [
+            PackingItem.from_parts(
+                "machine",
+                "Machine part",
+                Dimensions3D(6, 4, 3),
+                value=12,
+                rotation_policy=RotationPolicy.KEEP_UPRIGHT,
+                consumptions=[ResourceConsumption("weight", 16)],
+            ),
+            PackingItem.from_parts(
+                "box",
+                "Supply box",
+                Dimensions3D(4, 4, 2),
+                value=6,
+                quantity=2,
+                consumptions=[ResourceConsumption("weight", 6)],
+            ),
+        ],
+        time_limit=30,
+        mip_gap=0.01,
+    )
+
+
+def _capture_packing(window: MainWindow) -> None:
+    model = _packing_model()
+    solution = window.solve_packing_uc.execute(model)
+    window.packing_solution_page.set_problem(model)
+    window.packing_solution_page.set_solution(solution)
+    _capture(window, "optees-packing-solution.png", "packing_solution")
+
+
 def main() -> None:
+    parser = argparse.ArgumentParser(description="Capture Optees landing-page screenshots.")
+    parser.add_argument(
+        "--only",
+        choices=("packing",),
+        help="Capture only one slower or manually maintained screen.",
+    )
+    args = parser.parse_args()
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
     app = QApplication.instance() or QApplication(sys.argv)
@@ -183,6 +239,11 @@ def main() -> None:
     window.show()
     QTest.qWait(350)
     app.processEvents()
+
+    if args.only == "packing":
+        _capture_packing(window)
+        window.close()
+        return
 
     _capture(window, "optees-home.png", "home")
 
@@ -226,6 +287,8 @@ def main() -> None:
     window.classification_solution_page.set_problem(classification_model)
     window.classification_solution_page.set_solution(classification_solution)
     _capture(window, "optees-classification-solution.png", "classification_solution")
+
+    _capture_packing(window)
 
     window.close()
 
