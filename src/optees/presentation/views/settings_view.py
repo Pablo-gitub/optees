@@ -1,5 +1,6 @@
 from __future__ import annotations
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QLocale, QSize, Qt, QUrl, Signal
+from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import (
     QComboBox,
     QFormLayout,
@@ -12,9 +13,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from PySide6.QtCore import QLocale
-
 from optees.core.version import get_app_version
+from optees.core.assets import asset
 from optees.core.string_manager import strings as S
 from optees.presentation.error_feedback import localized_error_detail
 from optees.application.services.local_server_process import (
@@ -22,6 +22,9 @@ from optees.application.services.local_server_process import (
     LocalServerSnapshot,
     LocalServerState,
 )
+
+GITHUB_REPOSITORY_URL = "https://github.com/Pablo-gitub/optees"
+PERSONAL_WEBSITE_URL = "https://paolopietrelli.com"
 
 
 class SettingsView(QWidget):
@@ -153,6 +156,23 @@ class SettingsView(QWidget):
         self._service_snapshot = LocalServerSnapshot(LocalServerState.STOPPED)
         root.addStretch(1)
 
+        footer = QHBoxLayout()
+        footer.addStretch(1)
+        self.github_link_button = self._make_external_link_button(
+            "settingsGithubLink",
+            "icons/github.svg",
+            GITHUB_REPOSITORY_URL,
+        )
+        self.personal_link_button = self._make_external_link_button(
+            "settingsPersonalLink",
+            "icons/person.svg",
+            PERSONAL_WEBSITE_URL,
+        )
+        footer.addWidget(self.github_link_button)
+        footer.addWidget(self.personal_link_button)
+        footer.addStretch(1)
+        root.addLayout(footer)
+
         # listen to changes in language/theme globally
         S.language_changed.connect(self.refresh_strings)
         self.refresh_strings()
@@ -171,6 +191,23 @@ class SettingsView(QWidget):
         code = self.combo_lang.itemData(idx)
         if code and code != S.get_language():
             S.set_language(code)  # emit language_changed
+
+    def _make_external_link_button(
+        self,
+        object_name: str,
+        icon_path: str,
+        url: str,
+    ) -> QPushButton:
+        button = QPushButton(self)
+        button.setObjectName(object_name)
+        button.setFlat(True)
+        button.setCursor(Qt.PointingHandCursor)
+        button.setIcon(QIcon(asset(icon_path)))
+        button.setIconSize(QSize(18, 18))
+        button.clicked.connect(
+            lambda _checked=False, target=url: QDesktopServices.openUrl(QUrl(target))
+        )
+        return button
 
     # ----- hooks -----
     def refresh_strings(self) -> None:
@@ -194,6 +231,16 @@ class SettingsView(QWidget):
         )
         self.service_open_docs_button.setText(S.t("settings.local_service.open_docs"))
         self.service_security_note.setText(S.t("settings.local_service.security_note"))
+        self.github_link_button.setText(S.t("settings.links.github"))
+        self.github_link_button.setToolTip(S.t("settings.links.github_tooltip"))
+        self.github_link_button.setAccessibleName(S.t("settings.links.github_tooltip"))
+        self.personal_link_button.setText(S.t("settings.links.personal_website"))
+        self.personal_link_button.setToolTip(
+            S.t("settings.links.personal_website_tooltip")
+        )
+        self.personal_link_button.setAccessibleName(
+            S.t("settings.links.personal_website_tooltip")
+        )
         # update combo labels according to current language
         labels = {
             "en": S.t("settings.lang.english"),

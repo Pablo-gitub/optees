@@ -3,6 +3,7 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QPushButton
 
 from optees.core.string_manager import strings as S
@@ -11,6 +12,10 @@ from optees.domain.entities.update import (
     ReleaseAsset,
     UpdateCheckResult,
     UpdateExecutionState,
+)
+from optees.presentation.views.settings_view import (
+    GITHUB_REPOSITORY_URL,
+    PERSONAL_WEBSITE_URL,
 )
 
 
@@ -107,3 +112,17 @@ def test_source_run_marks_update_check_as_development(window):
     assert "Development" in window.settings_page.value_update.text() or (
         "sviluppo" in window.settings_page.value_update.text().lower()
     )
+
+
+def test_settings_footer_opens_project_and_author_links(window, qtbot, monkeypatch):
+    opened_urls: list[str] = []
+    monkeypatch.setattr(
+        QDesktopServices,
+        "openUrl",
+        lambda url: opened_urls.append(url.toString()) or True,
+    )
+
+    qtbot.mouseClick(window.settings_page.github_link_button, Qt.LeftButton)
+    qtbot.mouseClick(window.settings_page.personal_link_button, Qt.LeftButton)
+
+    assert opened_urls == [GITHUB_REPOSITORY_URL, PERSONAL_WEBSITE_URL]

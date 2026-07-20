@@ -85,6 +85,12 @@
     "update_launching": "Apertura del pacchetto scaricato. Completa i passaggi di sostituzione della piattaforma dopo la chiusura di Optees.",
     "update_unknown": "Non e' stato possibile stabilire se questa e' l'ultima versione.",
     "update_error": "Impossibile controllare gli aggiornamenti: {detail}",
+    "links": {
+      "github": "Optees su GitHub",
+      "github_tooltip": "Apri il repository Optees su GitHub",
+      "personal_website": "Paolo Pietrelli",
+      "personal_website_tooltip": "Apri il sito web di Paolo Pietrelli"
+    },
     "local_service": {
       "title": "Servizio solver locale",
       "description": "Avvia un'API autenticata su questo computer per consentire agli agenti software locali di scoprire ed eseguire i solver Optees. Il servizio non ascolta mai al di fuori di 127.0.0.1.",
