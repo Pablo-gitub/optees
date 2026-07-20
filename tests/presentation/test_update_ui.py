@@ -15,6 +15,8 @@ from optees.domain.entities.update import (
 )
 from optees.presentation.views.settings_view import (
     GITHUB_REPOSITORY_URL,
+    INSTAGRAM_PROFILE_URL,
+    LINKEDIN_PROFILE_URL,
     PERSONAL_WEBSITE_URL,
 )
 
@@ -123,6 +125,13 @@ def test_settings_footer_opens_project_and_author_links(window, qtbot, monkeypat
     )
 
     qtbot.mouseClick(window.settings_page.github_link_button, Qt.LeftButton)
+    qtbot.mouseClick(window.settings_page.linkedin_link_button, Qt.LeftButton)
+    qtbot.mouseClick(window.settings_page.instagram_link_button, Qt.LeftButton)
     qtbot.mouseClick(window.settings_page.personal_link_button, Qt.LeftButton)
 
-    assert opened_urls == [GITHUB_REPOSITORY_URL, PERSONAL_WEBSITE_URL]
+    assert opened_urls == [
+        GITHUB_REPOSITORY_URL,
+        LINKEDIN_PROFILE_URL,
+        INSTAGRAM_PROFILE_URL,
+        PERSONAL_WEBSITE_URL,
+    ]
