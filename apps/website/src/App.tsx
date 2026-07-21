@@ -59,10 +59,10 @@ const footerLinkHref: Record<string, string> = {
 
 type OSKey = "mac" | "windows" | "linux" | "other";
 
-const osMatchers: Record<Exclude<OSKey, "other">, RegExp> = {
-  mac: /(macos|darwin|osx|mac|\.dmg|\.pkg)/i,
-  windows: /(windows|\.exe|\.msi)/i,
-  linux: /(linux|\.appimage|\.deb|\.rpm)/i,
+const preferredAssetMatchers: Record<Exclude<OSKey, "other">, RegExp> = {
+  mac: /\.dmg$/i,
+  windows: /-setup\.exe$/i,
+  linux: /\.appimage$/i,
 };
 
 function detectOS(): OSKey {
@@ -79,7 +79,7 @@ function detectOS(): OSKey {
 
 function assetHrefFor(release: ReleaseInfo | null, os: OSKey): string {
   if (!release || os === "other") return releasesUrl;
-  const asset = release.assets.find((item) => osMatchers[os].test(item.name));
+  const asset = release.assets.find((item) => preferredAssetMatchers[os].test(item.name));
   return asset?.browser_download_url ?? releasesUrl;
 }
 
