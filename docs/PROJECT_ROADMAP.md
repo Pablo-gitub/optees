@@ -13,6 +13,8 @@ Related documents:
   loading horizontal expansion;
 - `docs/LOCAL_AGENT_SERVICE_ROADMAP.md` for the shared headless execution
   platform, local API, and future agent-facing contracts;
+- `docs/RESULT_ARTIFACTS_REPORTING_ROADMAP.md` for optional result charts,
+  tables, 3D exports, and local Markdown/PDF report composition;
 - `docs/NATIVE_DISTRIBUTION_ROADMAP.md` for native installers, release CI,
   platform update handoff, and packaged acceptance testing;
 - `docs/AGENT_BENCHMARKS.md` for paired experiments measuring whether agents
