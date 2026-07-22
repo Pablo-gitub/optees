@@ -24,7 +24,9 @@ The eventual user-facing order is:
 
 1. Multi-container Capacity Allocation;
 2. Single-container 3D Packing;
-3. Multi-container 3D Packing.
+3. Multi-container 3D Packing;
+4. Packing with Supports and Dunnage, with single-container and multi-container
+   modes when both are implemented.
 
 The implementation order is intentionally different because the first target
 is the more useful geometric workflow:
@@ -32,9 +34,10 @@ is the more useful geometric workflow:
 1. Single-container 3D Packing;
 2. support-aware single-container refinement;
 3. Multi-container 3D Packing;
-4. Interactive refinement;
-5. industrial constraints and heuristic solvers;
-6. Multi-container Capacity Allocation.
+4. Packing with Supports and Dunnage;
+5. Interactive refinement;
+6. industrial constraints and heuristic solvers;
+7. Multi-container Capacity Allocation.
 
 ## Mathematical Scope
 
@@ -185,7 +188,7 @@ as an integer quantity of indivisible units.
   footprint below it.
 - [x] Explicitly delimit simple gravity from support-area, load-bearing,
   balance, and stability constraints. Support-aware refinement starts in Phase
-  2; physical and industrial constraints remain Phase 5 scope.
+  2; physical and industrial constraints remain Phase 6 scope.
 
 ### Verification
 
@@ -211,23 +214,41 @@ load before adding container assignment. It does not claim transport safety or
 full static stability.
 
 - [ ] Define bottom-face support area separately from irrelevant side contact.
+- [ ] Treat floor contact as full support and item-on-item support as the union
+  of intersections between an item's bottom face and the top faces in direct
+  vertical contact below it.
+- [ ] Report both absolute supported area and normalized support ratio per item:
+  `support_ratio = supported_bottom_area / bottom_face_area`.
 - [ ] Preserve the primary loaded-value optimum and every hard feasibility
   constraint while refining a placement.
-- [ ] Add a deterministic support-aware improvement heuristic after simple
-  gravity, with an explicit seed and reproducible tie-breakers.
+- [ ] Keep simple gravity as an inexpensive standalone mode and candidate
+  generator, never as an irreversible constraint that narrows the feasible
+  placement space before support refinement.
+- [ ] Add a deterministic support-aware improvement heuristic that may change
+  X/Y coordinates and allowed orientations, then reapplies downward compaction
+  after each candidate move.
+- [ ] Compare the original solver placement, its simple-gravity projection,
+  and support-aware candidates; retain the best measured candidate without
+  reducing the primary loaded value.
+- [ ] Start with total normalized support as the documented secondary quality
+  measure. Record minimum per-item support ratio as a diagnostic so that a high
+  total cannot hide one poorly supported item.
+- [ ] Keep side-face contact out of the support objective. A future compactness
+  metric may measure lateral contact separately, but it must not be described
+  as weight support.
+- [ ] Use an explicit seed and reproducible tie-breakers.
 - [ ] Report supported base area and support ratio per loaded item without
-  presenting them as a safety certification.
+  presenting either metric as a safety certification.
 - [ ] Reject any candidate move that violates containment, allowed
   orientation, scalar capacities, or pairwise non-overlap.
-- [ ] Compare the refined placement with the original incumbent and retain the
-  original whenever no measured improvement is found.
 - [ ] Add analytic tests for floor support, partial support, unchanged primary
-  objective, deterministic output, and geometrically blocked placements.
+  objective, deterministic output, gravity not restricting candidate moves,
+  and geometrically blocked placements.
 - [ ] Simplify rotation presets so common axis combinations are directly
   selectable while the domain continues to store explicit orientation sets.
 
 An exact secondary solve that maximizes support lexicographically is deferred
-to Phase 5. The Phase 2 heuristic must therefore be labelled as placement
+to Phase 6. The Phase 2 heuristic must therefore be labelled as placement
 improvement, not as a proof of maximum support.
 
 ## Phase 3 - Multi-Container 3D Packing
@@ -259,7 +280,63 @@ improvement, not as a proof of maximum support.
 - [ ] Provide a fleet summary table with value, volume, weight, cost, and proof
   status.
 
-## Phase 4 - Interactive Refinement
+## Phase 4 - Packing With Supports And Dunnage
+
+This is a separate packing variant introduced only after the geometric
+multi-container model. It represents physical support elements explicitly; it
+does not reinterpret unsupported cargo contact as if support material existed.
+
+The first scope uses a finite catalogue of rectangular support elements with
+known geometry. Arbitrarily shaped or continuously resized supports are out of
+scope until a dedicated mathematical model and validator exist.
+
+### Support Model
+
+- [ ] Define typed support elements such as spacers, interlayers, pallets, and
+  full-layer separators separately from cargo items.
+- [ ] Give every support type fixed length, width, height, weight, optional
+  cost, available quantity, and permitted orientations.
+- [ ] Make support elements consume geometric space and every configured scalar
+  capacity exactly like physical objects, while excluding them from loaded
+  cargo value.
+- [ ] Define whether a support may rest on the floor, cargo, another support,
+  or only on explicitly permitted surfaces.
+- [ ] Require cargo using a support to satisfy direct-contact and support-area
+  rules against the support's top face.
+- [ ] Keep full-container or full-layer interlayers as a simpler explicit
+  subtype rather than silently deriving a variable support shape.
+- [ ] Preserve the primary loaded-cargo value, then minimize support count,
+  cost, or occupied volume using an explicit lexicographic order selected by
+  the workflow.
+- [ ] Report support placement and consumption separately from cargo placement.
+- [ ] State that modelled geometric support is not a certification of material
+  strength, compression resistance, or transport stability.
+
+### Single And Multiple Containers
+
+- [ ] Implement and validate the support model in one container first.
+- [ ] Extend the same support catalogue and constraints to heterogeneous
+  multi-container instances without changing single-container semantics.
+- [ ] Support per-container availability or cost only through explicit fields.
+- [ ] Preserve stable support and cargo identifiers when switching container
+  views or exporting structured results.
+
+### UI, Contracts, And Verification
+
+- [ ] Add a dedicated variant selector rather than overloading the ordinary 3D
+  packing form with hidden support behavior.
+- [ ] Define a versioned JSON contract for support catalogues, availability,
+  placement rules, and secondary objectives.
+- [ ] Render supports with a visual category distinct from cargo while keeping
+  individual elements selectable in the 3D scene and tables.
+- [ ] Explain how support height reduces usable space and how support weight or
+  cost affects the selected plan.
+- [ ] Add analytic tests for interlayer height, capacity consumption, support
+  availability, objective preservation, cost/count tie-breakers, and infeasible
+  support requirements.
+- [ ] Add single-container cases before shared multi-container benchmark cases.
+
+## Phase 5 - Interactive Refinement
 
 Interactive refinement is a human-in-the-loop re-optimization workflow, not a
 claim that Optees inferred physical properties that were absent from the data.
@@ -276,7 +353,7 @@ claim that Optees inferred physical properties that were absent from the data.
   variants of the same packing.
 - [ ] Explain which requirements are hard and which are penalty-based.
 
-## Phase 5 - Industrial Constraints And Heuristics
+## Phase 6 - Industrial Constraints And Heuristics
 
 - [ ] Centre-of-mass projection diagnostics for each item and container.
 - [ ] Configurable minimum support-ratio constraints with explicit modelling
@@ -294,7 +371,7 @@ claim that Optees inferred physical properties that were absent from the data.
   reproducibility metadata.
 - [ ] Exact-versus-heuristic comparison on small shared instances.
 
-## Phase 6 - Multi-Container Capacity Allocation
+## Phase 7 - Multi-Container Capacity Allocation
 
 This workflow deliberately ignores physical geometry. A scalar volume limit is
 therefore a capacity approximation, not proof that the objects physically fit.
