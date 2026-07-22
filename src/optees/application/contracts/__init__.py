@@ -8,6 +8,11 @@ from optees.application.contracts.artifact import (
     ArtifactStatus,
     AvailableArtifact,
 )
+from optees.application.contracts.artifact_rendering import (
+    ArtifactRenderContext,
+    ArtifactRenderOptions,
+    RenderedArtifact,
+)
 from optees.application.contracts.errors import ErrorCode, ErrorDetail, StructuredError
 from optees.application.contracts.execution import (
     ExecutionEnvelope,
@@ -25,6 +30,8 @@ __all__ = [
     "ArtifactManifestEntry",
     "ArtifactProvenance",
     "ArtifactRequest",
+    "ArtifactRenderContext",
+    "ArtifactRenderOptions",
     "ArtifactStatus",
     "AvailableArtifact",
     "ErrorCode",
@@ -33,6 +40,7 @@ __all__ = [
     "ExecutionMetadata",
     "JobStatus",
     "MathematicalStatus",
+    "RenderedArtifact",
     "SerializedResult",
     "StructuredError",
     "TerminationReason",

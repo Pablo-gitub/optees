@@ -239,8 +239,8 @@ must keep that document, capability discovery, and runtime behavior aligned.
 ### Phase 1 - Headless Artifact Foundation
 
 - [x] Introduce application-owned artifact request and manifest DTOs.
-- [ ] Add renderer ports that do not import PySide6 or Qt backends.
-- [ ] Add deterministic theme, locale, dimensions, fonts, and renderer versions.
+- [x] Add renderer ports that do not import PySide6 or Qt backends.
+- [x] Add deterministic theme, locale, dimensions, fonts, and renderer versions.
 - [ ] Implement bounded local artifact storage with hashes and cleanup.
 - [ ] Implement authenticated REST generation, listing, and download endpoints.
 - [ ] Extend capability discovery with `available_artifacts`.
