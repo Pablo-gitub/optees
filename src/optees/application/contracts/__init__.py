@@ -1,3 +1,13 @@
+from optees.application.contracts.artifact import (
+    ArtifactBatchManifest,
+    ArtifactBatchRequest,
+    ArtifactFormat,
+    ArtifactManifestEntry,
+    ArtifactProvenance,
+    ArtifactRequest,
+    ArtifactStatus,
+    AvailableArtifact,
+)
 from optees.application.contracts.errors import ErrorCode, ErrorDetail, StructuredError
 from optees.application.contracts.execution import (
     ExecutionEnvelope,
@@ -9,6 +19,14 @@ from optees.application.contracts.execution import (
 )
 
 __all__ = [
+    "ArtifactBatchManifest",
+    "ArtifactBatchRequest",
+    "ArtifactFormat",
+    "ArtifactManifestEntry",
+    "ArtifactProvenance",
+    "ArtifactRequest",
+    "ArtifactStatus",
+    "AvailableArtifact",
     "ErrorCode",
     "ErrorDetail",
     "ExecutionEnvelope",
@@ -19,9 +37,6 @@ __all__ = [
     "StructuredError",
     "TerminationReason",
 ]
-from optees.application.contracts.capability import (
-    CapabilityDescriptor,
-    ProblemValidation,
-)
+from optees.application.contracts.capability import CapabilityDescriptor, ProblemValidation
 
-__all__ = ["CapabilityDescriptor", "ProblemValidation"]
+__all__.extend(["CapabilityDescriptor", "ProblemValidation"])

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from optees.application.contracts.artifact import AvailableArtifact
 from optees.application.contracts.json_value import JsonValue, require_json_value
 
 
@@ -20,6 +21,7 @@ class CapabilityDescriptor:
     backend_candidates: tuple[str, ...] = ()
     supports_time_limit: bool = False
     supports_cancellation: bool = False
+    available_artifacts: tuple[AvailableArtifact, ...] = ()
     contract_version: str = "1"
     problem_schema_version: str = "1"
     result_schema_version: str = "1"
@@ -39,6 +41,9 @@ class CapabilityDescriptor:
             raise ValueError(
                 "unavailable_reason is required when the capability is unavailable."
             )
+        artifact_types = [item.artifact_type for item in self.available_artifacts]
+        if len(set(artifact_types)) != len(artifact_types):
+            raise ValueError("available_artifacts must have unique artifact types")
         require_json_value(self.to_dict())
 
     def to_dict(self) -> dict[str, JsonValue]:
@@ -57,6 +62,9 @@ class CapabilityDescriptor:
             "backend_candidates": list(self.backend_candidates),
             "supports_time_limit": self.supports_time_limit,
             "supports_cancellation": self.supports_cancellation,
+            "available_artifacts": [
+                artifact.to_dict() for artifact in self.available_artifacts
+            ],
         }
         normalized = require_json_value(payload)
         assert isinstance(normalized, dict)

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from optees.application.contracts.artifact import ArtifactFormat, AvailableArtifact
 from optees.application.contracts.capability import CapabilityDescriptor
 from optees.application.contracts.execution import (
     MathematicalStatus,
@@ -62,6 +63,29 @@ def test_unavailable_descriptor_requires_a_reason():
             result_schema={},
             available=False,
         )
+
+
+def test_descriptor_advertises_artifacts_without_affecting_existing_defaults():
+    plain = _registration("test.plain").descriptor
+    descriptor = CapabilityDescriptor(
+        capability_id="test.artifacts",
+        title="Artifacts",
+        problem_type="test",
+        input_schema={},
+        result_schema={},
+        available_artifacts=(
+            AvailableArtifact(
+                artifact_type="solution_table",
+                title="Solution table",
+                formats=(ArtifactFormat.JSON,),
+            ),
+        ),
+    )
+
+    assert plain.to_dict()["available_artifacts"] == []
+    assert descriptor.to_dict()["available_artifacts"][0]["artifact_type"] == (
+        "solution_table"
+    )
 
 
 def test_cancellable_descriptor_requires_an_executable_callback():
