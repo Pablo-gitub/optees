@@ -15,6 +15,8 @@ Related documents:
   platform, local API, and future agent-facing contracts;
 - `docs/RESULT_ARTIFACTS_REPORTING_ROADMAP.md` for optional result charts,
   tables, 3D exports, and local Markdown/PDF report composition;
+- `docs/RESULT_ARTIFACTS_CONTRACT.md` for the frozen artifact inventory,
+  lifecycle, limits, errors, and report schema that implementation follows;
 - `docs/NATIVE_DISTRIBUTION_ROADMAP.md` for native installers, release CI,
   platform update handoff, and packaged acceptance testing;
 - `docs/AGENT_BENCHMARKS.md` for paired experiments measuring whether agents

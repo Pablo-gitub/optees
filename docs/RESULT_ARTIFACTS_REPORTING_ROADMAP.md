@@ -225,13 +225,16 @@ source job IDs in its metadata.
 
 ### Phase 0 - Inventory And Contract Decisions
 
-- [ ] Inventory every chart, table, and 3D representation currently shipped in
+- [x] Inventory every chart, table, and 3D representation currently shipped in
   the desktop for all public capabilities.
-- [ ] Separate canonical result data from presentation-only calculations.
-- [ ] Define artifact IDs, statuses, formats, options, limits, and error codes.
-- [ ] Decide storage lifetime and cleanup behavior for REST and MCP sessions.
-- [ ] Freeze the report document schema independently from Pandoc.
-- [ ] Add architecture diagrams and API examples to the canonical docs.
+- [x] Separate canonical result data from presentation-only calculations.
+- [x] Define artifact IDs, statuses, formats, options, limits, and error codes.
+- [x] Decide storage lifetime and cleanup behavior for REST and MCP sessions.
+- [x] Freeze the report document schema independently from Pandoc.
+- [x] Add architecture diagrams and API examples to the canonical docs.
+
+Phase 0 is frozen in `RESULT_ARTIFACTS_CONTRACT.md`. Implementation changes
+must keep that document, capability discovery, and runtime behavior aligned.
 
 ### Phase 1 - Headless Artifact Foundation
 

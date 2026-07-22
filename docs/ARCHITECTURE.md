@@ -129,6 +129,33 @@ know both application abstractions and concrete adapters. It constructs the
 production registry and is the only place where all public capabilities are
 wired together.
 
+## Post-Solve Artifacts And Reports
+
+Result artifacts and reports are separate, opt-in workflows layered on a
+completed solver job. They use the retained validated problem payload and its
+execution envelope; they do not alter the result contract or rerun the solver.
+
+```mermaid
+flowchart TB
+    Job["Completed local job"] --> Problem["Versioned problem payload"]
+    Job --> Result["Execution envelope and validation"]
+    Problem --> Prepare["Capability artifact preparer"]
+    Result --> Prepare
+    Prepare --> Renderer["Headless renderer port"]
+    Renderer --> ArtifactStore["Bounded session artifact store"]
+    ArtifactStore --> RESTDownload["Authenticated REST download"]
+    ArtifactStore --> MCPResource["MCP resource or retrieval tool"]
+    ArtifactStore --> Composer["Report composer"]
+    Composer --> ReportStore["Markdown or optional PDF"]
+```
+
+The rendering worker is bounded and independent from the mathematical job
+worker, so an expensive chart or document cannot delay solver execution.
+Application contracts and lifecycle rules are defined in
+`RESULT_ARTIFACTS_CONTRACT.md`; delivery status is tracked in
+`RESULT_ARTIFACTS_REPORTING_ROADMAP.md`. Infrastructure renderers must remain
+headless and must not import PySide6 or Qt-specific Matplotlib backends.
+
 ## Source Ownership
 
 ```text

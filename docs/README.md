@@ -37,6 +37,10 @@ the packaged-artifact acceptance matrix.
 - [Architecture](ARCHITECTURE.md): dependency boundaries and Mermaid diagrams.
 - [Local job service](local-agent/job-service.md): application-owned execution
   lifecycle.
+- [Result artifact and report contracts](RESULT_ARTIFACTS_CONTRACT.md): frozen
+  post-solve artifact inventory, lifecycle, limits, and report schema.
+- [Result artifacts and local reporting roadmap](RESULT_ARTIFACTS_REPORTING_ROADMAP.md):
+  phased implementation of headless exports and report composition.
 - [Local agent service roadmap](LOCAL_AGENT_SERVICE_ROADMAP.md): contracts,
   implementation history, independent validation, and future agent work.
 - [Algorithms](ALGORITHMS.md): supported mathematical behavior and honest
@@ -58,6 +62,7 @@ the packaged-artifact acceptance matrix.
 - [Native distribution factual audit](NATIVE_DISTRIBUTION_AUDIT.md): current
   artifact behavior, updater limitations, and clean-account acceptance matrix.
 - [Packing and loading roadmap](PACKING_LOADING_ROADMAP.md)
+- [Result artifacts and local reporting roadmap](RESULT_ARTIFACTS_REPORTING_ROADMAP.md)
 - [MILP roadmap](MILP_ROADMAP.md)
 - [MILP feature plan](MILP_FEATURE_PLAN.md)
 - [NLP feature plan](NLP_FEATURE_PLAN.md)
