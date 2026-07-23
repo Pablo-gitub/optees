@@ -235,7 +235,10 @@ train/test split, fixed random seed, selected feature and target names,
 MAE/MSE/RMSE/R-squared, residuals, a one-feature fit chart, localized teaching
 pages, versioned JSON import, and analytic affine reference cases. The result
 view explicitly separates training from held-out test observations and does
-not present a predictive fit as a causal conclusion.
+not present a predictive fit as a causal conclusion. The headless result now
+has an independent arithmetic validator for parameters, predictions, residuals,
+split accounting, and metrics. This does not make the current random split
+valid for time-ordered forecasting.
 
 The binary-classification workflow provides local logistic regression for
 finite numeric features and exactly two labels, a deterministic stratified
@@ -249,11 +252,19 @@ must not be treated as a fairness, causality, or deployment claim.
 
 The remaining work is:
 
-1. **Clustering next within the AI family:** local unsupervised clustering with k-means,
+1. **Forecasting as a separate capability:** define a versioned time-series
+   contract with ordered timestamps, chronological or rolling-origin
+   evaluation, explicit forecast horizon, uncertainty intervals, residual
+   diagnostics, and leakage safeguards. Do not silently reinterpret the
+   existing tabular regression contract as forecasting.
+2. **Repeated-model ergonomics:** design bounded batch/fan-out execution for
+   the same validated capability over multiple groups while preserving one
+   result and validation report per model.
+3. **Clustering within the AI family:** local unsupervised clustering with k-means,
    user-selected `k`, reproducible seed, feature scaling made visible, inertia
    and silhouette diagnostics, and 2D/3D plots only for the selected displayed
    dimensions.
-2. **Classification hardening:** add a suitable redistributable external
+4. **Classification hardening:** add a suitable redistributable external
    benchmark only after its source, evaluation protocol, expected properties,
    license, and CI budget are reviewed. Keep this distinct from claims about
    fairness or production readiness.

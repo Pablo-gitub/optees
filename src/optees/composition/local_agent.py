@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from importlib.util import find_spec
-
 from optees.application.codecs.knapsack_bounded_problem_codec import (
     knapsack_bounded_model_from_dict,
 )
@@ -95,6 +93,9 @@ from optees.application.validation.lp_solution_validator import (
 from optees.application.validation.milp_solution_validator import (
     MILPIndependentSolutionValidator,
 )
+from optees.application.validation.regression_solution_validator import (
+    RegressionIndependentSolutionValidator,
+)
 from optees.application.usecases.solve_bounded_knapsack_usecase import (
     SolveBoundedKnapsackUseCase,
 )
@@ -123,6 +124,10 @@ from optees.application.usecases.train_classification_usecase import (
 )
 from optees.application.usecases.train_regression_usecase import (
     TrainRegressionUseCase,
+)
+from optees.composition.backend_health import (
+    import_is_usable,
+    scipy_highs_is_usable,
 )
 from optees.data.adapters.classification.numpy_classification_adapter import (
     NumpyClassificationAdapter,
@@ -226,7 +231,7 @@ def create_local_optimization_service() -> OptimizationService:
     registry.register(
         create_lp_registration(
             solver_port=LPSolverAdapter(),
-            dependency_available=find_spec("scipy") is not None,
+            dependency_available=scipy_highs_is_usable(),
         )
     )
     registry.register(
@@ -258,7 +263,7 @@ def create_local_optimization_service() -> OptimizationService:
     registry.register(
         create_milp_registration(
             solver_port=MILPSolverAdapter(),
-            dependency_available=find_spec("ortools") is not None,
+            dependency_available=import_is_usable("ortools"),
         )
     )
     registry.register(
@@ -267,25 +272,25 @@ def create_local_optimization_service() -> OptimizationService:
     registry.register(
         create_nlp_registration(
             solver_port=ScipyNLPSolverAdapter(),
-            dependency_available=find_spec("scipy") is not None,
+            dependency_available=import_is_usable("scipy.optimize", "minimize"),
         )
     )
     registry.register(
         create_regression_registration(
             solver_port=NumpyRegressionAdapter(),
-            dependency_available=find_spec("numpy") is not None,
+            dependency_available=import_is_usable("numpy", "linalg"),
         )
     )
     registry.register(
         create_classification_registration(
             solver_port=NumpyClassificationAdapter(),
-            dependency_available=find_spec("numpy") is not None,
+            dependency_available=import_is_usable("numpy", "linalg"),
         )
     )
     registry.register(
         create_packing_registration(
             solver_port=OrtoolsSingleContainerPackingAdapter(),
-            dependency_available=find_spec("ortools") is not None,
+            dependency_available=import_is_usable("ortools"),
         )
     )
     return OptimizationService(registry)
@@ -581,6 +586,7 @@ def create_regression_registration(
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=REGRESSION_BACKEND_ID,
+        validate_result=RegressionIndependentSolutionValidator(),
     )
 
 

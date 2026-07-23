@@ -52,6 +52,11 @@
   versioned JSON, and canonical mapping.
 - `tests/utility/test_classification_reference_cases.py`:
   deterministic two-dimensional logistic-regression reference case.
+- `tests/application/validation/test_regression_solution_validator.py`:
+  independent parameter, prediction, residual, split, and metric consistency
+  checks, including tampered-result failures.
+- `tests/composition/test_backend_health.py`: concrete optional-backend import
+  probes and a trivial SciPy/HiGHS execution probe.
 - `tests/adapters/test_assistant_classification_prompts.py`:
   equivalent English and Italian prompts across technical and colloquial
   descriptions.
@@ -159,6 +164,10 @@ PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark" -n 4 --dist lo
 The tagged release workflow has a separate authoritative gate. It checks out
 the exact tagged commit, installs all test extras, runs the complete suite
 under Xvfb, and only then permits the platform build matrix to start.
+Each platform build must also complete a small continuous LP through its
+packaged MCP companion and verify both the optimal result and independent
+validation report. Capability listing alone is not considered a sufficient
+backend smoke test.
 
 ## Reproducibility
 

@@ -70,9 +70,12 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
   reported separately for training and held-out test observations.
 - Learned intercept and coefficients, prediction/residual table, and a fitted
   line chart when exactly one feature is selected.
+- Independent arithmetic validation recomputes every published prediction,
+  residual, split count, and train/test metric from the public model result.
 - Versioned JSON import/export and analytic affine reference cases. Results
   are explicitly presented as predictive fits, not causal conclusions or
-  guarantees of future performance.
+  guarantees of future performance. The current random holdout is intended for
+  ordinary tabular relationships, not time-ordered forecasting.
 
 ### Educational AI & Machine Learning: Binary Classification
 

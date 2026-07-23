@@ -7,6 +7,9 @@ import pytest
 
 from optees.application.contracts.errors import ErrorCode, StructuredError
 from optees.application.contracts.execution import ExecutionEnvelope
+from optees.application.contracts.solution_validation import (
+    SolutionValidationStatus,
+)
 from optees.composition.local_agent import (
     CLASSIFICATION_BACKEND_ID,
     CLASSIFICATION_CAPABILITY_ID,
@@ -188,6 +191,7 @@ def test_production_service_matches_regression_reference_case():
         {"feature": "size", "value": pytest.approx(3.0)}
     ]
     assert outcome.result["test_metrics"]["rmse"] == pytest.approx(0.0, abs=1e-10)
+    assert outcome.validation.status is SolutionValidationStatus.VERIFIED
 
 
 def test_production_service_matches_classification_reference_case():

@@ -611,10 +611,19 @@ work rather than implicit claims of this proof.
 - [ ] For NLP candidates, verify finite values, declared bounds, and objective
   recomputation while explicitly declining any independent global-optimality
   claim.
-- [ ] For Regression and Classification, verify reproducible dimensions,
-  finite parameters, prediction/metric consistency, and split accounting.
+- [x] For Regression, verify finite parameters, complete prediction rows,
+  prediction/residual arithmetic, split accounting, and train/test metric
+  consistency.
+- [ ] For Classification, verify reproducible dimensions, finite parameters,
+  probability and prediction consistency, split accounting, and metrics.
 - [ ] Never present these checks as evidence of causality, fairness,
   generalization, or production suitability.
+
+The regression validator is deliberately limited to the published numerical
+contract. It recomputes predictions, residuals, and metrics from the returned
+intercept and coefficients, but explicitly declines claims about feature
+choice, causality, generalization, fairness, temporal forecasting suitability,
+or the correctness of the business interpretation.
 
 ### A5 - Public Failure Semantics And Documentation
 
@@ -623,6 +632,12 @@ work rather than implicit claims of this proof.
 - [ ] Surface failed validation prominently in REST, CLI, and agent guidance.
 - [ ] Add one verified and one failed validation example per capability.
 - [ ] Contract-test OpenAPI and document tolerance/version compatibility.
+- [x] Probe optional backends by importing their runtime API rather than only
+  checking package metadata; exercise a trivial HiGHS solve before declaring
+  `lp.continuous` available.
+- [x] Make every native release smoke test complete an LP through packaged MCP,
+  including optimal status and independent validation, instead of stopping at
+  capability discovery.
 
 Independent feasibility validation does not create an independent proof of
 optimality. A `verified` report means that all checks implemented and listed in

@@ -427,10 +427,19 @@ Current production registrations provide independent validators for:
 - `lp.continuous`: candidate vector, bounds, linear constraints, and objective
   consistency;
 - `milp.linear`: the corresponding checks plus integrality where applicable.
+- `ml.regression.linear`: finite public parameters, complete prediction rows,
+  prediction and residual arithmetic, train/test split accounting, and
+  recomputed metrics.
 
 Other capabilities explicitly return `not_available` until a dedicated
 validator is implemented. Passing these checks verifies the recorded
 properties; it is not, by itself, a second proof of global optimality.
+
+Capability availability is also a runtime property. The production composition
+imports the concrete optional backend API, and continuous LP additionally runs
+a trivial HiGHS health problem before advertising itself as available. Native
+release smoke tests execute that same LP through the packaged MCP companion so
+missing compiled modules are detected before publication.
 
 ## Composed Agent Workflows
 

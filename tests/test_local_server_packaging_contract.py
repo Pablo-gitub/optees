@@ -53,6 +53,10 @@ def test_native_bundles_include_and_smoke_test_mcp_companion():
     assert "packaging/smoke_mcp.py" in workflow
     assert "dist\\optees\\optees-mcp.exe" in workflow
     assert "dist/optees.app/Contents/MacOS/optees-mcp" in workflow
+    smoke = (ROOT / "packaging/smoke_mcp.py").read_text(encoding="utf-8")
+    assert '"optees_create_job"' in smoke
+    assert '"lp.continuous"' in smoke
+    assert '"mathematical_status") != "optimal"' in smoke
 
 
 def test_final_appimage_dispatches_and_smoke_tests_mcp():
