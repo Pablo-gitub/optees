@@ -288,7 +288,8 @@ than relying on platform-sensitive golden screenshots.
 - [x] NLP convergence and bounded 2D/3D objective visualizations.
 - [x] Dijkstra graph/path artifacts.
 - [x] Regression and classification diagnostics.
-- [ ] Packing placement tables, OBJ + MTL export, and named PNG camera views.
+- [x] Packing placement/capacity tables, OBJ + MTL export, and named PNG
+  camera views.
 - [ ] Keep desktop rendering behavior aligned with shared headless preparation.
 
 Categorical SVG/PNG rendering is shared by MILP and Knapsack without sharing
@@ -307,6 +308,14 @@ exposes coefficient, metrics, confusion, and prediction tables plus a confusion
 matrix and a two-feature decision boundary. SVG/PNG rendering, sampling, point
 counts, and graph size are bounded; incompatible dimensions produce an
 explicit failed artifact rather than a misleading projection.
+
+Packing completes its version 1 artifact inventory with placement and
+capacity-utilization tables, named static cameras, and a portable scene model.
+The PNG renderer supports isometric, front, side, top, or a four-view contact
+sheet without importing Qt. The deterministic model archive contains OBJ, MTL,
+and a machine-readable manifest; item colors are stable across PNG and OBJ
+outputs. Both renderers preserve the solver coordinates exactly and reject
+empty or oversized scenes instead of inventing or truncating placements.
 
 ### Phase 4 - MCP Artifact Access
 

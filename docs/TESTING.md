@@ -99,6 +99,9 @@ bounded Markdown with machine-readable truncation metadata.
   session-directory lifecycle, atomic bounded retention, SHA-256 verification,
   expiration and pinning, traversal rejection, symlink/byte tamper detection,
   deterministic eviction, and shutdown cleanup.
+- `tests/data/adapters/artifacts/test_packing_scene_renderer.py`: Packing
+  capacity accounting, five bounded headless camera modes, deterministic
+  OBJ+MTL archives, safe geometry identifiers, and manifest semantics.
 
 ## Commands
 ```bash
@@ -198,11 +201,12 @@ packaged MCP companion and verify both the optimal result and independent
 validation report. Capability listing alone is not considered a sufficient
 backend smoke test.
 
-Headless artifact tests render the LP reference slice through Matplotlib Agg.
-They verify SVG structure and semantic labels, and inspect PNG signatures,
-requested dimensions, and nonblank pixel variance. These checks intentionally
-avoid exact pixel snapshots, which vary across rendering platforms without
-providing stronger mathematical assurance.
+Headless artifact tests render LP and Packing reference scenes through
+Matplotlib Agg. They verify SVG structure and semantic labels, and inspect PNG
+signatures, requested dimensions, and nonblank pixel variance. Packing tests
+also validate every named camera and the deterministic OBJ/MTL/manifest
+archive. These checks intentionally avoid exact pixel snapshots, which vary
+across rendering platforms without providing stronger mathematical assurance.
 
 ## Reproducibility
 

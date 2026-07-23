@@ -66,13 +66,13 @@ artifact. Rich artifacts may have dimensional or result-state preconditions;
 these are declared by discovery and are validated before work is queued.
 
 The production table renderer implements every table identifier currently
-listed for Dijkstra, NLP, regression, and classification, plus the primary
-table identifier for the other capability rows. Tables are deterministic JSON,
-RFC 4180 CSV, or bounded Markdown. JSON uses the versioned `ArtifactTable`
-shape with stable column keys, display titles, scalar rows, and a separate
-summary object. CSV contains only the stable column keys and scalar rows;
-objective values, aggregate metrics, and other non-row values remain in the
-JSON summary. This avoids localized column names becoming an accidental
+listed for Dijkstra, NLP, regression, classification, and Packing, plus the
+primary table identifier for the other capability rows. Tables are
+deterministic JSON, RFC 4180 CSV, or bounded Markdown. JSON uses the versioned
+`ArtifactTable` shape with stable column keys, display titles, scalar rows, and
+a separate summary object. CSV contains only the stable column keys and scalar
+rows; objective values, aggregate metrics, and other non-row values remain in
+the JSON summary. This avoids localized column names becoming an accidental
 machine contract.
 
 Version 1 visual preconditions are intentionally strict:
@@ -91,6 +91,32 @@ Version 1 visual preconditions are intentionally strict:
 All six visuals are rendered headlessly as SVG or PNG. Unsupported dimensions
 or absent numerical data fail the individual artifact explicitly; they are
 never projected, synthesized, or silently omitted.
+
+Packing exposes two complete semantic tables and two scene representations.
+`placement_table` reports every loaded instance, orientation, position,
+dimensions, and value. `capacity_table` always reports geometric volume and
+adds one row for every declared container capacity; custom-resource usage is
+recomputed from loaded placements and the versioned item consumptions.
+
+`scene_views` produces one PNG using `view:
+isometric|front|side|top|all`. The first four values select a named
+deterministic camera; `all` produces a 2-by-2 contact sheet. Labels are
+optional (`labels: none|items`) and `max_labels` is bounded to 0-100. The
+renderer rejects empty incumbents and scenes above 500 placements rather than
+silently dropping geometry.
+
+`scene_model` produces a deterministic ZIP containing:
+
+- `packing_scene.obj`, with one closed axis-aligned cuboid per placement and
+  the container bounds as line geometry;
+- `packing_scene.mtl`, with stable material colors derived from item IDs;
+- `manifest.json`, with the capability, container dimensions, excluded
+  instances, file mapping, and right-handed `x=length`, `y=width`, `z=height`
+  coordinate convention.
+
+The OBJ bundle uses the problem's own dimension unit and does not infer metres,
+millimetres, or any physical material properties. It is a geometric result
+representation, not a physical-stability certificate.
 
 The same canonical tables support deterministic Markdown. `max_rows` defaults
 to 100 and is bounded to 1-1000. Every Markdown output embeds an

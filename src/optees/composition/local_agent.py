@@ -109,6 +109,10 @@ from optees.application.services.lp_artifact_visuals import (
     lp_visual_definitions,
     lp_visual_descriptors,
 )
+from optees.application.services.packing_artifact_scene import (
+    packing_scene_definitions,
+    packing_scene_descriptors,
+)
 from optees.application.services.optimization_service import OptimizationService
 from optees.application.services.local_job_service import LocalJobService
 from optees.application.validation.lp_solution_validator import (
@@ -347,6 +351,9 @@ def create_local_artifact_service(
     from optees.data.adapters.artifacts.lp_feasible_region_renderer import (
         LPFeasibleRegionRenderer,
     )
+    from optees.data.adapters.artifacts.packing_scene_renderer import (
+        PackingSceneRenderer,
+    )
 
     table_registrations = tuple(
         ArtifactRendererRegistration(
@@ -397,6 +404,18 @@ def create_local_artifact_service(
         )
         for definition in analytic_visual_definitions()
     )
+    packing_registrations = tuple(
+        ArtifactRendererRegistration(
+            capability_id=definition.capability_id,
+            descriptor=definition.descriptor(),
+            renderer=PackingSceneRenderer(),
+            media_types={
+                ArtifactFormat.PNG: "image/png",
+                ArtifactFormat.OBJ_MTL_ZIP: "application/zip",
+            },
+        )
+        for definition in packing_scene_definitions()
+    )
     return ArtifactGenerationService(
         job_service,
         LocalArtifactStore(),
@@ -405,6 +424,7 @@ def create_local_artifact_service(
             + visual_registrations
             + categorical_registrations
             + analytic_registrations
+            + packing_registrations
         ),
     )
 
@@ -419,6 +439,7 @@ def _available_artifacts(capability_id: str) -> tuple[AvailableArtifact, ...]:
         + lp_visual_descriptors(capability_id)
         + categorical_visual_descriptors(capability_id)
         + analytic_visual_descriptors(capability_id)
+        + packing_scene_descriptors(capability_id)
     )
 
 

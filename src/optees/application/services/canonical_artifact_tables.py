@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from math import isfinite
 
 from optees.application.contracts.artifact import (
     ArtifactFormat,
@@ -342,6 +343,103 @@ def _placements(context: ArtifactRenderContext) -> ArtifactTable:
     )
 
 
+def _packing_capacities(context: ArtifactRenderContext) -> ArtifactTable:
+    result = context.envelope.result
+    requested = result.get("requested")
+    source = requested if isinstance(requested, dict) else {}
+    placements = _object_rows(source.get("placements"))
+    container = context.problem.get("container")
+    container = container if isinstance(container, dict) else {}
+    dimensions = container.get("dimensions")
+    dimensions = dimensions if isinstance(dimensions, dict) else {}
+
+    volume_limit = _product(
+        dimensions.get("length"),
+        dimensions.get("width"),
+        dimensions.get("height"),
+    )
+    volume_used = _number(source.get("used_volume")) or 0.0
+    rows: list[dict[str, TableCell]] = [
+        _capacity_row("volume", volume_used, volume_limit)
+    ]
+
+    items = {
+        str(item.get("id")): item
+        for item in _object_rows(context.problem.get("items"))
+        if item.get("id") is not None
+    }
+    for capacity in _object_rows(container.get("capacities")):
+        name = str(capacity.get("name") or "").strip()
+        if not name:
+            continue
+        used = 0.0
+        for placement in placements:
+            item = items.get(str(placement.get("item_id")))
+            if item is None:
+                continue
+            consumption = next(
+                (
+                    _number(entry.get("amount"))
+                    for entry in _object_rows(item.get("consumptions"))
+                    if str(entry.get("name") or "").casefold() == name.casefold()
+                ),
+                None,
+            )
+            used += consumption or 0.0
+        rows.append(_capacity_row(name, used, _number(capacity.get("limit"))))
+
+    return _table(
+        context,
+        columns=(
+            ("resource", "Resource"),
+            ("used", "Used"),
+            ("limit", "Limit"),
+            ("remaining", "Remaining"),
+            ("utilization_percent", "Utilization percent"),
+        ),
+        rows=tuple(rows),
+        summary={
+            "loaded_instances": len(placements),
+            "excluded_instance_ids": source.get("excluded_instance_ids"),
+        },
+    )
+
+
+def _capacity_row(
+    resource: str,
+    used: float,
+    limit: float | None,
+) -> dict[str, TableCell]:
+    remaining = None if limit is None else max(0.0, limit - used)
+    utilization = (
+        None
+        if limit is None
+        else (
+            0.0
+            if limit == 0.0 and used == 0.0
+            else (None if limit == 0.0 else used / limit * 100.0)
+        )
+    )
+    return {
+        "resource": resource,
+        "used": used,
+        "limit": limit,
+        "remaining": remaining,
+        "utilization_percent": utilization,
+    }
+
+
+def _product(*values: object) -> float | None:
+    numbers = [_number(value) for value in values]
+    if any(value is None for value in numbers):
+        return None
+    product = 1.0
+    for value in numbers:
+        assert value is not None
+        product *= value
+    return product
+
+
 def _table_from_object_rows(
     context: ArtifactRenderContext,
     *,
@@ -400,6 +498,16 @@ def _union_keys(rows: tuple[dict[str, JsonValue], ...]) -> set[str]:
 
 def _scalar(value: JsonValue | None) -> TableCell:
     return value if value is None or isinstance(value, (str, int, float, bool)) else None
+
+
+def _number(value: object) -> float | None:
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        normalized = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return normalized if isfinite(normalized) else None
 
 
 def _without_missing(values: dict[str, JsonValue | None]) -> dict[str, JsonValue]:
@@ -515,6 +623,12 @@ _DEFINITIONS = (
         "placement_table",
         "Packing placements",
         _placements,
+    ),
+    CanonicalTableDefinition(
+        "packing.single_container_3d",
+        "capacity_table",
+        "Packing capacity utilization",
+        _packing_capacities,
     ),
 )
 

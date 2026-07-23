@@ -176,13 +176,15 @@ already verified bytes; it does not select renderers, inspect job repositories,
 or access filesystem paths.
 
 Production renderers include canonical result tables, bounded categorical
-charts, LP feasible regions, and analytical NLP, graph, regression, and
-classification visuals. Application-owned definitions select stable semantic
-rows and declare visual semantics, options, result states, and dimensional
+charts, LP feasible regions, analytical NLP, graph, regression, and
+classification visuals, plus Packing PNG camera views and OBJ+MTL scene
+archives. Application-owned definitions select stable semantic rows and
+declare visual semantics, options, result states, and dimensional
 preconditions. Infrastructure adapters serialize tables as deterministic JSON,
-RFC 4180 CSV, or Markdown and render visuals through Matplotlib Agg as SVG or
-PNG. The same definitions populate capability discovery, so a format cannot be
-advertised without a corresponding renderer registration.
+RFC 4180 CSV, or Markdown, render visuals through Matplotlib Agg as SVG or PNG,
+and package Packing geometry as a deterministic OBJ/MTL/manifest ZIP. The same
+definitions populate capability discovery, so a format cannot be advertised
+without a corresponding renderer registration.
 
 ```mermaid
 sequenceDiagram
