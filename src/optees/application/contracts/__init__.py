@@ -13,6 +13,17 @@ from optees.application.contracts.artifact_rendering import (
     ArtifactRenderOptions,
     RenderedArtifact,
 )
+from optees.application.contracts.artifact_storage import (
+    ArtifactCapacityError,
+    ArtifactCleanupResult,
+    ArtifactExpiredError,
+    ArtifactIntegrityError,
+    ArtifactNotFoundError,
+    ArtifactStorageClosedError,
+    ArtifactStorageStats,
+    StoredArtifact,
+    StoredArtifactPayload,
+)
 from optees.application.contracts.batch import (
     BatchItemRequest,
     BatchRequest,
@@ -34,12 +45,19 @@ from optees.application.contracts.execution import (
 __all__ = [
     "ArtifactBatchManifest",
     "ArtifactBatchRequest",
+    "ArtifactCapacityError",
+    "ArtifactCleanupResult",
+    "ArtifactExpiredError",
     "ArtifactFormat",
+    "ArtifactIntegrityError",
     "ArtifactManifestEntry",
+    "ArtifactNotFoundError",
     "ArtifactProvenance",
     "ArtifactRequest",
     "ArtifactRenderContext",
     "ArtifactRenderOptions",
+    "ArtifactStorageClosedError",
+    "ArtifactStorageStats",
     "ArtifactStatus",
     "AvailableArtifact",
     "BatchItemRequest",
@@ -57,6 +75,8 @@ __all__ = [
     "RenderedArtifact",
     "SerializedResult",
     "StructuredError",
+    "StoredArtifact",
+    "StoredArtifactPayload",
     "TerminationReason",
 ]
 from optees.application.contracts.capability import CapabilityDescriptor, ProblemValidation

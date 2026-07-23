@@ -156,6 +156,17 @@ Application contracts and lifecycle rules are defined in
 `RESULT_ARTIFACTS_REPORTING_ROADMAP.md`. Infrastructure renderers must remain
 headless and must not import PySide6 or Qt-specific Matplotlib backends.
 
+`ArtifactStoragePort` keeps artifact lifecycle semantics outside HTTP and MCP.
+Its local filesystem adapter creates one private temporary directory per
+process session and returns only opaque `artifact-*` identifiers. Writes are
+atomic, files are readable only by the current user, and every read verifies
+the retained byte count and SHA-256 digest. The adapter enforces the frozen
+per-file, total-byte, item-count, and lifetime limits. Capacity pressure removes
+expired entries first and then the oldest unpinned entries; report composition
+can pin inputs so active work is never evicted. Closing the session removes the
+entire isolated directory. Neither the application contract nor a future
+transport response exposes its absolute path.
+
 ## Source Ownership
 
 ```text
@@ -170,7 +181,7 @@ src/optees/
     validation/      independent solution validators
   composition/       production dependency wiring
   core/              version, strings, settings, and shared app services
-  data/adapters/     concrete numerical and algorithm adapters
+  data/adapters/     numerical, algorithm, and local filesystem adapters
   domain/
     entities/        solver results
     models/          problem models

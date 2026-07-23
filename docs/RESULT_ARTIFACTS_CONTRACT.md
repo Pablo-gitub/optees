@@ -185,6 +185,15 @@ on access and periodically while the service runs. Inputs needed for rendering
 remain tied to the source job; eviction of a source job prevents new renders
 but does not invalidate an already materialized artifact before its expiry.
 
+The implemented storage boundary accepts and returns only opaque artifact IDs.
+The filesystem adapter generates those IDs internally, writes through a
+same-directory temporary file followed by an atomic replacement, applies
+private directory/file permissions, and verifies both the stored byte count and
+SHA-256 digest on every read. Invalid identifiers, traversal-shaped input,
+symlink replacement, missing content, and modified bytes never return file
+content. Integrity failures remove the compromised entry from the session
+index.
+
 The initial effective limits are configuration values reported by discovery:
 
 | Limit | Version 1 default |

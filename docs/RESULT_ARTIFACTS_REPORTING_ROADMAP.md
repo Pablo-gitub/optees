@@ -241,10 +241,18 @@ must keep that document, capability discovery, and runtime behavior aligned.
 - [x] Introduce application-owned artifact request and manifest DTOs.
 - [x] Add renderer ports that do not import PySide6 or Qt backends.
 - [x] Add deterministic theme, locale, dimensions, fonts, and renderer versions.
-- [ ] Implement bounded local artifact storage with hashes and cleanup.
+- [x] Implement bounded local artifact storage with hashes and cleanup.
 - [ ] Implement authenticated REST generation, listing, and download endpoints.
 - [ ] Extend capability discovery with `available_artifacts`.
 - [ ] Add contract, authorization, traversal, size, timeout, and cleanup tests.
+
+The local storage slice is complete: it uses one private temporary directory
+per session, opaque generated IDs, atomic writes, SHA-256 verification on read,
+TTL cleanup, bounded count/bytes, deterministic oldest-unpinned eviction, and
+temporary pinning for active consumers. Focused tests cover traversal-shaped
+IDs, symlink and byte tampering, per-file and session capacity, expiration,
+pinning, and shutdown cleanup. The remaining item above stays open for REST
+authorization and renderer timeout tests, which belong to the next slice.
 
 ### Phase 2 - Tables And First Visual Slice
 

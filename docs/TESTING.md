@@ -75,6 +75,10 @@
   bounded batch contracts, atomic all-or-nothing submission, individual
   envelope retention, aggregate summaries, and exact-validation safeguards
   across REST, MCP, and the Ollama harness.
+- `tests/data/adapters/artifacts/test_local_artifact_store.py`: private
+  session-directory lifecycle, atomic bounded retention, SHA-256 verification,
+  expiration and pinning, traversal rejection, symlink/byte tamper detection,
+  deterministic eviction, and shutdown cleanup.
 
 ## Commands
 ```bash
