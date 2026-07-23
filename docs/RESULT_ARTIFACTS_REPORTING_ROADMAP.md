@@ -242,17 +242,25 @@ must keep that document, capability discovery, and runtime behavior aligned.
 - [x] Add renderer ports that do not import PySide6 or Qt backends.
 - [x] Add deterministic theme, locale, dimensions, fonts, and renderer versions.
 - [x] Implement bounded local artifact storage with hashes and cleanup.
-- [ ] Implement authenticated REST generation, listing, and download endpoints.
+- [x] Implement authenticated REST generation, listing, and download endpoints.
 - [ ] Extend capability discovery with `available_artifacts`.
-- [ ] Add contract, authorization, traversal, size, timeout, and cleanup tests.
+- [x] Add contract, authorization, traversal, size, timeout, and cleanup tests.
 
-The local storage slice is complete: it uses one private temporary directory
-per session, opaque generated IDs, atomic writes, SHA-256 verification on read,
-TTL cleanup, bounded count/bytes, deterministic oldest-unpinned eviction, and
-temporary pinning for active consumers. Focused tests cover traversal-shaped
-IDs, symlink and byte tampering, per-file and session capacity, expiration,
-pinning, and shutdown cleanup. The remaining item above stays open for REST
-authorization and renderer timeout tests, which belong to the next slice.
+The Phase 1 runtime now separates public manifest IDs from internal storage
+IDs, validates a complete request before queueing, renders on a bounded worker,
+enforces a logical timeout, reuses equivalent available outputs, and exposes
+authenticated create, list, and verified-download routes. Downloads are
+resolved only by opaque ID and include SHA-256 metadata; neither manifests nor
+responses expose filesystem paths. Focused tests cover authorization,
+transport validation, request atomicity, timeout sanitization, deduplication,
+traversal-shaped IDs, symlink and byte tampering, capacity, expiration,
+pinning, and shutdown cleanup.
+
+No production renderer is registered yet. Until Phase 2 registers the first
+table and LP renderers, the routes intentionally return
+`artifact_not_supported` instead of advertising or synthesizing unavailable
+outputs. Capability discovery remains the final open Phase 1 item and will be
+completed together with those concrete registrations.
 
 ### Phase 2 - Tables And First Visual Slice
 

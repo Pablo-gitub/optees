@@ -176,6 +176,20 @@ authenticated relative `download_url`; MCP exposes a resource URI or bounded
 retrieval tool appropriate to the client. Large binaries are never returned
 in solver results or injected into model context by default.
 
+The implemented REST resources are:
+
+- `POST /api/v1/jobs/{job_id}/artifacts` to atomically validate and queue a
+  version 1 artifact batch;
+- `GET /api/v1/jobs/{job_id}/artifacts` to poll every batch retained for the
+  source job;
+- `GET /api/v1/artifacts/{artifact_id}` to download verified bytes.
+
+All three routes require the same per-session bearer token as solver routes.
+Downloads use `Cache-Control: private, no-store`, return a SHA-256 ETag and
+`X-Content-SHA256`, and resolve a public opaque ID through an internal storage
+ID. The internal ID and filesystem location never cross the application
+boundary.
+
 ## Lifecycle And Limits
 
 Artifacts and reports are private to one local REST or MCP process session.
@@ -193,6 +207,13 @@ SHA-256 digest on every read. Invalid identifiers, traversal-shaped input,
 symlink replacement, missing content, and modified bytes never return file
 content. Integrity failures remove the compromised entry from the session
 index.
+
+Artifact rendering uses one coordinator and one renderer worker, separate from
+the mathematical job worker. A timeout marks the manifest entry as failed and
+prevents late bytes from being stored. Python threads cannot be forcefully
+terminated, so a non-cooperative timed-out renderer may finish privately before
+the bounded renderer worker accepts later work; it cannot publish its late
+result.
 
 The initial effective limits are configuration values reported by discovery:
 

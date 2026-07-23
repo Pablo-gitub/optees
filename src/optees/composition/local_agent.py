@@ -85,6 +85,9 @@ from optees.application.services.capability_registry import (
     CapabilityRegistry,
     RegisteredCapability,
 )
+from optees.application.services.artifact_generation_service import (
+    ArtifactGenerationService,
+)
 from optees.application.services.optimization_service import OptimizationService
 from optees.application.services.local_job_service import LocalJobService
 from optees.application.validation.lp_solution_validator import (
@@ -302,6 +305,19 @@ def create_local_job_service(*, capacity: int = 100) -> LocalJobService:
     return LocalJobService(
         create_local_optimization_service(),
         repository=InMemoryJobRepository(capacity=capacity),
+    )
+
+
+def create_local_artifact_service(
+    job_service: LocalJobService,
+) -> ArtifactGenerationService:
+    """Build session-local artifact orchestration before renderers are registered."""
+
+    from optees.data.adapters.artifacts.local_artifact_store import LocalArtifactStore
+
+    return ArtifactGenerationService(
+        job_service,
+        LocalArtifactStore(),
     )
 
 

@@ -167,6 +167,40 @@ can pin inputs so active work is never evicted. Closing the session removes the
 entire isolated directory. Neither the application contract nor a future
 transport response exposes its absolute path.
 
+`ArtifactGenerationService` owns the asynchronous artifact lifecycle. It reads
+an immutable problem/result pair through `ArtifactSourcePort`, validates the
+entire batch against registered headless renderers, records public manifest
+IDs, delegates bytes to `ArtifactStoragePort`, and maps public IDs to private
+storage IDs. The authenticated HTTP adapter only translates DTOs and returns
+already verified bytes; it does not select renderers, inspect job repositories,
+or access filesystem paths.
+
+```mermaid
+sequenceDiagram
+    participant Client as "REST client"
+    participant API as "Authenticated local API"
+    participant Artifacts as "ArtifactGenerationService"
+    participant Jobs as "ArtifactSourcePort"
+    participant Renderer as "Bounded renderer worker"
+    participant Store as "ArtifactStoragePort"
+
+    Client->>API: "POST job artifacts"
+    API->>Artifacts: "submit(versioned request)"
+    Artifacts->>Jobs: "artifact_source(job_id)"
+    Artifacts-->>API: "queued manifest"
+    API-->>Client: "202 Accepted"
+    Artifacts->>Renderer: "render(context)"
+    Renderer-->>Artifacts: "media type + bytes"
+    Artifacts->>Store: "store(bytes, TTL)"
+    Client->>API: "GET job artifacts"
+    API-->>Client: "current manifest"
+    Client->>API: "GET artifact_id"
+    API->>Artifacts: "download(public ID)"
+    Artifacts->>Store: "get(private ID)"
+    Store-->>Artifacts: "SHA-256 verified bytes"
+    API-->>Client: "private, no-store response"
+```
+
 ## Source Ownership
 
 ```text

@@ -126,3 +126,40 @@ cannot accept the complete batch. The result contains one normal execution
 envelope per item plus aggregate status counts. Batch execution is not a
 dependency graph; stages whose inputs depend on earlier outputs must be
 orchestrated explicitly.
+
+## Optional Result Artifacts
+
+Completed jobs can use the authenticated artifact lifecycle:
+
+```text
+POST /api/v1/jobs/{job_id}/artifacts
+GET  /api/v1/jobs/{job_id}/artifacts
+GET  /api/v1/artifacts/{artifact_id}
+```
+
+The POST body is a version 1 batch:
+
+```json
+{
+  "contract_version": "1",
+  "requests": [
+    {
+      "artifact_type": "solution_table",
+      "formats": ["csv"],
+      "options": {"locale": "en"}
+    }
+  ]
+}
+```
+
+Optees validates the complete request before queueing any output. Poll the job
+artifact collection until entries become `available`, `failed`, or `expired`.
+Downloads are private, bearer-authenticated responses with SHA-256 metadata;
+artifact manifests and result envelopes never contain binary content or local
+filesystem paths.
+
+The lifecycle routes are implemented before the concrete renderers. Until a
+capability advertises and registers an artifact type, requesting it returns
+`artifact_not_supported`. See
+[Result Artifacts Contract](../RESULT_ARTIFACTS_CONTRACT.md) for formats,
+limits, provenance, and lifecycle semantics.

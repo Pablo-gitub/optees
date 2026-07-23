@@ -10,7 +10,7 @@ from uuid import uuid4
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,11 +19,23 @@ from optees.application.contracts.batch import (
     BatchRequest,
     BatchSnapshot,
 )
+from optees.application.contracts.artifact import (
+    ArtifactBatchRequest,
+    ArtifactFormat,
+    ArtifactRequest,
+)
+from optees.application.contracts.artifact_storage import StoredArtifactPayload
 from optees.application.contracts.errors import ErrorCode, ErrorDetail, StructuredError
 from optees.application.contracts.job import JobSnapshot
 from optees.application.contracts.json_value import require_json_value
 from optees.application.services.local_job_service import LocalJobService
-from optees.composition.local_agent import create_local_job_service
+from optees.application.services.artifact_generation_service import (
+    ArtifactGenerationService,
+)
+from optees.composition.local_agent import (
+    create_local_artifact_service,
+    create_local_job_service,
+)
 from optees.core.version import get_app_version
 
 
@@ -56,6 +68,21 @@ class BatchProblemRequest(BaseModel):
 
     version: str = Field(pattern="^1$")
     items: list[BatchProblemItemRequest] = Field(min_length=1, max_length=32)
+
+
+class ArtifactItemRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    artifact_type: str = Field(min_length=1)
+    formats: list[ArtifactFormat] = Field(min_length=1)
+    options: dict[str, Any] = Field(default_factory=dict)
+
+
+class ArtifactGenerationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_version: str = Field(pattern="^1$")
+    requests: list[ArtifactItemRequest] = Field(min_length=1, max_length=8)
 
 
 class RequestGuardMiddleware:
@@ -145,8 +172,10 @@ def create_local_api(
     *,
     token: str,
     job_service: LocalJobService | None = None,
+    artifact_service: ArtifactGenerationService | None = None,
     max_request_bytes: int = DEFAULT_MAX_REQUEST_BYTES,
     shutdown_job_service: bool = True,
+    shutdown_artifact_service: bool = True,
 ) -> FastAPI:
     """Create the authenticated loopback API without starting a server."""
 
@@ -160,10 +189,13 @@ def create_local_api(
     ):
         raise ValueError("max_request_bytes must be a positive integer")
     service = job_service or create_local_job_service()
+    artifacts = artifact_service or create_local_artifact_service(service)
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         yield
+        if shutdown_artifact_service:
+            artifacts.close(wait=True)
         if shutdown_job_service:
             service.shutdown(wait=True, cancel_pending=True)
 
@@ -334,6 +366,53 @@ def create_local_api(
     async def cancel_job(job_id: str, _body: CancelRequest):
         return _job_or_raise(service.cancel(job_id))
 
+    @app.post(
+        "/api/v1/jobs/{job_id}/artifacts",
+        status_code=202,
+        dependencies=protected,
+    )
+    async def create_artifacts(
+        job_id: str,
+        body: ArtifactGenerationRequest,
+        request: Request,
+    ):
+        outcome = artifacts.submit(
+            job_id,
+            _artifact_batch_request(body, request_id=_request_id(request)),
+            request_id=_request_id(request),
+        )
+        if isinstance(outcome, StructuredError):
+            _raise_structured(outcome)
+        return outcome.to_dict()
+
+    @app.get("/api/v1/jobs/{job_id}/artifacts", dependencies=protected)
+    async def list_artifacts(job_id: str):
+        outcome = artifacts.list_for_job(job_id)
+        if isinstance(outcome, StructuredError):
+            _raise_structured(outcome)
+        return {
+            "contract_version": "1",
+            "job_id": job_id,
+            "artifact_batches": [manifest.to_dict() for manifest in outcome],
+        }
+
+    @app.get("/api/v1/artifacts/{artifact_id}", dependencies=protected)
+    async def download_artifact(artifact_id: str):
+        outcome = artifacts.download(artifact_id)
+        if isinstance(outcome, StructuredError):
+            _raise_structured(outcome)
+        assert isinstance(outcome, StoredArtifactPayload)
+        metadata = outcome.artifact
+        return Response(
+            content=outcome.content,
+            media_type=metadata.media_type,
+            headers={
+                "Cache-Control": "private, no-store",
+                "ETag": f'"sha256-{metadata.sha256}"',
+                "X-Content-SHA256": metadata.sha256,
+            },
+        )
+
     @app.post("/api/v1/batches/validate", dependencies=protected)
     async def validate_batch(
         body: BatchProblemRequest,
@@ -456,6 +535,41 @@ def _batch_request(
         raise AssertionError("unreachable")
 
 
+def _artifact_batch_request(
+    body: ArtifactGenerationRequest,
+    *,
+    request_id: str,
+) -> ArtifactBatchRequest:
+    try:
+        requests = []
+        for item in body.requests:
+            options = require_json_value(
+                item.options,
+                path="$.artifact.requests[].options",
+            )
+            assert isinstance(options, dict)
+            requests.append(
+                ArtifactRequest(
+                    artifact_type=item.artifact_type,
+                    formats=tuple(item.formats),
+                    options=options,
+                )
+            )
+        return ArtifactBatchRequest(
+            tuple(requests),
+            contract_version=body.contract_version,
+        )
+    except ValueError as exc:
+        _raise_structured(
+            StructuredError(
+                code=ErrorCode.ARTIFACT_REQUEST_INVALID,
+                message=str(exc),
+                request_id=request_id,
+            )
+        )
+        raise AssertionError("unreachable")
+
+
 def _raise_structured(error: StructuredError) -> None:
     raise _ApiError(status_code=_status_code(error.code), error=error)
 
@@ -476,6 +590,14 @@ def _status_code(code: ErrorCode) -> int:
         ErrorCode.BATCH_NOT_FOUND: 404,
         ErrorCode.BATCH_RESULT_NOT_READY: 409,
         ErrorCode.BATCH_CAPACITY_EXCEEDED: 429,
+        ErrorCode.ARTIFACT_NOT_SUPPORTED: 400,
+        ErrorCode.ARTIFACT_RESULT_NOT_AVAILABLE: 409,
+        ErrorCode.ARTIFACT_REQUEST_INVALID: 400,
+        ErrorCode.ARTIFACT_RENDER_FAILED: 500,
+        ErrorCode.ARTIFACT_NOT_FOUND: 404,
+        ErrorCode.ARTIFACT_EXPIRED: 410,
+        ErrorCode.ARTIFACT_CAPACITY_EXCEEDED: 507,
+        ErrorCode.ARTIFACT_BACKEND_UNAVAILABLE: 503,
         ErrorCode.SERVICE_UNAVAILABLE: 503,
         ErrorCode.INTERNAL_ERROR: 500,
     }[code]

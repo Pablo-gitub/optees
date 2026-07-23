@@ -19,6 +19,7 @@ from optees.application.contracts.batch import (
     BatchValidationItem,
     aggregate_batch_status,
 )
+from optees.application.contracts.artifact_rendering import ArtifactSource
 from optees.application.contracts.errors import ErrorCode, StructuredError
 from optees.application.contracts.execution import (
     ExecutionEnvelope,
@@ -342,6 +343,29 @@ class LocalJobService:
                 context={"job_id": job_id, "job_status": record.job_status.value},
             )
         return record.outcome
+
+    def artifact_source(self, job_id: str) -> ArtifactSource | StructuredError:
+        """Return the retained normalized problem and usable execution envelope."""
+
+        record = self._repository.get(job_id)
+        if record is None:
+            return self._job_not_found(job_id)
+        if not isinstance(record.outcome, ExecutionEnvelope):
+            return StructuredError(
+                code=ErrorCode.ARTIFACT_RESULT_NOT_AVAILABLE,
+                message="The job does not have a usable execution result.",
+                context={
+                    "job_id": job_id,
+                    "job_status": record.job_status.value,
+                },
+            )
+        problem = require_json_value(record.payload, path="$.artifact_source.problem")
+        assert isinstance(problem, dict)
+        return ArtifactSource(
+            capability_id=record.capability_id,
+            problem=problem,
+            envelope=record.outcome,
+        )
 
     def cancel(self, job_id: str) -> JobOperationOutcome:
         with self._lock:

@@ -8,6 +8,22 @@ from optees.application.contracts.json_value import JsonValue, require_json_valu
 
 
 @dataclass(frozen=True)
+class ArtifactSource:
+    """Immutable solver input/output pair retained for headless rendering."""
+
+    capability_id: str
+    problem: dict[str, JsonValue]
+    envelope: ExecutionEnvelope
+
+    def __post_init__(self) -> None:
+        if not self.capability_id.strip():
+            raise ValueError("artifact source capability_id must not be empty")
+        if self.capability_id != self.envelope.capability_id:
+            raise ValueError("artifact source capability must match its envelope")
+        require_json_value(self.problem, path="$.artifact_source.problem")
+
+
+@dataclass(frozen=True)
 class ArtifactRenderOptions:
     """Normalized options shared by every headless renderer."""
 
