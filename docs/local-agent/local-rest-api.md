@@ -158,8 +158,11 @@ Downloads are private, bearer-authenticated responses with SHA-256 metadata;
 artifact manifests and result envelopes never contain binary content or local
 filesystem paths.
 
-The lifecycle routes are implemented before the concrete renderers. Until a
-capability advertises and registers an artifact type, requesting it returns
-`artifact_not_supported`. See
+Every current capability exposes one canonical table in `json` and `csv`.
+Artifact identifiers are capability-specific, for example `solution_table` for
+LP/MILP, `selection_table` for Knapsack, `coefficient_table` for regression and
+classification, and `placement_table` for packing. Clients must use discovery
+instead of hardcoding this mapping. Requests outside the advertised inventory
+return `artifact_not_supported`. See
 [Result Artifacts Contract](../RESULT_ARTIFACTS_CONTRACT.md) for formats,
 limits, provenance, and lifecycle semantics.

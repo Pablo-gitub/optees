@@ -175,6 +175,12 @@ storage IDs. The authenticated HTTP adapter only translates DTOs and returns
 already verified bytes; it does not select renderers, inspect job repositories,
 or access filesystem paths.
 
+The first production renderer is the canonical result-table pipeline. An
+application-owned builder selects stable semantic rows for each public
+capability; an infrastructure adapter serializes that model as deterministic
+JSON or RFC 4180 CSV. The same definitions populate capability discovery, so a
+format cannot be advertised without a corresponding renderer registration.
+
 ```mermaid
 sequenceDiagram
     participant Client as "REST client"

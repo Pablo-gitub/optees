@@ -65,6 +65,14 @@ Every capability must eventually advertise and produce at least one tabular
 artifact. Rich artifacts may have dimensional or result-state preconditions;
 these are declared by discovery and are validated before work is queued.
 
+The first production slice implements the first table identifier in every row
+of the inventory in deterministic JSON and CSV. JSON uses the versioned
+`ArtifactTable` shape with stable column keys, display titles, scalar rows, and
+a separate summary object. CSV contains only the stable column keys and scalar
+rows; objective values, aggregate metrics, and other non-row values remain in
+the JSON summary. This avoids localized column names becoming an accidental
+machine contract.
+
 ## Canonical Data And Render-Only Derivations
 
 Canonical source data consists of:

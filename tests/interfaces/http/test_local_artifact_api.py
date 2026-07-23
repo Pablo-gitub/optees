@@ -191,3 +191,79 @@ def test_artifact_http_validation_is_atomic_and_does_not_echo_values(tmp_path):
 
     assert response.status_code in {400, 404}
     assert "CONFIDENTIAL-CUSTOMER-VALUE" not in response.text
+
+
+def test_production_composition_advertises_and_renders_lp_tables():
+    with ASGIClient(create_local_api(token=TOKEN)) as client:
+        capabilities = client.get("/api/v1/capabilities", headers=AUTH)
+        lp = next(
+            item
+            for item in capabilities.json()["capabilities"]
+            if item["id"] == "lp.continuous"
+        )
+        assert lp["available_artifacts"] == [
+            {
+                "artifact_type": "solution_table",
+                "title": "LP solution",
+                "formats": ["json", "csv"],
+                "required_mathematical_statuses": ["optimal", "feasible"],
+                "options_schema": {
+                    "type": "object",
+                    "properties": {"locale": {"enum": ["en", "it"]}},
+                    "additionalProperties": False,
+                },
+            }
+        ]
+
+        submitted = client.post(
+            "/api/v1/jobs",
+            headers=AUTH,
+            json={"capability_id": "lp.continuous", "problem": _lp_payload()},
+        )
+        job_id = submitted.json()["job_id"]
+        deadline = monotonic() + 5
+        while monotonic() < deadline:
+            job = client.get(f"/api/v1/jobs/{job_id}", headers=AUTH)
+            if job.json()["job_status"] == "completed":
+                break
+            sleep(0.01)
+
+        created = client.post(
+            f"/api/v1/jobs/{job_id}/artifacts",
+            headers=AUTH,
+            json={
+                "contract_version": "1",
+                "requests": [
+                    {
+                        "artifact_type": "solution_table",
+                        "formats": ["json", "csv"],
+                        "options": {"locale": "en"},
+                    }
+                ],
+            },
+        )
+        assert created.status_code == 202
+
+        artifacts = []
+        while monotonic() < deadline:
+            listing = client.get(
+                f"/api/v1/jobs/{job_id}/artifacts",
+                headers=AUTH,
+            )
+            artifacts = listing.json()["artifact_batches"][0]["artifacts"]
+            if all(item["status"] == "available" for item in artifacts):
+                break
+            sleep(0.01)
+
+        assert [item["format"] for item in artifacts] == ["json", "csv"]
+        json_artifact = client.get(
+            f"/api/v1/artifacts/{artifacts[0]['artifact_id']}",
+            headers=AUTH,
+        )
+        csv_artifact = client.get(
+            f"/api/v1/artifacts/{artifacts[1]['artifact_id']}",
+            headers=AUTH,
+        )
+
+    assert json_artifact.json()["rows"] == [{"name": "x", "value": 1.0}]
+    assert csv_artifact.text == "name,value\nx,1.0\n"

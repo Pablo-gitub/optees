@@ -55,6 +55,10 @@ from optees.application.codecs.shortest_path_problem_codec import (
 from optees.application.codecs.shortest_path_result_codec import (
     ShortestPathResultCodec,
 )
+from optees.application.contracts.artifact import (
+    ArtifactFormat,
+    AvailableArtifact,
+)
 from optees.application.contracts.capability import CapabilityDescriptor
 from optees.application.dtos.multi_dimensional_knapsack_dtos import (
     MultiDimensionalKnapsackRequest,
@@ -87,6 +91,11 @@ from optees.application.services.capability_registry import (
 )
 from optees.application.services.artifact_generation_service import (
     ArtifactGenerationService,
+    ArtifactRendererRegistration,
+)
+from optees.application.services.canonical_artifact_tables import (
+    canonical_table_definition,
+    canonical_table_definitions,
 )
 from optees.application.services.optimization_service import OptimizationService
 from optees.application.services.local_job_service import LocalJobService
@@ -311,14 +320,35 @@ def create_local_job_service(*, capacity: int = 100) -> LocalJobService:
 def create_local_artifact_service(
     job_service: LocalJobService,
 ) -> ArtifactGenerationService:
-    """Build session-local artifact orchestration before renderers are registered."""
+    """Build session-local artifact orchestration with canonical result tables."""
 
+    from optees.data.adapters.artifacts.canonical_table_renderer import (
+        CanonicalTableRenderer,
+    )
     from optees.data.adapters.artifacts.local_artifact_store import LocalArtifactStore
 
+    registrations = tuple(
+        ArtifactRendererRegistration(
+            capability_id=definition.capability_id,
+            descriptor=definition.descriptor(),
+            renderer=CanonicalTableRenderer(definition.builder),
+            media_types={
+                ArtifactFormat.JSON: "application/json",
+                ArtifactFormat.CSV: "text/csv; charset=utf-8",
+            },
+        )
+        for definition in canonical_table_definitions()
+    )
     return ArtifactGenerationService(
         job_service,
         LocalArtifactStore(),
+        registrations=registrations,
     )
+
+
+def _available_artifacts(capability_id: str) -> tuple[AvailableArtifact, ...]:
+    definition = canonical_table_definition(capability_id)
+    return (definition.descriptor(),) if definition is not None else ()
 
 
 def create_lp_optimization_service(
@@ -692,6 +722,7 @@ def _lp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
         backend_candidates=(LP_BACKEND_ID,),
         supports_time_limit=False,
         supports_cancellation=False,
+        available_artifacts=_available_artifacts(LP_CAPABILITY_ID),
     )
 
 
@@ -887,6 +918,7 @@ def _knapsack_zero_one_descriptor() -> CapabilityDescriptor:
         backend_candidates=(KNAPSACK_ZERO_ONE_BACKEND_ID,),
         supports_time_limit=False,
         supports_cancellation=False,
+        available_artifacts=_available_artifacts(KNAPSACK_ZERO_ONE_CAPABILITY_ID),
     )
 
 
@@ -955,6 +987,7 @@ def _knapsack_bounded_descriptor() -> CapabilityDescriptor:
         backend_candidates=(KNAPSACK_BOUNDED_BACKEND_ID,),
         supports_time_limit=False,
         supports_cancellation=False,
+        available_artifacts=_available_artifacts(KNAPSACK_BOUNDED_CAPABILITY_ID),
     )
 
 
@@ -1026,6 +1059,7 @@ def _knapsack_unbounded_descriptor() -> CapabilityDescriptor:
         backend_candidates=(KNAPSACK_UNBOUNDED_BACKEND_ID,),
         supports_time_limit=False,
         supports_cancellation=False,
+        available_artifacts=_available_artifacts(KNAPSACK_UNBOUNDED_CAPABILITY_ID),
     )
 
 
@@ -1096,6 +1130,7 @@ def _knapsack_fractional_descriptor() -> CapabilityDescriptor:
         backend_candidates=(KNAPSACK_FRACTIONAL_BACKEND_ID,),
         supports_time_limit=False,
         supports_cancellation=False,
+        available_artifacts=_available_artifacts(KNAPSACK_FRACTIONAL_CAPABILITY_ID),
     )
 
 
@@ -1169,6 +1204,9 @@ def _knapsack_multi_dimensional_descriptor() -> CapabilityDescriptor:
         backend_candidates=KNAPSACK_MULTI_DIMENSIONAL_BACKEND_IDS,
         supports_time_limit=False,
         supports_cancellation=False,
+        available_artifacts=_available_artifacts(
+            KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID
+        ),
     )
 
 
@@ -1288,6 +1326,7 @@ def _milp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
         backend_candidates=MILP_BACKEND_IDS,
         supports_time_limit=True,
         supports_cancellation=False,
+        available_artifacts=_available_artifacts(MILP_CAPABILITY_ID),
     )
 
 
@@ -1397,6 +1436,7 @@ def _dijkstra_descriptor() -> CapabilityDescriptor:
         backend_candidates=(DIJKSTRA_BACKEND_ID,),
         supports_time_limit=False,
         supports_cancellation=False,
+        available_artifacts=_available_artifacts(DIJKSTRA_CAPABILITY_ID),
     )
 
 
@@ -1484,6 +1524,7 @@ def _nlp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
         backend_candidates=(NLP_BACKEND_ID,),
         supports_time_limit=False,
         supports_cancellation=False,
+        available_artifacts=_available_artifacts(NLP_CAPABILITY_ID),
     )
 
 
@@ -1582,6 +1623,7 @@ def _regression_descriptor(*, dependency_available: bool) -> CapabilityDescripto
         backend_candidates=(REGRESSION_BACKEND_ID,),
         supports_time_limit=False,
         supports_cancellation=False,
+        available_artifacts=_available_artifacts(REGRESSION_CAPABILITY_ID),
     )
 
 
@@ -1684,6 +1726,7 @@ def _classification_descriptor(
         backend_candidates=(CLASSIFICATION_BACKEND_ID,),
         supports_time_limit=False,
         supports_cancellation=False,
+        available_artifacts=_available_artifacts(CLASSIFICATION_CAPABILITY_ID),
     )
 
 
@@ -1862,6 +1905,7 @@ def _packing_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
         backend_candidates=PACKING_BACKEND_IDS,
         supports_time_limit=True,
         supports_cancellation=True,
+        available_artifacts=_available_artifacts(PACKING_CAPABILITY_ID),
     )
 
 

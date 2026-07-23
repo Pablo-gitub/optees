@@ -5,6 +5,7 @@
 ```bash
 PYTHONPATH=src python -m pytest -q \
   tests/application/services/test_artifact_generation_service.py \
+  tests/data/adapters/artifacts/test_canonical_table_renderer.py \
   tests/data/adapters/artifacts/test_local_artifact_store.py \
   tests/interfaces/http/test_local_artifact_api.py \
   tests/interfaces/http/test_local_api.py
@@ -14,6 +15,9 @@ This gate covers asynchronous lifecycle, bounded storage, authorization, HTTP
 contracts, and verified downloads. It requires the local-service HTTP extras
 (`fastapi` and `httpx`); without them, HTTP modules are skipped while
 application and storage tests still run.
+
+The canonical renderer test is parameterized over every public capability and
+checks stable table shapes, deterministic JSON, and correctly escaped CSV.
 
 ## Philosophy
 - **TDD first**: write a small failing test → implement → refactor.

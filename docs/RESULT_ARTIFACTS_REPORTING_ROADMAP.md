@@ -243,7 +243,7 @@ must keep that document, capability discovery, and runtime behavior aligned.
 - [x] Add deterministic theme, locale, dimensions, fonts, and renderer versions.
 - [x] Implement bounded local artifact storage with hashes and cleanup.
 - [x] Implement authenticated REST generation, listing, and download endpoints.
-- [ ] Extend capability discovery with `available_artifacts`.
+- [x] Extend capability discovery with `available_artifacts`.
 - [x] Add contract, authorization, traversal, size, timeout, and cleanup tests.
 
 The Phase 1 runtime now separates public manifest IDs from internal storage
@@ -256,15 +256,15 @@ transport validation, request atomicity, timeout sanitization, deduplication,
 traversal-shaped IDs, symlink and byte tampering, capacity, expiration,
 pinning, and shutdown cleanup.
 
-No production renderer is registered yet. Until Phase 2 registers the first
-table and LP renderers, the routes intentionally return
-`artifact_not_supported` instead of advertising or synthesizing unavailable
-outputs. Capability discovery remains the final open Phase 1 item and will be
-completed together with those concrete registrations.
+Every public capability now advertises one semantic result table through
+`available_artifacts`. The shared canonical renderer produces deterministic
+version 1 JSON and RFC 4180 CSV without importing Qt. Unsupported artifact
+types or formats still return `artifact_not_supported`; discovery is the source
+of truth and clients must not guess richer outputs.
 
 ### Phase 2 - Tables And First Visual Slice
 
-- [ ] Implement canonical JSON and CSV table artifacts for every capability.
+- [x] Implement canonical JSON and CSV table artifacts for every capability.
 - [ ] Implement Markdown tables with explicit truncation metadata.
 - [ ] Extract LP visual renderers as the first 2D/3D reference slice.
 - [ ] Verify SVG and PNG output in headless CI.
