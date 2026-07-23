@@ -65,13 +65,32 @@ Every capability must eventually advertise and produce at least one tabular
 artifact. Rich artifacts may have dimensional or result-state preconditions;
 these are declared by discovery and are validated before work is queued.
 
-The first production slice implements the first table identifier in every row
-of the inventory in deterministic JSON and CSV. JSON uses the versioned
-`ArtifactTable` shape with stable column keys, display titles, scalar rows, and
-a separate summary object. CSV contains only the stable column keys and scalar
-rows; objective values, aggregate metrics, and other non-row values remain in
-the JSON summary. This avoids localized column names becoming an accidental
+The production table renderer implements every table identifier currently
+listed for Dijkstra, NLP, regression, and classification, plus the primary
+table identifier for the other capability rows. Tables are deterministic JSON,
+RFC 4180 CSV, or bounded Markdown. JSON uses the versioned `ArtifactTable`
+shape with stable column keys, display titles, scalar rows, and a separate
+summary object. CSV contains only the stable column keys and scalar rows;
+objective values, aggregate metrics, and other non-row values remain in the
+JSON summary. This avoids localized column names becoming an accidental
 machine contract.
+
+Version 1 visual preconditions are intentionally strict:
+
+- `highlighted_graph` accepts a solved Dijkstra graph with at most 200
+  vertices and preserves input order in a deterministic circular layout;
+- `convergence_chart` requires a non-empty finite convergence history;
+- `objective_landscape` requires exactly two NLP variables and accepts
+  `view: contour|surface` plus a bounded sampling resolution;
+- `fit_chart` requires exactly one regression feature;
+- `confusion_matrix` uses the test partition when present and otherwise the
+  training partition;
+- `decision_boundary` requires exactly two classification features and uses
+  the serialized feature scaling, coefficients, and decision threshold.
+
+All six visuals are rendered headlessly as SVG or PNG. Unsupported dimensions
+or absent numerical data fail the individual artifact explicitly; they are
+never projected, synthesized, or silently omitted.
 
 The same canonical tables support deterministic Markdown. `max_rows` defaults
 to 100 and is bounded to 1-1000. Every Markdown output embeds an

@@ -256,11 +256,13 @@ transport validation, request atomicity, timeout sanitization, deduplication,
 traversal-shaped IDs, symlink and byte tampering, capacity, expiration,
 pinning, and shutdown cleanup.
 
-Every public capability now advertises one semantic result table through
-`available_artifacts`. The shared canonical renderer produces deterministic
-version 1 JSON and RFC 4180 CSV without importing Qt. Unsupported artifact
-types or formats still return `artifact_not_supported`; discovery is the source
-of truth and clients must not guess richer outputs.
+Every public capability advertises at least one semantic result table through
+`available_artifacts`. Dijkstra and the supervised-learning capabilities now
+advertise their additional trace, metrics, confusion, and prediction tables.
+The shared canonical renderer produces deterministic version 1 JSON, RFC 4180
+CSV, and bounded Markdown without importing Qt. Unsupported artifact types or
+formats still return `artifact_not_supported`; discovery is the source of truth
+and clients must not guess richer outputs.
 
 ### Phase 2 - Tables And First Visual Slice
 
@@ -283,9 +285,9 @@ than relying on platform-sensitive golden screenshots.
 - [x] MILP variable charts and Knapsack item/capacity/resource charts,
   including bounded large-instance rendering.
 - [ ] MILP validation summary and any remaining diagnostic table artifacts.
-- [ ] NLP convergence and bounded 2D/3D objective visualizations.
-- [ ] Dijkstra graph/path artifacts.
-- [ ] Regression and classification diagnostics.
+- [x] NLP convergence and bounded 2D/3D objective visualizations.
+- [x] Dijkstra graph/path artifacts.
+- [x] Regression and classification diagnostics.
 - [ ] Packing placement tables, OBJ + MTL export, and named PNG camera views.
 - [ ] Keep desktop rendering behavior aligned with shared headless preparation.
 
@@ -294,6 +296,17 @@ their public artifact identifiers. Category-heavy views preserve input order,
 default to 40 entries, accept at most 200, and include a visible
 shown-versus-total note when truncated. This keeps API output bounded while
 leaving complete JSON/CSV/Markdown tables available for analysis.
+
+The analytical renderer completes the NLP, Dijkstra, regression, and binary
+classification artifact inventory without importing Qt. Dijkstra exposes the
+shortest path, settled-node trace, and a deterministic highlighted graph. NLP
+exposes its candidate table, convergence history, and a two-variable objective
+landscape selectable as contour or 3D surface. Regression exposes coefficient,
+metrics, and prediction tables plus a one-feature fit chart. Classification
+exposes coefficient, metrics, confusion, and prediction tables plus a confusion
+matrix and a two-feature decision boundary. SVG/PNG rendering, sampling, point
+counts, and graph size are bounded; incompatible dimensions produce an
+explicit failed artifact rather than a misleading projection.
 
 ### Phase 4 - MCP Artifact Access
 

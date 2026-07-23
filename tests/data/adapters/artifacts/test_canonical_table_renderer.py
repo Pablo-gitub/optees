@@ -79,15 +79,68 @@ _RESULTS = {
         "trained_model": True,
         "intercept": 1.0,
         "coefficients": [{"feature": "sales", "value": 2.0}],
-        "train_metrics": {"rmse": 0.1},
-        "test_metrics": {"rmse": 0.2},
+        "train_metrics": {
+            "mae": 0.08,
+            "mse": 0.01,
+            "rmse": 0.1,
+            "r_squared": 0.98,
+        },
+        "test_metrics": {
+            "mae": 0.15,
+            "mse": 0.04,
+            "rmse": 0.2,
+            "r_squared": 0.91,
+        },
+        "predictions": [
+            {
+                "row_index": 0,
+                "actual": 3.0,
+                "predicted": 3.1,
+                "residual": -0.1,
+                "partition": "train",
+            }
+        ],
     },
     "ml.classification.binary_logistic": {
         "trained_model": True,
+        "negative_label": "no",
+        "positive_label": "yes",
         "intercept": -1.0,
         "coefficients": [{"feature": "risk", "value": 2.0}],
-        "train_metrics": {"accuracy": 0.9},
-        "test_metrics": {"accuracy": 0.8},
+        "decision_threshold": 0.5,
+        "train_metrics": {
+            "accuracy": 0.9,
+            "precision": 0.8,
+            "recall": 1.0,
+            "f1": 0.89,
+        },
+        "test_metrics": {
+            "accuracy": 0.8,
+            "precision": 0.75,
+            "recall": 0.75,
+            "f1": 0.75,
+        },
+        "train_confusion": {
+            "true_negative": 4,
+            "false_positive": 1,
+            "false_negative": 0,
+            "true_positive": 5,
+        },
+        "test_confusion": {
+            "true_negative": 2,
+            "false_positive": 1,
+            "false_negative": 1,
+            "true_positive": 4,
+        },
+        "predictions": [
+            {
+                "row_index": 0,
+                "actual": "yes",
+                "predicted": "yes",
+                "probability_positive": 0.9,
+                "partition": "train",
+            }
+        ],
     },
     "packing.single_container_3d": {
         "requested": {
@@ -117,9 +170,21 @@ _RESULTS = {
 }
 
 
-def _context(capability_id: str, format_: ArtifactFormat) -> ArtifactRenderContext:
+def _context(
+    capability_id: str,
+    format_: ArtifactFormat,
+    *,
+    artifact_type: str | None = None,
+) -> ArtifactRenderContext:
     definition = canonical_table_definition(capability_id)
     assert definition is not None
+    diagnostics = {}
+    if capability_id == "graph.shortest_path.dijkstra":
+        diagnostics = {
+            "settled_order": ["A", "B"],
+            "settled_distances": {"A": 0.0, "B": 3.0},
+            "settled_count": 2,
+        }
     envelope = ExecutionEnvelope(
         job_id="job-table",
         capability_id=capability_id,
@@ -127,7 +192,7 @@ def _context(capability_id: str, format_: ArtifactFormat) -> ArtifactRenderConte
         mathematical_status=MathematicalStatus.OPTIMAL,
         termination_reason=TerminationReason.COMPLETED,
         result=_RESULTS[capability_id],
-        diagnostics={},
+        diagnostics=diagnostics,
         metadata=ExecutionMetadata(
             optees_version="test",
             api_version="v1",
@@ -137,9 +202,12 @@ def _context(capability_id: str, format_: ArtifactFormat) -> ArtifactRenderConte
     )
     return ArtifactRenderContext(
         capability_id=capability_id,
-        artifact_type=definition.artifact_type,
+        artifact_type=artifact_type or definition.artifact_type,
         format=format_,
-        problem={"version": "1"},
+        problem={
+            "version": "1",
+            "dataset": {"target_name": "target"},
+        },
         envelope=envelope,
         options=ArtifactRenderOptions(),
     )
@@ -148,11 +216,15 @@ def _context(capability_id: str, format_: ArtifactFormat) -> ArtifactRenderConte
 @pytest.mark.parametrize(
     "definition",
     canonical_table_definitions(),
-    ids=lambda item: item.capability_id,
+    ids=lambda item: f"{item.capability_id}-{item.artifact_type}",
 )
 def test_every_public_capability_builds_a_nonempty_canonical_table(definition):
     table = definition.builder(
-        _context(definition.capability_id, ArtifactFormat.JSON)
+        _context(
+            definition.capability_id,
+            ArtifactFormat.JSON,
+            artifact_type=definition.artifact_type,
+        )
     )
 
     assert table.artifact_type == definition.artifact_type

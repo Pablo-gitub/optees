@@ -58,7 +58,14 @@ class CanonicalTableDefinition:
 def canonical_table_definition(
     capability_id: str,
 ) -> CanonicalTableDefinition | None:
-    return _DEFINITIONS_BY_CAPABILITY.get(capability_id)
+    definitions = canonical_table_definitions_for(capability_id)
+    return definitions[0] if definitions else None
+
+
+def canonical_table_definitions_for(
+    capability_id: str,
+) -> tuple[CanonicalTableDefinition, ...]:
+    return _DEFINITIONS_BY_CAPABILITY.get(capability_id, ())
 
 
 def canonical_table_definitions() -> tuple[CanonicalTableDefinition, ...]:
@@ -112,6 +119,34 @@ def _path(context: ArtifactRenderContext) -> ArtifactTable:
     )
 
 
+def _settled_trace(context: ArtifactRenderContext) -> ArtifactTable:
+    raw_order = context.envelope.diagnostics.get("settled_order")
+    order = raw_order if isinstance(raw_order, list) else []
+    raw_distances = context.envelope.diagnostics.get("settled_distances")
+    distances = raw_distances if isinstance(raw_distances, dict) else {}
+    rows = tuple(
+        {
+            "step": index,
+            "node": _scalar(node),
+            "distance": _scalar(distances.get(str(node))),
+        }
+        for index, node in enumerate(order)
+    )
+    return _table(
+        context,
+        columns=(
+            ("step", "Step"),
+            ("node", "Settled node"),
+            ("distance", "Final distance"),
+        ),
+        rows=rows,
+        summary={
+            "settled_count": context.envelope.diagnostics.get("settled_count"),
+            "destination_distance": context.envelope.result.get("distance"),
+        },
+    )
+
+
 def _coefficients(context: ArtifactRenderContext) -> ArtifactTable:
     rows: list[dict[str, TableCell]] = [
         {
@@ -140,6 +175,112 @@ def _coefficients(context: ArtifactRenderContext) -> ArtifactTable:
             "trained_model": context.envelope.result.get("trained_model"),
             "train_metrics": context.envelope.result.get("train_metrics"),
             "test_metrics": context.envelope.result.get("test_metrics"),
+        },
+    )
+
+
+def _regression_metrics(context: ArtifactRenderContext) -> ArtifactTable:
+    return _partitioned_metrics(
+        context,
+        keys=("mae", "mse", "rmse", "r_squared"),
+    )
+
+
+def _classification_metrics(context: ArtifactRenderContext) -> ArtifactTable:
+    return _partitioned_metrics(
+        context,
+        keys=("accuracy", "precision", "recall", "f1"),
+    )
+
+
+def _partitioned_metrics(
+    context: ArtifactRenderContext,
+    *,
+    keys: tuple[str, ...],
+) -> ArtifactTable:
+    rows: list[dict[str, TableCell]] = []
+    for partition in ("train", "test"):
+        raw_metrics = context.envelope.result.get(f"{partition}_metrics")
+        metrics = raw_metrics if isinstance(raw_metrics, dict) else {}
+        rows.append(
+            {
+                "partition": partition,
+                **{key: _scalar(metrics.get(key)) for key in keys},
+            }
+        )
+    return _table(
+        context,
+        columns=(("partition", "Partition"),)
+        + tuple((key, _title(key)) for key in keys),
+        rows=tuple(rows),
+        summary={
+            "trained_model": context.envelope.result.get("trained_model"),
+        },
+    )
+
+
+def _regression_predictions(context: ArtifactRenderContext) -> ArtifactTable:
+    return _table_from_object_rows(
+        context,
+        columns=(
+            ("row_index", "Row"),
+            ("partition", "Partition"),
+            ("actual", "Actual"),
+            ("predicted", "Predicted"),
+            ("residual", "Residual"),
+        ),
+        rows=_object_rows(context.envelope.result.get("predictions")),
+        summary={
+            "target": _dataset_value(context, "target_name"),
+        },
+    )
+
+
+def _classification_confusion(context: ArtifactRenderContext) -> ArtifactTable:
+    keys = (
+        "true_negative",
+        "false_positive",
+        "false_negative",
+        "true_positive",
+    )
+    rows: list[dict[str, TableCell]] = []
+    for partition in ("train", "test"):
+        raw_confusion = context.envelope.result.get(f"{partition}_confusion")
+        confusion = raw_confusion if isinstance(raw_confusion, dict) else {}
+        rows.append(
+            {
+                "partition": partition,
+                **{key: _scalar(confusion.get(key)) for key in keys},
+            }
+        )
+    return _table(
+        context,
+        columns=(("partition", "Partition"),)
+        + tuple((key, _title(key)) for key in keys),
+        rows=tuple(rows),
+        summary={
+            "negative_label": context.envelope.result.get("negative_label"),
+            "positive_label": context.envelope.result.get("positive_label"),
+        },
+    )
+
+
+def _classification_predictions(context: ArtifactRenderContext) -> ArtifactTable:
+    return _table_from_object_rows(
+        context,
+        columns=(
+            ("row_index", "Row"),
+            ("partition", "Partition"),
+            ("actual", "Actual"),
+            ("predicted", "Predicted"),
+            ("probability_positive", "Positive probability"),
+        ),
+        rows=_object_rows(context.envelope.result.get("predictions")),
+        summary={
+            "target": _dataset_value(context, "target_name"),
+            "decision_threshold": context.envelope.result.get(
+                "decision_threshold"
+            ),
         },
     )
 
@@ -222,9 +363,14 @@ def _table(
     rows: tuple[dict[str, TableCell], ...],
     summary: dict[str, JsonValue],
 ) -> ArtifactTable:
+    definition = _DEFINITIONS_BY_KEY.get(
+        (context.capability_id, context.artifact_type)
+    )
+    if definition is None:
+        raise ValueError("canonical table definition is not registered")
     return ArtifactTable(
         artifact_type=context.artifact_type,
-        title=_DEFINITIONS_BY_CAPABILITY[context.capability_id].title,
+        title=definition.title,
         columns=tuple(
             ArtifactTableColumn(key=key, title=title) for key, title in columns
         ),
@@ -262,6 +408,15 @@ def _without_missing(values: dict[str, JsonValue | None]) -> dict[str, JsonValue
 
 def _title(key: str) -> str:
     return key.replace("_", " ").title()
+
+
+def _dataset_value(
+    context: ArtifactRenderContext,
+    key: str,
+) -> JsonValue | None:
+    raw_dataset = context.problem.get("dataset")
+    dataset = raw_dataset if isinstance(raw_dataset, dict) else {}
+    return dataset.get(key)
 
 
 _DEFINITIONS = (
@@ -302,6 +457,12 @@ _DEFINITIONS = (
         _path,
     ),
     CanonicalTableDefinition(
+        "graph.shortest_path.dijkstra",
+        "settled_trace_table",
+        "Dijkstra settled-node trace",
+        _settled_trace,
+    ),
+    CanonicalTableDefinition(
         "nlp.continuous_local",
         "candidate_table",
         "Local candidate",
@@ -314,10 +475,40 @@ _DEFINITIONS = (
         _coefficients,
     ),
     CanonicalTableDefinition(
+        "ml.regression.linear",
+        "metrics_table",
+        "Regression metrics",
+        _regression_metrics,
+    ),
+    CanonicalTableDefinition(
+        "ml.regression.linear",
+        "prediction_table",
+        "Regression predictions",
+        _regression_predictions,
+    ),
+    CanonicalTableDefinition(
         "ml.classification.binary_logistic",
         "coefficient_table",
         "Classification coefficients",
         _coefficients,
+    ),
+    CanonicalTableDefinition(
+        "ml.classification.binary_logistic",
+        "metrics_table",
+        "Classification metrics",
+        _classification_metrics,
+    ),
+    CanonicalTableDefinition(
+        "ml.classification.binary_logistic",
+        "confusion_table",
+        "Classification confusion counts",
+        _classification_confusion,
+    ),
+    CanonicalTableDefinition(
+        "ml.classification.binary_logistic",
+        "prediction_table",
+        "Classification predictions",
+        _classification_predictions,
     ),
     CanonicalTableDefinition(
         "packing.single_container_3d",
@@ -328,5 +519,14 @@ _DEFINITIONS = (
 )
 
 _DEFINITIONS_BY_CAPABILITY = {
-    definition.capability_id: definition for definition in _DEFINITIONS
+    capability_id: tuple(
+        definition
+        for definition in _DEFINITIONS
+        if definition.capability_id == capability_id
+    )
+    for capability_id in {definition.capability_id for definition in _DEFINITIONS}
+}
+_DEFINITIONS_BY_KEY = {
+    (definition.capability_id, definition.artifact_type): definition
+    for definition in _DEFINITIONS
 }

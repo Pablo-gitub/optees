@@ -330,6 +330,47 @@ def test_production_composition_advertises_and_renders_lp_tables():
     assert png_artifact.content.startswith(b"\x89PNG\r\n\x1a\n")
 
 
+def test_production_discovery_exposes_analytic_artifact_inventory():
+    expected = {
+        "graph.shortest_path.dijkstra": {
+            "path_table",
+            "settled_trace_table",
+            "highlighted_graph",
+        },
+        "nlp.continuous_local": {
+            "candidate_table",
+            "convergence_chart",
+            "objective_landscape",
+        },
+        "ml.regression.linear": {
+            "coefficient_table",
+            "metrics_table",
+            "prediction_table",
+            "fit_chart",
+        },
+        "ml.classification.binary_logistic": {
+            "coefficient_table",
+            "metrics_table",
+            "confusion_table",
+            "prediction_table",
+            "confusion_matrix",
+            "decision_boundary",
+        },
+    }
+    with ASGIClient(create_local_api(token=TOKEN)) as client:
+        response = client.get("/api/v1/capabilities", headers=AUTH)
+
+    capabilities = {
+        item["id"]: {
+            artifact["artifact_type"]
+            for artifact in item["available_artifacts"]
+        }
+        for item in response.json()["capabilities"]
+        if item["id"] in expected
+    }
+    assert capabilities == expected
+
+
 def test_production_artifact_options_are_rejected_atomically():
     with ASGIClient(create_local_api(token=TOKEN)) as client:
         submitted = client.post(

@@ -93,9 +93,13 @@ from optees.application.services.artifact_generation_service import (
     ArtifactGenerationService,
     ArtifactRendererRegistration,
 )
+from optees.application.services.analytic_artifact_visuals import (
+    analytic_visual_definitions,
+    analytic_visual_descriptors,
+)
 from optees.application.services.canonical_artifact_tables import (
-    canonical_table_definition,
     canonical_table_definitions,
+    canonical_table_definitions_for,
 )
 from optees.application.services.categorical_artifact_visuals import (
     categorical_visual_definitions,
@@ -333,6 +337,9 @@ def create_local_artifact_service(
     from optees.data.adapters.artifacts.canonical_table_renderer import (
         CanonicalTableRenderer,
     )
+    from optees.data.adapters.artifacts.analytic_chart_renderer import (
+        AnalyticChartRenderer,
+    )
     from optees.data.adapters.artifacts.categorical_chart_renderer import (
         CategoricalChartRenderer,
     )
@@ -378,6 +385,18 @@ def create_local_artifact_service(
         )
         for definition in categorical_visual_definitions()
     )
+    analytic_registrations = tuple(
+        ArtifactRendererRegistration(
+            capability_id=definition.capability_id,
+            descriptor=definition.descriptor(),
+            renderer=AnalyticChartRenderer(definition),
+            media_types={
+                ArtifactFormat.SVG: "image/svg+xml",
+                ArtifactFormat.PNG: "image/png",
+            },
+        )
+        for definition in analytic_visual_definitions()
+    )
     return ArtifactGenerationService(
         job_service,
         LocalArtifactStore(),
@@ -385,17 +404,21 @@ def create_local_artifact_service(
             table_registrations
             + visual_registrations
             + categorical_registrations
+            + analytic_registrations
         ),
     )
 
 
 def _available_artifacts(capability_id: str) -> tuple[AvailableArtifact, ...]:
-    definition = canonical_table_definition(capability_id)
-    tables = (definition.descriptor(),) if definition is not None else ()
+    tables = tuple(
+        definition.descriptor()
+        for definition in canonical_table_definitions_for(capability_id)
+    )
     return (
         tables
         + lp_visual_descriptors(capability_id)
         + categorical_visual_descriptors(capability_id)
+        + analytic_visual_descriptors(capability_id)
     )
 
 

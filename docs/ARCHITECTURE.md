@@ -175,11 +175,14 @@ storage IDs. The authenticated HTTP adapter only translates DTOs and returns
 already verified bytes; it does not select renderers, inspect job repositories,
 or access filesystem paths.
 
-The first production renderer is the canonical result-table pipeline. An
-application-owned builder selects stable semantic rows for each public
-capability; an infrastructure adapter serializes that model as deterministic
-JSON or RFC 4180 CSV. The same definitions populate capability discovery, so a
-format cannot be advertised without a corresponding renderer registration.
+Production renderers include canonical result tables, bounded categorical
+charts, LP feasible regions, and analytical NLP, graph, regression, and
+classification visuals. Application-owned definitions select stable semantic
+rows and declare visual semantics, options, result states, and dimensional
+preconditions. Infrastructure adapters serialize tables as deterministic JSON,
+RFC 4180 CSV, or Markdown and render visuals through Matplotlib Agg as SVG or
+PNG. The same definitions populate capability discovery, so a format cannot be
+advertised without a corresponding renderer registration.
 
 ```mermaid
 sequenceDiagram
