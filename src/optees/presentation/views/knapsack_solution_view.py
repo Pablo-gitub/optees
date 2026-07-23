@@ -21,6 +21,7 @@ from optees.core.string_manager import strings as S
 from optees.core.theme import theme
 from optees.core.design import tokens
 from optees.core.qss import qcolor
+from optees.application.services.categorical_presentation import bounded_categories
 from optees.presentation.views.lp_view.section import Section
 
 
@@ -215,7 +216,8 @@ class _ItemBarsWidget(QWidget):
             painter.drawText(rect, Qt.AlignCenter, S.t("knapsack.sol.charts.no_data"))
             return
 
-        items = list(self._problem.items)
+        all_items = list(self._problem.items)
+        items, window = bounded_categories(all_items)
         selected = set(self._solution.selected_indices)
         max_value = max([item.value for item in items] + [1.0])
         weight_metrics = [_resource_metric(item) for item in items]
@@ -288,6 +290,20 @@ class _ItemBarsWidget(QWidget):
             Qt.AlignLeft,
             S.t(legend_key),
         )
+        if window.truncated:
+            painter.setPen(muted)
+            painter.drawText(
+                rect.left(),
+                rect.top(),
+                rect.width(),
+                22,
+                Qt.AlignRight,
+                S.t(
+                    "knapsack.sol.charts.window",
+                    shown=window.displayed,
+                    total=window.total,
+                ),
+            )
 
 
 class KnapsackSolutionView(QWidget):

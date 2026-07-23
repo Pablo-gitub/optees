@@ -452,6 +452,7 @@
         "capacity_text": "Usato {used} di {capacity}; residuo {remaining}",
         "legend": "Blu = valore, arancione = peso; bordo verde = oggetto selezionato",
         "multi_legend": "Blu = valore, arancione = consumo totale risorse; bordo verde = oggetto selezionato",
+        "window": "Mostrati {shown} oggetti su {total}; la tabella contiene il risultato completo.",
         "no_data": "Nessun dato grafico disponibile."
       },
       "columns": {
@@ -609,6 +610,7 @@
             "x_label": "Variabili",
             "y_label": "Valore",
             "no_data": "Nessun dato da visualizzare",
+            "window": "Mostrate {shown} variabili su {total}; la tabella contiene il risultato completo.",
             "placeholder": "Installa matplotlib per vedere il grafico."
         },
         "feasible": {

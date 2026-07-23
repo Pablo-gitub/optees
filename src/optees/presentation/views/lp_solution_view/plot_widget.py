@@ -10,6 +10,7 @@ from matplotlib.figure import Figure  # type: ignore
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
 from optees.core import charts
+from optees.application.services.categorical_presentation import bounded_categories
 
 
 
@@ -44,6 +45,9 @@ class PlotWidget(QWidget):
         self._title = QLabel(S.t("lp.sol.plot.title"))
         self._title.setStyleSheet("font-weight: 700;")
         self._root.addWidget(self._title)
+        self._window_note = QLabel()
+        self._window_note.setVisible(False)
+        self._root.addWidget(self._window_note)
 
         # Placeholder by default; swapped out if matplotlib is available
         self._placeholder = QLabel(S.t("lp.sol.plot.placeholder"))
@@ -87,6 +91,7 @@ class PlotWidget(QWidget):
     def refresh_strings(self) -> None:
         """Refresh localized strings after language change."""
         self._title.setText(S.t("lp.sol.plot.title"))
+        self._update_window_note()
         if not self._matplotlib_ok and self._placeholder:
             self._placeholder.setText(S.t("lp.sol.plot.placeholder"))
 
@@ -94,6 +99,7 @@ class PlotWidget(QWidget):
         """Apply theme styles (text color, etc.)."""
         fg = "rgba(255,255,255,0.95)" if theme.is_dark() else "rgba(0,0,0,0.90)"
         self._title.setStyleSheet(f"font-weight:700; color:{fg};")
+        self._window_note.setStyleSheet(theme.secondary_text_css(self))
         self._repaint()
 
     def set_context(self, ctx: Dict[str, Any]) -> None:
@@ -115,7 +121,18 @@ class PlotWidget(QWidget):
 
         # Build values map and choose order from context if available
         vals_map = (self._result or {}).get("values") or (self._result or {}).get("x") or {}
-        names = list(self._ctx_names) if self._ctx_names else list(vals_map.keys())
+        all_names = list(self._ctx_names) if self._ctx_names else list(vals_map.keys())
+        all_labels = (
+            list(self._ctx_labels)
+            if self._ctx_labels and len(self._ctx_labels) == len(all_names)
+            else all_names
+        )
+        visible_indices, self._category_window = bounded_categories(
+            list(range(len(all_names)))
+        )
+        names = [all_names[index] for index in visible_indices]
+        x_labels = [all_labels[index] for index in visible_indices]
+        self._update_window_note()
 
         # Early exit: not solved or no variables
         if status == "NotSolved" or not names:
@@ -133,9 +150,6 @@ class PlotWidget(QWidget):
                 vals.append(float(v))
             except Exception:
                 vals.append(0.0)
-
-        # Human-facing X labels (prefer context labels)
-        x_labels = list(self._ctx_labels) if (self._ctx_labels and len(self._ctx_labels) == len(names)) else names
 
         # Draw
         t = charts.current()
@@ -163,3 +177,17 @@ class PlotWidget(QWidget):
             self._canvas.setVisible(True)
         if self._placeholder:
             self._placeholder.setVisible(False)
+
+    def _update_window_note(self) -> None:
+        window = getattr(self, "_category_window", None)
+        if window is None or not window.truncated:
+            self._window_note.setVisible(False)
+            return
+        self._window_note.setText(
+            S.t(
+                "lp.sol.plot.window",
+                shown=window.displayed,
+                total=window.total,
+            )
+        )
+        self._window_note.setVisible(True)

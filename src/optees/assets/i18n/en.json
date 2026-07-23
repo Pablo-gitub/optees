@@ -452,6 +452,7 @@
         "capacity_text": "Used {used} of {capacity}; remaining {remaining}",
         "legend": "Blue = value, orange = weight; green outline = selected item",
         "multi_legend": "Blue = value, orange = total resource usage; green outline = selected item",
+        "window": "Showing {shown} of {total} items; the table contains the full result.",
         "no_data": "No chart data yet."
       },
       "columns": {
@@ -608,6 +609,7 @@
         "x_label": "Variables",
         "y_label": "Value",
         "no_data": "No data to plot",
+        "window": "Showing {shown} of {total} variables; the table contains the full result.",
         "placeholder": "Install matplotlib to see the chart."
       },
       "feasible": {

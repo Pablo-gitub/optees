@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import json
 from math import isfinite
 
 from optees.application.contracts.artifact import (
@@ -79,6 +80,108 @@ def _variables(context: ArtifactRenderContext) -> ArtifactTable:
         columns=(("name", "Variable"), ("value", "Value")),
         rows=_object_rows(context.envelope.result.get("variables")),
         summary=_objective_summary(context),
+    )
+
+
+def _validation_summary(context: ArtifactRenderContext) -> ArtifactTable:
+    validation = context.envelope.validation
+    rows: list[dict[str, TableCell]] = [
+        {
+            "kind": "summary",
+            "code": "validation",
+            "status": validation.status.value,
+            "description": "Independent solution validation",
+            "details": _json_text(
+                {
+                    "tolerances": validation.tolerances,
+                    "limitations": list(validation.limitations),
+                    "violation_count": len(validation.violations),
+                }
+            ),
+        }
+    ]
+    rows.extend(
+        {
+            "kind": "check",
+            "code": check.code,
+            "status": check.status.value,
+            "description": check.description,
+            "details": _json_text(check.measurements),
+        }
+        for check in validation.checks
+    )
+    rows.extend(
+        {
+            "kind": "violation",
+            "code": violation.code,
+            "status": "failed",
+            "description": violation.message,
+            "details": _json_text(
+                {
+                    "check_code": violation.check_code,
+                    "path": violation.path,
+                    "measurements": violation.measurements,
+                }
+            ),
+        }
+        for violation in validation.violations
+    )
+    return _table(
+        context,
+        columns=(
+            ("kind", "Kind"),
+            ("code", "Code"),
+            ("status", "Status"),
+            ("description", "Description"),
+            ("details", "Details"),
+        ),
+        rows=tuple(rows),
+        summary={
+            "validation_status": validation.status.value,
+            "check_count": len(validation.checks),
+            "violation_count": len(validation.violations),
+        },
+    )
+
+
+def _solver_diagnostics(context: ArtifactRenderContext) -> ArtifactTable:
+    rows: list[dict[str, TableCell]] = [
+        {
+            "field": "mathematical_status",
+            "value": (
+                context.envelope.mathematical_status.value
+                if context.envelope.mathematical_status is not None
+                else None
+            ),
+        },
+        {
+            "field": "termination_reason",
+            "value": (
+                context.envelope.termination_reason.value
+                if context.envelope.termination_reason is not None
+                else None
+            ),
+        },
+    ]
+    rows.extend(
+        {
+            "field": key,
+            "value": (
+                _scalar(value)
+                if value is None or isinstance(value, (str, int, float, bool))
+                else _json_text(value)
+            ),
+        }
+        for key, value in sorted(context.envelope.diagnostics.items())
+    )
+    return _table(
+        context,
+        columns=(("field", "Field"), ("value", "Value")),
+        rows=tuple(rows),
+        summary={
+            "warning_count": len(context.envelope.warnings),
+            "warnings": list(context.envelope.warnings),
+        },
     )
 
 
@@ -500,6 +603,15 @@ def _scalar(value: JsonValue | None) -> TableCell:
     return value if value is None or isinstance(value, (str, int, float, bool)) else None
 
 
+def _json_text(value: JsonValue) -> str:
+    return json.dumps(
+        value,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    )
+
+
 def _number(value: object) -> float | None:
     if value is None or isinstance(value, bool):
         return None
@@ -533,6 +645,20 @@ _DEFINITIONS = (
     ),
     CanonicalTableDefinition(
         "milp.linear", "solution_table", "MILP solution", _variables
+    ),
+    CanonicalTableDefinition(
+        "milp.linear",
+        "validation_summary",
+        "MILP independent validation",
+        _validation_summary,
+        (),
+    ),
+    CanonicalTableDefinition(
+        "milp.linear",
+        "diagnostics_table",
+        "MILP solver diagnostics",
+        _solver_diagnostics,
+        (),
     ),
     CanonicalTableDefinition(
         "knapsack.zero_one", "selection_table", "Selected items", _selection

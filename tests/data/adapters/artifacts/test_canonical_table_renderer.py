@@ -19,9 +19,15 @@ from optees.application.contracts.execution import (
     MathematicalStatus,
     TerminationReason,
 )
+from optees.application.contracts.solution_validation import (
+    SolutionValidation,
+    ValidationCheck,
+    ValidationCheckStatus,
+)
 from optees.application.services.canonical_artifact_tables import (
     canonical_table_definition,
     canonical_table_definitions,
+    canonical_table_definitions_for,
 )
 from optees.data.adapters.artifacts.canonical_table_renderer import (
     CanonicalTableRenderer,
@@ -263,7 +269,11 @@ def test_definitions_advertise_only_formats_implemented_by_the_renderer():
             ArtifactFormat.CSV,
             ArtifactFormat.MARKDOWN,
         )
-        assert descriptor.required_mathematical_statuses
+        if definition.artifact_type not in {
+            "validation_summary",
+            "diagnostics_table",
+        }:
+            assert descriptor.required_mathematical_statuses
 
 
 def test_markdown_declares_truncation_and_escapes_table_content():
@@ -297,3 +307,63 @@ def test_markdown_declares_truncation_and_escapes_table_content():
     assert '"truncated": true' in markdown
     assert "Mostrate 2 righe su 3" in markdown
     assert "third" not in markdown
+
+
+def test_milp_validation_and_diagnostics_preserve_machine_readable_semantics():
+    context = _context(
+        "milp.linear",
+        ArtifactFormat.JSON,
+        artifact_type="validation_summary",
+    )
+    validation = SolutionValidation.from_checks(
+        (
+            ValidationCheck(
+                code="milp.integrality",
+                status=ValidationCheckStatus.PASSED,
+                description="Integer variables satisfy integrality tolerance.",
+                measurements={"maximum_violation": 0.0},
+            ),
+        ),
+        tolerances={"integrality": 1e-7},
+    )
+    context = replace(
+        context,
+        envelope=replace(
+            context.envelope,
+            validation=validation,
+            diagnostics={"mip_gap": 0.0, "node_count": 3},
+            warnings=("A bounded diagnostic warning.",),
+        ),
+    )
+
+    validation_definition = next(
+        item
+        for item in canonical_table_definitions_for("milp.linear")
+        if item.artifact_type == "validation_summary"
+    )
+    diagnostics_definition = next(
+        item
+        for item in canonical_table_definitions_for("milp.linear")
+        if item.artifact_type == "diagnostics_table"
+    )
+    validation_payload = json.loads(
+        CanonicalTableRenderer(validation_definition.builder)
+        .render(context)
+        .content
+    )
+    diagnostics_payload = json.loads(
+        CanonicalTableRenderer(diagnostics_definition.builder)
+        .render(replace(context, artifact_type="diagnostics_table"))
+        .content
+    )
+
+    assert validation_payload["rows"][1]["code"] == "milp.integrality"
+    assert validation_payload["rows"][1]["status"] == "passed"
+    assert '"maximum_violation":0.0' in validation_payload["rows"][1]["details"]
+    assert diagnostics_payload["rows"] == [
+        {"field": "mathematical_status", "value": "optimal"},
+        {"field": "termination_reason", "value": "completed"},
+        {"field": "mip_gap", "value": 0.0},
+        {"field": "node_count", "value": 3},
+    ]
+    assert diagnostics_payload["summary"]["warning_count"] == 1

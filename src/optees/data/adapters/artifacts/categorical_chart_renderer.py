@@ -14,6 +14,7 @@ from optees.application.contracts.artifact_rendering import (
 from optees.application.services.categorical_artifact_visuals import (
     CategoricalVisualDefinition,
 )
+from optees.application.services.categorical_presentation import bounded_categories
 
 
 _PALETTES = {
@@ -51,12 +52,19 @@ class CategoricalChartRenderer:
             context,
             self._definition.chart_kind,
         )
-        max_items = _max_items(context)
+        displayed_total = total
         if self._definition.bounded_categories:
-            labels = labels[:max_items]
-            first = first[:max_items]
-            second = second[:max_items] if second is not None else None
-            selected = selected[:max_items]
+            indices, window = bounded_categories(
+                list(range(len(labels))),
+                limit=_max_items(context),
+            )
+            labels = [labels[index] for index in indices]
+            first = [first[index] for index in indices]
+            second = (
+                [second[index] for index in indices] if second is not None else None
+            )
+            selected = [selected[index] for index in indices]
+            displayed_total = window.total
         if not labels:
             raise ValueError("categorical artifact contains no chartable rows")
 
@@ -96,11 +104,11 @@ class CategoricalChartRenderer:
         for spine in axes.spines.values():
             spine.set_color(palette["grid"])
         displayed = len(labels)
-        if displayed < total:
+        if displayed < displayed_total:
             note = (
-                f"Mostrate {displayed} categorie su {total}"
+                f"Mostrate {displayed} categorie su {displayed_total}"
                 if context.options.locale == "it"
-                else f"Showing {displayed} of {total} categories"
+                else f"Showing {displayed} of {displayed_total} categories"
             )
             figure.text(0.99, 0.01, note, ha="right", color=palette["muted"], fontsize=8)
         figure.tight_layout(rect=(0, 0.035, 1, 1))

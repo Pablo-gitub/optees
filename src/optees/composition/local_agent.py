@@ -410,8 +410,12 @@ def create_local_artifact_service(
             descriptor=definition.descriptor(),
             renderer=PackingSceneRenderer(),
             media_types={
-                ArtifactFormat.PNG: "image/png",
-                ArtifactFormat.OBJ_MTL_ZIP: "application/zip",
+                format_: (
+                    "image/png"
+                    if format_ is ArtifactFormat.PNG
+                    else "application/zip"
+                )
+                for format_ in definition.formats
             },
         )
         for definition in packing_scene_definitions()
