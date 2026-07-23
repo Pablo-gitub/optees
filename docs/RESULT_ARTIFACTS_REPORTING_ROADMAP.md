@@ -266,10 +266,17 @@ of truth and clients must not guess richer outputs.
 
 - [x] Implement canonical JSON and CSV table artifacts for every capability.
 - [x] Implement Markdown tables with explicit truncation metadata.
-- [ ] Extract LP visual renderers as the first 2D/3D reference slice.
-- [ ] Verify SVG and PNG output in headless CI.
-- [ ] Add golden semantic tests and image non-blank/dimension checks without
+- [x] Extract LP visual renderers as the first 2D/3D reference slice.
+- [x] Verify SVG and PNG output in headless CI.
+- [x] Add golden semantic tests and image non-blank/dimension checks without
   relying only on brittle pixel-perfect snapshots.
+
+The LP reference slice now advertises `feasible_region` for optimal models
+with exactly two or three variables. Its Matplotlib Agg adapter renders SVG
+and PNG without Qt, uses bounded sampling, localizes the title, applies the
+declared light/dark theme, and preserves requested dimensions. Tests inspect
+semantic SVG labels plus PNG headers, dimensions, and pixel variance rather
+than relying on platform-sensitive golden screenshots.
 
 ### Phase 3 - Capability Rollout
 

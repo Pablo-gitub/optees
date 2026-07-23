@@ -161,6 +161,10 @@ filesystem paths.
 Every current capability exposes one canonical table in `json`, `csv`, and
 `markdown`. Markdown accepts a bounded `max_rows` option and reports
 truncation explicitly; JSON and CSV retain the complete row set.
+Continuous LP also exposes `feasible_region` in `svg` and `png` for optimal
+problems with exactly two or three variables. Its options include locale,
+light/dark theme, width, and height; use capability discovery for the exact
+bounds.
 Artifact identifiers are capability-specific, for example `solution_table` for
 LP/MILP, `selection_table` for Knapsack, `coefficient_table` for regression and
 classification, and `placement_table` for packing. Clients must use discovery

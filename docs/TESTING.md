@@ -198,6 +198,12 @@ packaged MCP companion and verify both the optimal result and independent
 validation report. Capability listing alone is not considered a sufficient
 backend smoke test.
 
+Headless artifact tests render the LP reference slice through Matplotlib Agg.
+They verify SVG structure and semantic labels, and inspect PNG signatures,
+requested dimensions, and nonblank pixel variance. These checks intentionally
+avoid exact pixel snapshots, which vary across rendering platforms without
+providing stronger mathematical assurance.
+
 ## Reproducibility
 
 * Pin Python and core dependencies in the project environment.

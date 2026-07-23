@@ -97,6 +97,10 @@ from optees.application.services.canonical_artifact_tables import (
     canonical_table_definition,
     canonical_table_definitions,
 )
+from optees.application.services.lp_artifact_visuals import (
+    lp_visual_definitions,
+    lp_visual_descriptors,
+)
 from optees.application.services.optimization_service import OptimizationService
 from optees.application.services.local_job_service import LocalJobService
 from optees.application.validation.lp_solution_validator import (
@@ -326,8 +330,11 @@ def create_local_artifact_service(
         CanonicalTableRenderer,
     )
     from optees.data.adapters.artifacts.local_artifact_store import LocalArtifactStore
+    from optees.data.adapters.artifacts.lp_feasible_region_renderer import (
+        LPFeasibleRegionRenderer,
+    )
 
-    registrations = tuple(
+    table_registrations = tuple(
         ArtifactRendererRegistration(
             capability_id=definition.capability_id,
             descriptor=definition.descriptor(),
@@ -340,16 +347,29 @@ def create_local_artifact_service(
         )
         for definition in canonical_table_definitions()
     )
+    visual_registrations = tuple(
+        ArtifactRendererRegistration(
+            capability_id=definition.capability_id,
+            descriptor=definition.descriptor(),
+            renderer=LPFeasibleRegionRenderer(),
+            media_types={
+                ArtifactFormat.SVG: "image/svg+xml",
+                ArtifactFormat.PNG: "image/png",
+            },
+        )
+        for definition in lp_visual_definitions()
+    )
     return ArtifactGenerationService(
         job_service,
         LocalArtifactStore(),
-        registrations=registrations,
+        registrations=table_registrations + visual_registrations,
     )
 
 
 def _available_artifacts(capability_id: str) -> tuple[AvailableArtifact, ...]:
     definition = canonical_table_definition(capability_id)
-    return (definition.descriptor(),) if definition is not None else ()
+    tables = (definition.descriptor(),) if definition is not None else ()
+    return tables + lp_visual_descriptors(capability_id)
 
 
 def create_lp_optimization_service(

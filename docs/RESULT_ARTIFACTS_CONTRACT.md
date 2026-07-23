@@ -79,6 +79,14 @@ to 100 and is bounded to 1-1000. Every Markdown output embeds an
 an explicit truncation flag; a localized visible note is added when rows are
 omitted. JSON and CSV remain complete and are not affected by `max_rows`.
 
+Continuous LP additionally advertises `feasible_region` in SVG and PNG when
+the solved model has exactly two or three variables. The renderer consumes the
+retained versioned problem and result, uses a bounded deterministic sampling
+grid, and marks the reported optimum. A 2D fill or 3D point cloud is a
+didactic representation of the feasible set, not an additional optimality
+proof. Other dimensions fail as unsupported render inputs rather than
+producing a misleading projection.
+
 ## Canonical Data And Render-Only Derivations
 
 Canonical source data consists of:
@@ -107,8 +115,8 @@ entry has this version 1 shape:
 {
   "artifact_type": "feasible_region",
   "title": "Feasible region",
-  "formats": ["svg", "png", "data_json"],
-  "required_mathematical_statuses": ["optimal", "feasible"],
+  "formats": ["svg", "png"],
+  "required_mathematical_statuses": ["optimal"],
   "options_schema": {
     "type": "object",
     "properties": {

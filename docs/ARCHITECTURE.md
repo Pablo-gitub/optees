@@ -542,6 +542,13 @@ flowchart LR
 Each capability validates only its own contract and result. Optees does not
 currently certify the semantic correctness of the complete composed workflow.
 
+Headless result rendering follows the same boundary. Application-owned
+definitions advertise artifact semantics and options; adapters perform the
+concrete serialization or plotting. The first visual adapter uses Matplotlib
+Agg to render 2D/3D LP feasible regions as SVG or PNG without importing Qt.
+Its bounded sampling and plot window are presentation derivations and never
+alter the retained problem, result, or mathematical status.
+
 ## Extending The Platform
 
 To add a public solver capability:

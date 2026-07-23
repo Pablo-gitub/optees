@@ -75,6 +75,20 @@ def _lp_payload() -> dict:
     }
 
 
+def _lp_2d_payload() -> dict:
+    return {
+        "version": "1",
+        "variables": [
+            {"name": "x", "label": "Product X", "lb": 0, "ub": 4},
+            {"name": "y", "label": "Product Y", "lb": 0, "ub": 4},
+        ],
+        "objective": {"sense": "max", "coefficients": [1, 1], "offset": 0},
+        "constraints": [
+            {"coefficients": [1, 1], "relation": "<=", "rhs": 4}
+        ],
+    }
+
+
 def _artifact_request() -> dict:
     return {
         "contract_version": "1",
@@ -219,13 +233,37 @@ def test_production_composition_advertises_and_renders_lp_tables():
                     },
                     "additionalProperties": False,
                 },
-            }
+            },
+            {
+                "artifact_type": "feasible_region",
+                "title": "LP feasible region (2D/3D)",
+                "formats": ["svg", "png"],
+                "required_mathematical_statuses": ["optimal"],
+                "options_schema": {
+                    "type": "object",
+                    "properties": {
+                        "locale": {"enum": ["en", "it"]},
+                        "theme": {"enum": ["light", "dark"]},
+                        "width": {
+                            "type": "integer",
+                            "minimum": 320,
+                            "maximum": 4096,
+                        },
+                        "height": {
+                            "type": "integer",
+                            "minimum": 240,
+                            "maximum": 4096,
+                        },
+                    },
+                    "additionalProperties": False,
+                },
+            },
         ]
 
         submitted = client.post(
             "/api/v1/jobs",
             headers=AUTH,
-            json={"capability_id": "lp.continuous", "problem": _lp_payload()},
+            json={"capability_id": "lp.continuous", "problem": _lp_2d_payload()},
         )
         job_id = submitted.json()["job_id"]
         deadline = monotonic() + 5
@@ -245,6 +283,16 @@ def test_production_composition_advertises_and_renders_lp_tables():
                         "artifact_type": "solution_table",
                         "formats": ["json", "csv"],
                         "options": {"locale": "en"},
+                    },
+                    {
+                        "artifact_type": "feasible_region",
+                        "formats": ["png"],
+                        "options": {
+                            "locale": "en",
+                            "theme": "dark",
+                            "width": 480,
+                            "height": 320,
+                        },
                     }
                 ],
             },
@@ -262,7 +310,7 @@ def test_production_composition_advertises_and_renders_lp_tables():
                 break
             sleep(0.01)
 
-        assert [item["format"] for item in artifacts] == ["json", "csv"]
+        assert [item["format"] for item in artifacts] == ["json", "csv", "png"]
         json_artifact = client.get(
             f"/api/v1/artifacts/{artifacts[0]['artifact_id']}",
             headers=AUTH,
@@ -271,9 +319,15 @@ def test_production_composition_advertises_and_renders_lp_tables():
             f"/api/v1/artifacts/{artifacts[1]['artifact_id']}",
             headers=AUTH,
         )
+        png_artifact = client.get(
+            f"/api/v1/artifacts/{artifacts[2]['artifact_id']}",
+            headers=AUTH,
+        )
 
-    assert json_artifact.json()["rows"] == [{"name": "x", "value": 1.0}]
-    assert csv_artifact.text == "name,value\nx,1.0\n"
+    result_rows = json_artifact.json()["rows"]
+    assert [row["name"] for row in result_rows] == ["x", "y"]
+    assert csv_artifact.text.startswith("name,value\nx,")
+    assert png_artifact.content.startswith(b"\x89PNG\r\n\x1a\n")
 
 
 def test_production_artifact_options_are_rejected_atomically():
