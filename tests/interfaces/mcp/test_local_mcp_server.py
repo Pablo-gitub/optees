@@ -13,6 +13,7 @@ from mcp.client.stdio import stdio_client
 from optees.composition.local_agent import (
     create_local_artifact_service,
     create_local_job_service,
+    create_local_report_service,
 )
 from optees.interfaces.mcp.local_server import (
     LocalMcpToolFacade,
@@ -52,6 +53,9 @@ TOOL_NAMES = {
     "optees_list_result_artifacts",
     "optees_render_result_artifacts",
     "optees_get_artifact",
+    "optees_compose_report",
+    "optees_get_report_status",
+    "optees_get_report",
 }
 
 
@@ -83,10 +87,12 @@ def test_mcp_tools_publish_expected_names_and_problem_schemas():
     async def inspect_tools():
         service = create_local_job_service()
         artifacts = create_local_artifact_service(service)
+        reports = create_local_report_service(service, artifacts)
         try:
-            server = create_mcp_server(service, artifacts)
+            server = create_mcp_server(service, artifacts, reports)
             return await server.list_tools(), await server.list_resource_templates()
         finally:
+            reports.close()
             artifacts.close()
             service.shutdown(wait=True, cancel_pending=True)
 
@@ -103,8 +109,50 @@ def test_mcp_tools_publish_expected_names_and_problem_schemas():
     render_schema = by_name["optees_render_result_artifacts"].inputSchema
     assert render_schema["properties"]["requests"]["maxItems"] == 8
     assert [str(item.uriTemplate) for item in templates] == [
-        "optees-artifact://{artifact_id}"
+        "optees-artifact://{artifact_id}",
+        "optees-report://{report_id}",
     ]
+
+
+def test_facade_composes_metadata_only_report_with_explicit_resource_read():
+    jobs = create_local_job_service()
+    artifacts = create_local_artifact_service(jobs)
+    reports = create_local_report_service(jobs, artifacts)
+    facade = LocalMcpToolFacade(jobs, artifacts, reports)
+    try:
+        composed = facade.compose_report(
+            {
+                "contract_version": "1",
+                "format": "markdown",
+                "locale": "en",
+                "title": "MCP report",
+                "sections": [
+                    {
+                        "section_id": "summary",
+                        "heading": "Summary",
+                        "blocks": [{"type": "markdown", "content": "Result summary."}],
+                    }
+                ],
+            }
+        )
+        assert composed["ok"] is True
+        report_id = composed["report"]["report_id"]
+        deadline = monotonic() + 5
+        metadata = None
+        while monotonic() < deadline:
+            metadata = facade.get_report(report_id)
+            if metadata.get("resource_uri"):
+                break
+            sleep(0.01)
+
+        assert metadata is not None
+        assert metadata["content_included"] is False
+        assert metadata["resource_uri"] == f"optees-report://{report_id}"
+        assert b"Optees" in facade.read_report_resource(report_id)
+    finally:
+        reports.close()
+        artifacts.close()
+        jobs.shutdown(wait=True, cancel_pending=True)
 
 
 def test_facade_renders_metadata_only_and_requires_explicit_resource_read():

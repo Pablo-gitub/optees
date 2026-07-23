@@ -115,6 +115,9 @@ from optees.application.services.packing_artifact_scene import (
 )
 from optees.application.services.optimization_service import OptimizationService
 from optees.application.services.local_job_service import LocalJobService
+from optees.application.services.report_composition_service import (
+    ReportCompositionService,
+)
 from optees.application.validation.lp_solution_validator import (
     LPIndependentSolutionValidator,
 )
@@ -429,6 +432,26 @@ def create_local_artifact_service(
             + categorical_registrations
             + analytic_registrations
             + packing_registrations
+        ),
+    )
+
+
+def create_local_report_service(
+    job_service: LocalJobService,
+    artifact_service: ArtifactGenerationService,
+) -> ReportCompositionService:
+    """Build bounded session-local Markdown report composition."""
+
+    from optees.data.adapters.artifacts.local_artifact_store import LocalArtifactStore
+
+    report_output_bytes = 64 * 1024 * 1024
+    return ReportCompositionService(
+        job_service,
+        artifact_service,
+        LocalArtifactStore(
+            max_artifact_bytes=report_output_bytes,
+            max_total_bytes=256 * 1024 * 1024,
+            max_artifacts=64,
         ),
     )
 

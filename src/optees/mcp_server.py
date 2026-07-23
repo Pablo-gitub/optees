@@ -8,6 +8,7 @@ from typing import Iterator, TextIO
 from optees.composition.local_agent import (
     create_local_artifact_service,
     create_local_job_service,
+    create_local_report_service,
 )
 from optees.interfaces.mcp.local_server import create_mcp_server
 
@@ -17,9 +18,10 @@ def main() -> None:
 
     service = create_local_job_service()
     artifacts = create_local_artifact_service(service)
+    reports = create_local_report_service(service, artifacts)
     try:
         with _isolated_frozen_stdio():
-            create_mcp_server(service, artifacts).run(transport="stdio")
+            create_mcp_server(service, artifacts, reports).run(transport="stdio")
     except ImportError:
         print(
             "The optional MCP dependency is missing. Install optees[mcp].",
@@ -27,6 +29,7 @@ def main() -> None:
         )
         raise SystemExit(2) from None
     finally:
+        reports.close(wait=True)
         artifacts.close(wait=True)
         service.shutdown(wait=True, cancel_pending=True)
 

@@ -136,6 +136,27 @@ def test_health_is_public_but_info_requires_constant_contract_authentication():
         ),
         ("get", "/api/v1/jobs/missing/artifacts", {}),
         ("get", "/api/v1/artifacts/artifact-missing", {}),
+        (
+            "post",
+            "/api/v1/reports",
+            {
+                "json": {
+                    "contract_version": "1",
+                    "format": "markdown",
+                    "locale": "en",
+                    "title": "Test",
+                    "sections": [
+                        {
+                            "section_id": "summary",
+                            "heading": "Summary",
+                            "blocks": [{"type": "markdown", "content": "Body"}],
+                        }
+                    ],
+                }
+            },
+        ),
+        ("get", "/api/v1/reports/report-missing", {}),
+        ("get", "/api/v1/reports/report-missing/download", {}),
         ("post", "/api/v1/batches/validate", {"json": _batch_request()}),
         ("post", "/api/v1/batches", {"json": _batch_request()}),
         ("get", "/api/v1/batches/missing", {}),
@@ -355,6 +376,9 @@ def test_authenticated_openapi_matches_routes_and_bearer_security():
         "/api/v1/jobs/{job_id}/cancel",
         "/api/v1/jobs/{job_id}/artifacts",
         "/api/v1/artifacts/{artifact_id}",
+        "/api/v1/reports",
+        "/api/v1/reports/{report_id}",
+        "/api/v1/reports/{report_id}/download",
         "/api/v1/batches/validate",
         "/api/v1/batches",
         "/api/v1/batches/{batch_id}",

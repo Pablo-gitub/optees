@@ -22,6 +22,7 @@ from optees.application.contracts.batch import (
 from optees.application.codecs.artifact_request_codec import (
     artifact_batch_request_from_dict,
 )
+from optees.application.codecs.report_request_codec import report_request_from_dict
 from optees.application.contracts.artifact import (
     ArtifactBatchRequest,
     ArtifactFormat,
@@ -34,9 +35,13 @@ from optees.application.services.local_job_service import LocalJobService
 from optees.application.services.artifact_generation_service import (
     ArtifactGenerationService,
 )
+from optees.application.services.report_composition_service import (
+    ReportCompositionService,
+)
 from optees.composition.local_agent import (
     create_local_artifact_service,
     create_local_job_service,
+    create_local_report_service,
 )
 from optees.core.version import get_app_version
 
@@ -85,6 +90,17 @@ class ArtifactGenerationRequest(BaseModel):
 
     contract_version: str = Field(pattern="^1$")
     requests: list[ArtifactItemRequest] = Field(min_length=1, max_length=8)
+
+
+class ReportGenerationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    contract_version: str = Field(pattern="^1$")
+    format: str = Field(pattern="^markdown$")
+    locale: str = Field(pattern="^(en|it)$")
+    title: str = Field(min_length=1, max_length=200)
+    sections: list[dict[str, Any]] = Field(min_length=1, max_length=32)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class RequestGuardMiddleware:
@@ -175,9 +191,11 @@ def create_local_api(
     token: str,
     job_service: LocalJobService | None = None,
     artifact_service: ArtifactGenerationService | None = None,
+    report_service: ReportCompositionService | None = None,
     max_request_bytes: int = DEFAULT_MAX_REQUEST_BYTES,
     shutdown_job_service: bool = True,
     shutdown_artifact_service: bool = True,
+    shutdown_report_service: bool = True,
 ) -> FastAPI:
     """Create the authenticated loopback API without starting a server."""
 
@@ -192,10 +210,13 @@ def create_local_api(
         raise ValueError("max_request_bytes must be a positive integer")
     service = job_service or create_local_job_service()
     artifacts = artifact_service or create_local_artifact_service(service)
+    reports = report_service or create_local_report_service(service, artifacts)
 
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         yield
+        if shutdown_report_service:
+            reports.close(wait=True)
         if shutdown_artifact_service:
             artifacts.close(wait=True)
         if shutdown_job_service:
@@ -415,6 +436,54 @@ def create_local_api(
             },
         )
 
+    @app.post("/api/v1/reports", status_code=202, dependencies=protected)
+    async def create_report(
+        body: ReportGenerationRequest,
+        request: Request,
+    ):
+        try:
+            report_request = report_request_from_dict(body.model_dump())
+        except ValueError as exc:
+            _raise_structured(
+                StructuredError(
+                    code=ErrorCode.REPORT_REQUEST_INVALID,
+                    message=str(exc),
+                    request_id=_request_id(request),
+                )
+            )
+        outcome = reports.submit(
+            report_request,
+            request_id=_request_id(request),
+        )
+        if isinstance(outcome, StructuredError):
+            _raise_structured(outcome)
+        return outcome.to_dict()
+
+    @app.get("/api/v1/reports/{report_id}", dependencies=protected)
+    async def report_status(report_id: str):
+        outcome = reports.get(report_id)
+        if isinstance(outcome, StructuredError):
+            _raise_structured(outcome)
+        return outcome.to_dict()
+
+    @app.get("/api/v1/reports/{report_id}/download", dependencies=protected)
+    async def download_report(report_id: str):
+        outcome = reports.download(report_id)
+        if isinstance(outcome, StructuredError):
+            _raise_structured(outcome)
+        assert isinstance(outcome, StoredArtifactPayload)
+        metadata = outcome.artifact
+        return Response(
+            content=outcome.content,
+            media_type=metadata.media_type,
+            headers={
+                "Cache-Control": "private, no-store",
+                "Content-Disposition": f'attachment; filename="{report_id}.md"',
+                "ETag": f'"sha256-{metadata.sha256}"',
+                "X-Content-SHA256": metadata.sha256,
+            },
+        )
+
     @app.post("/api/v1/batches/validate", dependencies=protected)
     async def validate_batch(
         body: BatchProblemRequest,
@@ -593,6 +662,13 @@ def _status_code(code: ErrorCode) -> int:
         ErrorCode.ARTIFACT_EXPIRED: 410,
         ErrorCode.ARTIFACT_CAPACITY_EXCEEDED: 507,
         ErrorCode.ARTIFACT_BACKEND_UNAVAILABLE: 503,
+        ErrorCode.REPORT_REQUEST_INVALID: 400,
+        ErrorCode.REPORT_ARTIFACT_NOT_AVAILABLE: 409,
+        ErrorCode.REPORT_BACKEND_UNAVAILABLE: 503,
+        ErrorCode.REPORT_COMPOSITION_FAILED: 500,
+        ErrorCode.REPORT_NOT_FOUND: 404,
+        ErrorCode.REPORT_EXPIRED: 410,
+        ErrorCode.REPORT_CAPACITY_EXCEEDED: 507,
         ErrorCode.SERVICE_UNAVAILABLE: 503,
         ErrorCode.INTERNAL_ERROR: 500,
     }[code]

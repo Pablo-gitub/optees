@@ -404,6 +404,27 @@ Report statuses are `queued`, `composing`, `available`, `failed`, and
 restrained footer `Optees · optees.it`. The footer identifies the tool and is
 not a certification of the user's interpretation.
 
+The implemented REST surface is:
+
+- `POST /api/v1/reports` to validate and queue one Markdown report;
+- `GET /api/v1/reports/{report_id}` to poll its lifecycle and inspect
+  provenance, byte count, and SHA-256;
+- `GET /api/v1/reports/{report_id}/download` to retrieve verified Markdown.
+
+The implemented MCP surface mirrors this contract:
+
+- `optees_compose_report` validates and queues the versioned request;
+- `optees_get_report_status` polls lifecycle metadata;
+- `optees_get_report` returns metadata and, when available, an
+  `optees-report://{report_id}` resource URI;
+- the resource URI is the only MCP operation that transfers report bytes.
+
+Neither transport accepts a filesystem destination, a remote asset URL, a
+Pandoc option, or caller-authored solver status. PNG and SVG references remain
+explicit private artifact resource links in Markdown. OBJ/MTL archives and
+other non-embeddable formats produce a visible `unsupported_artifact` block
+until a validated conversion exists.
+
 ## Compatibility Rules
 
 - Artifact and report contracts have versions independent from problem and

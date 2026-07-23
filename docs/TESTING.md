@@ -10,7 +10,10 @@ PYTHONPATH=src python -m pytest -q \
   tests/data/adapters/artifacts/test_analytic_chart_renderer.py \
   tests/data/adapters/artifacts/test_packing_scene_renderer.py \
   tests/data/adapters/artifacts/test_local_artifact_store.py \
+  tests/application/contracts/test_report_contracts.py \
+  tests/application/services/test_report_composition_service.py \
   tests/interfaces/http/test_local_artifact_api.py \
+  tests/interfaces/http/test_local_report_api.py \
   tests/interfaces/http/test_local_api.py \
   tests/interfaces/mcp/test_local_mcp_server.py
 ```
@@ -24,7 +27,10 @@ The canonical renderer test is parameterized over every public capability and
 checks stable table shapes, deterministic JSON, correctly escaped CSV, bounded
 Markdown, MILP validation semantics, and machine-readable truncation metadata.
 MCP coverage verifies metadata-first discovery, render polling, explicit
-resource transfer, and rejection of unsafe opaque IDs.
+resource transfer, and rejection of unsafe opaque IDs. Report coverage verifies
+strict safe-Markdown validation, deterministic composition, source provenance,
+artifact pinning, explicit unsupported blocks, authenticated download, and
+metadata-only MCP retrieval.
 
 ## Philosophy
 - **TDD first**: write a small failing test → implement → refactor.

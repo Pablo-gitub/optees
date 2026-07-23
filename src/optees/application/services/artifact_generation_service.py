@@ -404,6 +404,64 @@ class ArtifactGenerationService:
                 artifact_id,
             )
 
+    def pin(self, artifact_id: str) -> StructuredError | None:
+        """Prevent one available public artifact from expiring during composition."""
+
+        with self._lock:
+            self._refresh_expired()
+            record = self._records.get(artifact_id)
+            if record is None:
+                return _artifact_error(
+                    ErrorCode.ARTIFACT_NOT_FOUND,
+                    "The artifact was not found.",
+                    artifact_id,
+                )
+            if (
+                record.entry.status is not ArtifactStatus.AVAILABLE
+                or record.storage_id is None
+            ):
+                return _artifact_error(
+                    ErrorCode.ARTIFACT_RESULT_NOT_AVAILABLE,
+                    "The artifact is not available for report composition.",
+                    artifact_id,
+                )
+            storage_id = record.storage_id
+        try:
+            self._storage.pin(storage_id)
+        except ArtifactExpiredError:
+            self._mark_expired(artifact_id)
+            return _artifact_error(
+                ErrorCode.ARTIFACT_EXPIRED,
+                "The artifact has expired.",
+                artifact_id,
+            )
+        except ArtifactNotFoundError:
+            return _artifact_error(
+                ErrorCode.ARTIFACT_NOT_FOUND,
+                "The artifact content was not found.",
+                artifact_id,
+            )
+        except ArtifactStorageClosedError:
+            return _artifact_error(
+                ErrorCode.ARTIFACT_BACKEND_UNAVAILABLE,
+                "The artifact storage is unavailable.",
+                artifact_id,
+            )
+        return None
+
+    def unpin(self, artifact_id: str) -> None:
+        """Release a composition pin; cleanup remains owned by artifact storage."""
+
+        with self._lock:
+            record = self._records.get(artifact_id)
+            storage_id = None if record is None else record.storage_id
+        if storage_id is None:
+            return
+        try:
+            self._storage.unpin(storage_id)
+        except (ValueError, ArtifactNotFoundError, ArtifactStorageClosedError):
+            return
+
     def close(self, *, wait: bool = True) -> None:
         with self._lock:
             if not self._accepting:

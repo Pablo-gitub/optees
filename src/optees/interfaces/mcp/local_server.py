@@ -10,6 +10,7 @@ from pydantic import Field
 from optees.application.codecs.artifact_request_codec import (
     artifact_batch_request_from_dict,
 )
+from optees.application.codecs.report_request_codec import report_request_from_dict
 from optees.application.contracts.batch import BatchItemRequest, BatchRequest
 from optees.application.contracts.artifact import ArtifactStatus
 from optees.application.contracts.errors import StructuredError
@@ -18,6 +19,9 @@ from optees.application.services.artifact_generation_service import (
     ArtifactGenerationService,
 )
 from optees.application.services.local_job_service import LocalJobService
+from optees.application.services.report_composition_service import (
+    ReportCompositionService,
+)
 
 
 class LocalMcpToolFacade:
@@ -27,9 +31,11 @@ class LocalMcpToolFacade:
         self,
         job_service: LocalJobService,
         artifact_service: ArtifactGenerationService | None = None,
+        report_service: ReportCompositionService | None = None,
     ) -> None:
         self._jobs = job_service
         self._artifacts = artifact_service
+        self._reports = report_service
         self._described_capabilities: set[str] = set()
         self._validated_problems: set[str] = set()
         self._validated_batches: set[str] = set()
@@ -284,16 +290,79 @@ class LocalMcpToolFacade:
             raise ValueError(outcome.message)
         return outcome.content
 
+    def compose_report(self, request: dict[str, Any]) -> dict[str, object]:
+        if self._reports is None:
+            return _tool_error(
+                "report_service_unavailable",
+                "Report composition is not configured for this MCP session.",
+            )
+        try:
+            parsed = report_request_from_dict(request)
+        except ValueError as exc:
+            return _tool_error("report_request_invalid", str(exc))
+        outcome = self._reports.submit(parsed)
+        if isinstance(outcome, StructuredError):
+            return {"ok": False, "error": outcome.to_dict()["error"]}
+        return {
+            "ok": True,
+            "report": outcome.to_dict(),
+            "content_policy": {
+                "embedded_by_default": False,
+                "next_step": (
+                    "Poll optees_get_report_status, then inspect metadata with "
+                    "optees_get_report before explicitly reading its resource URI."
+                ),
+            },
+        }
+
+    def get_report_status(self, report_id: str) -> dict[str, object]:
+        if self._reports is None:
+            return _tool_error(
+                "report_service_unavailable",
+                "Report composition is not configured for this MCP session.",
+            )
+        outcome = self._reports.get(report_id)
+        if isinstance(outcome, StructuredError):
+            return {"ok": False, "error": outcome.to_dict()["error"]}
+        return {"ok": True, "report": outcome.to_dict()}
+
+    def get_report(self, report_id: str) -> dict[str, object]:
+        status = self.get_report_status(report_id)
+        if status.get("ok") is not True:
+            return status
+        report = status["report"]
+        assert isinstance(report, dict)
+        payload: dict[str, object] = {
+            "ok": True,
+            "report": report,
+            "content_included": False,
+        }
+        if report.get("status") == "available":
+            payload["resource_uri"] = f"optees-report://{report_id}"
+            payload["retrieval_instruction"] = (
+                "Read the resource URI only when the user needs the Markdown bytes."
+            )
+        return payload
+
+    def read_report_resource(self, report_id: str) -> bytes:
+        if self._reports is None:
+            raise ValueError("report service is unavailable")
+        outcome = self._reports.download(report_id)
+        if isinstance(outcome, StructuredError):
+            raise ValueError(outcome.message)
+        return outcome.content
+
 
 def create_mcp_server(
     job_service: LocalJobService,
     artifact_service: ArtifactGenerationService | None = None,
+    report_service: ReportCompositionService | None = None,
 ):
     """Create the stdio MCP server without starting or owning the job service."""
 
     from mcp.server.fastmcp import FastMCP
 
-    facade = LocalMcpToolFacade(job_service, artifact_service)
+    facade = LocalMcpToolFacade(job_service, artifact_service, report_service)
     server = FastMCP(
         "Optees Local Solver",
         instructions=(
@@ -303,6 +372,8 @@ def create_mcp_server(
             "mathematical status and independent validation separately, and never "
             "invent missing data. Artifact tools return metadata only by default; "
             "read an artifact resource explicitly only when its bytes are needed."
+            " Report composition accepts only bounded Markdown, job status, and "
+            "artifact references; report tools also return metadata by default."
         ),
         log_level="WARNING",
         json_response=True,
@@ -483,6 +554,47 @@ def create_mcp_server(
     )
     def optees_artifact_resource(artifact_id: str) -> bytes:
         return facade.read_artifact_resource(artifact_id)
+
+    @server.tool(
+        name="optees_compose_report",
+        description=(
+            "Compose a bounded deterministic Markdown report from safe Markdown, "
+            "Optees job statuses, and existing result artifact IDs."
+        ),
+        structured_output=True,
+    )
+    def optees_compose_report(request: dict[str, Any]) -> dict[str, object]:
+        return facade.compose_report(request)
+
+    @server.tool(
+        name="optees_get_report_status",
+        description="Poll lifecycle and provenance metadata for one report.",
+        structured_output=True,
+    )
+    def optees_get_report_status(report_id: str) -> dict[str, object]:
+        return facade.get_report_status(report_id)
+
+    @server.tool(
+        name="optees_get_report",
+        description=(
+            "Inspect one report manifest and obtain its explicit resource URI. "
+            "This metadata-only tool never inserts report content into context."
+        ),
+        structured_output=True,
+    )
+    def optees_get_report(report_id: str) -> dict[str, object]:
+        return facade.get_report(report_id)
+
+    @server.resource(
+        "optees-report://{report_id}",
+        name="Optees Markdown report",
+        description=(
+            "Explicitly retrieve one bounded, verified Markdown report by opaque ID."
+        ),
+        mime_type="text/markdown",
+    )
+    def optees_report_resource(report_id: str) -> bytes:
+        return facade.read_report_resource(report_id)
 
     return server
 

@@ -355,13 +355,30 @@ artifact-selection accuracy.
 
 ### Phase 5 - Markdown Report MVP
 
-- [ ] Implement the versioned report schema and validator.
-- [ ] Compose headings, Markdown content, tables, images, captions, statuses,
+- [x] Implement the versioned report schema and validator.
+- [x] Compose headings, Markdown content, tables, images, captions, statuses,
   validation summaries, and provenance.
-- [ ] Add the official `Optees · optees.it` footer.
-- [ ] Represent rejected or unsupported assets explicitly.
-- [ ] Produce deterministic Markdown without requiring Pandoc.
-- [ ] Expose report creation and retrieval through REST and MCP.
+- [x] Add the official `Optees · optees.it` footer.
+- [x] Represent rejected or unsupported assets explicitly.
+- [x] Produce deterministic Markdown without requiring Pandoc.
+- [x] Expose report creation and retrieval through REST and MCP.
+
+Phase 5 engineering is complete. `ReportCompositionService` owns a dedicated
+single-worker lifecycle and stores Markdown in a separate bounded,
+session-private `LocalArtifactStore`. Report inputs accept only the frozen
+version 1 block vocabulary (`markdown`, `job_status`, and `artifact`), reject
+raw HTML, unsafe link targets, arbitrary paths, and undeclared fields, and
+temporarily pin referenced artifacts during composition. Missing, expired, or
+non-embeddable sources remain visible as `unsupported_artifact` blocks.
+
+REST exposes authenticated creation, status polling, and verified download at
+`POST /api/v1/reports`, `GET /api/v1/reports/{report_id}`, and
+`GET /api/v1/reports/{report_id}/download`. MCP mirrors the same lifecycle with
+`optees_compose_report`, `optees_get_report_status`, and
+`optees_get_report`; bytes are transferred only through an explicit
+`optees-report://{report_id}` resource read. The output contains source IDs,
+artifact hashes and media types, independent validation status, and the
+official footer. Pandoc and PDF remain intentionally outside this phase.
 
 ### Phase 6 - Local PDF Backend
 

@@ -182,6 +182,17 @@ artifact bytes are available solely through an explicit
 archives, and other binaries from entering model context as an incidental tool
 result.
 
+`ReportCompositionService` is a second application-owned asynchronous
+orchestrator. It resolves execution envelopes through `LocalJobService`, pins
+verified artifact inputs through `ArtifactGenerationService`, delegates
+deterministic Markdown assembly to `MarkdownReportComposer`, and writes the
+result to its own bounded `ArtifactStoragePort`. The composer owns no
+filesystem, HTTP, MCP, Qt, Pandoc, or solver dependency. REST and MCP expose
+metadata-first report operations; report bytes are read only through an
+authenticated download or explicit `optees-report://{report_id}` resource.
+Unavailable inputs are represented in-band as `unsupported_artifact` blocks,
+so a generated document cannot silently omit requested evidence.
+
 Production renderers include canonical result tables, bounded categorical
 charts, LP feasible regions, analytical NLP, graph, regression, and
 classification visuals, plus Packing PNG camera views and OBJ+MTL scene
