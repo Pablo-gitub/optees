@@ -205,11 +205,18 @@ def test_production_composition_advertises_and_renders_lp_tables():
             {
                 "artifact_type": "solution_table",
                 "title": "LP solution",
-                "formats": ["json", "csv"],
+                "formats": ["json", "csv", "markdown"],
                 "required_mathematical_statuses": ["optimal", "feasible"],
                 "options_schema": {
                     "type": "object",
-                    "properties": {"locale": {"enum": ["en", "it"]}},
+                    "properties": {
+                        "locale": {"enum": ["en", "it"]},
+                        "max_rows": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1000,
+                        },
+                    },
                     "additionalProperties": False,
                 },
             }
@@ -267,3 +274,42 @@ def test_production_composition_advertises_and_renders_lp_tables():
 
     assert json_artifact.json()["rows"] == [{"name": "x", "value": 1.0}]
     assert csv_artifact.text == "name,value\nx,1.0\n"
+
+
+def test_production_artifact_options_are_rejected_atomically():
+    with ASGIClient(create_local_api(token=TOKEN)) as client:
+        submitted = client.post(
+            "/api/v1/jobs",
+            headers=AUTH,
+            json={"capability_id": "lp.continuous", "problem": _lp_payload()},
+        )
+        job_id = submitted.json()["job_id"]
+        deadline = monotonic() + 5
+        while monotonic() < deadline:
+            job = client.get(f"/api/v1/jobs/{job_id}", headers=AUTH)
+            if job.json()["job_status"] == "completed":
+                break
+            sleep(0.01)
+
+        rejected = client.post(
+            f"/api/v1/jobs/{job_id}/artifacts",
+            headers=AUTH,
+            json={
+                "contract_version": "1",
+                "requests": [
+                    {
+                        "artifact_type": "solution_table",
+                        "formats": ["markdown"],
+                        "options": {"max_rows": 0},
+                    }
+                ],
+            },
+        )
+        listing = client.get(
+            f"/api/v1/jobs/{job_id}/artifacts",
+            headers=AUTH,
+        )
+
+    assert rejected.status_code == 400
+    assert rejected.json()["error"]["code"] == "artifact_request_invalid"
+    assert listing.json()["artifact_batches"] == []

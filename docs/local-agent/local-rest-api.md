@@ -158,7 +158,9 @@ Downloads are private, bearer-authenticated responses with SHA-256 metadata;
 artifact manifests and result envelopes never contain binary content or local
 filesystem paths.
 
-Every current capability exposes one canonical table in `json` and `csv`.
+Every current capability exposes one canonical table in `json`, `csv`, and
+`markdown`. Markdown accepts a bounded `max_rows` option and reports
+truncation explicitly; JSON and CSV retain the complete row set.
 Artifact identifiers are capability-specific, for example `solution_table` for
 LP/MILP, `selection_table` for Knapsack, `coefficient_table` for regression and
 classification, and `placement_table` for packing. Clients must use discovery

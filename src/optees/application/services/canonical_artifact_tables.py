@@ -34,12 +34,21 @@ class CanonicalTableDefinition:
         return AvailableArtifact(
             artifact_type=self.artifact_type,
             title=self.title,
-            formats=(ArtifactFormat.JSON, ArtifactFormat.CSV),
+            formats=(
+                ArtifactFormat.JSON,
+                ArtifactFormat.CSV,
+                ArtifactFormat.MARKDOWN,
+            ),
             required_mathematical_statuses=self.statuses,
             options_schema={
                 "type": "object",
                 "properties": {
                     "locale": {"enum": ["en", "it"]},
+                    "max_rows": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 1000,
+                    },
                 },
                 "additionalProperties": False,
             },

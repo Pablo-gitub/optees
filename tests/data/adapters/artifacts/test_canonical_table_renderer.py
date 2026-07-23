@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import io
 import json
+from dataclasses import replace
 
 import pytest
 
@@ -185,5 +186,42 @@ def test_renderer_emits_deterministic_structured_json_and_escaped_csv():
 def test_definitions_advertise_only_formats_implemented_by_the_renderer():
     for definition in canonical_table_definitions():
         descriptor = definition.descriptor()
-        assert descriptor.formats == (ArtifactFormat.JSON, ArtifactFormat.CSV)
+        assert descriptor.formats == (
+            ArtifactFormat.JSON,
+            ArtifactFormat.CSV,
+            ArtifactFormat.MARKDOWN,
+        )
         assert descriptor.required_mathematical_statuses
+
+
+def test_markdown_declares_truncation_and_escapes_table_content():
+    definition = canonical_table_definition("lp.continuous")
+    assert definition is not None
+    context = _context("lp.continuous", ArtifactFormat.MARKDOWN)
+    context = replace(
+        context,
+        envelope=replace(
+            context.envelope,
+            result={
+                **context.envelope.result,
+                "variables": [
+                    {"name": "first|variable", "value": 1.0},
+                    {"name": "second\nvariable", "value": 2.0},
+                    {"name": "third", "value": 3.0},
+                ],
+            },
+        ),
+        options=replace(context.options, locale="it", extra={"max_rows": 2}),
+    )
+
+    rendered = CanonicalTableRenderer(definition.builder).render(context)
+    markdown = rendered.content.decode("utf-8")
+
+    assert rendered.media_type == "text/markdown; charset=utf-8"
+    assert "first\\|variable" in markdown
+    assert "second<br>variable" in markdown
+    assert '"total_rows": 3' in markdown
+    assert '"displayed_rows": 2' in markdown
+    assert '"truncated": true' in markdown
+    assert "Mostrate 2 righe su 3" in markdown
+    assert "third" not in markdown

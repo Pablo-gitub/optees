@@ -335,6 +335,7 @@ def create_local_artifact_service(
             media_types={
                 ArtifactFormat.JSON: "application/json",
                 ArtifactFormat.CSV: "text/csv; charset=utf-8",
+                ArtifactFormat.MARKDOWN: "text/markdown; charset=utf-8",
             },
         )
         for definition in canonical_table_definitions()

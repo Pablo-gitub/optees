@@ -265,7 +265,7 @@ of truth and clients must not guess richer outputs.
 ### Phase 2 - Tables And First Visual Slice
 
 - [x] Implement canonical JSON and CSV table artifacts for every capability.
-- [ ] Implement Markdown tables with explicit truncation metadata.
+- [x] Implement Markdown tables with explicit truncation metadata.
 - [ ] Extract LP visual renderers as the first 2D/3D reference slice.
 - [ ] Verify SVG and PNG output in headless CI.
 - [ ] Add golden semantic tests and image non-blank/dimension checks without

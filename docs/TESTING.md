@@ -17,7 +17,8 @@ contracts, and verified downloads. It requires the local-service HTTP extras
 application and storage tests still run.
 
 The canonical renderer test is parameterized over every public capability and
-checks stable table shapes, deterministic JSON, and correctly escaped CSV.
+checks stable table shapes, deterministic JSON, correctly escaped CSV, and
+bounded Markdown with machine-readable truncation metadata.
 
 ## Philosophy
 - **TDD first**: write a small failing test → implement → refactor.

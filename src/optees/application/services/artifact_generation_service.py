@@ -212,6 +212,10 @@ class ArtifactGenerationService:
                     },
                 )
             try:
+                _validate_declared_options(
+                    artifact_request.options,
+                    registration.descriptor.options_schema,
+                )
                 options = _render_options(artifact_request.options)
             except (TypeError, ValueError) as exc:
                 return StructuredError(
@@ -554,6 +558,46 @@ def _render_options(options: Mapping[str, object]) -> ArtifactRenderOptions:
         font_family=options.get("font_family", "DejaVu Sans"),
         extra=extra,
     )
+
+
+def _validate_declared_options(
+    options: Mapping[str, object],
+    schema: Mapping[str, object],
+) -> None:
+    """Validate the bounded JSON-schema subset used by artifact discovery."""
+
+    if not schema:
+        return
+    properties = schema.get("properties", {})
+    if not isinstance(properties, Mapping):
+        raise ValueError("artifact options schema properties must be an object")
+    if schema.get("additionalProperties") is False:
+        unknown = sorted(set(options) - set(properties))
+        if unknown:
+            raise ValueError(
+                "unsupported artifact option: " + ", ".join(unknown)
+            )
+    for key, value in options.items():
+        rule = properties.get(key)
+        if not isinstance(rule, Mapping):
+            continue
+        allowed = rule.get("enum")
+        if isinstance(allowed, (list, tuple)) and value not in allowed:
+            raise ValueError(f"artifact option '{key}' has an unsupported value")
+        expected_type = rule.get("type")
+        if expected_type == "integer":
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise ValueError(f"artifact option '{key}' must be an integer")
+            minimum = rule.get("minimum")
+            maximum = rule.get("maximum")
+            if isinstance(minimum, (int, float)) and value < minimum:
+                raise ValueError(
+                    f"artifact option '{key}' must be at least {minimum}"
+                )
+            if isinstance(maximum, (int, float)) and value > maximum:
+                raise ValueError(
+                    f"artifact option '{key}' must be at most {maximum}"
+                )
 
 
 def _fingerprint(

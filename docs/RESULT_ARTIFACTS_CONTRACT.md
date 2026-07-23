@@ -73,6 +73,12 @@ rows; objective values, aggregate metrics, and other non-row values remain in
 the JSON summary. This avoids localized column names becoming an accidental
 machine contract.
 
+The same canonical tables support deterministic Markdown. `max_rows` defaults
+to 100 and is bounded to 1-1000. Every Markdown output embeds an
+`optees-table-metadata` JSON comment containing total rows, displayed rows, and
+an explicit truncation flag; a localized visible note is added when rows are
+omitted. JSON and CSV remain complete and are not affected by `max_rows`.
+
 ## Canonical Data And Render-Only Derivations
 
 Canonical source data consists of:
