@@ -99,6 +99,9 @@ The server exposes these allowlisted tools:
 10. `optees_get_batch_status`
 11. `optees_get_batch_result`
 12. `optees_cancel_batch`
+13. `optees_list_result_artifacts`
+14. `optees_render_result_artifacts`
+15. `optees_get_artifact`
 
 An agent must inspect the complete capability descriptor before validation and
 must validate the exact capability and payload before job creation. A changed
@@ -111,6 +114,23 @@ aggregate status, and retrieve its aggregate result. Each batch item retains
 its own job and independent validation report. A changed item invalidates the
 batch proof. Batch tools do not orchestrate dependent multi-stage workflows.
 
+After a job completes, artifact access follows a separate, opt-in sequence:
+
+1. call `optees_list_result_artifacts` to inspect supported artifact types,
+   formats, options, and existing batches;
+2. call `optees_render_result_artifacts` only with advertised combinations;
+3. poll `optees_list_result_artifacts` until the requested entry is
+   `available`;
+4. call `optees_get_artifact` to inspect media type, size, SHA-256, expiry, and
+   the opaque resource URI;
+5. read `optees-artifact://{artifact_id}` only when the user actually needs the
+   content.
+
+The three artifact tools return metadata only. They never include Base64,
+binary bytes, internal storage IDs, or filesystem paths. Explicit resource
+reads remain bounded by the session artifact limits and verify content
+integrity before transfer.
+
 ## Security And Scope
 
 The stdio process is private to the launching client, keeps jobs only in
@@ -119,8 +139,9 @@ cloud-hosted agent reach services on the user's localhost; the MCP client
 itself must run locally and support local process servers.
 
 The server discovers every capability registered by the shared composition
-root. Automated MCP sequencing and one complete LP execution provide the first
-vertical regression path; broader capability and client compatibility still
-requires the Phase D matrix. Native release CI launches the packaged companion
-on Windows, macOS, and Linux and requires successful capability discovery. A
-manual clean-machine Claude test remains part of release-candidate acceptance.
+root. Automated MCP sequencing covers a complete LP solve plus artifact
+discovery, bounded rendering, metadata-only inspection, and explicit resource
+transfer. Broader capability and client compatibility still requires the Phase
+D matrix. Native release CI launches the packaged companion on Windows, macOS,
+and Linux and requires successful capability discovery. A manual clean-machine
+Claude test remains part of release-candidate acceptance.

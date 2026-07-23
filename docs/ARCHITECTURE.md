@@ -175,6 +175,13 @@ storage IDs. The authenticated HTTP adapter only translates DTOs and returns
 already verified bytes; it does not select renderers, inspect job repositories,
 or access filesystem paths.
 
+The MCP adapter exposes the same service through metadata-first tools.
+Discovery, rendering, and manifest inspection return structured JSON only;
+artifact bytes are available solely through an explicit
+`optees-artifact://{artifact_id}` resource read. This prevents charts, ZIP
+archives, and other binaries from entering model context as an incidental tool
+result.
+
 Production renderers include canonical result tables, bounded categorical
 charts, LP feasible regions, analytical NLP, graph, regression, and
 classification visuals, plus Packing PNG camera views and OBJ+MTL scene

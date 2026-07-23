@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import sys
 from datetime import timedelta
 from pathlib import Path
+from time import monotonic, sleep
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
-from optees.composition.local_agent import create_local_job_service
+from optees.composition.local_agent import (
+    create_local_artifact_service,
+    create_local_job_service,
+)
 from optees.interfaces.mcp.local_server import (
     LocalMcpToolFacade,
     create_mcp_server,
@@ -44,6 +49,9 @@ TOOL_NAMES = {
     "optees_get_batch_status",
     "optees_get_batch_result",
     "optees_cancel_batch",
+    "optees_list_result_artifacts",
+    "optees_render_result_artifacts",
+    "optees_get_artifact",
 }
 
 
@@ -74,12 +82,15 @@ def test_facade_requires_descriptor_and_exact_validation_before_job():
 def test_mcp_tools_publish_expected_names_and_problem_schemas():
     async def inspect_tools():
         service = create_local_job_service()
+        artifacts = create_local_artifact_service(service)
         try:
-            return await create_mcp_server(service).list_tools()
+            server = create_mcp_server(service, artifacts)
+            return await server.list_tools(), await server.list_resource_templates()
         finally:
+            artifacts.close()
             service.shutdown(wait=True, cancel_pending=True)
 
-    tools = asyncio.run(inspect_tools())
+    tools, templates = asyncio.run(inspect_tools())
     by_name = {tool.name: tool for tool in tools}
 
     assert set(by_name) == TOOL_NAMES
@@ -89,6 +100,53 @@ def test_mcp_tools_publish_expected_names_and_problem_schemas():
     assert by_name["optees_get_job_result"].outputSchema["type"] == "object"
     batch_schema = by_name["optees_validate_batch"].inputSchema
     assert batch_schema["properties"]["items"]["maxItems"] == 32
+    render_schema = by_name["optees_render_result_artifacts"].inputSchema
+    assert render_schema["properties"]["requests"]["maxItems"] == 8
+    assert [str(item.uriTemplate) for item in templates] == [
+        "optees-artifact://{artifact_id}"
+    ]
+
+
+def test_facade_renders_metadata_only_and_requires_explicit_resource_read():
+    jobs = create_local_job_service()
+    artifacts = create_local_artifact_service(jobs)
+    facade = LocalMcpToolFacade(jobs, artifacts)
+    try:
+        facade.get_capability("lp.continuous")
+        validated = facade.validate_problem("lp.continuous", LP_PROBLEM)
+        assert validated["validation"]["valid"] is True
+        created = facade.create_job("lp.continuous", LP_PROBLEM)
+        job_id = created["job"]["job_id"]
+        _wait_for_job(jobs, job_id)
+
+        discovery = facade.list_result_artifacts(job_id)
+        artifact_types = {
+            item["artifact_type"] for item in discovery["available_artifacts"]
+        }
+        assert "solution_table" in artifact_types
+        rendered = facade.render_result_artifacts(
+            job_id,
+            [{"artifact_type": "solution_table", "formats": ["json"]}],
+        )
+        assert rendered["ok"] is True
+        entry = _wait_for_artifact(artifacts, job_id)
+
+        metadata = facade.get_artifact(entry["artifact_id"])
+        assert metadata["content_included"] is False
+        assert "content" not in metadata
+        assert "path" not in str(metadata).lower()
+        assert metadata["resource_uri"] == (
+            f"optees-artifact://{entry['artifact_id']}"
+        )
+        content = facade.read_artifact_resource(entry["artifact_id"])
+        assert json.loads(content)["artifact_type"] == "solution_table"
+
+        traversal = facade.get_artifact("../../etc/passwd")
+        assert traversal["ok"] is False
+        assert "path" not in str(traversal).lower()
+    finally:
+        artifacts.close()
+        jobs.shutdown(wait=True, cancel_pending=True)
 
 
 def test_facade_requires_inspection_and_exact_validation_before_batch():
@@ -192,8 +250,86 @@ async def _run_stdio_lp_workflow() -> None:
             assert envelope["validation"]["status"] == "verified"
             assert envelope["result"]["objective"] == 220.0
 
+            discovered = await session.call_tool(
+                "optees_list_result_artifacts",
+                {"job_id": job_id},
+                read_timeout_seconds=timeout,
+            )
+            available = _structured(discovered)["available_artifacts"]
+            assert any(
+                item["artifact_type"] == "solution_table" for item in available
+            )
+            requested = await session.call_tool(
+                "optees_render_result_artifacts",
+                {
+                    "job_id": job_id,
+                    "requests": [
+                        {
+                            "artifact_type": "solution_table",
+                            "formats": ["json"],
+                        }
+                    ],
+                },
+                read_timeout_seconds=timeout,
+            )
+            assert _structured(requested)["content_policy"][
+                "embedded_by_default"
+            ] is False
+
+            artifact_entry = None
+            for _ in range(100):
+                listed_artifacts = await session.call_tool(
+                    "optees_list_result_artifacts",
+                    {"job_id": job_id},
+                    read_timeout_seconds=timeout,
+                )
+                batches = _structured(listed_artifacts)["artifact_batches"]
+                if batches:
+                    candidate = batches[-1]["artifacts"][0]
+                    if candidate["status"] == "available":
+                        artifact_entry = candidate
+                        break
+                await asyncio.sleep(0.01)
+            assert artifact_entry is not None
+            metadata = await session.call_tool(
+                "optees_get_artifact",
+                {"artifact_id": artifact_entry["artifact_id"]},
+                read_timeout_seconds=timeout,
+            )
+            artifact_metadata = _structured(metadata)
+            assert artifact_metadata["content_included"] is False
+            assert "content" not in artifact_metadata
+
+            resource = await session.read_resource(
+                artifact_metadata["resource_uri"]
+            )
+            assert len(resource.contents) == 1
+            assert resource.contents[0].blob is not None
+
 
 def _structured(result) -> dict[str, object]:
     assert result.isError is False
     assert isinstance(result.structuredContent, dict)
     return result.structuredContent
+
+
+def _wait_for_job(service, job_id: str) -> None:
+    deadline = monotonic() + 5
+    while monotonic() < deadline:
+        snapshot = service.get(job_id)
+        if snapshot.job_status.value == "completed":
+            return
+        sleep(0.01)
+    raise AssertionError("job did not complete")
+
+
+def _wait_for_artifact(service, job_id: str) -> dict[str, object]:
+    deadline = monotonic() + 5
+    while monotonic() < deadline:
+        batches = service.list_for_job(job_id)
+        if batches:
+            entry = batches[-1].artifacts[0]
+            if entry.status.value == "available":
+                return entry.to_dict()
+        sleep(0.01)
+    raise AssertionError("artifact did not become available")

@@ -265,6 +265,20 @@ Downloads use `Cache-Control: private, no-store`, return a SHA-256 ETag and
 ID. The internal ID and filesystem location never cross the application
 boundary.
 
+The implemented MCP surface mirrors that lifecycle:
+
+- `optees_list_result_artifacts` advertises the job capability's artifact
+  contracts and lists retained batches;
+- `optees_render_result_artifacts` atomically validates and queues a version 1
+  request;
+- `optees_get_artifact` returns manifest metadata and, when available, an
+  `optees-artifact://{artifact_id}` URI;
+- the resource URI performs the only content transfer and reads verified bytes
+  by opaque public ID.
+
+MCP tools never embed artifact content or local paths. Agents must inspect
+media type and byte size before explicitly reading a resource.
+
 ## Lifecycle And Limits
 
 Artifacts and reports are private to one local REST or MCP process session.

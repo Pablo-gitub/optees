@@ -334,6 +334,29 @@ class ArtifactGenerationService:
             self._refresh_expired()
             return tuple(self._manifest(batch_id, job_id) for batch_id in batch_ids)
 
+    def manifest_entry(
+        self,
+        artifact_id: str,
+    ) -> ArtifactManifestEntry | StructuredError:
+        """Return transport-neutral metadata without reading artifact bytes."""
+
+        with self._lock:
+            self._refresh_expired()
+            record = self._records.get(artifact_id)
+            if record is None:
+                return _artifact_error(
+                    ErrorCode.ARTIFACT_NOT_FOUND,
+                    "The artifact was not found.",
+                    artifact_id,
+                )
+            if record.entry.status is ArtifactStatus.EXPIRED:
+                return _artifact_error(
+                    ErrorCode.ARTIFACT_EXPIRED,
+                    "The artifact has expired.",
+                    artifact_id,
+                )
+            return record.entry
+
     def download(self, artifact_id: str) -> ArtifactDownloadOutcome:
         with self._lock:
             record = self._records.get(artifact_id)

@@ -19,10 +19,12 @@ from optees.application.contracts.batch import (
     BatchRequest,
     BatchSnapshot,
 )
+from optees.application.codecs.artifact_request_codec import (
+    artifact_batch_request_from_dict,
+)
 from optees.application.contracts.artifact import (
     ArtifactBatchRequest,
     ArtifactFormat,
-    ArtifactRequest,
 )
 from optees.application.contracts.artifact_storage import StoredArtifactPayload
 from optees.application.contracts.errors import ErrorCode, ErrorDetail, StructuredError
@@ -541,22 +543,15 @@ def _artifact_batch_request(
     request_id: str,
 ) -> ArtifactBatchRequest:
     try:
-        requests = []
-        for item in body.requests:
-            options = require_json_value(
-                item.options,
-                path="$.artifact.requests[].options",
-            )
-            assert isinstance(options, dict)
-            requests.append(
-                ArtifactRequest(
-                    artifact_type=item.artifact_type,
-                    formats=tuple(item.formats),
-                    options=options,
-                )
-            )
-        return ArtifactBatchRequest(
-            tuple(requests),
+        return artifact_batch_request_from_dict(
+            [
+                {
+                    "artifact_type": item.artifact_type,
+                    "formats": [format_.value for format_ in item.formats],
+                    "options": item.options,
+                }
+                for item in body.requests
+            ],
             contract_version=body.contract_version,
         )
     except ValueError as exc:

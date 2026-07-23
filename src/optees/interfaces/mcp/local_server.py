@@ -7,17 +7,29 @@ from typing import Annotated, Any
 
 from pydantic import Field
 
+from optees.application.codecs.artifact_request_codec import (
+    artifact_batch_request_from_dict,
+)
 from optees.application.contracts.batch import BatchItemRequest, BatchRequest
+from optees.application.contracts.artifact import ArtifactStatus
 from optees.application.contracts.errors import StructuredError
 from optees.application.contracts.json_value import require_json_value
+from optees.application.services.artifact_generation_service import (
+    ArtifactGenerationService,
+)
 from optees.application.services.local_job_service import LocalJobService
 
 
 class LocalMcpToolFacade:
     """Stateful MCP facade enforcing discovery before validated execution."""
 
-    def __init__(self, job_service: LocalJobService) -> None:
+    def __init__(
+        self,
+        job_service: LocalJobService,
+        artifact_service: ArtifactGenerationService | None = None,
+    ) -> None:
         self._jobs = job_service
+        self._artifacts = artifact_service
         self._described_capabilities: set[str] = set()
         self._validated_problems: set[str] = set()
         self._validated_batches: set[str] = set()
@@ -172,13 +184,116 @@ class LocalMcpToolFacade:
             return {"ok": False, "error": outcome.to_dict()}
         return {"ok": True, "batch": outcome.to_dict()}
 
+    def list_result_artifacts(self, job_id: str) -> dict[str, object]:
+        if self._artifacts is None:
+            return _tool_error(
+                "artifact_service_unavailable",
+                "Artifact generation is not configured for this MCP session.",
+            )
+        snapshot = self._jobs.get(job_id)
+        if isinstance(snapshot, StructuredError):
+            return {"ok": False, "error": snapshot.to_dict()["error"]}
+        descriptor = next(
+            (
+                item
+                for item in self._jobs.list_capabilities()
+                if item.get("id") == snapshot.capability_id
+            ),
+            None,
+        )
+        batches = self._artifacts.list_for_job(job_id)
+        if isinstance(batches, StructuredError):
+            return {"ok": False, "error": batches.to_dict()["error"]}
+        return {
+            "ok": True,
+            "job_id": job_id,
+            "capability_id": snapshot.capability_id,
+            "available_artifacts": (
+                descriptor.get("available_artifacts", [])
+                if descriptor is not None
+                else []
+            ),
+            "artifact_batches": [batch.to_dict() for batch in batches],
+            "content_policy": {
+                "embedded_by_default": False,
+                "retrieval": "Read optees-artifact://{artifact_id} explicitly.",
+            },
+        }
 
-def create_mcp_server(job_service: LocalJobService):
+    def render_result_artifacts(
+        self,
+        job_id: str,
+        requests: list[dict[str, Any]],
+        *,
+        contract_version: str = "1",
+    ) -> dict[str, object]:
+        if self._artifacts is None:
+            return _tool_error(
+                "artifact_service_unavailable",
+                "Artifact generation is not configured for this MCP session.",
+            )
+        try:
+            request = artifact_batch_request_from_dict(
+                requests,
+                contract_version=contract_version,
+            )
+        except ValueError as exc:
+            return _tool_error("artifact_request_invalid", str(exc))
+        outcome = self._artifacts.submit(job_id, request)
+        if isinstance(outcome, StructuredError):
+            return {"ok": False, "error": outcome.to_dict()["error"]}
+        return {
+            "ok": True,
+            "artifact_batch": outcome.to_dict(),
+            "content_policy": {
+                "embedded_by_default": False,
+                "next_step": (
+                    "Poll optees_list_result_artifacts, then inspect metadata with "
+                    "optees_get_artifact before explicitly reading its resource URI."
+                ),
+            },
+        }
+
+    def get_artifact(self, artifact_id: str) -> dict[str, object]:
+        if self._artifacts is None:
+            return _tool_error(
+                "artifact_service_unavailable",
+                "Artifact generation is not configured for this MCP session.",
+            )
+        outcome = self._artifacts.manifest_entry(artifact_id)
+        if isinstance(outcome, StructuredError):
+            return {"ok": False, "error": outcome.to_dict()["error"]}
+        payload: dict[str, object] = {
+            "ok": True,
+            "artifact": outcome.to_dict(),
+            "content_included": False,
+        }
+        if outcome.status is ArtifactStatus.AVAILABLE:
+            payload["resource_uri"] = f"optees-artifact://{outcome.artifact_id}"
+            payload["retrieval_instruction"] = (
+                "Read the resource URI only when the user needs the file content. "
+                "Binary bytes are never inserted by this metadata tool."
+            )
+        return payload
+
+    def read_artifact_resource(self, artifact_id: str) -> bytes:
+        if self._artifacts is None:
+            raise ValueError("artifact service is unavailable")
+        outcome = self._artifacts.download(artifact_id)
+        if isinstance(outcome, StructuredError):
+            raise ValueError(outcome.message)
+        return outcome.content
+
+
+def create_mcp_server(
+    job_service: LocalJobService,
+    artifact_service: ArtifactGenerationService | None = None,
+):
     """Create the stdio MCP server without starting or owning the job service."""
 
     from mcp.server.fastmcp import FastMCP
 
-    facade = LocalMcpToolFacade(job_service)
+    facade = LocalMcpToolFacade(job_service, artifact_service)
     server = FastMCP(
         "Optees Local Solver",
         instructions=(
@@ -186,7 +301,8 @@ def create_mcp_server(job_service: LocalJobService):
             "versioned payload before creating a job. Use batch tools for independent "
             "repeated scenarios instead of coordinating many individual jobs. Report "
             "mathematical status and independent validation separately, and never "
-            "invent missing data."
+            "invent missing data. Artifact tools return metadata only by default; "
+            "read an artifact resource explicitly only when its bytes are needed."
         ),
         log_level="WARNING",
         json_response=True,
@@ -309,6 +425,64 @@ def create_mcp_server(job_service: LocalJobService):
     )
     def optees_cancel_batch(batch_id: str) -> dict[str, object]:
         return facade.cancel_batch(batch_id)
+
+    @server.tool(
+        name="optees_list_result_artifacts",
+        description=(
+            "Discover artifact types supported by a job's capability and list every "
+            "artifact batch already requested for that job. Example: call this after "
+            "a completed job before choosing a table, chart, or 3D export."
+        ),
+        structured_output=True,
+    )
+    def optees_list_result_artifacts(job_id: str) -> dict[str, object]:
+        return facade.list_result_artifacts(job_id)
+
+    @server.tool(
+        name="optees_render_result_artifacts",
+        description=(
+            "Request bounded result artifacts for a completed job. Pass only types, "
+            "formats, and options advertised by optees_list_result_artifacts. The "
+            "response contains manifests, never binary content."
+        ),
+        structured_output=True,
+    )
+    def optees_render_result_artifacts(
+        job_id: str,
+        requests: Annotated[
+            list[dict[str, Any]],
+            Field(min_length=1, max_length=8),
+        ],
+        contract_version: str = "1",
+    ) -> dict[str, object]:
+        return facade.render_result_artifacts(
+            job_id,
+            requests,
+            contract_version=contract_version,
+        )
+
+    @server.tool(
+        name="optees_get_artifact",
+        description=(
+            "Inspect one artifact manifest and obtain its explicit resource URI. "
+            "This metadata-only tool never inserts file bytes into model context."
+        ),
+        structured_output=True,
+    )
+    def optees_get_artifact(artifact_id: str) -> dict[str, object]:
+        return facade.get_artifact(artifact_id)
+
+    @server.resource(
+        "optees-artifact://{artifact_id}",
+        name="Optees result artifact",
+        description=(
+            "Explicitly retrieve one bounded, verified artifact by opaque ID. Read "
+            "only after inspecting its media type and size with optees_get_artifact."
+        ),
+        mime_type="application/octet-stream",
+    )
+    def optees_artifact_resource(artifact_id: str) -> bytes:
+        return facade.read_artifact_resource(artifact_id)
 
     return server
 

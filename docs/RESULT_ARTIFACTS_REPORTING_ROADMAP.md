@@ -284,13 +284,13 @@ than relying on platform-sensitive golden screenshots.
 
 - [x] MILP variable charts and Knapsack item/capacity/resource charts,
   including bounded large-instance rendering.
-- [ ] MILP validation summary and any remaining diagnostic table artifacts.
+- [x] MILP validation summary and remaining diagnostic table artifacts.
 - [x] NLP convergence and bounded 2D/3D objective visualizations.
 - [x] Dijkstra graph/path artifacts.
 - [x] Regression and classification diagnostics.
 - [x] Packing placement/capacity tables, OBJ + MTL export, and named PNG
   camera views.
-- [ ] Keep desktop rendering behavior aligned with shared headless preparation.
+- [x] Keep desktop rendering behavior aligned with shared headless preparation.
 
 Categorical SVG/PNG rendering is shared by MILP and Knapsack without sharing
 their public artifact identifiers. Category-heavy views preserve input order,
@@ -317,13 +317,41 @@ and a machine-readable manifest; item colors are stable across PNG and OBJ
 outputs. Both renderers preserve the solver coordinates exactly and reject
 empty or oversized scenes instead of inventing or truncating placements.
 
+MILP now exposes separate, machine-readable validation and solver-diagnostic
+tables. Validation output preserves check codes, statuses, measurements,
+violations, tolerances, and limitations; diagnostics preserve mathematical
+status, termination reason, warnings, and stable sorted backend fields.
+
+Desktop LP and Knapsack charts now use the same deterministic 40-category
+window as headless categorical artifacts. Complete values remain available in
+their tables and exports, while the chart explicitly reports truncation.
+
 ### Phase 4 - MCP Artifact Access
 
-- [ ] Expose artifact discovery and rendering through MCP.
-- [ ] Prevent large binaries from being injected into model context by default.
-- [ ] Provide clear tool descriptions and example agent workflows.
-- [ ] Test one frontier agent and at least two local tool-capable models.
-- [ ] Record artifact selection accuracy, transfer failures, and token impact.
+- [x] Expose artifact discovery and rendering through MCP.
+- [x] Prevent large binaries from being injected into model context by default.
+- [x] Provide clear tool descriptions and example agent workflows.
+- [x] Add automated end-to-end MCP coverage for discovery, render polling,
+  metadata inspection, explicit resource transfer, and unsafe-ID rejection.
+- [ ] Run the empirical artifact-selection study with one frontier agent and at
+  least two local tool-capable models after the Markdown report workflow exists.
+- [ ] Record artifact selection accuracy, transfer failures, and token impact in
+  that study.
+
+Phase 4 engineering is complete. MCP now exposes three metadata tools and one
+explicit resource template. `optees_list_result_artifacts` discovers supported
+outputs and prior batches, `optees_render_result_artifacts` requests bounded
+generation, and `optees_get_artifact` reports status, media type, byte count,
+hash, and a resource URI. None of those tools returns file bytes or filesystem
+paths. Content is read only through
+`optees-artifact://{artifact_id}`, which delegates to the same bounded,
+SHA-256-verifying store used by REST.
+
+The empirical model study remains deliberately scheduled after Phase 5, as
+previously agreed, so agents can be evaluated on a useful solve-render-compose
+workflow rather than an isolated file download. Existing Claude/Qwen/Granite
+evidence establishes general MCP tool compatibility but is not misreported as
+artifact-selection accuracy.
 
 ### Phase 5 - Markdown Report MVP
 

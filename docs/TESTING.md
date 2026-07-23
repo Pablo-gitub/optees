@@ -6,9 +6,13 @@
 PYTHONPATH=src python -m pytest -q \
   tests/application/services/test_artifact_generation_service.py \
   tests/data/adapters/artifacts/test_canonical_table_renderer.py \
+  tests/data/adapters/artifacts/test_categorical_chart_renderer.py \
+  tests/data/adapters/artifacts/test_analytic_chart_renderer.py \
+  tests/data/adapters/artifacts/test_packing_scene_renderer.py \
   tests/data/adapters/artifacts/test_local_artifact_store.py \
   tests/interfaces/http/test_local_artifact_api.py \
-  tests/interfaces/http/test_local_api.py
+  tests/interfaces/http/test_local_api.py \
+  tests/interfaces/mcp/test_local_mcp_server.py
 ```
 
 This gate covers asynchronous lifecycle, bounded storage, authorization, HTTP
@@ -17,8 +21,10 @@ contracts, and verified downloads. It requires the local-service HTTP extras
 application and storage tests still run.
 
 The canonical renderer test is parameterized over every public capability and
-checks stable table shapes, deterministic JSON, correctly escaped CSV, and
-bounded Markdown with machine-readable truncation metadata.
+checks stable table shapes, deterministic JSON, correctly escaped CSV, bounded
+Markdown, MILP validation semantics, and machine-readable truncation metadata.
+MCP coverage verifies metadata-first discovery, render polling, explicit
+resource transfer, and rejection of unsafe opaque IDs.
 
 ## Philosophy
 - **TDD first**: write a small failing test → implement → refactor.
