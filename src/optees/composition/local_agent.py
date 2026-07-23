@@ -97,6 +97,10 @@ from optees.application.services.canonical_artifact_tables import (
     canonical_table_definition,
     canonical_table_definitions,
 )
+from optees.application.services.categorical_artifact_visuals import (
+    categorical_visual_definitions,
+    categorical_visual_descriptors,
+)
 from optees.application.services.lp_artifact_visuals import (
     lp_visual_definitions,
     lp_visual_descriptors,
@@ -329,6 +333,9 @@ def create_local_artifact_service(
     from optees.data.adapters.artifacts.canonical_table_renderer import (
         CanonicalTableRenderer,
     )
+    from optees.data.adapters.artifacts.categorical_chart_renderer import (
+        CategoricalChartRenderer,
+    )
     from optees.data.adapters.artifacts.local_artifact_store import LocalArtifactStore
     from optees.data.adapters.artifacts.lp_feasible_region_renderer import (
         LPFeasibleRegionRenderer,
@@ -359,17 +366,37 @@ def create_local_artifact_service(
         )
         for definition in lp_visual_definitions()
     )
+    categorical_registrations = tuple(
+        ArtifactRendererRegistration(
+            capability_id=definition.capability_id,
+            descriptor=definition.descriptor(),
+            renderer=CategoricalChartRenderer(definition),
+            media_types={
+                ArtifactFormat.SVG: "image/svg+xml",
+                ArtifactFormat.PNG: "image/png",
+            },
+        )
+        for definition in categorical_visual_definitions()
+    )
     return ArtifactGenerationService(
         job_service,
         LocalArtifactStore(),
-        registrations=table_registrations + visual_registrations,
+        registrations=(
+            table_registrations
+            + visual_registrations
+            + categorical_registrations
+        ),
     )
 
 
 def _available_artifacts(capability_id: str) -> tuple[AvailableArtifact, ...]:
     definition = canonical_table_definition(capability_id)
     tables = (definition.descriptor(),) if definition is not None else ()
-    return tables + lp_visual_descriptors(capability_id)
+    return (
+        tables
+        + lp_visual_descriptors(capability_id)
+        + categorical_visual_descriptors(capability_id)
+    )
 
 
 def create_lp_optimization_service(

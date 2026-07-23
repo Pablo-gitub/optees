@@ -280,12 +280,20 @@ than relying on platform-sensitive golden screenshots.
 
 ### Phase 3 - Capability Rollout
 
-- [ ] MILP and Knapsack artifacts, including the large-instance UX correction.
+- [x] MILP variable charts and Knapsack item/capacity/resource charts,
+  including bounded large-instance rendering.
+- [ ] MILP validation summary and any remaining diagnostic table artifacts.
 - [ ] NLP convergence and bounded 2D/3D objective visualizations.
 - [ ] Dijkstra graph/path artifacts.
 - [ ] Regression and classification diagnostics.
 - [ ] Packing placement tables, OBJ + MTL export, and named PNG camera views.
 - [ ] Keep desktop rendering behavior aligned with shared headless preparation.
+
+Categorical SVG/PNG rendering is shared by MILP and Knapsack without sharing
+their public artifact identifiers. Category-heavy views preserve input order,
+default to 40 entries, accept at most 200, and include a visible
+shown-versus-total note when truncated. This keeps API output bounded while
+leaving complete JSON/CSV/Markdown tables available for analysis.
 
 ### Phase 4 - MCP Artifact Access
 

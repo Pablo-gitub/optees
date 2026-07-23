@@ -165,6 +165,10 @@ Continuous LP also exposes `feasible_region` in `svg` and `png` for optimal
 problems with exactly two or three variables. Its options include locale,
 light/dark theme, width, and height; use capability discovery for the exact
 bounds.
+MILP and Knapsack expose capability-specific SVG/PNG bar charts. Charts with
+potentially many variables, items, or resources accept `max_items` from 1 to
+200 and visibly disclose truncation. Request the canonical table when complete
+machine-readable rows are required.
 Artifact identifiers are capability-specific, for example `solution_table` for
 LP/MILP, `selection_table` for Knapsack, `coefficient_table` for regression and
 classification, and `placement_table` for packing. Clients must use discovery

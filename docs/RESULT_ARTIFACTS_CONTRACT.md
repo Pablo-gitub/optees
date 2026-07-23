@@ -87,6 +87,14 @@ didactic representation of the feasible set, not an additional optimality
 proof. Other dimensions fail as unsupported render inputs rather than
 producing a misleading projection.
 
+MILP advertises a bounded `variable_chart`. The five Knapsack variants
+advertise bounded `item_chart` views; scalar variants also provide
+`capacity_chart`, while the multi-dimensional variant provides
+`resource_chart`. Category-heavy charts accept `max_items` (default 40,
+bounded to 1-200), preserve input order, and display an explicit
+shown-versus-total note when truncated. Complete canonical tables remain
+available independently of chart truncation.
+
 ## Canonical Data And Render-Only Derivations
 
 Canonical source data consists of:
