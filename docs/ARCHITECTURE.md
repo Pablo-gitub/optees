@@ -226,6 +226,11 @@ classDiagram
     class LocalJobService {
         +validate(capability_id, payload)
         +submit(capability_id, payload)
+        +validate_batch(batch)
+        +submit_batch(batch)
+        +batch_status(batch_id)
+        +batch_result(batch_id)
+        +cancel_batch(batch_id)
         +status(job_id)
         +result(job_id)
         +cancel(job_id)
@@ -233,6 +238,7 @@ classDiagram
 
     class InMemoryJobRepository {
         +add(record)
+        +add_many(records)
         +get(job_id)
         +replace(job_id, changes)
         +list()
@@ -335,6 +341,27 @@ REST accepts validation and submission as separate calls but does not retain a
 per-client proof that they are identical. The stateful MCP facade does retain
 that proof and rejects job creation until the same capability and normalized
 payload have passed validation.
+
+### Bounded Batch Execution
+
+Independent repeated scenarios can be submitted through the versioned batch
+contract instead of manually coordinating three calls per problem. A batch:
+
+- contains between 1 and 32 items with unique client-defined identifiers;
+- may mix capabilities, provided every descriptor has first been inspected by
+  an MCP client;
+- validates every item before submission and creates no jobs if any item is
+  invalid, unavailable, or cannot fit in the bounded repository;
+- retains one ordinary job, execution envelope, mathematical status, and
+  independent validation report per item;
+- adds only aggregate lifecycle, mathematical-status, and validation-status
+  counts.
+
+The MVP remains deliberately single-worker. Batch fan-out is logical and
+bounded: it removes agent-side coordination without running numerical backends
+concurrently or weakening their individual validation. It is appropriate for
+independent regressions, scenarios, or parameter sweeps. It is not workflow
+orchestration and must not be used when one result is an input to a later job.
 
 ## Status Semantics
 

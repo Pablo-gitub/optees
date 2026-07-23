@@ -91,3 +91,38 @@ payload:
 `POST /api/v1/jobs` returns `202` and a job snapshot. Poll the returned job ID,
 then retrieve `/api/v1/jobs/{job_id}/result`. Mathematical infeasibility is a
 completed job result, not an HTTP execution failure.
+
+## Independent Batch Execution
+
+For repeated independent scenarios, use the batch endpoints:
+
+```text
+POST /api/v1/batches/validate
+POST /api/v1/batches
+GET  /api/v1/batches/{batch_id}
+GET  /api/v1/batches/{batch_id}/result
+POST /api/v1/batches/{batch_id}/cancel
+```
+
+The version 1 request contains 1 to 32 items:
+
+```json
+{
+  "version": "1",
+  "items": [
+    {
+      "client_item_id": "region-north",
+      "capability_id": "ml.regression.linear",
+      "problem": {"version": "1"}
+    }
+  ]
+}
+```
+
+`problem` must contain the complete capability-specific payload. Client item
+IDs must be unique. Validation and submission are all-or-nothing: Optees
+creates no jobs if an item is invalid or unavailable, or if the bounded queue
+cannot accept the complete batch. The result contains one normal execution
+envelope per item plus aggregate status counts. Batch execution is not a
+dependency graph; stages whose inputs depend on earlier outputs must be
+orchestrated explicitly.

@@ -59,6 +59,20 @@ def _problem_request() -> dict:
     return {"capability_id": "lp.continuous", "problem": _lp_payload()}
 
 
+def _batch_request() -> dict:
+    return {
+        "version": "1",
+        "items": [
+            {
+                "client_item_id": f"scenario-{index}",
+                "capability_id": "lp.continuous",
+                "problem": _lp_payload(),
+            }
+            for index in range(1, 3)
+        ],
+    }
+
+
 def _error_code(response) -> str:
     return response.json()["error"]["code"]
 
@@ -104,6 +118,11 @@ def test_health_is_public_but_info_requires_constant_contract_authentication():
         ("get", "/api/v1/jobs/missing", {}),
         ("get", "/api/v1/jobs/missing/result", {}),
         ("post", "/api/v1/jobs/missing/cancel", {"json": {}}),
+        ("post", "/api/v1/batches/validate", {"json": _batch_request()}),
+        ("post", "/api/v1/batches", {"json": _batch_request()}),
+        ("get", "/api/v1/batches/missing", {}),
+        ("get", "/api/v1/batches/missing/result", {}),
+        ("post", "/api/v1/batches/missing/cancel", {"json": {}}),
         ("get", "/api/v1/openapi.json", {}),
     ],
 )
@@ -247,6 +266,60 @@ def test_cancel_and_result_for_unknown_job_use_stable_status_codes():
     assert _error_code(result) == "job_not_found"
 
 
+def test_batch_api_validates_submits_and_aggregates_individual_results():
+    with ASGIClient(create_local_api(token=TOKEN)) as client:
+        validated = client.post(
+            "/api/v1/batches/validate",
+            headers=AUTH,
+            json=_batch_request(),
+        )
+        submitted = client.post(
+            "/api/v1/batches",
+            headers=AUTH,
+            json=_batch_request(),
+        )
+        batch_id = submitted.json()["batch_id"]
+
+        deadline = monotonic() + 5
+        snapshot = None
+        while monotonic() < deadline:
+            snapshot = client.get(f"/api/v1/batches/{batch_id}", headers=AUTH)
+            if snapshot.json()["batch_status"] == "completed":
+                break
+            sleep(0.01)
+        result = client.get(
+            f"/api/v1/batches/{batch_id}/result",
+            headers=AUTH,
+        )
+
+    assert validated.status_code == 200
+    assert validated.json()["valid"] is True
+    assert submitted.status_code == 202
+    assert snapshot is not None
+    assert snapshot.json()["counts"] == {"completed": 2}
+    assert result.status_code == 200
+    assert result.json()["summary"]["mathematical_status_counts"] == {
+        "optimal": 2
+    }
+    assert result.json()["summary"]["validation_status_counts"] == {
+        "verified": 2
+    }
+
+
+def test_batch_api_rejects_duplicate_client_ids_as_invalid_request():
+    duplicate = _batch_request()
+    duplicate["items"][1]["client_item_id"] = "scenario-1"
+    with ASGIClient(create_local_api(token=TOKEN)) as client:
+        response = client.post(
+            "/api/v1/batches",
+            headers=AUTH,
+            json=duplicate,
+        )
+
+    assert response.status_code == 400
+    assert _error_code(response) == "invalid_request"
+
+
 def test_authenticated_openapi_matches_routes_and_bearer_security():
     with ASGIClient(create_local_api(token=TOKEN)) as client:
         response = client.get("/api/v1/openapi.json", headers=AUTH)
@@ -262,6 +335,11 @@ def test_authenticated_openapi_matches_routes_and_bearer_security():
         "/api/v1/jobs/{job_id}",
         "/api/v1/jobs/{job_id}/result",
         "/api/v1/jobs/{job_id}/cancel",
+        "/api/v1/batches/validate",
+        "/api/v1/batches",
+        "/api/v1/batches/{batch_id}",
+        "/api/v1/batches/{batch_id}/result",
+        "/api/v1/batches/{batch_id}/cancel",
         "/api/v1/openapi.json",
     }
     assert response.status_code == 200

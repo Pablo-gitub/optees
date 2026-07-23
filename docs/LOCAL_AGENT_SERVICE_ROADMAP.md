@@ -354,6 +354,8 @@ invocable through the same in-process service and CLI.
   cancellation, without labelling it optimal.
 - [x] Prevent new work during controlled shutdown.
 - [x] Add lifecycle, concurrency, cancellation, and retention tests.
+- [x] Add bounded, atomic batch submission for up to 32 independent problems,
+  preserving one job and independent validation report per item.
 
 `LocalJobService` wraps the synchronous execution facade with one local worker,
 an explicit FIFO queue, bounded in-memory retention, and immutable public job
@@ -389,6 +391,11 @@ GET  /api/v1/jobs
 GET  /api/v1/jobs/{job_id}
 GET  /api/v1/jobs/{job_id}/result
 POST /api/v1/jobs/{job_id}/cancel
+POST /api/v1/batches/validate
+POST /api/v1/batches
+GET  /api/v1/batches/{batch_id}
+GET  /api/v1/batches/{batch_id}/result
+POST /api/v1/batches/{batch_id}/cancel
 ```
 
 - [x] Generate and contract-test OpenAPI.
@@ -403,6 +410,10 @@ available through the authenticated `/api/v1/openapi.json` endpoint. Mutating
 routes accept bounded JSON bodies only, and the provided server runner rejects
 all bind addresses except `127.0.0.1`. Process management, token generation,
 desktop controls, and release packaging remain Phase 7 responsibilities.
+Batch validation and submission are atomic at the application boundary: one
+invalid or unavailable item, or insufficient queue capacity, prevents every
+item from being accepted. REST, MCP, and the Ollama harness expose the same
+aggregate lifecycle while preserving the ordinary per-item envelopes.
 
 ### Phase 7 - Server Process, Desktop Settings, And Packaging
 

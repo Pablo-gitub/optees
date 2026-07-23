@@ -14,8 +14,14 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, ConfigDict, Field
 
+from optees.application.contracts.batch import (
+    BatchItemRequest,
+    BatchRequest,
+    BatchSnapshot,
+)
 from optees.application.contracts.errors import ErrorCode, ErrorDetail, StructuredError
 from optees.application.contracts.job import JobSnapshot
+from optees.application.contracts.json_value import require_json_value
 from optees.application.services.local_job_service import LocalJobService
 from optees.composition.local_agent import create_local_job_service
 from optees.core.version import get_app_version
@@ -35,6 +41,21 @@ class ProblemRequest(BaseModel):
 
 class CancelRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
+
+
+class BatchProblemItemRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    client_item_id: str = Field(min_length=1)
+    capability_id: str = Field(min_length=1)
+    problem: dict[str, Any]
+
+
+class BatchProblemRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    version: str = Field(pattern="^1$")
+    items: list[BatchProblemItemRequest] = Field(min_length=1, max_length=32)
 
 
 class RequestGuardMiddleware:
@@ -313,6 +334,43 @@ def create_local_api(
     async def cancel_job(job_id: str, _body: CancelRequest):
         return _job_or_raise(service.cancel(job_id))
 
+    @app.post("/api/v1/batches/validate", dependencies=protected)
+    async def validate_batch(
+        body: BatchProblemRequest,
+        request: Request,
+    ):
+        batch = _batch_request(body, request_id=_request_id(request))
+        return service.validate_batch(
+            batch,
+            request_id=_request_id(request),
+        ).to_dict()
+
+    @app.post("/api/v1/batches", status_code=202, dependencies=protected)
+    async def submit_batch(
+        body: BatchProblemRequest,
+        request: Request,
+    ):
+        outcome = service.submit_batch(
+            _batch_request(body, request_id=_request_id(request)),
+            request_id=_request_id(request),
+        )
+        return _batch_or_raise(outcome)
+
+    @app.get("/api/v1/batches/{batch_id}", dependencies=protected)
+    async def batch(batch_id: str):
+        return _batch_or_raise(service.get_batch(batch_id))
+
+    @app.get("/api/v1/batches/{batch_id}/result", dependencies=protected)
+    async def batch_result(batch_id: str):
+        outcome = service.batch_result(batch_id)
+        if isinstance(outcome, StructuredError):
+            _raise_structured(outcome)
+        return outcome.to_dict()
+
+    @app.post("/api/v1/batches/{batch_id}/cancel", dependencies=protected)
+    async def cancel_batch(batch_id: str, _body: CancelRequest):
+        return _batch_or_raise(service.cancel_batch(batch_id))
+
     @app.get("/api/v1/openapi.json", dependencies=protected)
     async def openapi_document():
         return app.openapi()
@@ -361,6 +419,43 @@ def _job_or_raise(outcome: JobSnapshot | StructuredError) -> dict[str, object]:
     return outcome.to_dict()
 
 
+def _batch_or_raise(
+    outcome: BatchSnapshot | StructuredError,
+) -> dict[str, object]:
+    if isinstance(outcome, StructuredError):
+        _raise_structured(outcome)
+    return outcome.to_dict()
+
+
+def _batch_request(
+    body: BatchProblemRequest,
+    *,
+    request_id: str,
+) -> BatchRequest:
+    try:
+        items = []
+        for item in body.items:
+            problem = require_json_value(item.problem, path="$.batch.items[].problem")
+            assert isinstance(problem, dict)
+            items.append(
+                BatchItemRequest(
+                    client_item_id=item.client_item_id,
+                    capability_id=item.capability_id,
+                    problem=problem,
+                )
+            )
+        return BatchRequest(tuple(items), version=body.version)
+    except ValueError as exc:
+        _raise_structured(
+            StructuredError(
+                code=ErrorCode.INVALID_REQUEST,
+                message=str(exc),
+                request_id=request_id,
+            )
+        )
+        raise AssertionError("unreachable")
+
+
 def _raise_structured(error: StructuredError) -> None:
     raise _ApiError(status_code=_status_code(error.code), error=error)
 
@@ -378,6 +473,9 @@ def _status_code(code: ErrorCode) -> int:
         ErrorCode.JOB_RESULT_NOT_READY: 409,
         ErrorCode.JOB_RESULT_NOT_AVAILABLE: 409,
         ErrorCode.JOB_CAPACITY_EXCEEDED: 429,
+        ErrorCode.BATCH_NOT_FOUND: 404,
+        ErrorCode.BATCH_RESULT_NOT_READY: 409,
+        ErrorCode.BATCH_CAPACITY_EXCEEDED: 429,
         ErrorCode.SERVICE_UNAVAILABLE: 503,
         ErrorCode.INTERNAL_ERROR: 500,
     }[code]

@@ -257,9 +257,10 @@ The remaining work is:
    evaluation, explicit forecast horizon, uncertainty intervals, residual
    diagnostics, and leakage safeguards. Do not silently reinterpret the
    existing tabular regression contract as forecasting.
-2. **Repeated-model ergonomics:** design bounded batch/fan-out execution for
-   the same validated capability over multiple groups while preserving one
-   result and validation report per model.
+2. **Repeated-model ergonomics (completed):** bounded batch/fan-out execution
+   accepts up to 32 independently validated problems, preserves one result and
+   validation report per item, and returns aggregate lifecycle, mathematical,
+   and validation counts through REST, MCP, and the local Ollama harness.
 3. **Clustering within the AI family:** local unsupervised clustering with k-means,
    user-selected `k`, reproducible seed, feature scaling made visible, inertia
    and silhouette diagnostics, and 2D/3D plots only for the selected displayed

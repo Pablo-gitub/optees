@@ -39,6 +39,11 @@ TOOL_NAMES = {
     "optees_get_job_status",
     "optees_get_job_result",
     "optees_cancel_job",
+    "optees_validate_batch",
+    "optees_create_batch",
+    "optees_get_batch_status",
+    "optees_get_batch_result",
+    "optees_cancel_batch",
 }
 
 
@@ -82,6 +87,45 @@ def test_mcp_tools_publish_expected_names_and_problem_schemas():
     assert set(validate_schema["required"]) == {"capability_id", "problem"}
     assert validate_schema["properties"]["problem"]["type"] == "object"
     assert by_name["optees_get_job_result"].outputSchema["type"] == "object"
+    batch_schema = by_name["optees_validate_batch"].inputSchema
+    assert batch_schema["properties"]["items"]["maxItems"] == 32
+
+
+def test_facade_requires_inspection_and_exact_validation_before_batch():
+    service = create_local_job_service()
+    facade = LocalMcpToolFacade(service)
+    items = [
+        {
+            "client_item_id": f"scenario-{index}",
+            "capability_id": "lp.continuous",
+            "problem": LP_PROBLEM,
+        }
+        for index in range(1, 3)
+    ]
+    try:
+        before_descriptor = facade.validate_batch("1", items)
+        facade.get_capability("lp.continuous")
+        before_validation = facade.create_batch("1", items)
+        validation = facade.validate_batch("1", items)
+        changed = facade.create_batch(
+            "1",
+            [
+                items[0],
+                {
+                    **items[1],
+                    "problem": {**LP_PROBLEM, "constraints": []},
+                },
+            ],
+        )
+        created = facade.create_batch("1", items)
+    finally:
+        service.shutdown(wait=True, cancel_pending=True)
+
+    assert before_descriptor["error"]["code"] == "capability_not_inspected"
+    assert before_validation["error"]["code"] == "batch_not_validated"
+    assert validation["validation"]["valid"] is True
+    assert changed["error"]["code"] == "batch_not_validated"
+    assert created["batch"]["item_count"] == 2
 
 
 def test_stdio_mcp_client_completes_local_lp_workflow():
@@ -153,4 +197,3 @@ def _structured(result) -> dict[str, object]:
     assert result.isError is False
     assert isinstance(result.structuredContent, dict)
     return result.structuredContent
-

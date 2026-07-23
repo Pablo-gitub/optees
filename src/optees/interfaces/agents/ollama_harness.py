@@ -134,12 +134,38 @@ class OpteesToolFacade:
         self._timeout = timeout
         self._described_capabilities: set[str] = set()
         self._validated_problems: set[str] = set()
+        self._validated_batches: set[str] = set()
 
     @property
     def tool_definitions(self) -> list[JsonObject]:
         problem_properties = {
             "capability_id": {"type": "string"},
             "problem": {"type": "object", "additionalProperties": True},
+        }
+        batch_properties = {
+            "version": {"type": "string", "enum": ["1"]},
+            "items": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 32,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "client_item_id": {"type": "string"},
+                        "capability_id": {"type": "string"},
+                        "problem": {
+                            "type": "object",
+                            "additionalProperties": True,
+                        },
+                    },
+                    "required": [
+                        "client_item_id",
+                        "capability_id",
+                        "problem",
+                    ],
+                    "additionalProperties": False,
+                },
+            },
         }
         return [
             _tool(
@@ -184,6 +210,39 @@ class OpteesToolFacade:
                 {"job_id": {"type": "string"}},
                 ["job_id"],
             ),
+            _tool(
+                "optees_validate_batch",
+                "Validate up to 32 problems in one request without running them.",
+                batch_properties,
+                ["version", "items"],
+            ),
+            _tool(
+                "optees_create_batch",
+                (
+                    "Atomically submit an identical validated batch while preserving "
+                    "one job and validation report per item."
+                ),
+                batch_properties,
+                ["version", "items"],
+            ),
+            _tool(
+                "optees_get_batch_status",
+                "Get aggregate and per-item lifecycle status for a batch.",
+                {"batch_id": {"type": "string"}},
+                ["batch_id"],
+            ),
+            _tool(
+                "optees_get_batch_result",
+                "Get all item results, validations, and aggregate counts for a batch.",
+                {"batch_id": {"type": "string"}},
+                ["batch_id"],
+            ),
+            _tool(
+                "optees_cancel_batch",
+                "Request cancellation for every active item in a batch.",
+                {"batch_id": {"type": "string"}},
+                ["batch_id"],
+            ),
         ]
 
     def execute(self, name: str, arguments: JsonObject) -> JsonObject:
@@ -195,6 +254,11 @@ class OpteesToolFacade:
             "optees_get_job_status": self._get_job_status,
             "optees_get_job_result": self._get_job_result,
             "optees_cancel_job": self._cancel_job,
+            "optees_validate_batch": self._validate_batch,
+            "optees_create_batch": self._create_batch,
+            "optees_get_batch_status": self._get_batch_status,
+            "optees_get_batch_result": self._get_batch_result,
+            "optees_cancel_batch": self._cancel_batch,
         }
         handler = handlers.get(name)
         if handler is None:
@@ -214,6 +278,7 @@ class OpteesToolFacade:
         """Forget discovery and validation evidence between independent prompts."""
         self._described_capabilities.clear()
         self._validated_problems.clear()
+        self._validated_batches.clear()
 
     def _list_capabilities(self, _arguments: JsonObject) -> JsonObject:
         response = self._request("GET", "/api/v1/capabilities")
@@ -300,12 +365,100 @@ class OpteesToolFacade:
         )
         return {"ok": True, "job": response}
 
+    def _validate_batch(self, arguments: JsonObject) -> JsonObject:
+        version, items = self._batch_arguments(arguments)
+        missing = sorted(
+            {
+                str(item["capability_id"])
+                for item in items
+                if item["capability_id"] not in self._described_capabilities
+            }
+        )
+        if missing:
+            return _tool_error(
+                "capability_not_inspected",
+                "Inspect every batch capability before validating the batch.",
+            )
+        payload = {"version": version, "items": items}
+        response = self._request("POST", "/api/v1/batches/validate", payload)
+        if response.get("valid") is True:
+            self._validated_batches.add(_batch_key(payload))
+        return {"ok": True, "validation": response}
+
+    def _create_batch(self, arguments: JsonObject) -> JsonObject:
+        version, items = self._batch_arguments(arguments)
+        payload = {"version": version, "items": items}
+        if _batch_key(payload) not in self._validated_batches:
+            return _tool_error(
+                "batch_not_validated",
+                "Validate this exact versioned batch before creating it.",
+            )
+        response = self._request("POST", "/api/v1/batches", payload)
+        return {"ok": True, "batch": response}
+
+    def _get_batch_status(self, arguments: JsonObject) -> JsonObject:
+        batch_id = _required_string(arguments, "batch_id")
+        response = self._request(
+            "GET",
+            f"/api/v1/batches/{quote(batch_id, safe='')}",
+        )
+        return {"ok": True, "batch": response}
+
+    def _get_batch_result(self, arguments: JsonObject) -> JsonObject:
+        batch_id = _required_string(arguments, "batch_id")
+        response = self._request(
+            "GET",
+            f"/api/v1/batches/{quote(batch_id, safe='')}/result",
+        )
+        return {"ok": True, "batch_result": response}
+
+    def _cancel_batch(self, arguments: JsonObject) -> JsonObject:
+        batch_id = _required_string(arguments, "batch_id")
+        response = self._request(
+            "POST",
+            f"/api/v1/batches/{quote(batch_id, safe='')}/cancel",
+            {},
+        )
+        return {"ok": True, "batch": response}
+
     def _problem_arguments(self, arguments: JsonObject) -> tuple[str, JsonObject]:
         capability_id = _required_string(arguments, "capability_id")
         problem = arguments.get("problem")
         if not isinstance(problem, dict):
             raise ValueError("problem must be a JSON object")
         return capability_id, problem
+
+    def _batch_arguments(
+        self,
+        arguments: JsonObject,
+    ) -> tuple[str, list[JsonObject]]:
+        version = _required_string(arguments, "version")
+        if version != "1":
+            raise ValueError("unsupported batch version")
+        raw_items = arguments.get("items")
+        if not isinstance(raw_items, list) or not 1 <= len(raw_items) <= 32:
+            raise ValueError("items must contain between 1 and 32 objects")
+        items: list[JsonObject] = []
+        identifiers: set[str] = set()
+        for raw_item in raw_items:
+            if not isinstance(raw_item, dict):
+                raise ValueError("every batch item must be an object")
+            client_item_id = _required_string(raw_item, "client_item_id")
+            capability_id = _required_string(raw_item, "capability_id")
+            problem = raw_item.get("problem")
+            if not isinstance(problem, dict):
+                raise ValueError("batch problem must be a JSON object")
+            if client_item_id in identifiers:
+                raise ValueError("batch client_item_id values must be unique")
+            identifiers.add(client_item_id)
+            items.append(
+                {
+                    "client_item_id": client_item_id,
+                    "capability_id": capability_id,
+                    "problem": problem,
+                }
+            )
+        return version, items
 
     def _request(
         self,
@@ -451,6 +604,10 @@ Use Optees tools instead of calculating a supported final answer yourself.
 First list capabilities, then inspect the selected capability descriptor and its
 JSON schema. State material assumptions and ask the user for missing information
 instead of inventing values. Validate the exact problem before creating a job.
+For multiple independent scenarios, use the batch tools: inspect every distinct
+capability, validate the exact batch, create it once, poll its aggregate status,
+then retrieve the aggregate result. Do not replace a dependent multi-stage
+workflow with a batch.
 Poll a created job until it reaches a terminal state, retrieve its result, and
 report mathematical status and independent validation status separately. Never
 claim global optimality unless the Optees result does. Never request, reveal, or
@@ -506,6 +663,11 @@ def _problem_key(capability_id: str, problem: JsonObject) -> str:
         sort_keys=True,
         separators=(",", ":"),
     )
+    return sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _batch_key(payload: JsonObject) -> str:
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return sha256(canonical.encode("utf-8")).hexdigest()
 
 

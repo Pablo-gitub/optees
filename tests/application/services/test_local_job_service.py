@@ -5,6 +5,13 @@ from time import monotonic, sleep
 
 import pytest
 
+from optees.application.contracts.batch import (
+    BatchItemRequest,
+    BatchRequest,
+    BatchResult,
+    BatchSnapshot,
+    BatchStatus,
+)
 from optees.application.contracts.errors import ErrorCode, StructuredError
 from optees.application.contracts.execution import (
     ExecutionEnvelope,
@@ -162,6 +169,99 @@ def _wait_for_status(
             return outcome
         sleep(0.01)
     raise AssertionError(f"job {job_id} did not reach {expected.value}")
+
+
+def _batch(*payloads: dict) -> BatchRequest:
+    return BatchRequest(
+        tuple(
+            BatchItemRequest(f"scenario-{index}", LP_CAPABILITY_ID, payload)
+            for index, payload in enumerate(payloads, start=1)
+        )
+    )
+
+
+def _wait_for_batch(
+    service: LocalJobService,
+    batch_id: str,
+) -> BatchSnapshot:
+    deadline = monotonic() + 5
+    while monotonic() < deadline:
+        outcome = service.get_batch(batch_id)
+        assert isinstance(outcome, BatchSnapshot)
+        if outcome.batch_status not in {BatchStatus.QUEUED, BatchStatus.RUNNING}:
+            return outcome
+        sleep(0.01)
+    raise AssertionError(f"batch {batch_id} did not finish")
+
+
+def test_batch_preserves_individual_results_and_aggregates_validation():
+    service = create_local_job_service(capacity=4)
+    try:
+        request = _batch(_lp_payload(), _lp_payload())
+        validation = service.validate_batch(request)
+        assert validation.valid is True
+
+        submitted = service.submit_batch(request)
+        assert isinstance(submitted, BatchSnapshot)
+        completed = _wait_for_batch(service, submitted.batch_id)
+        result = service.batch_result(submitted.batch_id)
+
+        assert completed.batch_status is BatchStatus.COMPLETED
+        assert isinstance(result, BatchResult)
+        assert [item.client_item_id for item in result.items] == [
+            "scenario-1",
+            "scenario-2",
+        ]
+        payload = result.to_dict()
+        assert payload["summary"]["mathematical_status_counts"] == {"optimal": 2}
+        assert payload["summary"]["validation_status_counts"] == {"verified": 2}
+        assert all(item.result is not None for item in result.items)
+    finally:
+        service.shutdown()
+
+
+def test_invalid_batch_is_rejected_without_submitting_partial_work():
+    service = create_local_job_service(capacity=4)
+    invalid = _lp_payload()
+    invalid["variables"] = []
+    try:
+        outcome = service.submit_batch(_batch(_lp_payload(), invalid))
+
+        assert isinstance(outcome, StructuredError)
+        assert outcome.code is ErrorCode.VALIDATION_FAILED
+        assert service.list_jobs() == ()
+    finally:
+        service.shutdown()
+
+
+def test_batch_capacity_failure_does_not_submit_a_partial_batch():
+    service = create_local_job_service(capacity=1)
+    try:
+        outcome = service.submit_batch(_batch(_lp_payload(), _lp_payload()))
+
+        assert isinstance(outcome, StructuredError)
+        assert outcome.code is ErrorCode.JOB_CAPACITY_EXCEEDED
+        assert service.list_jobs() == ()
+    finally:
+        service.shutdown()
+
+
+def test_batch_result_survives_individual_terminal_job_eviction():
+    service = create_local_job_service(capacity=2)
+    try:
+        submitted = service.submit_batch(_batch(_lp_payload(), _lp_payload()))
+        assert isinstance(submitted, BatchSnapshot)
+        _wait_for_batch(service, submitted.batch_id)
+
+        later_job = service.submit(LP_CAPABILITY_ID, _lp_payload())
+        assert isinstance(later_job, JobSnapshot)
+        result = service.batch_result(submitted.batch_id)
+
+        assert isinstance(result, BatchResult)
+        assert len(result.items) == 2
+        assert all(item.result is not None for item in result.items)
+    finally:
+        service.shutdown()
 
 
 def test_job_service_runs_one_job_and_queues_following_work():

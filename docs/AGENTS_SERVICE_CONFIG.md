@@ -278,6 +278,13 @@ configuration. Input is hidden in the terminal. The native PyInstaller
 artifacts do not currently expose this chat command; a packaged Local Agent
 desktop module is planned.
 
+When a request contains several independent models, agents should use
+`optees_validate_batch`, `optees_create_batch`, `optees_get_batch_status`, and
+`optees_get_batch_result`. The batch accepts at most 32 items and preserves the
+individual result and validation report for each one. It must not be used for
+dependent stages such as forecasting followed by production optimization,
+because those require explicit orchestration between results and inputs.
+
 The reviewed D0 prompt, model compatibility results, transcript policy, and
 security behavior are documented in
 [Ollama D0 local agent harness](local-agent/ollama-d0-harness.md).

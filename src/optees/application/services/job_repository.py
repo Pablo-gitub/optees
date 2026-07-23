@@ -62,15 +62,29 @@ class InMemoryJobRepository:
         return self._capacity
 
     def add(self, record: JobRecord) -> None:
+        self.add_many((record,))
+
+    def add_many(self, records: tuple[JobRecord, ...]) -> None:
+        """Atomically retain a group of jobs after making bounded space."""
+        if not records:
+            raise ValueError("records must not be empty")
         with self._lock:
-            if record.job_id in self._records:
-                raise ValueError(f"job {record.job_id!r} already exists")
-            self._evict_terminal_until_space()
-            if len(self._records) >= self._capacity:
+            incoming_ids = [record.job_id for record in records]
+            if len(set(incoming_ids)) != len(incoming_ids):
+                raise ValueError("job identifiers in a batch must be unique")
+            duplicate = next(
+                (job_id for job_id in incoming_ids if job_id in self._records),
+                None,
+            )
+            if duplicate is not None:
+                raise ValueError(f"job {duplicate!r} already exists")
+            self._evict_terminal_until_space(required=len(records))
+            if len(self._records) + len(records) > self._capacity:
                 raise JobRepositoryFullError(
                     "job repository capacity is occupied by active jobs"
                 )
-            self._records[record.job_id] = record
+            for record in records:
+                self._records[record.job_id] = record
 
     def get(self, job_id: str) -> JobRecord | None:
         with self._lock:
@@ -89,8 +103,8 @@ class InMemoryJobRepository:
         with self._lock:
             return tuple(self._records.values())
 
-    def _evict_terminal_until_space(self) -> None:
-        while len(self._records) >= self._capacity:
+    def _evict_terminal_until_space(self, *, required: int = 1) -> None:
+        while len(self._records) + required > self._capacity:
             terminal_id = next(
                 (
                     job_id

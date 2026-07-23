@@ -2,12 +2,23 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from concurrent.futures import Future, ThreadPoolExecutor
-from dataclasses import replace
+from dataclasses import dataclass, field, replace
 from threading import RLock
 from time import time
 from typing import TypeAlias
 from uuid import uuid4
 
+from optees.application.contracts.batch import (
+    BatchItemSnapshot,
+    BatchRequest,
+    BatchResult,
+    BatchResultItem,
+    BatchSnapshot,
+    BatchStatus,
+    BatchValidation,
+    BatchValidationItem,
+    aggregate_batch_status,
+)
 from optees.application.contracts.errors import ErrorCode, StructuredError
 from optees.application.contracts.execution import (
     ExecutionEnvelope,
@@ -30,6 +41,16 @@ from optees.application.services.optimization_service import (
 
 JobOperationOutcome: TypeAlias = JobSnapshot | StructuredError
 JobResultOutcome: TypeAlias = ExecutionEnvelope | StructuredError
+BatchOperationOutcome: TypeAlias = BatchSnapshot | StructuredError
+BatchResultOutcome: TypeAlias = BatchResult | StructuredError
+
+
+@dataclass
+class _BatchRecord:
+    batch_id: str
+    submitted_at: float
+    items: tuple[tuple[str, str], ...]
+    terminal_jobs: dict[str, JobRecord] = field(default_factory=dict)
 
 
 class LocalJobService:
@@ -41,17 +62,31 @@ class LocalJobService:
         *,
         repository: InMemoryJobRepository | None = None,
         job_id_factory: Callable[[], str] | None = None,
+        batch_id_factory: Callable[[], str] | None = None,
+        batch_capacity: int = 20,
         clock: Callable[[], float] = time,
     ) -> None:
+        if (
+            isinstance(batch_capacity, bool)
+            or not isinstance(batch_capacity, int)
+            or batch_capacity < 1
+        ):
+            raise ValueError("batch_capacity must be a positive integer")
         self._optimization = optimization_service
         self._repository = repository or InMemoryJobRepository()
         self._job_id_factory = job_id_factory or (lambda: f"job-{uuid4().hex}")
+        self._batch_id_factory = batch_id_factory or (
+            lambda: f"batch-{uuid4().hex}"
+        )
+        self._batch_capacity = batch_capacity
         self._clock = clock
         self._executor = ThreadPoolExecutor(
             max_workers=1,
             thread_name_prefix="optees-local-job",
         )
         self._futures: dict[str, Future[None]] = {}
+        self._batches: dict[str, _BatchRecord] = {}
+        self._job_batches: dict[str, str] = {}
         self._lock = RLock()
         self._accepting = True
 
@@ -99,14 +134,168 @@ class LocalJobService:
                     message="The local job queue has reached its active-job capacity.",
                     request_id=request_id,
                 )
-            future = self._executor.submit(self._run_job, record.job_id)
-            self._futures[record.job_id] = future
-            future.add_done_callback(
-                lambda _future, submitted_job_id=record.job_id: self._forget_future(
-                    submitted_job_id
+            self._schedule(record.job_id)
+        return record.snapshot()
+
+    def validate_batch(
+        self,
+        request: BatchRequest,
+        *,
+        request_id: str | None = None,
+    ) -> BatchValidation:
+        items: list[BatchValidationItem] = []
+        for item in request.items:
+            outcome = self._optimization.validate(
+                item.capability_id,
+                item.problem,
+                request_id=request_id,
+            )
+            if isinstance(outcome, StructuredError):
+                items.append(
+                    BatchValidationItem(
+                        client_item_id=item.client_item_id,
+                        capability_id=item.capability_id,
+                        valid=False,
+                        available=False,
+                        error=outcome.to_dict(),
+                    )
+                )
+                continue
+            items.append(
+                BatchValidationItem(
+                    client_item_id=item.client_item_id,
+                    capability_id=item.capability_id,
+                    valid=True,
+                    available=outcome.available,
+                    validation=outcome.to_dict(),
                 )
             )
-        return record.snapshot()
+        return BatchValidation(tuple(items))
+
+    def submit_batch(
+        self,
+        request: BatchRequest,
+        *,
+        request_id: str | None = None,
+    ) -> BatchOperationOutcome:
+        with self._lock:
+            if not self._accepting:
+                return self._service_unavailable(request_id=request_id)
+        validation = self.validate_batch(request, request_id=request_id)
+        if not validation.valid:
+            return StructuredError(
+                code=ErrorCode.VALIDATION_FAILED,
+                message=(
+                    "Every batch item must be valid and available before any "
+                    "job is submitted."
+                ),
+                request_id=request_id,
+                context={"batch_validation": validation.to_dict()},
+            )
+
+        submitted_at = self._clock()
+        records = tuple(
+            JobRecord(
+                job_id=self._job_id_factory(),
+                capability_id=item.capability_id,
+                payload=item.problem,
+                submitted_at=submitted_at,
+            )
+            for item in request.items
+        )
+        batch = _BatchRecord(
+            batch_id=self._batch_id_factory(),
+            submitted_at=submitted_at,
+            items=tuple(
+                (item.client_item_id, record.job_id)
+                for item, record in zip(request.items, records, strict=True)
+            ),
+        )
+        with self._lock:
+            if not self._accepting:
+                return self._service_unavailable(request_id=request_id)
+            if not self._make_batch_space():
+                return StructuredError(
+                    code=ErrorCode.BATCH_CAPACITY_EXCEEDED,
+                    message="The local batch registry is occupied by active batches.",
+                    request_id=request_id,
+                )
+            try:
+                self._repository.add_many(records)
+            except JobRepositoryFullError:
+                return StructuredError(
+                    code=ErrorCode.JOB_CAPACITY_EXCEEDED,
+                    message=(
+                        "The local job queue cannot accept every item in this "
+                        "batch atomically."
+                    ),
+                    request_id=request_id,
+                    context={"item_count": len(records)},
+                )
+            self._batches[batch.batch_id] = batch
+            for record in records:
+                self._job_batches[record.job_id] = batch.batch_id
+                self._schedule(record.job_id)
+        return self._batch_snapshot(batch)
+
+    def get_batch(self, batch_id: str) -> BatchOperationOutcome:
+        with self._lock:
+            batch = self._batches.get(batch_id)
+            if batch is None:
+                return self._batch_not_found(batch_id)
+            return self._batch_snapshot(batch)
+
+    def batch_result(self, batch_id: str) -> BatchResultOutcome:
+        with self._lock:
+            batch = self._batches.get(batch_id)
+            if batch is None:
+                return self._batch_not_found(batch_id)
+            snapshot = self._batch_snapshot(batch)
+            if snapshot.batch_status in {BatchStatus.QUEUED, BatchStatus.RUNNING}:
+                return StructuredError(
+                    code=ErrorCode.BATCH_RESULT_NOT_READY,
+                    message="The batch still contains active jobs.",
+                    context={
+                        "batch_id": batch_id,
+                        "batch_status": snapshot.batch_status.value,
+                    },
+                )
+            items: list[BatchResultItem] = []
+            for client_item_id, job_id in batch.items:
+                record = self._batch_job_record(batch, job_id)
+                assert record is not None
+                items.append(
+                    BatchResultItem(
+                        client_item_id=client_item_id,
+                        job=record.snapshot(),
+                        result=(
+                            record.outcome
+                            if isinstance(record.outcome, ExecutionEnvelope)
+                            else None
+                        ),
+                        error=(
+                            record.outcome
+                            if isinstance(record.outcome, StructuredError)
+                            else None
+                        ),
+                    )
+                )
+            return BatchResult(snapshot, tuple(items))
+
+    def cancel_batch(self, batch_id: str) -> BatchOperationOutcome:
+        with self._lock:
+            batch = self._batches.get(batch_id)
+            if batch is None:
+                return self._batch_not_found(batch_id)
+            job_ids = tuple(job_id for _client_item_id, job_id in batch.items)
+        for job_id in job_ids:
+            snapshot = self.get(job_id)
+            if (
+                isinstance(snapshot, JobSnapshot)
+                and snapshot.job_status not in TERMINAL_JOB_STATUSES
+            ):
+                self.cancel(job_id)
+        return self.get_batch(batch_id)
 
     def get(self, job_id: str) -> JobOperationOutcome:
         record = self._repository.get(job_id)
@@ -172,6 +361,7 @@ class LocalJobService:
                         finished_at=self._clock(),
                     )
                     assert cancelled is not None
+                    self._capture_terminal_batch_job(cancelled)
                     return cancelled.snapshot()
 
             if not self._optimization.supports_cancellation(record.capability_id):
@@ -243,14 +433,14 @@ class LocalJobService:
                 status = JobStatus.CANCELLED
             else:
                 status = JobStatus.COMPLETED
-            self._repository.replace(
+            completed = self._repository.replace(
                 job_id,
                 job_status=status,
                 finished_at=self._clock(),
                 outcome=outcome,
             )
         else:
-            self._repository.replace(
+            completed = self._repository.replace(
                 job_id,
                 job_status=(
                     JobStatus.CANCELLED
@@ -260,9 +450,82 @@ class LocalJobService:
                 finished_at=self._clock(),
                 outcome=outcome,
             )
+        if completed is not None:
+            self._capture_terminal_batch_job(completed)
+
+    def _schedule(self, job_id: str) -> None:
+        future = self._executor.submit(self._run_job, job_id)
+        self._futures[job_id] = future
+        future.add_done_callback(
+            lambda _future, submitted_job_id=job_id: self._forget_future(
+                submitted_job_id
+            )
+        )
+
     def _forget_future(self, job_id: str) -> None:
         with self._lock:
             self._futures.pop(job_id, None)
+
+    def _capture_terminal_batch_job(self, record: JobRecord) -> None:
+        with self._lock:
+            batch_id = self._job_batches.get(record.job_id)
+            if batch_id is None:
+                return
+            batch = self._batches.get(batch_id)
+            if batch is not None:
+                batch.terminal_jobs[record.job_id] = record
+
+    def _batch_snapshot(self, batch: _BatchRecord) -> BatchSnapshot:
+        items: list[BatchItemSnapshot] = []
+        finished_at: float | None = None
+        for client_item_id, job_id in batch.items:
+            record = self._batch_job_record(batch, job_id)
+            assert record is not None
+            items.append(BatchItemSnapshot(client_item_id, record.snapshot()))
+            if record.finished_at is not None:
+                finished_at = max(
+                    finished_at or record.finished_at,
+                    record.finished_at,
+                )
+        status = aggregate_batch_status(
+            tuple(item.job.job_status for item in items)
+        )
+        return BatchSnapshot(
+            batch_id=batch.batch_id,
+            batch_status=status,
+            submitted_at=batch.submitted_at,
+            finished_at=(
+                finished_at
+                if status not in {BatchStatus.QUEUED, BatchStatus.RUNNING}
+                else None
+            ),
+            items=tuple(items),
+        )
+
+    def _batch_job_record(
+        self,
+        batch: _BatchRecord,
+        job_id: str,
+    ) -> JobRecord | None:
+        return self._repository.get(job_id) or batch.terminal_jobs.get(job_id)
+
+    def _make_batch_space(self) -> bool:
+        while len(self._batches) >= self._batch_capacity:
+            terminal_id = next(
+                (
+                    batch_id
+                    for batch_id, batch in self._batches.items()
+                    if self._batch_snapshot(batch).batch_status
+                    not in {BatchStatus.QUEUED, BatchStatus.RUNNING}
+                ),
+                None,
+            )
+            if terminal_id is None:
+                return False
+            removed = self._batches.pop(terminal_id)
+            for _client_item_id, job_id in removed.items:
+                self._job_batches.pop(job_id, None)
+        return True
 
     @staticmethod
     def _job_not_found(job_id: str) -> StructuredError:
@@ -270,6 +533,14 @@ class LocalJobService:
             code=ErrorCode.JOB_NOT_FOUND,
             message="The requested job does not exist or is no longer retained.",
             context={"job_id": job_id},
+        )
+
+    @staticmethod
+    def _batch_not_found(batch_id: str) -> StructuredError:
+        return StructuredError(
+            code=ErrorCode.BATCH_NOT_FOUND,
+            message="The requested batch does not exist or is no longer retained.",
+            context={"batch_id": batch_id},
         )
 
     @staticmethod

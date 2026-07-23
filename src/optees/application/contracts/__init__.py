@@ -13,6 +13,14 @@ from optees.application.contracts.artifact_rendering import (
     ArtifactRenderOptions,
     RenderedArtifact,
 )
+from optees.application.contracts.batch import (
+    BatchItemRequest,
+    BatchRequest,
+    BatchResult,
+    BatchSnapshot,
+    BatchStatus,
+    BatchValidation,
+)
 from optees.application.contracts.errors import ErrorCode, ErrorDetail, StructuredError
 from optees.application.contracts.execution import (
     ExecutionEnvelope,
@@ -34,6 +42,12 @@ __all__ = [
     "ArtifactRenderOptions",
     "ArtifactStatus",
     "AvailableArtifact",
+    "BatchItemRequest",
+    "BatchRequest",
+    "BatchResult",
+    "BatchSnapshot",
+    "BatchStatus",
+    "BatchValidation",
     "ErrorCode",
     "ErrorDetail",
     "ExecutionEnvelope",

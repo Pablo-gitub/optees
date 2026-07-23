@@ -94,11 +94,22 @@ The server exposes these allowlisted tools:
 5. `optees_get_job_status`
 6. `optees_get_job_result`
 7. `optees_cancel_job`
+8. `optees_validate_batch`
+9. `optees_create_batch`
+10. `optees_get_batch_status`
+11. `optees_get_batch_result`
+12. `optees_cancel_batch`
 
 An agent must inspect the complete capability descriptor before validation and
 must validate the exact capability and payload before job creation. A changed
 payload requires a new validation. Solver mathematical status and independent
 validation status are separate claims in every result.
+
+For 1 to 32 independent scenarios, the agent should inspect every distinct
+capability, validate the exact versioned batch, create it once, poll its
+aggregate status, and retrieve its aggregate result. Each batch item retains
+its own job and independent validation report. A changed item invalidates the
+batch proof. Batch tools do not orchestrate dependent multi-stage workflows.
 
 ## Security And Scope
 

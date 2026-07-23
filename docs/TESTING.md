@@ -70,6 +70,11 @@
   `tests/application/services/test_local_server_process*.py`: authenticated
   REST contracts, real loopback transport, subprocess lifecycle, occupied-port
   fallback, session-token replacement, OpenAPI access, and shutdown.
+- `tests/application/contracts/test_batch_contracts.py`,
+  `tests/application/services/test_local_job_service.py`, and transport tests:
+  bounded batch contracts, atomic all-or-nothing submission, individual
+  envelope retention, aggregate summaries, and exact-validation safeguards
+  across REST, MCP, and the Ollama harness.
 
 ## Commands
 ```bash

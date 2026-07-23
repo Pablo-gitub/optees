@@ -84,6 +84,14 @@ class FakeOpteesTransport:
                 "job_status": "completed",
                 "result_available": True,
             }
+        if url.endswith("/api/v1/batches/validate"):
+            return {"valid": True, "item_count": 2}
+        if url.endswith("/api/v1/batches"):
+            return {
+                "batch_id": "batch-1",
+                "batch_status": "queued",
+                "item_count": 2,
+            }
         raise AssertionError(f"Unexpected request: {method} {url}")
 
 
@@ -185,6 +193,46 @@ def test_complete_ollama_agent_loop_records_redacted_reproducible_events():
     system_prompt = ollama.requests[0]["messages"][0]["content"]
     assert "optimal_face" in system_prompt
     assert "Call the optimum unique only when" in system_prompt
+
+
+def test_tool_facade_requires_exact_batch_validation_before_submission():
+    transport = FakeOpteesTransport()
+    facade = OpteesToolFacade(
+        base_url="http://127.0.0.1:8765",
+        token=TOKEN,
+        transport=transport,
+    )
+    items = [
+        {
+            "client_item_id": f"scenario-{index}",
+            "capability_id": "lp.continuous",
+            "problem": PROBLEM,
+        }
+        for index in range(1, 3)
+    ]
+    arguments = {"version": "1", "items": items}
+
+    before_descriptor = facade.execute("optees_validate_batch", arguments)
+    facade.execute("optees_get_capability", {"capability_id": "lp.continuous"})
+    before_validation = facade.execute("optees_create_batch", arguments)
+    validation = facade.execute("optees_validate_batch", arguments)
+    changed = facade.execute(
+        "optees_create_batch",
+        {
+            "version": "1",
+            "items": [
+                items[0],
+                {**items[1], "client_item_id": "changed"},
+            ],
+        },
+    )
+    created = facade.execute("optees_create_batch", arguments)
+
+    assert before_descriptor["error"]["code"] == "capability_not_inspected"
+    assert before_validation["error"]["code"] == "batch_not_validated"
+    assert validation["validation"]["valid"] is True
+    assert changed["error"]["code"] == "batch_not_validated"
+    assert created["batch"]["batch_id"] == "batch-1"
 
 
 def test_harness_stops_runaway_tool_calling():
