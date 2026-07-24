@@ -241,10 +241,11 @@ version reuses the existing artifact while it remains available.
 }
 ```
 
-Artifact statuses are `queued`, `rendering`, `available`, `failed`, and
-`expired`. Invalid or unsupported requests fail validation and do not create
-manifest entries. A runtime failure produces a `failed` entry with a
-structured, non-sensitive error.
+Artifact statuses are `queued`, `rendering`, `available`, `failed`,
+`cancelled`, and `expired`. Every entry includes a bounded
+`progress_percent` and `progress_stage`. Invalid or unsupported requests fail
+validation and do not create manifest entries. A runtime failure produces a
+`failed` entry with a structured, non-sensitive error.
 
 The canonical manifest contains no transport URL. REST responses may add an
 authenticated relative `download_url`; MCP exposes a resource URI or bounded
@@ -353,13 +354,14 @@ backend commands, or untrusted document contents.
 
 ## Report Contract Version 1
 
-The stable API models a report, not a Pandoc command. The first implementation
-produces Markdown without external tools; PDF is an optional backend.
+The stable API models a report, not a Pandoc command. Markdown is produced
+without external tools; PDF uses the optional runtime-discovered
+`pandoc.typst.v1` backend.
 
 ```json
 {
   "contract_version": "1",
-  "format": "markdown",
+  "format": "pdf",
   "locale": "en",
   "title": "Production planning report",
   "sections": [
@@ -378,7 +380,8 @@ produces Markdown without external tools; PDF is an optional backend.
         {
           "type": "artifact",
           "artifact_id": "artifact-...",
-          "caption": "Optimal production quantities"
+          "caption": "Optimal production quantities",
+          "views": ["isometric", "top"]
         }
       ]
     }
@@ -399,31 +402,47 @@ If an accepted artifact cannot be embedded, the output contains an explicit
 not an input block type. OBJ/MTL content is embedded only after conversion to
 requested named static views.
 
-Report statuses are `queued`, `composing`, `available`, `failed`, and
-`expired`. Every output includes source job and artifact provenance and the
-restrained footer `Optees · optees.it`. The footer identifies the tool and is
-not a certification of the user's interpretation.
+The optional `views` field is accepted only for artifact blocks and contains
+at most four unique values selected from `isometric`, `front`, `side`, and
+`top`. It controls bounded static conversion of Packing OBJ+MTL archives.
+
+Report statuses are `queued`, `composing`, `available`, `failed`, `cancelled`,
+and `expired`. Manifests expose `progress_percent`, `progress_stage`, and the
+selected `backend_id`. Every output includes source job and artifact
+provenance and the restrained footer `Optees · optees.it`. The footer
+identifies the tool and is not a certification of the user's interpretation.
 
 The implemented REST surface is:
 
-- `POST /api/v1/reports` to validate and queue one Markdown report;
+- `GET /api/v1/reports/backends` to inspect optional PDF availability;
+- `POST /api/v1/reports` to validate and queue one Markdown or PDF report;
 - `GET /api/v1/reports/{report_id}` to poll its lifecycle and inspect
   provenance, byte count, and SHA-256;
-- `GET /api/v1/reports/{report_id}/download` to retrieve verified Markdown.
+- `POST /api/v1/reports/{report_id}/cancel` to request cancellation;
+- `GET /api/v1/reports/{report_id}/download` to retrieve verified content.
 
 The implemented MCP surface mirrors this contract:
 
 - `optees_compose_report` validates and queues the versioned request;
+- `optees_get_report_backends` exposes PDF backend diagnostics;
 - `optees_get_report_status` polls lifecycle metadata;
+- `optees_cancel_report` requests cancellation;
 - `optees_get_report` returns metadata and, when available, an
   `optees-report://{report_id}` resource URI;
 - the resource URI is the only MCP operation that transfers report bytes.
 
 Neither transport accepts a filesystem destination, a remote asset URL, a
 Pandoc option, or caller-authored solver status. PNG and SVG references remain
-explicit private artifact resource links in Markdown. OBJ/MTL archives and
-other non-embeddable formats produce a visible `unsupported_artifact` block
-until a validated conversion exists.
+explicit private artifact resource links in Markdown. Stored XLSX artifacts
+are converted to bounded Markdown tables. Stored OBJ+MTL archives are parsed
+again and converted to selected PNG camera views before PDF composition.
+Other non-embeddable formats produce a visible `unsupported_artifact` block.
+
+Artifact manifests use the same `progress_percent` and `progress_stage`
+semantics and add terminal status `cancelled`. REST exposes
+`POST /api/v1/artifacts/{artifact_id}/cancel`; MCP mirrors it as
+`optees_cancel_artifact`. Cancellation is cooperative and prevents a renderer
+that finishes later from publishing its output.
 
 ## Compatibility Rules
 

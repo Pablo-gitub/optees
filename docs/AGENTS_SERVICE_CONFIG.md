@@ -289,6 +289,24 @@ The reviewed D0 prompt, model compatibility results, transcript policy, and
 security behavior are documented in
 [Ollama D0 local agent harness](local-agent/ollama-d0-harness.md).
 
+## Result Artifacts And Reports
+
+Agents should inspect advertised artifact types after a completed job and
+request only evidence needed by the user. Metadata calls do not transfer
+binary content. Markdown reports are always local and dependency-free; PDF
+requires the optional Pandoc+Typst backend.
+
+Before requesting PDF, call `optees_get_report_backends`. Compose with
+`optees_compose_report`, poll `optees_get_report_status`, and retrieve bytes
+only through the returned `optees-report://` resource. Packing OBJ+MTL
+artifacts can request `isometric`, `front`, `side`, or `top` views. For long
+operations, inspect progress and use `optees_cancel_artifact` or
+`optees_cancel_report` when the user cancels the task.
+
+The full request example, REST equivalents, runtime diagnostics, and security
+limits are documented in
+[Local Result Artifacts And Reports](LOCAL_REPORTING.md).
+
 ## OpenAI GPT Clients
 
 OpenAI GPT integration is planned but not yet certified. Before publishing a

@@ -102,6 +102,12 @@ The server exposes these allowlisted tools:
 13. `optees_list_result_artifacts`
 14. `optees_render_result_artifacts`
 15. `optees_get_artifact`
+16. `optees_cancel_artifact`
+17. `optees_compose_report`
+18. `optees_get_report_backends`
+19. `optees_get_report_status`
+20. `optees_get_report`
+21. `optees_cancel_report`
 
 An agent must inspect the complete capability descriptor before validation and
 must validate the exact capability and payload before job creation. A changed
@@ -120,16 +126,23 @@ After a job completes, artifact access follows a separate, opt-in sequence:
    formats, options, and existing batches;
 2. call `optees_render_result_artifacts` only with advertised combinations;
 3. poll `optees_list_result_artifacts` until the requested entry is
-   `available`;
+   `available`, or cancel it with `optees_cancel_artifact`;
 4. call `optees_get_artifact` to inspect media type, size, SHA-256, expiry, and
    the opaque resource URI;
 5. read `optees-artifact://{artifact_id}` only when the user actually needs the
    content.
 
-The three artifact tools return metadata only. They never include Base64,
+The artifact tools return metadata only. They never include Base64,
 binary bytes, internal storage IDs, or filesystem paths. Explicit resource
 reads remain bounded by the session artifact limits and verify content
 integrity before transfer.
+
+Report composition follows the same metadata-first rule. Inspect
+`optees_get_report_backends`, submit a versioned Markdown or PDF request with
+`optees_compose_report`, poll `optees_get_report_status`, and retrieve metadata
+with `optees_get_report`. Report bytes move only through
+`optees-report://{report_id}`. `optees_cancel_report` provides cooperative
+cancellation and prevents late publication.
 
 ## Security And Scope
 

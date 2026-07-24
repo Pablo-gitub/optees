@@ -39,6 +39,8 @@ the packaged-artifact acceptance matrix.
   lifecycle.
 - [Result artifact and report contracts](RESULT_ARTIFACTS_CONTRACT.md): frozen
   post-solve artifact inventory, lifecycle, limits, and report schema.
+- [Local result artifacts and reports](LOCAL_REPORTING.md): availability,
+  PDF runtime, conversion, progress, cancellation, and native acceptance.
 - [Result artifacts and local reporting roadmap](RESULT_ARTIFACTS_REPORTING_ROADMAP.md):
   phased implementation of headless exports and report composition.
 - [Local agent service roadmap](LOCAL_AGENT_SERVICE_ROADMAP.md): contracts,

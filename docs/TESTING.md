@@ -114,6 +114,9 @@ metadata-only MCP retrieval.
 - `tests/data/adapters/artifacts/test_packing_scene_renderer.py`: Packing
   capacity accounting, five bounded headless camera modes, deterministic
   OBJ+MTL archives, safe geometry identifiers, and manifest semantics.
+- `tests/data/adapters/reports/test_report_adapters.py`: bounded XLSX and
+  OBJ+MTL report conversion, archive/geometry rejection, PDF backend
+  diagnostics, fixed-command execution, and verified PDF output.
 
 ## Commands
 ```bash
@@ -219,6 +222,13 @@ signatures, requested dimensions, and nonblank pixel variance. Packing tests
 also validate every named camera and the deterministic OBJ/MTL/manifest
 archive. These checks intentionally avoid exact pixel snapshots, which vary
 across rendering platforms without providing stronger mathematical assurance.
+
+Report tests use controlled fake Pandoc and Typst executables to verify command
+boundaries and lifecycle semantics without making the local suite depend on
+optional document tools. A release candidate that advertises PDF support must
+also run the installed native smoke in `docs/RELEASING.md`; a mocked `%PDF-`
+response does not validate real fonts, pagination, tables, links, captions, or
+the bundled Typst template on a target platform.
 
 ## Reproducibility
 

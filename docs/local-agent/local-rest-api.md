@@ -135,6 +135,7 @@ Completed jobs can use the authenticated artifact lifecycle:
 POST /api/v1/jobs/{job_id}/artifacts
 GET  /api/v1/jobs/{job_id}/artifacts
 GET  /api/v1/artifacts/{artifact_id}
+POST /api/v1/artifacts/{artifact_id}/cancel
 ```
 
 The POST body is a version 1 batch:
@@ -158,6 +159,10 @@ Downloads are private, bearer-authenticated responses with SHA-256 metadata;
 artifact manifests and result envelopes never contain binary content or local
 filesystem paths.
 
+Artifact manifests expose `progress_percent` and `progress_stage`. Poll until
+entries become `available`, `failed`, `cancelled`, or `expired`. Cancellation
+is cooperative and prevents output that finishes later from being published.
+
 Every current capability exposes one canonical table in `json`, `csv`, and
 `markdown`. Markdown accepts a bounded `max_rows` option and reports
 truncation explicitly; JSON and CSV retain the complete row set.
@@ -176,3 +181,23 @@ instead of hardcoding this mapping. Requests outside the advertised inventory
 return `artifact_not_supported`. See
 [Result Artifacts Contract](../RESULT_ARTIFACTS_CONTRACT.md) for formats,
 limits, provenance, and lifecycle semantics.
+
+## Local Reports
+
+Reports compose validated job status and stored artifacts without rerunning a
+solver:
+
+```text
+GET  /api/v1/reports/backends
+POST /api/v1/reports
+GET  /api/v1/reports/{report_id}
+POST /api/v1/reports/{report_id}/cancel
+GET  /api/v1/reports/{report_id}/download
+```
+
+Markdown is always available. PDF requests require the optional
+`pandoc.typst.v1` backend; inspect its structured diagnostic before submission.
+Reports expose the same progress, cancellation, SHA-256, expiry, and private
+download semantics as artifacts. See
+[Local Result Artifacts And Reports](../LOCAL_REPORTING.md) for the bounded
+request and conversion behavior.

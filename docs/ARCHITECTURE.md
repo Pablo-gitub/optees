@@ -146,7 +146,10 @@ flowchart TB
     ArtifactStore --> RESTDownload["Authenticated REST download"]
     ArtifactStore --> MCPResource["MCP resource or retrieval tool"]
     ArtifactStore --> Composer["Report composer"]
-    Composer --> ReportStore["Markdown or optional PDF"]
+    Composer --> Converter["Validated XLSX / OBJ conversion"]
+    Converter --> Backend["Optional Pandoc + Typst port"]
+    Composer --> ReportStore["Deterministic Markdown"]
+    Backend --> ReportStore["Bounded PDF"]
 ```
 
 The rendering worker is bounded and independent from the mathematical job
@@ -192,6 +195,21 @@ metadata-first report operations; report bytes are read only through an
 authenticated download or explicit `optees-report://{report_id}` resource.
 Unavailable inputs are represented in-band as `unsupported_artifact` blocks,
 so a generated document cannot silently omit requested evidence.
+
+`ReportAssetConverterPort` converts only already resolved, SHA-256-verified
+artifact bytes. Its bounded adapter maps the first XLSX worksheet to Markdown
+and validated Packing OBJ+MTL archives to named PNG camera views.
+`ReportBackendPort` owns optional final document conversion. The current
+Pandoc+Typst adapter is discovered at runtime, uses one bundled fixed template,
+isolates temporary files, accepts no caller command options or paths, and
+enforces timeout and output-size limits. Missing executables are a capability
+diagnostic rather than a composition crash.
+
+Artifact and report workers publish monotonic progress through their
+manifests. Their cancellation events are application-owned: a terminal
+`cancelled` response is visible immediately, late output is never published,
+and the PDF adapter terminates its isolated process group. Transport adapters
+only forward these lifecycle operations.
 
 Production renderers include canonical result tables, bounded categorical
 charts, LP feasible regions, analytical NLP, graph, regression, and

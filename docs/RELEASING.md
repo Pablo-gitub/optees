@@ -137,6 +137,26 @@ install/update test before announcing the release. On each platform, also
 configure a local MCP client against the packaged entry point and run
 `optees_list_capabilities` before promoting a release candidate.
 
+### Artifact and report smoke
+
+For each installed macOS, Windows, and Linux release candidate:
+
+1. complete one small LP job through the local service;
+2. request its canonical result table and one graphical artifact;
+3. poll both operations until `available` and verify progress reaches 100;
+4. compose and download a Markdown report containing the job status and both
+   artifacts;
+5. call the report-backend diagnostic through REST or MCP;
+6. when `pandoc.typst.v1` is available, compose and download the equivalent
+   PDF, inspecting fonts, page breaks, wide tables, captions, links, and footer;
+7. start another artifact or report, cancel it, and verify that it remains
+   `cancelled` without late publication.
+
+Record the platform, package type, backend versions, generated hashes, and
+result in the release acceptance evidence. PDF unavailability is acceptable
+while Pandoc and Typst remain optional, but it must be reported through the
+structured backend diagnostic rather than a generic failure.
+
 ## Signing And Update Handoff
 
 When the Apple Developer ID and notarization secrets are configured, the macOS

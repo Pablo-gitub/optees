@@ -382,23 +382,58 @@ official footer. Pandoc and PDF remain intentionally outside this phase.
 
 ### Phase 6 - Local PDF Backend
 
-- [ ] Add a report-backend port and a Pandoc adapter discovered at runtime.
-- [ ] Select and document a bounded PDF engine such as Typst before packaging.
-- [ ] Fail with a capability diagnostic when the PDF backend is unavailable.
-- [ ] Disable unsafe Pandoc features and enforce fixed bundled templates.
-- [ ] Validate fonts, page breaks, wide tables, captions, links, and footers.
-- [ ] Decide whether Pandoc and the PDF engine remain optional dependencies or
+- [x] Add a report-backend port and a Pandoc adapter discovered at runtime.
+- [x] Select and document a bounded PDF engine such as Typst before packaging.
+- [x] Fail with a capability diagnostic when the PDF backend is unavailable.
+- [x] Disable unsafe Pandoc features and enforce fixed bundled templates.
+- [x] Define and structurally validate fonts, page breaks, wide tables,
+  captions, links, and footers in the fixed template.
+- [x] Decide whether Pandoc and the PDF engine remain optional dependencies or
   are bundled per platform only after installer-size and license review.
+
+Phase 6 engineering is complete. `ReportBackendPort` isolates document
+production from the application service. The first adapter discovers Pandoc
+and Typst at runtime, executes only a fixed command and bundled A4 template in
+an isolated private directory, enforces time and output-size limits, and
+returns a sanitized capability diagnostic when either executable is absent.
+The template defines bounded typography, breakable tables, image captions,
+clickable links, and the official page footer. Structural and mocked-runtime
+tests cover the contract; the real-render native acceptance remains part of
+the Phase 7 release gate.
+
+Pandoc and Typst remain optional for version 1. Markdown reporting is the
+dependency-free baseline. Bundling the two executables is deliberately
+deferred until installer-size, license, update, and three-platform acceptance
+have been reviewed.
 
 ### Phase 7 - Conversion And Packaging Hardening
 
-- [ ] Convert validated spreadsheet/table assets to bounded report tables.
-- [ ] Convert OBJ + MTL bundles to selected static views.
-- [ ] Add cancellation and progress reporting for expensive renders/reports.
+- [x] Convert validated spreadsheet/table assets to bounded report tables.
+- [x] Convert OBJ + MTL bundles to selected static views during PDF
+  composition.
+- [x] Add cancellation and progress reporting for expensive renders/reports.
 - [ ] Smoke-test artifact and report creation in macOS, Windows, and Linux
   installed release candidates.
-- [ ] Document installation, availability diagnostics, and agent examples.
+- [x] Document installation, availability diagnostics, and agent examples.
 - [ ] Add representative generated reports to agent-effectiveness benchmarks.
+
+Phase 7 engineering is complete. Stored XLSX content is parsed without office
+automation, limited by archive, XML, row, column, and cell budgets, and reduced
+to its first worksheet. Stored Packing OBJ+MTL bundles are revalidated,
+bounded, and rendered only through the four named camera views. Duplicate ZIP
+entries, unsafe paths, compression bombs, invalid indices, and non-finite
+geometry or colors are rejected.
+
+Artifact and report manifests now expose monotonic progress and terminal
+`cancelled` states through REST and MCP. Cancellation prevents late
+publication; the optional PDF backend also terminates its process group.
+Operational usage is documented in `LOCAL_REPORTING.md`.
+
+The two remaining checkboxes are release and empirical evidence gates. They
+cannot be closed by source tests on one machine: each installed release
+candidate must complete the documented solve-render-compose-download smoke,
+and representative reports must be retained under the agent benchmark
+protocol before this initiative's overall completion gate is satisfied.
 
 ## Completion Gate
 
