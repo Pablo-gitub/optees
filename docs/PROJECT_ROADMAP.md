@@ -80,6 +80,89 @@ the product standard: the first geometric workflow still requires an exact
 contract, deterministic references, benchmark evidence, and honest solver
 status reporting.
 
+## Current Implementation Priority
+
+After the `0.9.2` reporting and native-packaging work, product development
+prioritizes three complete business-decision workflows before clustering,
+generic heuristics, or broad horizontal expansion:
+
+1. **Time-series Forecasting**
+2. **Unrelated Parallel Machines Scheduling**
+3. **Two-player Zero-sum Game Theory**
+
+This order is intentional. Forecasting turns historical observations into
+explicit future estimates. Scheduling can then consume known or forecast work
+requirements and assign jobs to heterogeneous machines. Zero-sum games add a
+different strategic-decision workflow after those two operational capabilities
+are stable. Each stage is delivered as a complete vertical slice and exposed
+consistently through desktop, versioned JSON, the local REST service, MCP,
+independent validation, optional result artifacts, and reports.
+
+### Priority 1 - Time-series Forecasting
+
+- [ ] Define a versioned time-series model with ordered timestamps, one target,
+  an explicit forecast horizon, frequency handling, and missing-value policy.
+- [ ] Establish deterministic naive and seasonal-naive baselines before adding
+  a trend/seasonality model; method selection must remain visible to the user.
+- [ ] Use chronological holdout or rolling-origin evaluation. Random train/test
+  splitting and leakage from future observations are forbidden.
+- [ ] Report fitted values, forecasts, residuals, horizon metrics, uncertainty
+  intervals where the selected method supports them, and warnings for weak or
+  insufficient history.
+- [ ] Provide an actual-versus-fitted-versus-forecast chart and a residual
+  diagnostic suitable for both the desktop view and optional API artifacts.
+- [ ] Add analytic references, edge cases, and a reviewed public benchmark
+  before making claims beyond the documented educational scope.
+
+The first implementation plan must choose the initial maintained forecasting
+adapter and freeze its assumptions before code is written. It must not retrofit
+forecasting into the existing random-split regression contract.
+
+### Priority 2 - Unrelated Parallel Machines Scheduling
+
+The canonical model starts from unrelated machines, `R||Cmax`, because its
+processing-time matrix also represents the simpler identical- and
+uniform-machine cases without introducing separate solver cores.
+
+- [ ] Define jobs, machines, eligibility, and processing times `p_ij`, with an
+  explicit assignment matrix and makespan `Cmax`.
+- [ ] Let the formulation UI generate the full matrix from compact choices:
+  repeated or distinct jobs, and machine-independent or machine-dependent
+  processing times. The JSON contract remains explicit and normalized.
+- [ ] Support an all-required mode that minimizes makespan.
+- [ ] Support optional jobs with value or priority through a lexicographic
+  objective: first maximize scheduled value, then minimize makespan while
+  preserving the best value.
+- [ ] Return assignments, machine loads, makespan, unscheduled jobs, objective
+  stages, optimality status, and independent feasibility validation.
+- [ ] Provide an assignment table, per-machine load chart, and Gantt-style
+  schedule, with deterministic reference cases for every compact UI mode.
+
+Equal job durations, identical repeated jobs, and identical machines are input
+specializations of this capability, not separate algorithms. Sequence-dependent
+setup times, release dates, deadlines, precedence constraints, and heuristic
+large-instance solvers remain later scheduling expansions.
+
+### Priority 3 - Two-player Zero-sum Game Theory
+
+Game Theory is introduced as its own family. It is not Graph Theory, and a
+matrix game is not the same problem as minimax search on a game tree.
+
+- [ ] Define a finite two-player zero-sum payoff matrix with explicit row-player
+  and column-player semantics.
+- [ ] Detect pure saddle points by comparing maximin and minimax values.
+- [ ] Solve mixed strategies through the corresponding primal/dual linear
+  programs and report the value of the game.
+- [ ] Validate probability normalization, non-negativity, payoff guarantees,
+  dual consistency, and exploitability within documented tolerances.
+- [ ] Provide payoff-matrix editing, strategy probability tables, pure-strategy
+  diagnostics, and a localized educational explanation of equilibrium.
+- [ ] Add textbook analytic games and degeneracy cases before exposing the
+  capability through desktop and agent contracts.
+
+General-sum bimatrix games, Nash-equilibrium enumeration, repeated games,
+cooperative games, and game-tree minimax are explicitly deferred.
+
 ## Current Baseline
 
 ### Linear Programming
@@ -250,7 +333,7 @@ only from explicitly declared columns and pipe-separated rows, validates it
 through the importer, and never invents observations from prose. This workflow
 must not be treated as a fairness, causality, or deployment claim.
 
-The remaining work is:
+The remaining work is ordered by the current product priority above:
 
 1. **Forecasting as a separate capability:** define a versioned time-series
    contract with ordered timestamps, chronological or rolling-origin
@@ -261,7 +344,8 @@ The remaining work is:
    accepts up to 32 independently validated problems, preserves one result and
    validation report per item, and returns aggregate lifecycle, mathematical,
    and validation counts through REST, MCP, and the local Ollama harness.
-3. **Clustering within the AI family:** local unsupervised clustering with k-means,
+3. **Clustering within the AI family (deferred until the three current
+   priorities are complete):** local unsupervised clustering with k-means,
    user-selected `k`, reproducible seed, feature scaling made visible, inertia
    and silhouette diagnostics, and 2D/3D plots only for the selected displayed
    dimensions.
@@ -413,9 +497,10 @@ order that reuses the new foundations.
 | Packing & Loading | Orthogonal single- and multi-container 3D packing, interactive refinement, industrial constraints, heuristic comparison, and capacity-only allocation. |
 | NLP | Nonlinear constraints, least squares, quadratic programming, nonlinear minimax, and global methods such as differential evolution. |
 | Graph Theory | Bellman-Ford, minimum spanning tree, max flow/min cut, matching, and exact/heuristic TSP comparison. |
-| AI & Machine Learning | Regularization and validation improvements after regression and binary classification, then clustering diagnostics; each expansion keeps local, reproducible data handling. |
+| AI & Machine Learning | Time-series forecasting first; regularization, classification hardening, and clustering diagnostics follow after the current business-decision sequence. |
 | Heuristics | Simulated Annealing, then problem-specific Genetic Algorithm or Tabu Search; every result keeps seed, budget, incumbent trace, and feasibility diagnostics. |
-| Scheduling | Parallel-machine makespan first, using a MILP formulation and later heuristic comparators; time-indexed and sequence-dependent models follow only with dedicated visualizations. |
+| Scheduling | Unrelated parallel machines first, including identical-machine and repeated-job input specializations, required-job makespan, and optional-job lexicographic value/makespan objectives. Heuristic and sequence-dependent models follow later. |
+| Game Theory | Two-player zero-sum matrix games with pure saddle-point analysis and LP-based mixed strategies; general-sum and repeated games follow only after the zero-sum contract is validated. |
 | Robust & Stochastic Optimization | Explicit scenario model, min-max regret, then newsvendor and revenue-management workflows with uncertainty assumptions visible in the UI. |
 
 ### Phase 6 - Modeling Assistant: Structured Guidance
@@ -454,7 +539,8 @@ defines the objective and constraints:
 | Linear continuous or mixed-integer models | LP/MILP, often through an epigraph variable or a Chebyshev goal-programming formulation. |
 | Nonlinear objective or constraints | NLP. |
 | Uncertain scenarios and regret | Robust Optimization models, initially documented within the Modeling Assistant and later exposed as a dedicated family/workflow. |
-| Game trees | Graph Theory / AI, using minimax and alpha-beta pruning. |
+| Zero-sum matrix games | Game Theory, using maximin/minimax equilibrium values and LP duality for mixed strategies. |
+| Game trees | Adversarial Search / AI, using minimax and alpha-beta pruning. |
 
 Max-min follows the same rule: it is a modelling objective, not an algorithm
 family by itself.

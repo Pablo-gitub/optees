@@ -116,13 +116,18 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
 
 The next sections are introduced in this order:
 
-1. Educational AI & Machine Learning: k-means clustering, using the same
-   local-data and evaluation contract after the shipped regression and binary
-   classification workflows.
-2. Heuristics & Metaheuristics: TSP constructive/local-search baseline, then
-   Simulated Annealing and problem-specific metaheuristics.
-3. Scheduling and Robust/Stochastic Optimization: workflow-specific models
-   built first on the MILP, Graph, and Heuristic foundations.
+1. Educational AI & Machine Learning: time-series Forecasting with chronological
+   evaluation, explicit horizons, uncertainty diagnostics, and leakage
+   safeguards.
+2. Scheduling: Unrelated Parallel Machines with required-job makespan and
+   optional-job lexicographic value/makespan modes. Identical machines and
+   repeated equal jobs are compact input specializations of this model.
+3. Game Theory: finite two-player zero-sum matrix games, pure saddle-point
+   analysis, and LP-based mixed strategies.
+
+After these business-decision workflows, the planned sequence returns to
+k-means clustering, TSP constructive/local search, Simulated Annealing, and
+the broader family expansions in `docs/PROJECT_ROADMAP.md`.
 
 ## Cross-Family Methods
 
@@ -130,7 +135,9 @@ The next sections are introduced in this order:
 - Nonlinear minimax belongs in NLP.
 - Min-max regret, newsvendor, and revenue management belong to Robust
   Optimization workflows.
-- Game-tree minimax and alpha-beta pruning belong to Graph Theory / AI.
+- Zero-sum payoff-matrix maximin/minimax belongs to Game Theory.
+- Game-tree minimax and alpha-beta pruning belong to Adversarial Search / AI,
+  not to the shortest-path Graph Theory workflow.
 
 Heuristics are never presented as proof-producing exact methods. Their results
 must report the random seed where applicable, run budget, elapsed time,
