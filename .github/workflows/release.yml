@@ -240,6 +240,44 @@ jobs:
             }
           }
 
+      - name: Smoke test packaged artifact reporting (Linux)
+        if: runner.os == 'Linux'
+        run: >-
+          python packaging/smoke_packaged_reporting.py 18766
+          dist/optees/optees --local-server
+
+      - name: Smoke test packaged artifact reporting (macOS)
+        if: runner.os == 'macOS'
+        run: >-
+          python packaging/smoke_packaged_reporting.py 18766
+          dist/optees.app/Contents/MacOS/optees --local-server
+
+      - name: Smoke test packaged artifact reporting (Windows)
+        if: runner.os == 'Windows'
+        run: >-
+          python packaging/smoke_packaged_reporting.py 18766
+          dist\optees\optees-server.exe
+
+      - name: Verify packaged report template (Linux)
+        if: runner.os == 'Linux'
+        run: test -f dist/optees/_internal/assets/reports/optees.typst
+
+      - name: Verify packaged report template (macOS)
+        if: runner.os == 'macOS'
+        run: >-
+          test -f
+          dist/optees.app/Contents/Resources/assets/reports/optees.typst
+
+      - name: Verify packaged report template (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (-not (Test-Path `
+              'dist\optees\_internal\assets\reports\optees.typst' `
+              -PathType Leaf)) {
+            throw 'The packaged Optees Typst template is missing.'
+          }
+
       - name: Verify bundled OR-Tools libraries (Windows)
         if: runner.os == 'Windows'
         shell: pwsh

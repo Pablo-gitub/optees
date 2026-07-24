@@ -139,6 +139,13 @@ configure a local MCP client against the packaged entry point and run
 
 ### Artifact and report smoke
 
+The tagged release workflow runs the dependency-free portion of this smoke
+against every native package before publishing it. It verifies a solved and
+independently validated LP, a Markdown table, a PNG chart, authenticated
+downloads and SHA-256 headers, a composed Markdown report, the packaged Typst
+template, and structured PDF-backend diagnostics. When Pandoc and Typst happen
+to be available on the runner, it also composes and verifies a real PDF.
+
 For each installed macOS, Windows, and Linux release candidate:
 
 1. complete one small LP job through the local service;

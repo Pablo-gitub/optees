@@ -66,3 +66,19 @@ def test_final_appimage_dispatches_and_smoke_tests_mcp():
     assert 'exec "${HERE}/optees-mcp" "$@"' in workflow
     assert "Smoke test final AppImage MCP entry point" in workflow
     assert "./optees-linux-x86_64.AppImage --mcp-server" in workflow
+
+
+def test_native_bundles_smoke_test_artifact_and_report_workflow():
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    smoke_path = ROOT / "packaging" / "smoke_packaged_reporting.py"
+    smoke = smoke_path.read_text(encoding="utf-8")
+
+    assert workflow.count("Smoke test packaged artifact reporting") == 3
+    assert workflow.count("packaging/smoke_packaged_reporting.py") == 3
+    assert workflow.count("Verify packaged report template") == 3
+    assert "solution_table" in smoke
+    assert "feasible_region" in smoke
+    assert "/api/v1/reports/backends" in smoke
+    assert "Optees · optees.it" in smoke
+    assert 'pdf.startswith(b"%PDF-")' in smoke
+    assert "x-content-sha256" in smoke

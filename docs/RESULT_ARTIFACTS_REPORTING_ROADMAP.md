@@ -439,6 +439,14 @@ candidate must complete the documented solve-render-compose-download smoke,
 and representative reports must be retained under the agent benchmark
 protocol before this initiative's overall completion gate is satisfied.
 
+The release workflow now exercises the solve-render-compose-download path
+against every packaged platform artifact before publication. It checks a
+verified LP, Markdown and PNG artifacts, hashes, a Markdown report, the bundled
+Typst template, and PDF-backend diagnostics; a real PDF is additionally
+generated whenever Pandoc and Typst are available. The phase remains open until
+the resulting native installers have also been installed and accepted on all
+three target operating systems.
+
 An additional local-agent acceptance run used `qwen3.5:9b` through the bounded
 Ollama harness. The model requested report composition through metadata-only
 tools, polled the returned opaque report ID, and reported the authenticated
