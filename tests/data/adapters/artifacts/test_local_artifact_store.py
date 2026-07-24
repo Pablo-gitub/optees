@@ -70,6 +70,21 @@ def test_store_is_session_isolated_private_hashed_and_removed_on_close(tmp_path)
         store.stats()
 
 
+def test_atomic_write_falls_back_when_descriptor_chmod_is_unavailable(
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.delattr(os, "fchmod", raising=False)
+
+    with LocalArtifactStore(
+        parent_directory=tmp_path,
+        id_factory=_ids("artifact-windows"),
+    ) as store:
+        metadata = store.store(b"portable", media_type="text/plain")
+
+        assert store.get(metadata.artifact_id).content == b"portable"
+
+
 def test_per_file_limit_rejects_content_without_writing(tmp_path):
     with LocalArtifactStore(
         parent_directory=tmp_path,

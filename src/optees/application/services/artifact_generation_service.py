@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from copy import deepcopy
 from collections.abc import Callable, Mapping
 from concurrent.futures import Future, ThreadPoolExecutor, TimeoutError
@@ -51,6 +52,7 @@ _STANDARD_OPTION_KEYS = {
     "height",
     "font_family",
 }
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -569,6 +571,12 @@ class ArtifactGenerationService:
             )
             return
         except Exception:
+            _LOGGER.exception(
+                "Artifact generation failed for %s (%s as %s).",
+                task.source.capability_id,
+                task.request.artifact_type,
+                task.format.value,
+            )
             self._fail(
                 task.public_artifact_id,
                 ErrorCode.ARTIFACT_RENDER_FAILED,

@@ -280,7 +280,13 @@ class LocalArtifactStore:
         )
         temporary = Path(temporary_name)
         try:
-            os.fchmod(descriptor, 0o600)
+            descriptor_chmod = getattr(os, "fchmod", None)
+            if descriptor_chmod is not None:
+                descriptor_chmod(descriptor, 0o600)
+            else:
+                # Windows does not expose os.fchmod. Restrict the named
+                # temporary file before writing it instead.
+                temporary.chmod(stat.S_IREAD | stat.S_IWRITE)
             with os.fdopen(descriptor, "wb") as handle:
                 descriptor = -1
                 handle.write(content)

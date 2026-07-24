@@ -89,6 +89,12 @@ directory and removes same-named DLLs that PyInstaller may have discovered
 elsewhere on the runner. This prevents a package that either misses
 `ortools.dll` or combines it with unrelated Abseil/Protobuf builds.
 
+Packaged artifact generation also exercises the Windows-compatible atomic
+storage path. Windows does not provide `os.fchmod`; temporary artifact files
+must therefore be restricted through their path before the atomic replace.
+The release reporting smoke test is the cross-platform acceptance gate for
+both canonical tables and graphical artifacts.
+
 The release workflow compares the SHA-256 hash of every bundled OR-Tools DLL
 with the installed wheel before creating the native installer and portable
 ZIP. A missing or different file fails the platform build. This integrity
