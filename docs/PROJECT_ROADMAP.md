@@ -9,6 +9,8 @@ Related documents:
 - `docs/MILP_ROADMAP.md` for MILP-specific completion work;
 - `docs/NLP_FEATURE_PLAN.md` for the Phase 1 nonlinear-programming delivery
   checklist;
+- `docs/FORECASTING_ROADMAP.md` for the engine-first Forecasting capability and
+  its subsequent desktop and educational handoff;
 - `docs/PACKING_LOADING_ROADMAP.md` for the geometric packing and container
   loading horizontal expansion;
 - `docs/LOCAL_AGENT_SERVICE_ROADMAP.md` for the shared headless execution
@@ -99,6 +101,9 @@ consistently through desktop, versioned JSON, the local REST service, MCP,
 independent validation, optional result artifacts, and reports.
 
 ### Priority 1 - Time-series Forecasting
+
+The detailed two-part implementation and handoff checklist is maintained in
+`docs/FORECASTING_ROADMAP.md`.
 
 - [ ] Define a versioned time-series model with ordered timestamps, one target,
   an explicit forecast horizon, frequency handling, and missing-value policy.
