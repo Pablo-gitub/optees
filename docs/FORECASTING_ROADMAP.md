@@ -67,38 +67,41 @@ surface must preserve.
 
 ### A0 - Freeze The Statistical Contract
 
-- [ ] Compare maintained local Python implementations for the first
+- [x] Compare maintained local Python implementations for the first
   trend/seasonality method and document dependency, package-size, license, and
   native-packaging consequences.
-- [ ] Select the initial method set and assign stable method identifiers.
+- [x] Select the initial method set and assign stable method identifiers.
   `naive` and `seasonal_naive` are mandatory; the first trend/seasonality
   adapter must be explicitly chosen rather than inferred from UI wording.
-- [ ] Define supported frequency values, timestamp parsing, duplicate handling,
+- [x] Define supported frequency values, timestamp parsing, duplicate handling,
   sorting policy, minimum history, season-length requirements, and whether
   missing periods are rejected or filled only by an explicit policy.
-- [ ] Freeze evaluation metric definitions and zero-denominator behavior.
+- [x] Freeze evaluation metric definitions and zero-denominator behavior.
   Initial candidates are MAE, RMSE, MAPE with an explicit undefined state, and
   MASE when enough seasonal history exists.
-- [ ] Freeze uncertainty semantics. A field may be absent when a method cannot
+- [x] Freeze uncertainty semantics. A field may be absent when a method cannot
   support a defensible interval; Optees must not fabricate a confidence band.
-- [ ] Record numerical tolerances, deterministic seed behavior, and expected
+- [x] Record numerical tolerances, deterministic seed behavior, and expected
   failure/status vocabulary.
+
+The frozen decisions are maintained in
+`docs/FORECASTING_STATISTICAL_CONTRACT.md`.
 
 **Exit criterion:** a reviewed contract note answers every ambiguity above and
 the chosen dependency can be packaged on Windows, macOS, and Linux.
 
 ### A1 - Domain Model And Ports
 
-- [ ] Add immutable timestamped observations and a `ForecastingModel` containing
+- [x] Add immutable timestamped observations and a `ForecastingModel` containing
   target metadata, method, horizon, frequency, optional season length,
   evaluation strategy, and bounded method options.
-- [ ] Reject non-finite targets, duplicate or non-monotonic normalized
+- [x] Reject non-finite targets, duplicate or non-monotonic normalized
   timestamps, invalid horizons, insufficient history, unsupported frequency,
   and inconsistent seasonal settings.
-- [ ] Define result entities for fitted values, holdout predictions, future
+- [x] Define result entities for fitted values, holdout predictions, future
   forecasts, residuals, metrics, interval bounds, model parameters,
   diagnostics, and mathematical status.
-- [ ] Define a Forecasting solver port independent from the selected numerical
+- [x] Define a Forecasting solver port independent from the selected numerical
   library and from Qt, HTTP, MCP, and filesystem code.
 - [ ] Keep training, evaluation, and future forecasting as explicit operations
   in the use case even if one adapter performs them together.
