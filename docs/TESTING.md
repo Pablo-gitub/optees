@@ -118,10 +118,18 @@ metadata-only MCP retrieval.
   OBJ+MTL report conversion, archive/geometry rejection, PDF backend
   diagnostics, fixed-command execution, and verified PDF output.
 
+Ruff is available through the `dev` extra and applies to new or modified
+Python code. Whole-repository linting is not yet a CI gate because legacy
+modules retain known lint debt. Use `python -m ruff check src tests packaging`
+to audit that backlog separately.
+
 ## Commands
 ```bash
 # install reproducible development test dependencies
-python -m pip install -e ".[plot,local-service,test]"
+python -m pip install -e ".[plot,local-service,test,dev]"
+
+# lint the Python files changed by the current work unit
+python -m ruff check path/to/changed.py path/to/changed_test.py
 
 # fast local feedback: no full-window GUI, measured benchmarks, or sockets
 PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark and not tcp"
