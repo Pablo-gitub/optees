@@ -167,6 +167,89 @@ class OpteesToolFacade:
                 },
             },
         }
+        artifact_request_properties = {
+            "job_id": {"type": "string"},
+            "contract_version": {"type": "string", "enum": ["1"]},
+            "requests": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 8,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "artifact_type": {"type": "string"},
+                        "formats": {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {"type": "string"},
+                        },
+                        "options": {
+                            "type": "object",
+                            "additionalProperties": True,
+                        },
+                    },
+                    "required": ["artifact_type", "formats"],
+                    "additionalProperties": False,
+                },
+            },
+        }
+        report_request_properties = {
+            "contract_version": {"type": "string", "enum": ["1"]},
+            "format": {"type": "string", "enum": ["markdown", "pdf"]},
+            "locale": {"type": "string", "enum": ["en", "it"]},
+            "title": {"type": "string"},
+            "sections": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 32,
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "section_id": {"type": "string"},
+                        "heading": {"type": "string"},
+                        "blocks": {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "markdown",
+                                            "job_status",
+                                            "artifact",
+                                        ],
+                                    },
+                                    "value": {"type": "string"},
+                                    "caption": {"type": "string"},
+                                    "views": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "enum": [
+                                                "isometric",
+                                                "front",
+                                                "side",
+                                                "top",
+                                            ],
+                                        },
+                                    },
+                                },
+                                "required": ["type", "value"],
+                                "additionalProperties": False,
+                            },
+                        },
+                    },
+                    "required": ["section_id", "heading", "blocks"],
+                    "additionalProperties": False,
+                },
+            },
+            "metadata": {
+                "type": "object",
+                "additionalProperties": True,
+            },
+        }
         return [
             _tool(
                 "optees_list_capabilities",
@@ -243,6 +326,69 @@ class OpteesToolFacade:
                 {"batch_id": {"type": "string"}},
                 ["batch_id"],
             ),
+            _tool(
+                "optees_list_result_artifacts",
+                (
+                    "List artifact types supported by a completed job and metadata "
+                    "for prior artifact batches. No file bytes are returned."
+                ),
+                {"job_id": {"type": "string"}},
+                ["job_id"],
+            ),
+            _tool(
+                "optees_render_result_artifacts",
+                (
+                    "Request up to eight bounded artifacts using only types, formats, "
+                    "and options advertised by optees_list_result_artifacts."
+                ),
+                artifact_request_properties,
+                ["job_id", "requests"],
+            ),
+            _tool(
+                "optees_cancel_artifact",
+                "Request cancellation of one queued or rendering artifact.",
+                {"artifact_id": {"type": "string"}},
+                ["artifact_id"],
+            ),
+            _tool(
+                "optees_get_report_backends",
+                (
+                    "Inspect local report backend availability before requesting PDF. "
+                    "Markdown reports need no external backend."
+                ),
+                {},
+                [],
+            ),
+            _tool(
+                "optees_compose_report",
+                (
+                    "Compose a bounded Markdown or PDF report from safe Markdown, "
+                    "job status, and existing artifact blocks. No bytes are returned."
+                ),
+                report_request_properties,
+                [
+                    "contract_version",
+                    "format",
+                    "locale",
+                    "title",
+                    "sections",
+                ],
+            ),
+            _tool(
+                "optees_get_report_status",
+                (
+                    "Poll report status and metadata. An available report includes "
+                    "its authenticated relative download endpoint."
+                ),
+                {"report_id": {"type": "string"}},
+                ["report_id"],
+            ),
+            _tool(
+                "optees_cancel_report",
+                "Request cancellation of one queued or composing report.",
+                {"report_id": {"type": "string"}},
+                ["report_id"],
+            ),
         ]
 
     def execute(self, name: str, arguments: JsonObject) -> JsonObject:
@@ -259,6 +405,13 @@ class OpteesToolFacade:
             "optees_get_batch_status": self._get_batch_status,
             "optees_get_batch_result": self._get_batch_result,
             "optees_cancel_batch": self._cancel_batch,
+            "optees_list_result_artifacts": self._list_result_artifacts,
+            "optees_render_result_artifacts": self._render_result_artifacts,
+            "optees_cancel_artifact": self._cancel_artifact,
+            "optees_get_report_backends": self._get_report_backends,
+            "optees_compose_report": self._compose_report,
+            "optees_get_report_status": self._get_report_status,
+            "optees_cancel_report": self._cancel_report,
         }
         handler = handlers.get(name)
         if handler is None:
@@ -421,6 +574,122 @@ class OpteesToolFacade:
         )
         return {"ok": True, "batch": response}
 
+    def _list_result_artifacts(self, arguments: JsonObject) -> JsonObject:
+        job_id = _required_string(arguments, "job_id")
+        job = self._request("GET", f"/api/v1/jobs/{quote(job_id, safe='')}")
+        capability_id = job.get("capability_id")
+        if not isinstance(capability_id, str) or not capability_id:
+            raise ValueError("Optees returned a job without a capability_id.")
+        descriptor = self._request(
+            "GET",
+            f"/api/v1/capabilities/{quote(capability_id, safe='')}",
+        )
+        response = self._request(
+            "GET",
+            f"/api/v1/jobs/{quote(job_id, safe='')}/artifacts",
+        )
+        return {
+            "ok": True,
+            "job_id": job_id,
+            "capability_id": capability_id,
+            "available_artifacts": descriptor.get("available_artifacts", []),
+            "artifact_batches": response.get("artifact_batches", []),
+            "content_policy": {
+                "content_included": False,
+                "retrieval": (
+                    "An authenticated client downloads available files from "
+                    "/api/v1/artifacts/{artifact_id}."
+                ),
+            },
+        }
+
+    def _render_result_artifacts(self, arguments: JsonObject) -> JsonObject:
+        job_id = _required_string(arguments, "job_id")
+        contract_version = arguments.get("contract_version", "1")
+        if not isinstance(contract_version, str) or not contract_version:
+            raise ValueError("contract_version must be a non-empty string")
+        if contract_version != "1":
+            raise ValueError("unsupported artifact contract version")
+        requests = _object_list(arguments, "requests", minimum=1, maximum=8)
+        response = self._request(
+            "POST",
+            f"/api/v1/jobs/{quote(job_id, safe='')}/artifacts",
+            {
+                "contract_version": contract_version,
+                "requests": requests,
+            },
+        )
+        return {
+            "ok": True,
+            "artifact_batch": response,
+            "content_policy": {
+                "content_included": False,
+                "next_step": "Poll optees_list_result_artifacts for metadata.",
+            },
+        }
+
+    def _cancel_artifact(self, arguments: JsonObject) -> JsonObject:
+        artifact_id = _required_string(arguments, "artifact_id")
+        response = self._request(
+            "POST",
+            f"/api/v1/artifacts/{quote(artifact_id, safe='')}/cancel",
+            {},
+        )
+        return {"ok": True, "artifact": response}
+
+    def _get_report_backends(self, _arguments: JsonObject) -> JsonObject:
+        response = self._request("GET", "/api/v1/reports/backends")
+        return {"ok": True, "backends": response.get("backends", [])}
+
+    def _compose_report(self, arguments: JsonObject) -> JsonObject:
+        request: object = arguments.get("request", arguments)
+        if isinstance(request, str):
+            try:
+                request = json.loads(request)
+            except json.JSONDecodeError as exc:
+                raise ValueError("request must contain valid JSON") from exc
+        if not isinstance(request, dict):
+            raise ValueError("report request must be a JSON object")
+        response = self._request(
+            "POST",
+            "/api/v1/reports",
+            _normalize_agent_report_request(request),
+        )
+        return {
+            "ok": True,
+            "report": response,
+            "content_policy": {
+                "content_included": False,
+                "next_step": "Poll optees_get_report_status for metadata.",
+            },
+        }
+
+    def _get_report_status(self, arguments: JsonObject) -> JsonObject:
+        report_id = _required_string(arguments, "report_id")
+        response = self._request(
+            "GET",
+            f"/api/v1/reports/{quote(report_id, safe='')}",
+        )
+        payload: JsonObject = {
+            "ok": True,
+            "report": response,
+            "content_included": False,
+        }
+        if response.get("status") == "available":
+            payload["download_endpoint"] = (
+                f"/api/v1/reports/{quote(report_id, safe='')}/download"
+            )
+        return payload
+
+    def _cancel_report(self, arguments: JsonObject) -> JsonObject:
+        report_id = _required_string(arguments, "report_id")
+        response = self._request(
+            "POST",
+            f"/api/v1/reports/{quote(report_id, safe='')}/cancel",
+            {},
+        )
+        return {"ok": True, "report": response}
+
     def _problem_arguments(self, arguments: JsonObject) -> tuple[str, JsonObject]:
         capability_id = _required_string(arguments, "capability_id")
         problem = arguments.get("problem")
@@ -514,7 +783,7 @@ class OllamaAgentHarness:
         ollama: OllamaClient,
         tools: OpteesToolFacade,
         model: str = "qwen2.5-coder:7b",
-        max_tool_calls: int = 16,
+        max_tool_calls: int = 24,
         max_run_seconds: float = 600.0,
         progress: Callable[[str], None] | None = None,
     ) -> None:
@@ -585,6 +854,11 @@ class OllamaAgentHarness:
                 self._emit(
                     f"Tool completed: {name} ({'ok' if result.get('ok') else 'error'})"
                 )
+                if result.get("ok") is not True:
+                    self._emit(
+                        "Tool error: "
+                        + json.dumps(_redact(result.get("error")), sort_keys=True)
+                    )
                 events.append(ToolEvent(name, arguments, result))
                 messages.append(
                     {
@@ -615,7 +889,14 @@ repeat authentication credentials. For LP results, always report the
 optimal_face analysis_status. Call the optimum unique only when that analysis
 is computed, has_alternate_optimum is false, and dimension is zero. Report
 alternate-optimum ranges when available; for partial, skipped, or unavailable
-analysis, state that uniqueness could not be established."""
+analysis, state that uniqueness could not be established.
+When the user requests visual artifacts or a report, first discover the job's
+available artifact contract, request only advertised outputs, and poll metadata
+until terminal. Check report backend diagnostics before requesting PDF; use
+Markdown when PDF is unavailable. Compose reports only from safe Markdown, job
+status, and artifact IDs returned by Optees. Tool results never contain binary
+file bytes: report the authenticated relative download endpoint to the user
+instead of attempting to read or reproduce file content."""
 
 
 def _tool(
@@ -676,6 +957,92 @@ def _required_string(arguments: JsonObject, name: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{name} must be a non-empty string")
     return value.strip()
+
+
+def _object_list(
+    arguments: JsonObject,
+    name: str,
+    *,
+    minimum: int,
+    maximum: int,
+) -> list[JsonObject]:
+    value = arguments.get(name)
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"{name} must contain valid JSON") from exc
+    if not isinstance(value, list) or not minimum <= len(value) <= maximum:
+        raise ValueError(
+            f"{name} must contain between {minimum} and {maximum} objects"
+        )
+    if any(not isinstance(item, dict) for item in value):
+        raise ValueError(f"every {name} item must be an object")
+    return value
+
+
+def _normalize_agent_report_request(request: JsonObject) -> JsonObject:
+    normalized = dict(request)
+    normalized.setdefault("contract_version", "1")
+    metadata = normalized.get("metadata")
+    if metadata in (None, ""):
+        normalized["metadata"] = {}
+    elif isinstance(metadata, str):
+        try:
+            parsed_metadata = json.loads(metadata)
+        except json.JSONDecodeError as exc:
+            raise ValueError("metadata must contain valid JSON") from exc
+        if not isinstance(parsed_metadata, dict):
+            raise ValueError("metadata must be a JSON object")
+        normalized["metadata"] = parsed_metadata
+    sections = normalized.get("sections")
+    if isinstance(sections, str):
+        try:
+            sections = json.loads(sections)
+        except json.JSONDecodeError as exc:
+            raise ValueError("sections must contain valid JSON") from exc
+        normalized["sections"] = sections
+    if not isinstance(sections, list):
+        return normalized
+    normalized_sections: list[object] = []
+    for section in sections:
+        if not isinstance(section, dict):
+            normalized_sections.append(section)
+            continue
+        normalized_section = dict(section)
+        blocks = normalized_section.get("blocks")
+        if not isinstance(blocks, list):
+            normalized_sections.append(normalized_section)
+            continue
+        normalized_blocks: list[object] = []
+        for block in blocks:
+            if not isinstance(block, dict) or "value" not in block:
+                normalized_blocks.append(block)
+                continue
+            block_type = block.get("type")
+            value = block.get("value")
+            if block_type == "markdown":
+                normalized_blocks.append({"type": "markdown", "content": value})
+            elif block_type == "job_status":
+                normalized_blocks.append({"type": "job_status", "job_id": value})
+            elif block_type == "artifact":
+                normalized_block: JsonObject = {
+                    "type": "artifact",
+                    "artifact_id": value,
+                }
+                caption = block.get("caption")
+                if isinstance(caption, str) and caption:
+                    normalized_block["caption"] = caption
+                views = block.get("views")
+                if isinstance(views, list) and views:
+                    normalized_block["views"] = views
+                normalized_blocks.append(normalized_block)
+            else:
+                normalized_blocks.append(block)
+        normalized_section["blocks"] = normalized_blocks
+        normalized_sections.append(normalized_section)
+    normalized["sections"] = normalized_sections
+    return normalized
 
 
 def _tool_error(code: str, message: str) -> JsonObject:

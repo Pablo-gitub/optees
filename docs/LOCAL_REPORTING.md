@@ -82,3 +82,9 @@ artifact smoke procedure in [Releasing Optees](RELEASING.md) on macOS,
 Windows, and Linux. Source tests and a mocked PDF executable verify contracts
 and failure behavior; they do not replace a real Typst render from each native
 release candidate.
+
+The real Pandoc+Typst path has been exercised successfully from a macOS source
+environment, including composition initiated by a local Qwen agent. This does
+not close the packaging gate: the installed macOS, Windows, and Linux release
+candidates must each pass the same procedure with the executables and templates
+available in their actual distribution environment.

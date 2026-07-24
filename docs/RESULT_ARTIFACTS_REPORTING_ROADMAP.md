@@ -398,8 +398,12 @@ an isolated private directory, enforces time and output-size limits, and
 returns a sanitized capability diagnostic when either executable is absent.
 The template defines bounded typography, breakable tables, image captions,
 clickable links, and the official page footer. Structural and mocked-runtime
-tests cover the contract; the real-render native acceptance remains part of
-the Phase 7 release gate.
+tests cover the contract. A source-environment acceptance run on macOS with
+Pandoc 3.7.0.2 and Typst 0.15.1 produced a valid single-page A4 PDF containing
+solver status, independent validation, a Markdown table, a PNG chart, artifact
+hashes, and the Optees footer. This proves the real adapter path on that
+development environment; installed release-candidate acceptance remains part
+of the Phase 7 gate.
 
 Pandoc and Typst remain optional for version 1. Markdown reporting is the
 dependency-free baseline. Bundling the two executables is deliberately
@@ -434,6 +438,14 @@ cannot be closed by source tests on one machine: each installed release
 candidate must complete the documented solve-render-compose-download smoke,
 and representative reports must be retained under the agent benchmark
 protocol before this initiative's overall completion gate is satisfied.
+
+An additional local-agent acceptance run used `qwen3.5:9b` through the bounded
+Ollama harness. The model requested report composition through metadata-only
+tools, polled the returned opaque report ID, and reported the authenticated
+relative download endpoint. The downloaded PDF was then independently
+inspected as a valid single-page A4 document. This is useful compatibility
+evidence, but it is one synthetic run rather than the multi-model empirical
+study required by Phase 4.
 
 ## Completion Gate
 

@@ -61,6 +61,16 @@ class FakeOpteesTransport:
                 "id": "lp.continuous",
                 "available": True,
                 "input_schema": {"type": "object"},
+                "available_artifacts": [
+                    {
+                        "artifact_type": "solution_table",
+                        "formats": ["markdown"],
+                    },
+                    {
+                        "artifact_type": "feasible_region",
+                        "formats": ["png"],
+                    },
+                ],
             }
         if url.endswith("/api/v1/problems/validate"):
             return {
@@ -81,8 +91,76 @@ class FakeOpteesTransport:
         if url.endswith("/api/v1/jobs/job-1"):
             return {
                 "job_id": "job-1",
+                "capability_id": "lp.continuous",
                 "job_status": "completed",
                 "result_available": True,
+            }
+        if url.endswith("/api/v1/jobs/job-1/artifacts"):
+            if method == "POST":
+                return {
+                    "request_id": "artifact-request-1",
+                    "job_id": "job-1",
+                    "status": "queued",
+                    "artifacts": [
+                        {
+                            "artifact_id": "artifact-table-1",
+                            "artifact_type": "solution_table",
+                            "status": "queued",
+                        }
+                    ],
+                }
+            return {
+                "contract_version": "1",
+                "job_id": "job-1",
+                "artifact_batches": [
+                    {
+                        "request_id": "artifact-request-1",
+                        "status": "available",
+                        "artifacts": [
+                            {
+                                "artifact_id": "artifact-table-1",
+                                "artifact_type": "solution_table",
+                                "format": "markdown",
+                                "media_type": "text/markdown",
+                                "status": "available",
+                                "size_bytes": 128,
+                                "sha256": "a" * 64,
+                            }
+                        ],
+                    }
+                ],
+            }
+        if url.endswith("/api/v1/artifacts/artifact-table-1/cancel"):
+            return {
+                "artifact_id": "artifact-table-1",
+                "status": "cancelled",
+            }
+        if url.endswith("/api/v1/reports/backends"):
+            return {
+                "backends": [
+                    {
+                        "backend_id": "pandoc_typst",
+                        "format": "pdf",
+                        "available": True,
+                    }
+                ]
+            }
+        if url.endswith("/api/v1/reports") and method == "POST":
+            return {
+                "report_id": "report-1",
+                "format": "pdf",
+                "status": "queued",
+            }
+        if url.endswith("/api/v1/reports/report-1/cancel"):
+            return {"report_id": "report-1", "status": "cancelled"}
+        if url.endswith("/api/v1/reports/report-1"):
+            return {
+                "report_id": "report-1",
+                "format": "pdf",
+                "media_type": "application/pdf",
+                "status": "available",
+                "size_bytes": 1024,
+                "sha256": "b" * 64,
             }
         if url.endswith("/api/v1/batches/validate"):
             return {"valid": True, "item_count": 2}
@@ -193,6 +271,175 @@ def test_complete_ollama_agent_loop_records_redacted_reproducible_events():
     system_prompt = ollama.requests[0]["messages"][0]["content"]
     assert "optimal_face" in system_prompt
     assert "Call the optimum unique only when" in system_prompt
+    assert "report backend diagnostics" in system_prompt
+
+
+def test_tool_facade_orchestrates_artifacts_and_reports_without_binary_content():
+    transport = FakeOpteesTransport()
+    facade = OpteesToolFacade(
+        base_url="http://127.0.0.1:8765",
+        token=TOKEN,
+        transport=transport,
+    )
+
+    discovered = facade.execute(
+        "optees_list_result_artifacts",
+        {"job_id": "job-1"},
+    )
+    requested = facade.execute(
+        "optees_render_result_artifacts",
+        {
+            "job_id": "job-1",
+            "contract_version": "1",
+            "requests": [
+                {
+                    "artifact_type": "solution_table",
+                    "formats": ["markdown"],
+                    "options": {},
+                }
+            ],
+        },
+    )
+    completed = facade.execute(
+        "optees_list_result_artifacts",
+        {"job_id": "job-1"},
+    )
+    backends = facade.execute("optees_get_report_backends", {})
+    report_request = {
+        "contract_version": "1",
+        "format": "pdf",
+        "locale": "en",
+        "title": "Production plan",
+        "sections": [
+            {
+                "section_id": "result",
+                "heading": "Result",
+                "blocks": [
+                    {"type": "job_status", "job_id": "job-1"},
+                    {
+                        "type": "artifact",
+                        "artifact_id": "artifact-table-1",
+                        "caption": "Optimal quantities",
+                    },
+                ],
+            }
+        ],
+        "metadata": {},
+    }
+    submitted = facade.execute(
+        "optees_compose_report",
+        report_request,
+    )
+    report = facade.execute(
+        "optees_get_report_status",
+        {"report_id": "report-1"},
+    )
+
+    assert discovered["available_artifacts"][0]["artifact_type"] == "solution_table"
+    assert requested["artifact_batch"]["status"] == "queued"
+    assert (
+        completed["artifact_batches"][0]["artifacts"][0]["status"]
+        == "available"
+    )
+    assert backends["backends"][0]["available"] is True
+    assert submitted["report"]["report_id"] == "report-1"
+    assert report["download_endpoint"] == "/api/v1/reports/report-1/download"
+    serialized = json.dumps(
+        [discovered, requested, completed, backends, submitted, report]
+    )
+    assert TOKEN not in serialized
+    assert "file_bytes" not in serialized
+
+    simplified = facade.execute(
+        "optees_compose_report",
+        {
+            "contract_version": "1",
+            "format": "pdf",
+            "locale": "en",
+            "title": "Production plan",
+            "sections": [
+                {
+                    "section_id": "result",
+                    "heading": "Result",
+                    "blocks": [
+                        {
+                            "type": "markdown",
+                            "value": "Validated result.",
+                            "caption": "",
+                            "views": [],
+                        },
+                        {
+                            "type": "job_status",
+                            "value": "job-1",
+                            "caption": "",
+                            "views": [],
+                        },
+                        {
+                            "type": "artifact",
+                            "value": "artifact-table-1",
+                            "caption": "Optimal quantities",
+                            "views": [],
+                        },
+                    ],
+                }
+            ],
+            "metadata": "{}",
+        },
+    )
+    assert simplified["ok"] is True
+    simplified_payload = transport.calls[-1]["payload"]
+    assert simplified_payload["sections"][0]["blocks"] == [
+        {"type": "markdown", "content": "Validated result."},
+        {"type": "job_status", "job_id": "job-1"},
+        {
+            "type": "artifact",
+            "artifact_id": "artifact-table-1",
+            "caption": "Optimal quantities",
+        },
+    ]
+
+    string_wrapped = facade.execute(
+        "optees_render_result_artifacts",
+        {
+            "job_id": "job-1",
+            "contract_version": "1",
+            "requests": json.dumps(
+                [
+                    {
+                        "artifact_type": "solution_table",
+                        "formats": ["markdown"],
+                        "options": {},
+                    }
+                ]
+            ),
+        },
+    )
+    assert string_wrapped["ok"] is True
+
+
+def test_tool_definitions_expose_metadata_only_artifact_and_report_lifecycle():
+    facade = OpteesToolFacade(
+        base_url="http://127.0.0.1:8765",
+        token=TOKEN,
+        transport=FakeOpteesTransport(),
+    )
+
+    names = {
+        tool["function"]["name"]
+        for tool in facade.tool_definitions
+    }
+
+    assert {
+        "optees_list_result_artifacts",
+        "optees_render_result_artifacts",
+        "optees_cancel_artifact",
+        "optees_get_report_backends",
+        "optees_compose_report",
+        "optees_get_report_status",
+        "optees_cancel_report",
+    } <= names
+    assert "optees_download_artifact" not in names
+    assert "optees_download_report" not in names
 
 
 def test_tool_facade_requires_exact_batch_validation_before_submission():
