@@ -52,6 +52,7 @@ def test_naive_repeats_latest_training_value_without_future_leakage() -> None:
 
     assert output.status is ForecastingStatus.FORECASTED
     assert output.predicted_values == (12.0, 12.0)
+    assert output.fitted_values == (None, 10.0)
     assert output.parameters == (("last_value", 12.0),)
 
 
@@ -70,6 +71,7 @@ def test_seasonal_naive_repeats_latest_complete_training_season() -> None:
     )
 
     assert output.predicted_values == (6.0, 8.0, 10.0, 6.0)
+    assert output.fitted_values == (None, None, None, 5.0, 7.0, 9.0)
     assert output.parameters == (("season_length", 3.0),)
 
 

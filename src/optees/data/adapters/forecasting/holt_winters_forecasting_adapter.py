@@ -48,11 +48,14 @@ class HoltWintersForecastingAdapter(ForecastingSolverPort):
                     use_brute=True,
                 )
                 predictions = tuple(float(value) for value in fitted.forecast(len(timestamps)))
+                fitted_values = tuple(float(value) for value in fitted.fittedvalues)
         except (ArithmeticError, RuntimeError, ValueError) as exc:
             return self._failed_output(exc)
 
         if len(predictions) != len(timestamps) or any(
             not math.isfinite(value) for value in predictions
+        ) or len(fitted_values) != len(training) or any(
+            not math.isfinite(value) for value in fitted_values
         ):
             return self._failed_output()
 
@@ -86,6 +89,7 @@ class HoltWintersForecastingAdapter(ForecastingSolverPort):
                 else ForecastingStatus.PARTIAL
             ),
             predicted_values=predictions,
+            fitted_values=fitted_values,
             parameters=self._scalar_parameters(fitted),
             diagnostics=tuple(diagnostics),
         )

@@ -5,13 +5,18 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from optees.domain.entities.forecasting import (
+    ForecastEvaluationFold,
     ForecastMetricSet,
     ForecastPoint,
     ForecastSegment,
     ForecastingSolution,
     PredictionInterval,
 )
-from optees.domain.value_objects.forecasting import ForecastingMethod, ForecastingStatus
+from optees.domain.value_objects.forecasting import (
+    ForecastEvaluationStatus,
+    ForecastingMethod,
+    ForecastingStatus,
+)
 
 
 def test_solution_keeps_validated_points_metrics_and_parameters() -> None:
@@ -121,3 +126,30 @@ def test_solution_rejects_non_increasing_timestamps() -> None:
                 ForecastPoint(origin + timedelta(days=1), 8, ForecastSegment.FUTURE),
             ),
         )
+
+
+def test_evaluation_fold_requires_holdout_points_after_its_origin() -> None:
+    origin = datetime(2026, 1, 1)
+    point = ForecastPoint(
+        timestamp=origin + timedelta(days=1),
+        predicted=8,
+        actual=10,
+        residual=2,
+        segment=ForecastSegment.HOLDOUT,
+    )
+    fold = ForecastEvaluationFold(
+        origin=origin,
+        training_size=3,
+        points=(point,),
+        metrics=ForecastMetricSet(mae=2, rmse=2),
+    )
+
+    solution = ForecastingSolution(
+        status=ForecastingStatus.FORECASTED,
+        method=ForecastingMethod.NAIVE,
+        origin=origin + timedelta(days=2),
+        evaluation_status=ForecastEvaluationStatus.EVALUATED,
+        evaluation_folds=(fold,),
+    )
+
+    assert solution.evaluation_folds == (fold,)

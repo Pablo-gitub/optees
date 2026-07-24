@@ -79,6 +79,11 @@ Metrics use unrounded values:
   methods and the declared season length otherwise. It is unavailable when
   the training history is too short or the denominator is zero.
 
+For rolling-origin evaluation, each prediction is scaled using only the
+training history available at its own origin. Aggregate MASE is the mean of
+those point-level scaled absolute errors. Overlapping target timestamps remain
+separate evaluation observations because they come from different origins.
+
 Unavailable metrics are represented as absent values, never as zero, infinity,
 or a fabricated fallback.
 

@@ -52,6 +52,7 @@ def test_holt_winters_preserves_additive_seasonal_cycle() -> None:
 
     assert output.status is ForecastingStatus.FORECASTED
     assert output.predicted_values == pytest.approx((10, 20, 30, 10), abs=1e-6)
+    assert len(output.fitted_values) == len(model.observations)
     assert dict(output.parameters).keys() >= {
         "smoothing_level",
         "smoothing_trend",
@@ -102,6 +103,7 @@ def test_holt_winters_forwards_bounded_iteration_limit(
     captured: dict[str, object] = {}
 
     class SuccessfulFit:
+        fittedvalues = [10.0, 20.0, 30.0, 10.0, 20.0, 30.0]
         params = {
             "smoothing_level": 0.4,
             "smoothing_trend": 0.1,

@@ -3,6 +3,7 @@
 from .observation import ForecastObservation
 from .solution import (
     ForecastDiagnostic,
+    ForecastEvaluationFold,
     ForecastMetricSet,
     ForecastPoint,
     ForecastSegment,
@@ -12,6 +13,7 @@ from .solution import (
 
 __all__ = [
     "ForecastDiagnostic",
+    "ForecastEvaluationFold",
     "ForecastMetricSet",
     "ForecastObservation",
     "ForecastPoint",

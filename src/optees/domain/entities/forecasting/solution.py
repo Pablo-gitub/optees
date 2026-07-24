@@ -6,7 +6,11 @@ from datetime import datetime
 from enum import Enum
 from typing import Optional
 
-from optees.domain.value_objects.forecasting import ForecastingMethod, ForecastingStatus
+from optees.domain.value_objects.forecasting import (
+    ForecastEvaluationStatus,
+    ForecastingMethod,
+    ForecastingStatus,
+)
 
 
 def _finite(value: object, label: str) -> float:
@@ -121,12 +125,52 @@ class ForecastDiagnostic:
 
 
 @dataclass(frozen=True)
+class ForecastEvaluationFold:
+    """One leakage-free chronological evaluation window."""
+
+    origin: datetime
+    training_size: int
+    points: tuple[ForecastPoint, ...]
+    metrics: ForecastMetricSet
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.origin, datetime):
+            raise ValueError("Forecast evaluation origin must be a datetime")
+        if (
+            isinstance(self.training_size, bool)
+            or not isinstance(self.training_size, int)
+            or self.training_size < 2
+        ):
+            raise ValueError("Forecast evaluation training size must be at least two")
+        points = tuple(self.points)
+        if not points or any(not isinstance(point, ForecastPoint) for point in points):
+            raise ValueError("Forecast evaluation fold requires forecast points")
+        if any(point.segment is not ForecastSegment.HOLDOUT for point in points):
+            raise ValueError("Forecast evaluation fold points must use the holdout segment")
+        if any(point.timestamp <= self.origin for point in points):
+            raise ValueError("Forecast evaluation targets must occur after the fold origin")
+        if any(
+            point.timestamp <= points[index - 1].timestamp
+            for index, point in enumerate(points)
+            if index
+        ):
+            raise ValueError("Forecast evaluation timestamps must be strictly increasing")
+        if any((point.timestamp.tzinfo is not None) != (self.origin.tzinfo is not None) for point in points):
+            raise ValueError("Forecast evaluation cannot mix aware and naive timestamps")
+        if not isinstance(self.metrics, ForecastMetricSet):
+            raise ValueError("Forecast evaluation metrics must be a ForecastMetricSet")
+        object.__setattr__(self, "points", points)
+
+
+@dataclass(frozen=True)
 class ForecastingSolution:
     status: ForecastingStatus
     method: ForecastingMethod
     origin: datetime
     points: tuple[ForecastPoint, ...] = ()
     metrics: ForecastMetricSet = ForecastMetricSet()
+    evaluation_status: ForecastEvaluationStatus = ForecastEvaluationStatus.NOT_REQUESTED
+    evaluation_folds: tuple[ForecastEvaluationFold, ...] = ()
     parameters: tuple[tuple[str, float], ...] = ()
     diagnostics: tuple[ForecastDiagnostic, ...] = ()
 
@@ -162,6 +206,26 @@ class ForecastingSolution:
                 raise ValueError("Historical forecast points cannot occur after the forecast origin")
         if not isinstance(self.metrics, ForecastMetricSet):
             raise ValueError("Forecast solution metrics must be a ForecastMetricSet")
+        evaluation_status = (
+            self.evaluation_status
+            if isinstance(self.evaluation_status, ForecastEvaluationStatus)
+            else ForecastEvaluationStatus(str(self.evaluation_status))
+        )
+        evaluation_folds = tuple(self.evaluation_folds)
+        if any(not isinstance(fold, ForecastEvaluationFold) for fold in evaluation_folds):
+            raise ValueError(
+                "Forecast solution evaluation folds must contain ForecastEvaluationFold values"
+            )
+        if (
+            evaluation_status is ForecastEvaluationStatus.NOT_REQUESTED
+            and evaluation_folds
+        ):
+            raise ValueError("A non-evaluated forecast cannot contain evaluation folds")
+        if (
+            evaluation_status is ForecastEvaluationStatus.EVALUATED
+            and not evaluation_folds
+        ):
+            raise ValueError("An evaluated forecast must contain evaluation folds")
         diagnostics = tuple(self.diagnostics)
         if any(not isinstance(item, ForecastDiagnostic) for item in diagnostics):
             raise ValueError("Forecast solution diagnostics must contain ForecastDiagnostic values")
@@ -176,5 +240,7 @@ class ForecastingSolution:
         object.__setattr__(self, "status", status)
         object.__setattr__(self, "method", method)
         object.__setattr__(self, "points", points)
+        object.__setattr__(self, "evaluation_status", evaluation_status)
+        object.__setattr__(self, "evaluation_folds", evaluation_folds)
         object.__setattr__(self, "parameters", tuple(parameters))
         object.__setattr__(self, "diagnostics", diagnostics)

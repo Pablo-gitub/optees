@@ -103,7 +103,7 @@ the chosen dependency can be packaged on Windows, macOS, and Linux.
   diagnostics, and mathematical status.
 - [x] Define a Forecasting solver port independent from the selected numerical
   library and from Qt, HTTP, MCP, and filesystem code.
-- [ ] Keep training, evaluation, and future forecasting as explicit operations
+- [x] Keep training, evaluation, and future forecasting as explicit operations
   in the use case even if one adapter performs them together.
 
 ### A2 - Baselines And Forecasting Adapter
@@ -116,13 +116,13 @@ the chosen dependency can be packaged on Windows, macOS, and Linux.
 - [x] Preserve timestamp alignment and original scale in all returned rows.
 - [x] Map numerical warnings and convergence failures to stable Optees
   diagnostics without leaking raw library exceptions into public contracts.
-- [ ] Add cancellation and bounded runtime/options where the selected backend
+- [x] Add cancellation and bounded runtime/options where the selected backend
   can perform iterative fitting.
 
 ### A3 - Temporal Evaluation And Independent Validation
 
-- [ ] Implement chronological holdout without shuffling.
-- [ ] Implement bounded rolling-origin evaluation with explicit origin count,
+- [x] Implement chronological holdout without shuffling.
+- [x] Implement bounded rolling-origin evaluation with explicit origin count,
   step, horizon, and minimum training window.
 - [ ] Recompute MAE, RMSE, and every other published metric independently from
   public predictions and observations.

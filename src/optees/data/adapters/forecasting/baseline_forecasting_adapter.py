@@ -32,6 +32,9 @@ class BaselineForecastingAdapter(ForecastingSolverPort):
             return ForecastingAdapterOutput(
                 status=ForecastingStatus.FORECASTED,
                 predicted_values=(value,) * len(timestamps),
+                fitted_values=(None,) + tuple(
+                    observation.value for observation in training[:-1]
+                ),
                 parameters=(("last_value", value),),
             )
 
@@ -41,6 +44,11 @@ class BaselineForecastingAdapter(ForecastingSolverPort):
             status=ForecastingStatus.FORECASTED,
             predicted_values=tuple(
                 season[index % model.season_length] for index in range(len(timestamps))
+            ),
+            fitted_values=(None,) * model.season_length
+            + tuple(
+                training[index - model.season_length].value
+                for index in range(model.season_length, len(training))
             ),
             parameters=(("season_length", float(model.season_length)),),
         )
