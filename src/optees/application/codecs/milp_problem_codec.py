@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 
+from optees.application.contracts.capability_ids import MILP_CAPABILITY_ID
 from optees.application.contracts.json_value import JsonValue
 from optees.domain.models.milp.milp_model import MILPModel
 from optees.utility.milp_json_io import milp_model_from_dict
@@ -11,7 +12,9 @@ def milp_model_from_public_dict(payload: dict[str, JsonValue]) -> MILPModel:
     required = ("version", "variables", "objective", "constraints")
     missing = [field for field in required if field not in payload]
     if missing:
-        raise ValueError("milp.linear is missing required fields: " + ", ".join(missing))
+        raise ValueError(
+            f"{MILP_CAPABILITY_ID} is missing required fields: " + ", ".join(missing)
+        )
     model = milp_model_from_dict(payload)
     _validate_public_model(model)
     return model

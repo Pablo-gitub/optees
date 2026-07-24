@@ -15,6 +15,20 @@ from optees.application.contracts.artifact_table import (
     ArtifactTableColumn,
     TableCell,
 )
+from optees.application.contracts.capability_ids import (
+    CLASSIFICATION_CAPABILITY_ID,
+    DIJKSTRA_CAPABILITY_ID,
+    KNAPSACK_BOUNDED_CAPABILITY_ID,
+    KNAPSACK_FRACTIONAL_CAPABILITY_ID,
+    KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID,
+    KNAPSACK_UNBOUNDED_CAPABILITY_ID,
+    KNAPSACK_ZERO_ONE_CAPABILITY_ID,
+    LP_CAPABILITY_ID,
+    MILP_CAPABILITY_ID,
+    NLP_CAPABILITY_ID,
+    PACKING_CAPABILITY_ID,
+    REGRESSION_CAPABILITY_ID,
+)
 from optees.application.contracts.execution import MathematicalStatus
 from optees.application.contracts.json_value import JsonValue
 
@@ -641,117 +655,123 @@ def _dataset_value(
 
 _DEFINITIONS = (
     CanonicalTableDefinition(
-        "lp.continuous", "solution_table", "LP solution", _variables
+        LP_CAPABILITY_ID, "solution_table", "LP solution", _variables
     ),
     CanonicalTableDefinition(
-        "milp.linear", "solution_table", "MILP solution", _variables
+        MILP_CAPABILITY_ID, "solution_table", "MILP solution", _variables
     ),
     CanonicalTableDefinition(
-        "milp.linear",
+        MILP_CAPABILITY_ID,
         "validation_summary",
         "MILP independent validation",
         _validation_summary,
         (),
     ),
     CanonicalTableDefinition(
-        "milp.linear",
+        MILP_CAPABILITY_ID,
         "diagnostics_table",
         "MILP solver diagnostics",
         _solver_diagnostics,
         (),
     ),
     CanonicalTableDefinition(
-        "knapsack.zero_one", "selection_table", "Selected items", _selection
+        KNAPSACK_ZERO_ONE_CAPABILITY_ID,
+        "selection_table",
+        "Selected items",
+        _selection,
     ),
     CanonicalTableDefinition(
-        "knapsack.bounded", "selection_table", "Selected quantities", _selection
-    ),
-    CanonicalTableDefinition(
-        "knapsack.unbounded",
+        KNAPSACK_BOUNDED_CAPABILITY_ID,
         "selection_table",
         "Selected quantities",
         _selection,
     ),
     CanonicalTableDefinition(
-        "knapsack.fractional",
+        KNAPSACK_UNBOUNDED_CAPABILITY_ID,
+        "selection_table",
+        "Selected quantities",
+        _selection,
+    ),
+    CanonicalTableDefinition(
+        KNAPSACK_FRACTIONAL_CAPABILITY_ID,
         "selection_table",
         "Selected fractions",
         _selection,
     ),
     CanonicalTableDefinition(
-        "knapsack.multi_dimensional",
+        KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID,
         "selection_table",
         "Selected quantities",
         _selection,
     ),
     CanonicalTableDefinition(
-        "graph.shortest_path.dijkstra",
+        DIJKSTRA_CAPABILITY_ID,
         "path_table",
         "Shortest path",
         _path,
     ),
     CanonicalTableDefinition(
-        "graph.shortest_path.dijkstra",
+        DIJKSTRA_CAPABILITY_ID,
         "settled_trace_table",
         "Dijkstra settled-node trace",
         _settled_trace,
     ),
     CanonicalTableDefinition(
-        "nlp.continuous_local",
+        NLP_CAPABILITY_ID,
         "candidate_table",
         "Local candidate",
         _variables,
     ),
     CanonicalTableDefinition(
-        "ml.regression.linear",
+        REGRESSION_CAPABILITY_ID,
         "coefficient_table",
         "Regression coefficients",
         _coefficients,
     ),
     CanonicalTableDefinition(
-        "ml.regression.linear",
+        REGRESSION_CAPABILITY_ID,
         "metrics_table",
         "Regression metrics",
         _regression_metrics,
     ),
     CanonicalTableDefinition(
-        "ml.regression.linear",
+        REGRESSION_CAPABILITY_ID,
         "prediction_table",
         "Regression predictions",
         _regression_predictions,
     ),
     CanonicalTableDefinition(
-        "ml.classification.binary_logistic",
+        CLASSIFICATION_CAPABILITY_ID,
         "coefficient_table",
         "Classification coefficients",
         _coefficients,
     ),
     CanonicalTableDefinition(
-        "ml.classification.binary_logistic",
+        CLASSIFICATION_CAPABILITY_ID,
         "metrics_table",
         "Classification metrics",
         _classification_metrics,
     ),
     CanonicalTableDefinition(
-        "ml.classification.binary_logistic",
+        CLASSIFICATION_CAPABILITY_ID,
         "confusion_table",
         "Classification confusion counts",
         _classification_confusion,
     ),
     CanonicalTableDefinition(
-        "ml.classification.binary_logistic",
+        CLASSIFICATION_CAPABILITY_ID,
         "prediction_table",
         "Classification predictions",
         _classification_predictions,
     ),
     CanonicalTableDefinition(
-        "packing.single_container_3d",
+        PACKING_CAPABILITY_ID,
         "placement_table",
         "Packing placements",
         _placements,
     ),
     CanonicalTableDefinition(
-        "packing.single_container_3d",
+        PACKING_CAPABILITY_ID,
         "capacity_table",
         "Packing capacity utilization",
         _packing_capacities,

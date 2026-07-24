@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 
+from optees.application.contracts.capability_ids import MILP_CAPABILITY_ID
 from optees.application.contracts.execution import (
     MathematicalStatus,
     SerializedResult,
@@ -22,7 +23,7 @@ _STATUS_MAP = {
 
 
 class MILPResultCodec:
-    capability_id = "milp.linear"
+    capability_id = MILP_CAPABILITY_ID
     result_schema_version = "1"
 
     def serialize(self, solution: MILPSolution) -> SerializedResult:

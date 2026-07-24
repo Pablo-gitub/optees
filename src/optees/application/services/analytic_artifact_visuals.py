@@ -3,6 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from optees.application.contracts.artifact import ArtifactFormat, AvailableArtifact
+from optees.application.contracts.capability_ids import (
+    CLASSIFICATION_CAPABILITY_ID,
+    DIJKSTRA_CAPABILITY_ID,
+    NLP_CAPABILITY_ID,
+    REGRESSION_CAPABILITY_ID,
+)
 from optees.application.contracts.execution import MathematicalStatus
 
 
@@ -54,14 +60,14 @@ _FEASIBLE = (MathematicalStatus.FEASIBLE,)
 
 _DEFINITIONS = (
     AnalyticVisualDefinition(
-        "graph.shortest_path.dijkstra",
+        DIJKSTRA_CAPABILITY_ID,
         "highlighted_graph",
         "Shortest path graph",
         "dijkstra_graph",
         _OPTIMAL,
     ),
     AnalyticVisualDefinition(
-        "nlp.continuous_local",
+        NLP_CAPABILITY_ID,
         "convergence_chart",
         "NLP convergence history",
         "nlp_convergence",
@@ -69,7 +75,7 @@ _DEFINITIONS = (
         supports_max_points=True,
     ),
     AnalyticVisualDefinition(
-        "nlp.continuous_local",
+        NLP_CAPABILITY_ID,
         "objective_landscape",
         "NLP objective landscape",
         "nlp_landscape",
@@ -77,7 +83,7 @@ _DEFINITIONS = (
         supports_view=True,
     ),
     AnalyticVisualDefinition(
-        "ml.regression.linear",
+        REGRESSION_CAPABILITY_ID,
         "fit_chart",
         "Regression fit",
         "regression_fit",
@@ -85,14 +91,14 @@ _DEFINITIONS = (
         supports_max_points=True,
     ),
     AnalyticVisualDefinition(
-        "ml.classification.binary_logistic",
+        CLASSIFICATION_CAPABILITY_ID,
         "confusion_matrix",
         "Classification confusion matrix",
         "classification_confusion",
         _FEASIBLE,
     ),
     AnalyticVisualDefinition(
-        "ml.classification.binary_logistic",
+        CLASSIFICATION_CAPABILITY_ID,
         "decision_boundary",
         "Classification decision boundary",
         "classification_boundary",

@@ -4,6 +4,7 @@ import math
 from collections.abc import Mapping
 from typing import Any
 
+from optees.application.contracts.capability_ids import LP_CAPABILITY_ID
 from optees.application.contracts.execution import MathematicalStatus, SerializedResult
 from optees.application.contracts.json_value import JsonValue, require_json_value
 from optees.domain.entities.lp.solution import LPSolution
@@ -11,7 +12,7 @@ from optees.domain.value_objects.lp.solve_status import SolveStatus
 
 
 class LPResultCodec:
-    capability_id = "lp.continuous"
+    capability_id = LP_CAPABILITY_ID
     result_schema_version = "1"
 
     def serialize(self, solution: LPSolution) -> SerializedResult:

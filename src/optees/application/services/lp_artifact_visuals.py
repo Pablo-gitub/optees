@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from optees.application.contracts.artifact import ArtifactFormat, AvailableArtifact
+from optees.application.contracts.capability_ids import LP_CAPABILITY_ID
 from optees.application.contracts.execution import MathematicalStatus
 
 
@@ -40,7 +41,7 @@ class LPVisualDefinition:
 
 
 LP_FEASIBLE_REGION = LPVisualDefinition(
-    capability_id="lp.continuous",
+    capability_id=LP_CAPABILITY_ID,
     artifact_type="feasible_region",
     title="LP feasible region (2D/3D)",
 )

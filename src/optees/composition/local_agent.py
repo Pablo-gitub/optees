@@ -38,6 +38,7 @@ from optees.application.codecs.knapsack_zero_one_problem_codec import (
 from optees.application.codecs.knapsack_zero_one_result_codec import (
     KnapsackZeroOneResultCodec,
 )
+from optees.application.codecs.lp_problem_codec import lp_model_from_public_dict
 from optees.application.codecs.lp_result_codec import LPResultCodec
 from optees.application.codecs.milp_problem_codec import milp_model_from_public_dict
 from optees.application.codecs.milp_result_codec import MILPResultCodec
@@ -62,6 +63,20 @@ from optees.application.contracts.artifact import (
     AvailableArtifact,
 )
 from optees.application.contracts.capability import CapabilityDescriptor
+from optees.application.contracts.capability_ids import (
+    CLASSIFICATION_CAPABILITY_ID,
+    DIJKSTRA_CAPABILITY_ID,
+    KNAPSACK_BOUNDED_CAPABILITY_ID,
+    KNAPSACK_FRACTIONAL_CAPABILITY_ID,
+    KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID,
+    KNAPSACK_UNBOUNDED_CAPABILITY_ID,
+    KNAPSACK_ZERO_ONE_CAPABILITY_ID,
+    LP_CAPABILITY_ID,
+    MILP_CAPABILITY_ID,
+    NLP_CAPABILITY_ID,
+    PACKING_CAPABILITY_ID,
+    REGRESSION_CAPABILITY_ID,
+)
 from optees.application.dtos.multi_dimensional_knapsack_dtos import (
     MultiDimensionalKnapsackRequest,
 )
@@ -222,37 +237,22 @@ from optees.domain.models.packing.single_container_packing_model import (
     SingleContainerPackingModel,
 )
 from optees.domain.models.regression.regression_model import RegressionModel
-from optees.utility.lp_json_io import lp_model_from_dict
-
-
-LP_CAPABILITY_ID = "lp.continuous"
 LP_BACKEND_ID = "scipy.highs"
-KNAPSACK_ZERO_ONE_CAPABILITY_ID = "knapsack.zero_one"
 KNAPSACK_ZERO_ONE_BACKEND_ID = "internal.dynamic_programming"
-KNAPSACK_BOUNDED_CAPABILITY_ID = "knapsack.bounded"
 KNAPSACK_BOUNDED_BACKEND_ID = "internal.bounded_dynamic_programming"
-KNAPSACK_UNBOUNDED_CAPABILITY_ID = "knapsack.unbounded"
 KNAPSACK_UNBOUNDED_BACKEND_ID = "internal.unbounded_dynamic_programming"
-KNAPSACK_FRACTIONAL_CAPABILITY_ID = "knapsack.fractional"
 KNAPSACK_FRACTIONAL_BACKEND_ID = "internal.fractional_greedy_density"
-KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID = "knapsack.multi_dimensional"
 KNAPSACK_MULTI_DIMENSIONAL_ROUTER_ID = "optees.multidimensional_router"
 KNAPSACK_MULTI_DIMENSIONAL_BACKEND_IDS = (
     "internal.multidimensional_branch_and_bound",
     "ortools.linear_mixed_integer",
 )
-MILP_CAPABILITY_ID = "milp.linear"
 MILP_ROUTER_ID = "optees.milp_router"
 MILP_BACKEND_IDS = ("ortools.cbc", "ortools.cp_sat")
-DIJKSTRA_CAPABILITY_ID = "graph.shortest_path.dijkstra"
 DIJKSTRA_BACKEND_ID = "internal.dijkstra_heap"
-NLP_CAPABILITY_ID = "nlp.continuous_local"
 NLP_BACKEND_ID = "scipy.optimize.minimize"
-REGRESSION_CAPABILITY_ID = "ml.regression.linear"
 REGRESSION_BACKEND_ID = "numpy.linear_least_squares"
-CLASSIFICATION_CAPABILITY_ID = "ml.classification.binary_logistic"
 CLASSIFICATION_BACKEND_ID = "numpy.logistic_gradient_descent"
-PACKING_CAPABILITY_ID = "packing.single_container_3d"
 PACKING_ROUTER_ID = "optees.single_container_packing_router"
 PACKING_BACKEND_IDS = ("ortools.scip", "ortools.cbc")
 
@@ -507,7 +507,7 @@ def create_lp_registration(
     codec = LPResultCodec()
     return RegisteredCapability(
         descriptor=_lp_descriptor(dependency_available=dependency_available),
-        parse_problem=lp_model_from_dict,
+        parse_problem=lp_model_from_public_dict,
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=LP_BACKEND_ID,

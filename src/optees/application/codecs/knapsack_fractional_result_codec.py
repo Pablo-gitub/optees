@@ -6,6 +6,9 @@ from optees.application.codecs.knapsack_result_helpers import (
     not_solved_warning,
     optional_finite,
 )
+from optees.application.contracts.capability_ids import (
+    KNAPSACK_FRACTIONAL_CAPABILITY_ID,
+)
 from optees.application.contracts.execution import SerializedResult
 from optees.application.contracts.json_value import JsonValue, require_json_value
 from optees.domain.entities.knapsack.fractional_solution import (
@@ -14,7 +17,7 @@ from optees.domain.entities.knapsack.fractional_solution import (
 
 
 class KnapsackFractionalResultCodec:
-    capability_id = "knapsack.fractional"
+    capability_id = KNAPSACK_FRACTIONAL_CAPABILITY_ID
     result_schema_version = "1"
 
     def serialize(self, solution: FractionalKnapsackSolution) -> SerializedResult:

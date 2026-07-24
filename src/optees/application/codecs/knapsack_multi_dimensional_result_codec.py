@@ -6,6 +6,9 @@ from optees.application.codecs.knapsack_result_helpers import (
     not_solved_warning,
     optional_finite,
 )
+from optees.application.contracts.capability_ids import (
+    KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID,
+)
 from optees.application.contracts.execution import SerializedResult
 from optees.application.contracts.json_value import JsonValue, require_json_value
 from optees.application.usecases.solve_multi_dimensional_knapsack_capability_usecase import (
@@ -17,7 +20,7 @@ from optees.domain.entities.knapsack.multi_dimensional_quantity_solution import 
 
 
 class KnapsackMultiDimensionalResultCodec:
-    capability_id = "knapsack.multi_dimensional"
+    capability_id = KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID
     result_schema_version = "1"
 
     def serialize(self, solution: MultiDimensionalResult) -> SerializedResult:

@@ -19,6 +19,9 @@ contract or execution logic.
 - **Versioned public contracts:** capability descriptors, problem schemas,
   result schemas, execution envelopes, and validation reports are explicit
   JSON contracts.
+- **Stable capability identity:** public capability IDs are declared once in
+  `application/contracts/capability_ids.py` and reused by codecs, artifact
+  definitions, and the composition root.
 - **Validate before execution:** clients can validate the exact payload before
   creating a job. The MCP facade additionally enforces discovery and
   validation as protocol steps.
@@ -221,6 +224,12 @@ RFC 4180 CSV, or Markdown, render visuals through Matplotlib Agg as SVG or PNG,
 and package Packing geometry as a deterministic OBJ/MTL/manifest ZIP. The same
 definitions populate capability discovery, so a format cannot be advertised
 without a corresponding renderer registration.
+
+The artifact definition registry deliberately remains separate from
+`RegisteredCapability`: solving must work without storage or rendering
+infrastructure, while the composition root joins the two registries and exposes
+only descriptors backed by a renderer. This is an optional-subsystem boundary,
+not duplicated transport dispatch.
 
 ```mermaid
 sequenceDiagram

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 
+from optees.application.contracts.capability_ids import NLP_CAPABILITY_ID
 from optees.application.contracts.execution import MathematicalStatus, SerializedResult
 from optees.application.contracts.json_value import JsonValue, require_json_value
 from optees.domain.entities.nlp.solution import NLPSolution
@@ -9,7 +10,7 @@ from optees.domain.value_objects.nlp.solve_status import NLPSolveStatus
 
 
 class NLPResultCodec:
-    capability_id = "nlp.continuous_local"
+    capability_id = NLP_CAPABILITY_ID
     result_schema_version = "1"
 
     def serialize(self, solution: NLPSolution) -> SerializedResult:

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from optees.application.contracts.artifact import ArtifactFormat, AvailableArtifact
+from optees.application.contracts.capability_ids import PACKING_CAPABILITY_ID
 from optees.application.contracts.execution import MathematicalStatus
 
 
@@ -59,14 +60,14 @@ class PackingSceneDefinition:
 
 _DEFINITIONS = (
     PackingSceneDefinition(
-        "packing.single_container_3d",
+        PACKING_CAPABILITY_ID,
         "scene_views",
         "Packing scene camera views",
         (ArtifactFormat.PNG,),
         supports_view=True,
     ),
     PackingSceneDefinition(
-        "packing.single_container_3d",
+        PACKING_CAPABILITY_ID,
         "scene_model",
         "Packing scene OBJ + MTL model",
         (ArtifactFormat.OBJ_MTL_ZIP,),

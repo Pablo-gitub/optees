@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from optees.application.contracts.capability_ids import REGRESSION_CAPABILITY_ID
 from optees.application.contracts.execution import MathematicalStatus, SerializedResult
 from optees.application.contracts.json_value import JsonValue, require_json_value
 from optees.domain.entities.regression.solution import RegressionMetrics, RegressionSolution
@@ -7,7 +8,7 @@ from optees.domain.value_objects.regression.regression_status import RegressionS
 
 
 class RegressionResultCodec:
-    capability_id = "ml.regression.linear"
+    capability_id = REGRESSION_CAPABILITY_ID
     result_schema_version = "1"
 
     def serialize(self, solution: RegressionSolution) -> SerializedResult:

@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 
+from optees.application.contracts.capability_ids import CLASSIFICATION_CAPABILITY_ID
 from optees.application.contracts.execution import MathematicalStatus, SerializedResult
 from optees.application.contracts.json_value import JsonValue, require_json_value
 from optees.domain.entities.classification.solution import (
@@ -16,7 +17,7 @@ from optees.domain.value_objects.classification.classification_status import (
 
 
 class ClassificationResultCodec:
-    capability_id = "ml.classification.binary_logistic"
+    capability_id = CLASSIFICATION_CAPABILITY_ID
     result_schema_version = "1"
 
     def serialize(self, solution: ClassificationSolution) -> SerializedResult:

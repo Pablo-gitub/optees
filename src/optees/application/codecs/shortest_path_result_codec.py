@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from optees.application.contracts.capability_ids import DIJKSTRA_CAPABILITY_ID
 from optees.application.contracts.execution import MathematicalStatus, SerializedResult
 from optees.application.contracts.json_value import JsonValue, require_json_value
 from optees.domain.entities.graph.solution import ShortestPathSolution
@@ -14,7 +15,7 @@ _STATUS_MAP = {
 
 
 class ShortestPathResultCodec:
-    capability_id = "graph.shortest_path.dijkstra"
+    capability_id = DIJKSTRA_CAPABILITY_ID
     result_schema_version = "1"
 
     def serialize(self, solution: ShortestPathSolution) -> SerializedResult:

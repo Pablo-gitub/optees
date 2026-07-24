@@ -9,11 +9,14 @@ from optees.application.codecs.knapsack_result_helpers import (
     not_solved_warning,
     optional_finite,
 )
+from optees.application.contracts.capability_ids import (
+    KNAPSACK_ZERO_ONE_CAPABILITY_ID,
+)
 from optees.domain.entities.knapsack.solution import KnapsackSolution
 
 
 class KnapsackZeroOneResultCodec:
-    capability_id = "knapsack.zero_one"
+    capability_id = KNAPSACK_ZERO_ONE_CAPABILITY_ID
     result_schema_version = "1"
 
     def serialize(self, solution: KnapsackSolution) -> SerializedResult:

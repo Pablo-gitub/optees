@@ -3,6 +3,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from optees.application.contracts.artifact import ArtifactFormat, AvailableArtifact
+from optees.application.contracts.capability_ids import (
+    KNAPSACK_BOUNDED_CAPABILITY_ID,
+    KNAPSACK_FRACTIONAL_CAPABILITY_ID,
+    KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID,
+    KNAPSACK_UNBOUNDED_CAPABILITY_ID,
+    KNAPSACK_ZERO_ONE_CAPABILITY_ID,
+    MILP_CAPABILITY_ID,
+)
 from optees.application.contracts.execution import MathematicalStatus
 
 
@@ -44,15 +52,15 @@ class CategoricalVisualDefinition:
 
 
 _KNAPSACK_IDS = (
-    "knapsack.zero_one",
-    "knapsack.bounded",
-    "knapsack.unbounded",
-    "knapsack.fractional",
+    KNAPSACK_ZERO_ONE_CAPABILITY_ID,
+    KNAPSACK_BOUNDED_CAPABILITY_ID,
+    KNAPSACK_UNBOUNDED_CAPABILITY_ID,
+    KNAPSACK_FRACTIONAL_CAPABILITY_ID,
 )
 
 _DEFINITIONS = (
     CategoricalVisualDefinition(
-        "milp.linear",
+        MILP_CAPABILITY_ID,
         "variable_chart",
         "MILP variable values",
         "variables",
@@ -78,14 +86,14 @@ _DEFINITIONS = (
         for capability_id in _KNAPSACK_IDS
     ),
     CategoricalVisualDefinition(
-        "knapsack.multi_dimensional",
+        KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID,
         "item_chart",
         "Knapsack item values",
         "items",
         True,
     ),
     CategoricalVisualDefinition(
-        "knapsack.multi_dimensional",
+        KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID,
         "resource_chart",
         "Knapsack resource utilization",
         "resources",

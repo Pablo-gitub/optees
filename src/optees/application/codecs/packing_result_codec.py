@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 
+from optees.application.contracts.capability_ids import PACKING_CAPABILITY_ID
 from optees.application.contracts.execution import (
     MathematicalStatus,
     SerializedResult,
@@ -25,7 +26,7 @@ _STATUS_MAP = {
 
 
 class PackingResultCodec:
-    capability_id = "packing.single_container_3d"
+    capability_id = PACKING_CAPABILITY_ID
     result_schema_version = "1"
 
     def serialize(self, solve_result: PackingSolveResult) -> SerializedResult:

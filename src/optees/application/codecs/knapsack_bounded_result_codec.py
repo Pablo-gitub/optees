@@ -6,12 +6,15 @@ from optees.application.codecs.knapsack_result_helpers import (
     mathematical_status,
     not_solved_warning,
 )
+from optees.application.contracts.capability_ids import (
+    KNAPSACK_BOUNDED_CAPABILITY_ID,
+)
 from optees.application.contracts.execution import SerializedResult
 from optees.domain.entities.knapsack.bounded_solution import BoundedKnapsackSolution
 
 
 class KnapsackBoundedResultCodec:
-    capability_id = "knapsack.bounded"
+    capability_id = KNAPSACK_BOUNDED_CAPABILITY_ID
     result_schema_version = "1"
 
     def serialize(self, solution: BoundedKnapsackSolution) -> SerializedResult:
