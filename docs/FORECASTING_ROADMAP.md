@@ -138,16 +138,16 @@ the chosen dependency can be packaged on Windows, macOS, and Linux.
 
 ### A4 - Versioned JSON And Capability Registration
 
-- [ ] Define problem schema version `1` and result schema version `1`.
-- [ ] Implement strict codecs and importer validation with stable error codes.
-- [ ] Include a complete example payload and result fixture in the capability
+- [x] Define problem schema version `1` and result schema version `1`.
+- [x] Implement strict codecs and importer validation with stable error codes.
+- [x] Include a complete example payload and result fixture in the capability
   descriptor rather than exposing only top-level field names.
-- [ ] Register one public capability identifier under AI & Machine Learning,
+- [x] Register one public capability identifier under AI & Machine Learning,
   with supported methods and artifact inventory discoverable by agents.
-- [ ] Expose validate, solve, job status, result retrieval, and bounded batch
+- [x] Expose validate, solve, job status, result retrieval, and bounded batch
   execution through the existing application services.
-- [ ] Verify equivalent behavior through CLI, authenticated REST, and MCP.
-- [ ] Add conservative rule-based assistant recognition in matched English and
+- [x] Verify equivalent behavior through CLI, authenticated REST, and MCP.
+- [x] Add conservative rule-based assistant recognition in matched English and
   Italian tests; structured drafting remains limited to explicit timestamps and
   values and must never invent history from prose.
 

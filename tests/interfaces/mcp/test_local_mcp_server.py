@@ -241,6 +241,70 @@ def test_stdio_mcp_client_completes_local_lp_workflow():
     asyncio.run(_run_stdio_lp_workflow())
 
 
+def test_stdio_mcp_client_completes_local_forecasting_workflow():
+    asyncio.run(_run_stdio_forecasting_workflow())
+
+
+async def _run_stdio_forecasting_workflow() -> None:
+    parameters = StdioServerParameters(
+        command=sys.executable,
+        args=["-m", "optees.mcp_server"],
+        cwd=ROOT,
+        env={"PYTHONPATH": str(ROOT / "src")},
+    )
+    timeout = timedelta(seconds=20)
+    async with stdio_client(parameters) as (read_stream, write_stream):
+        async with ClientSession(read_stream, write_stream) as session:
+            await session.initialize()
+            inspected = await session.call_tool(
+                "optees_get_capability",
+                {"capability_id": "ml.forecasting.univariate"},
+                read_timeout_seconds=timeout,
+            )
+            capability = _structured(inspected)["capability"]
+            problem = capability["example_problem"]
+            validated = await session.call_tool(
+                "optees_validate_problem",
+                {
+                    "capability_id": "ml.forecasting.univariate",
+                    "problem": problem,
+                },
+                read_timeout_seconds=timeout,
+            )
+            assert _structured(validated)["validation"]["valid"] is True
+            created = await session.call_tool(
+                "optees_create_job",
+                {
+                    "capability_id": "ml.forecasting.univariate",
+                    "problem": problem,
+                },
+                read_timeout_seconds=timeout,
+            )
+            job_id = _structured(created)["job"]["job_id"]
+
+            for _ in range(100):
+                status = await session.call_tool(
+                    "optees_get_job_status",
+                    {"job_id": job_id},
+                    read_timeout_seconds=timeout,
+                )
+                job = _structured(status)["job"]
+                if job["job_status"] in {"completed", "failed", "cancelled"}:
+                    break
+                await asyncio.sleep(0.01)
+            assert job["job_status"] == "completed"
+
+            result = await session.call_tool(
+                "optees_get_job_result",
+                {"job_id": job_id},
+                read_timeout_seconds=timeout,
+            )
+            envelope = _structured(result)["result"]
+            assert envelope["mathematical_status"] == "feasible"
+            assert envelope["validation"]["status"] == "verified"
+            assert envelope["result"] == capability["example_result"]
+
+
 async def _run_stdio_lp_workflow() -> None:
     parameters = StdioServerParameters(
         command=sys.executable,

@@ -22,6 +22,8 @@ class CapabilityDescriptor:
     supports_time_limit: bool = False
     supports_cancellation: bool = False
     available_artifacts: tuple[AvailableArtifact, ...] = ()
+    example_problem: dict[str, JsonValue] | None = None
+    example_result: dict[str, JsonValue] | None = None
     contract_version: str = "1"
     problem_schema_version: str = "1"
     result_schema_version: str = "1"
@@ -66,6 +68,10 @@ class CapabilityDescriptor:
                 artifact.to_dict() for artifact in self.available_artifacts
             ],
         }
+        if self.example_problem is not None:
+            payload["example_problem"] = self.example_problem
+        if self.example_result is not None:
+            payload["example_result"] = self.example_result
         normalized = require_json_value(payload)
         assert isinstance(normalized, dict)
         return normalized

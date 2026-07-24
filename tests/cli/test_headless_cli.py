@@ -72,8 +72,30 @@ def test_list_capabilities_emits_one_versioned_json_document():
         "nlp.continuous_local",
         "ml.regression.linear",
         "ml.classification.binary_logistic",
+        "ml.forecasting.univariate",
         "packing.single_container_3d",
     }
+
+
+def test_solve_forecasting_descriptor_example_through_cli():
+    listed = _stdout_json(_run("list-capabilities"))
+    descriptor = next(
+        item
+        for item in listed["capabilities"]
+        if item["id"] == "ml.forecasting.univariate"
+    )
+
+    result = _run(
+        "solve",
+        "ml.forecasting.univariate",
+        stdin=json.dumps(descriptor["example_problem"]),
+    )
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.SUCCESS
+    assert output["mathematical_status"] == "feasible"
+    assert output["validation"]["status"] == "verified"
+    assert output["result"] == descriptor["example_result"]
 
 
 def test_solve_zero_one_knapsack_through_cli():

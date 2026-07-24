@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable, Mapping
 from datetime import datetime
+from threading import Event
 
 from optees.application.contracts.forecasting import (
     ForecastingAdapterOutput,
@@ -37,6 +38,7 @@ class ForecastTimeSeriesUseCase:
         solvers: Mapping[ForecastingMethod, ForecastingSolverPort],
     ) -> None:
         self._solvers = dict(solvers)
+        self._cancel_event = Event()
 
     def fit_training_window(
         self,
@@ -156,6 +158,9 @@ class ForecastTimeSeriesUseCase:
         cancel_requested: CancelCheck | None = None,
     ) -> ForecastingSolution:
         """Evaluate chronologically, then fit all history for the production forecast."""
+        if cancel_requested is None:
+            self._cancel_event.clear()
+            cancel_requested = self._cancel_event.is_set
         evaluation = self.evaluate(model, cancel_requested=cancel_requested)
         if cancel_requested is not None and cancel_requested():
             return self._cancelled_solution(model, evaluation)
@@ -222,6 +227,11 @@ class ForecastTimeSeriesUseCase:
             parameters=future.parameters,
             diagnostics=diagnostics,
         )
+
+    def cancel(self) -> bool:
+        """Request cancellation at the next chronological evaluation boundary."""
+        self._cancel_event.set()
+        return True
 
     def _solver_for(self, method: ForecastingMethod) -> ForecastingSolverPort:
         try:

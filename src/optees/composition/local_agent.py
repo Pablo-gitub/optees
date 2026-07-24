@@ -11,6 +11,12 @@ from optees.application.codecs.classification_problem_codec import (
 from optees.application.codecs.classification_result_codec import (
     ClassificationResultCodec,
 )
+from optees.application.codecs.forecasting_problem_codec import (
+    forecasting_model_from_public_dict,
+)
+from optees.application.codecs.forecasting_result_codec import (
+    ForecastingResultCodec,
+)
 from optees.application.codecs.knapsack_bounded_result_codec import (
     KnapsackBoundedResultCodec,
 )
@@ -66,6 +72,7 @@ from optees.application.contracts.capability import CapabilityDescriptor
 from optees.application.contracts.capability_ids import (
     CLASSIFICATION_CAPABILITY_ID,
     DIJKSTRA_CAPABILITY_ID,
+    FORECASTING_CAPABILITY_ID,
     KNAPSACK_BOUNDED_CAPABILITY_ID,
     KNAPSACK_FRACTIONAL_CAPABILITY_ID,
     KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID,
@@ -89,6 +96,7 @@ from optees.application.ports.classification_solver_port import (
 from optees.application.ports.fractional_knapsack_solver_port import (
     FractionalKnapsackSolverPort,
 )
+from optees.application.ports.forecasting_solver_port import ForecastingSolverPort
 from optees.application.ports.knapsack_solver_port import KnapsackSolverPort
 from optees.application.ports.lp_solver_port import LPSolverPort
 from optees.application.ports.milp_solver_port import MILPSolverPort
@@ -138,6 +146,9 @@ from optees.application.services.report_composition_service import (
 from optees.application.validation.lp_solution_validator import (
     LPIndependentSolutionValidator,
 )
+from optees.application.validation.forecasting_solution_validator import (
+    ForecastingIndependentSolutionValidator,
+)
 from optees.application.validation.milp_solution_validator import (
     MILPIndependentSolutionValidator,
 )
@@ -170,6 +181,9 @@ from optees.application.usecases.solve_unbounded_knapsack_usecase import (
 from optees.application.usecases.train_classification_usecase import (
     TrainClassificationUseCase,
 )
+from optees.application.usecases.forecast_time_series_usecase import (
+    ForecastTimeSeriesUseCase,
+)
 from optees.application.usecases.train_regression_usecase import (
     TrainRegressionUseCase,
 )
@@ -179,6 +193,10 @@ from optees.composition.backend_health import (
 )
 from optees.data.adapters.classification.numpy_classification_adapter import (
     NumpyClassificationAdapter,
+)
+from optees.data.adapters.forecasting import (
+    BaselineForecastingAdapter,
+    HoltWintersForecastingAdapter,
 )
 from optees.data.adapters.graph.dijkstra_solver_adapter import DijkstraSolverAdapter
 from optees.data.adapters.knapsack.bounded_knapsack_solver_adapter import (
@@ -204,6 +222,7 @@ from optees.data.adapters.regression.numpy_regression_adapter import (
     NumpyRegressionAdapter,
 )
 from optees.domain.entities.classification.solution import ClassificationSolution
+from optees.domain.entities.forecasting import ForecastingSolution
 from optees.domain.entities.graph.solution import ShortestPathSolution
 from optees.domain.entities.knapsack.bounded_solution import BoundedKnapsackSolution
 from optees.domain.entities.knapsack.fractional_solution import (
@@ -221,6 +240,7 @@ from optees.domain.entities.regression.solution import RegressionSolution
 from optees.domain.models.classification.binary_classification_model import (
     BinaryClassificationModel,
 )
+from optees.domain.models.forecasting import ForecastingModel
 from optees.domain.models.graph.shortest_path_model import ShortestPathModel
 from optees.domain.models.knapsack.bounded_knapsack_model import BoundedKnapsackModel
 from optees.domain.models.knapsack.fractional_knapsack_model import (
@@ -237,6 +257,7 @@ from optees.domain.models.packing.single_container_packing_model import (
     SingleContainerPackingModel,
 )
 from optees.domain.models.regression.regression_model import RegressionModel
+from optees.domain.value_objects.forecasting import ForecastingMethod
 LP_BACKEND_ID = "scipy.highs"
 KNAPSACK_ZERO_ONE_BACKEND_ID = "internal.dynamic_programming"
 KNAPSACK_BOUNDED_BACKEND_ID = "internal.bounded_dynamic_programming"
@@ -253,6 +274,12 @@ DIJKSTRA_BACKEND_ID = "internal.dijkstra_heap"
 NLP_BACKEND_ID = "scipy.optimize.minimize"
 REGRESSION_BACKEND_ID = "numpy.linear_least_squares"
 CLASSIFICATION_BACKEND_ID = "numpy.logistic_gradient_descent"
+FORECASTING_ROUTER_ID = "optees.forecasting_router"
+FORECASTING_BACKEND_IDS = (
+    "internal.naive",
+    "internal.seasonal_naive",
+    "statsmodels.holt_winters_additive",
+)
 PACKING_ROUTER_ID = "optees.single_container_packing_router"
 PACKING_BACKEND_IDS = ("ortools.scip", "ortools.cbc")
 
@@ -318,6 +345,16 @@ def create_local_optimization_service() -> OptimizationService:
         create_classification_registration(
             solver_port=NumpyClassificationAdapter(),
             dependency_available=import_is_usable("numpy", "linalg"),
+        )
+    )
+    registry.register(
+        create_forecasting_registration(
+            baseline_solver_port=BaselineForecastingAdapter(),
+            trend_solver_port=HoltWintersForecastingAdapter(),
+            dependency_available=import_is_usable(
+                "statsmodels.tsa.holtwinters",
+                "ExponentialSmoothing",
+            ),
         )
     )
     registry.register(
@@ -798,6 +835,50 @@ def create_classification_registration(
         execute=use_case.execute,
         serialize_result=codec.serialize,
         backend_id=CLASSIFICATION_BACKEND_ID,
+    )
+
+
+def create_forecasting_optimization_service(
+    *,
+    baseline_solver_port: ForecastingSolverPort,
+    trend_solver_port: ForecastingSolverPort,
+    dependency_available: bool = True,
+) -> OptimizationService:
+    registry = CapabilityRegistry()
+    registry.register(
+        create_forecasting_registration(
+            baseline_solver_port=baseline_solver_port,
+            trend_solver_port=trend_solver_port,
+            dependency_available=dependency_available,
+        )
+    )
+    return OptimizationService(registry)
+
+
+def create_forecasting_registration(
+    *,
+    baseline_solver_port: ForecastingSolverPort,
+    trend_solver_port: ForecastingSolverPort,
+    dependency_available: bool,
+) -> RegisteredCapability[ForecastingModel, ForecastingSolution]:
+    use_case = ForecastTimeSeriesUseCase(
+        {
+            ForecastingMethod.NAIVE: baseline_solver_port,
+            ForecastingMethod.SEASONAL_NAIVE: baseline_solver_port,
+            ForecastingMethod.HOLT_WINTERS_ADDITIVE: trend_solver_port,
+        }
+    )
+    codec = ForecastingResultCodec()
+    return RegisteredCapability(
+        descriptor=_forecasting_descriptor(
+            dependency_available=dependency_available
+        ),
+        parse_problem=forecasting_model_from_public_dict,
+        execute=use_case.execute,
+        serialize_result=codec.serialize,
+        backend_id=FORECASTING_ROUTER_ID,
+        validate_result=ForecastingIndependentSolutionValidator(),
+        cancel_execution=use_case.cancel,
     )
 
 
@@ -1727,6 +1808,314 @@ def _nlp_result_schema() -> dict:
             },
             "local_candidate": {"type": "boolean"},
         },
+    }
+
+
+def _forecasting_descriptor(
+    *,
+    dependency_available: bool,
+) -> CapabilityDescriptor:
+    return CapabilityDescriptor(
+        capability_id=FORECASTING_CAPABILITY_ID,
+        title="Univariate time-series forecasting",
+        problem_type="univariate_forecasting",
+        input_schema=_forecasting_input_schema(),
+        result_schema=_forecasting_result_schema(),
+        default_options={
+            "method": "naive",
+            "frequency": "daily",
+            "missing_period_policy": "reject",
+            "evaluation": {
+                "strategy": "holdout",
+                "holdout_size": 1,
+            },
+        },
+        available=dependency_available,
+        unavailable_reason=(
+            None
+            if dependency_available
+            else "Statsmodels is required by the Holt-Winters forecasting backend."
+        ),
+        backend_candidates=FORECASTING_BACKEND_IDS,
+        supports_cancellation=True,
+        available_artifacts=_available_artifacts(FORECASTING_CAPABILITY_ID),
+        example_problem=_forecasting_example_problem(),
+        example_result=_forecasting_example_result(),
+    )
+
+
+def _forecasting_input_schema() -> dict:
+    observation = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["timestamp", "value"],
+        "properties": {
+            "timestamp": {"type": "string", "format": "date-time"},
+            "value": {"type": "number"},
+        },
+    }
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": False,
+        "required": [
+            "version",
+            "problem_type",
+            "target_name",
+            "frequency",
+            "horizon",
+            "method",
+            "observations",
+        ],
+        "properties": {
+            "version": {"const": "1"},
+            "problem_type": {"const": "univariate_forecasting"},
+            "target_name": {"type": "string", "minLength": 1},
+            "frequency": {
+                "enum": [
+                    "hourly",
+                    "daily",
+                    "weekly",
+                    "monthly",
+                    "quarterly",
+                    "yearly",
+                ]
+            },
+            "horizon": {"type": "integer", "minimum": 1, "maximum": 10_000},
+            "method": {
+                "enum": ["naive", "seasonal_naive", "holt_winters_additive"]
+            },
+            "season_length": {"type": ["integer", "null"], "minimum": 2},
+            "missing_period_policy": {"const": "reject"},
+            "observations": {
+                "type": "array",
+                "minItems": 3,
+                "items": observation,
+            },
+            "evaluation": {
+                "type": ["object", "null"],
+                "additionalProperties": False,
+                "properties": {
+                    "strategy": {
+                        "enum": ["none", "holdout", "rolling_origin"]
+                    },
+                    "holdout_size": {"type": "integer", "minimum": 1},
+                    "origin_count": {"type": "integer", "minimum": 1},
+                    "step": {"type": "integer", "minimum": 1},
+                    "evaluation_horizon": {"type": "integer", "minimum": 1},
+                    "minimum_training_size": {"type": "integer", "minimum": 2},
+                },
+            },
+            "method_options": {
+                "type": ["object", "null"],
+                "additionalProperties": False,
+                "properties": {
+                    "max_iterations": {"type": "integer", "minimum": 1},
+                    "tolerance": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                    },
+                },
+            },
+        },
+    }
+
+
+def _forecasting_result_schema() -> dict:
+    metric_schema = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["mae", "rmse", "mape", "mase"],
+        "properties": {
+            name: {"type": ["number", "null"]}
+            for name in ("mae", "rmse", "mape", "mase")
+        },
+    }
+    point_schema = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": [
+            "timestamp",
+            "actual",
+            "predicted",
+            "residual",
+            "interval",
+            "segment",
+        ],
+        "properties": {
+            "timestamp": {"type": "string", "format": "date-time"},
+            "actual": {"type": ["number", "null"]},
+            "predicted": {"type": "number"},
+            "residual": {"type": ["number", "null"]},
+            "interval": {
+                "type": ["object", "null"],
+                "additionalProperties": False,
+                "required": ["lower", "upper", "coverage"],
+                "properties": {
+                    "lower": {"type": "number"},
+                    "upper": {"type": "number"},
+                    "coverage": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "exclusiveMaximum": 1,
+                    },
+                },
+            },
+            "segment": {"enum": ["fitted", "holdout", "future"]},
+        },
+    }
+    fold_schema = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["origin", "training_size", "points", "metrics"],
+        "properties": {
+            "origin": {"type": "string", "format": "date-time"},
+            "training_size": {"type": "integer", "minimum": 2},
+            "points": {"type": "array", "minItems": 1, "items": point_schema},
+            "metrics": metric_schema,
+        },
+    }
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": False,
+        "required": [
+            "forecast_available",
+            "method",
+            "origin",
+            "points",
+            "metrics",
+            "evaluation",
+            "parameters",
+        ],
+        "properties": {
+            "forecast_available": {"type": "boolean"},
+            "method": {
+                "enum": ["naive", "seasonal_naive", "holt_winters_additive"]
+            },
+            "origin": {"type": "string", "format": "date-time"},
+            "points": {"type": "array", "items": point_schema},
+            "metrics": metric_schema,
+            "evaluation": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["status", "folds"],
+                "properties": {
+                    "status": {
+                        "enum": ["not_requested", "evaluated", "partial", "failed"]
+                    },
+                    "folds": {"type": "array", "items": fold_schema},
+                },
+            },
+            "parameters": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["name", "value"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "value": {"type": "number"},
+                    },
+                },
+            },
+        },
+    }
+
+
+def _forecasting_example_problem() -> dict:
+    return {
+        "version": "1",
+        "problem_type": "univariate_forecasting",
+        "target_name": "daily_orders",
+        "frequency": "daily",
+        "horizon": 2,
+        "method": "naive",
+        "missing_period_policy": "reject",
+        "observations": [
+            {"timestamp": "2026-01-01T00:00:00", "value": 10.0},
+            {"timestamp": "2026-01-02T00:00:00", "value": 12.0},
+            {"timestamp": "2026-01-03T00:00:00", "value": 14.0},
+            {"timestamp": "2026-01-04T00:00:00", "value": 16.0},
+        ],
+        "evaluation": {"strategy": "holdout", "holdout_size": 1},
+    }
+
+
+def _forecasting_example_result() -> dict:
+    return {
+        "forecast_available": True,
+        "method": "naive",
+        "origin": "2026-01-04T00:00:00",
+        "points": [
+            {
+                "timestamp": "2026-01-02T00:00:00",
+                "actual": 12.0,
+                "predicted": 10.0,
+                "residual": 2.0,
+                "interval": None,
+                "segment": "fitted",
+            },
+            {
+                "timestamp": "2026-01-03T00:00:00",
+                "actual": 14.0,
+                "predicted": 12.0,
+                "residual": 2.0,
+                "interval": None,
+                "segment": "fitted",
+            },
+            {
+                "timestamp": "2026-01-04T00:00:00",
+                "actual": 16.0,
+                "predicted": 14.0,
+                "residual": 2.0,
+                "interval": None,
+                "segment": "fitted",
+            },
+            {
+                "timestamp": "2026-01-05T00:00:00",
+                "actual": None,
+                "predicted": 16.0,
+                "residual": None,
+                "interval": None,
+                "segment": "future",
+            },
+            {
+                "timestamp": "2026-01-06T00:00:00",
+                "actual": None,
+                "predicted": 16.0,
+                "residual": None,
+                "interval": None,
+                "segment": "future",
+            },
+        ],
+        "metrics": {"mae": 2.0, "rmse": 2.0, "mape": 12.5, "mase": 1.0},
+        "evaluation": {
+            "status": "evaluated",
+            "folds": [
+                {
+                    "origin": "2026-01-03T00:00:00",
+                    "training_size": 3,
+                    "points": [
+                        {
+                            "timestamp": "2026-01-04T00:00:00",
+                            "actual": 16.0,
+                            "predicted": 14.0,
+                            "residual": 2.0,
+                            "interval": None,
+                            "segment": "holdout",
+                        }
+                    ],
+                    "metrics": {
+                        "mae": 2.0,
+                        "rmse": 2.0,
+                        "mape": 12.5,
+                        "mase": 1.0,
+                    },
+                }
+            ],
+        },
+        "parameters": [{"name": "last_value", "value": 16.0}],
     }
 
 

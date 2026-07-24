@@ -1,25 +1,23 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import replace
 from datetime import datetime, timedelta
 
+from optees.application.codecs.forecasting_result_codec import ForecastingResultCodec
+from optees.application.contracts.execution import SerializedResult
+from optees.application.contracts.json_value import JsonValue
 from optees.application.contracts.solution_validation import SolutionValidationStatus
 from optees.application.usecases.forecast_time_series_usecase import (
     ForecastTimeSeriesUseCase,
 )
 from optees.application.validation import ForecastingIndependentSolutionValidator
 from optees.data.adapters.forecasting import BaselineForecastingAdapter
-from optees.domain.entities.forecasting import (
-    ForecastMetricSet,
-    ForecastPoint,
-    ForecastSegment,
-    PredictionInterval,
-)
+from optees.domain.entities.forecasting import ForecastObservation
 from optees.domain.models.forecasting import (
     ForecastingEvaluationOptions,
     ForecastingModel,
 )
-from optees.domain.entities.forecasting import ForecastObservation
 from optees.domain.value_objects.forecasting import (
     EvaluationStrategy,
     ForecastingFrequency,
@@ -48,18 +46,34 @@ def _model() -> ForecastingModel:
     )
 
 
-def _solution():
+def _serialized() -> tuple[ForecastingModel, SerializedResult]:
     model = _model()
     solution = ForecastTimeSeriesUseCase(
         {ForecastingMethod.NAIVE: BaselineForecastingAdapter()}
     ).execute(model)
-    return model, solution
+    return model, ForecastingResultCodec().serialize(solution)
+
+
+def _tamper(
+    serialized: SerializedResult,
+    mutation,
+) -> SerializedResult:
+    result = deepcopy(serialized.result)
+    mutation(result)
+    return replace(serialized, result=result)
+
+
+def _rows(result: dict[str, JsonValue]) -> list[dict[str, JsonValue]]:
+    rows = result["points"]
+    assert isinstance(rows, list)
+    assert all(isinstance(row, dict) for row in rows)
+    return rows  # type: ignore[return-value]
 
 
 def test_valid_baseline_forecast_is_independently_verified() -> None:
-    model, solution = _solution()
+    model, serialized = _serialized()
 
-    report = ForecastingIndependentSolutionValidator()(model, solution)
+    report = ForecastingIndependentSolutionValidator()(model, serialized)
 
     assert report.status is SolutionValidationStatus.VERIFIED
     assert {check.code for check in report.checks} == {
@@ -70,21 +84,14 @@ def test_valid_baseline_forecast_is_independently_verified() -> None:
 
 
 def test_tampered_future_timestamp_is_rejected() -> None:
-    model, solution = _solution()
-    points = list(solution.points)
-    future_index = next(
-        index
-        for index, point in enumerate(points)
-        if point.segment is ForecastSegment.FUTURE
-    )
-    original = points[future_index]
-    points[future_index] = ForecastPoint(
-        timestamp=original.timestamp + timedelta(hours=1),
-        predicted=original.predicted,
-        segment=ForecastSegment.FUTURE,
-    )
-    tampered = replace(solution, points=tuple(points))
+    model, serialized = _serialized()
 
+    tampered = _tamper(
+        serialized,
+        lambda result: _rows(result)[-1].update(
+            {"timestamp": "2026-01-22T01:00:00"}
+        ),
+    )
     report = ForecastingIndependentSolutionValidator()(model, tampered)
 
     assert report.status is SolutionValidationStatus.FAILED
@@ -92,19 +99,21 @@ def test_tampered_future_timestamp_is_rejected() -> None:
 
 
 def test_tampered_split_accounting_is_rejected() -> None:
-    model, solution = _solution()
-    first_fold = solution.evaluation_folds[0]
-    tampered_fold = replace(
-        first_fold,
-        origin=model.observations[1].timestamp,
-        training_size=2,
-    )
-    tampered = replace(
-        solution,
-        evaluation_folds=(tampered_fold,) + solution.evaluation_folds[1:],
-    )
+    model, serialized = _serialized()
 
-    report = ForecastingIndependentSolutionValidator()(model, tampered)
+    def mutate(result: dict[str, JsonValue]) -> None:
+        evaluation = result["evaluation"]
+        assert isinstance(evaluation, dict)
+        folds = evaluation["folds"]
+        assert isinstance(folds, list)
+        assert isinstance(folds[0], dict)
+        folds[0]["training_size"] = 2
+        folds[0]["origin"] = "2026-01-02T00:00:00"
+
+    report = ForecastingIndependentSolutionValidator()(
+        model,
+        _tamper(serialized, mutate),
+    )
 
     assert report.status is SolutionValidationStatus.FAILED
     assert any(
@@ -114,18 +123,25 @@ def test_tampered_split_accounting_is_rejected() -> None:
 
 
 def test_tampered_metrics_are_recomputed_and_rejected() -> None:
-    model, solution = _solution()
-    first_fold = replace(
-        solution.evaluation_folds[0],
-        metrics=ForecastMetricSet(mae=999, rmse=999, mape=999, mase=999),
-    )
-    tampered = replace(
-        solution,
-        metrics=ForecastMetricSet(mae=999, rmse=999, mape=999, mase=999),
-        evaluation_folds=(first_fold,) + solution.evaluation_folds[1:],
-    )
+    model, serialized = _serialized()
 
-    report = ForecastingIndependentSolutionValidator()(model, tampered)
+    def mutate(result: dict[str, JsonValue]) -> None:
+        metrics = result["metrics"]
+        assert isinstance(metrics, dict)
+        metrics.update({"mae": 999, "rmse": 999, "mape": 999, "mase": 999})
+        evaluation = result["evaluation"]
+        assert isinstance(evaluation, dict)
+        folds = evaluation["folds"]
+        assert isinstance(folds, list)
+        assert isinstance(folds[0], dict)
+        fold_metrics = folds[0]["metrics"]
+        assert isinstance(fold_metrics, dict)
+        fold_metrics.update({"mae": 999, "rmse": 999, "mape": 999, "mase": 999})
+
+    report = ForecastingIndependentSolutionValidator()(
+        model,
+        _tamper(serialized, mutate),
+    )
 
     assert report.status is SolutionValidationStatus.FAILED
     assert any(
@@ -135,26 +151,19 @@ def test_tampered_metrics_are_recomputed_and_rejected() -> None:
 
 
 def test_tampered_historical_actual_and_residual_are_rejected() -> None:
-    model, solution = _solution()
-    points = list(solution.points)
-    fitted_index = next(
-        index
-        for index, point in enumerate(points)
-        if point.segment is ForecastSegment.FITTED
-    )
-    original = points[fitted_index]
-    assert original.actual is not None
-    altered_actual = original.actual + 1
-    points[fitted_index] = ForecastPoint(
-        timestamp=original.timestamp,
-        predicted=original.predicted,
-        actual=altered_actual,
-        residual=altered_actual - original.predicted,
-        segment=ForecastSegment.FITTED,
-    )
-    tampered = replace(solution, points=tuple(points))
+    model, serialized = _serialized()
 
-    report = ForecastingIndependentSolutionValidator()(model, tampered)
+    def mutate(result: dict[str, JsonValue]) -> None:
+        row = _rows(result)[0]
+        assert isinstance(row["actual"], (int, float))
+        actual = float(row["actual"]) + 1
+        row["actual"] = actual
+        row["residual"] = actual - float(row["predicted"])
+
+    report = ForecastingIndependentSolutionValidator()(
+        model,
+        _tamper(serialized, mutate),
+    )
 
     assert report.status is SolutionValidationStatus.FAILED
     assert any(
@@ -164,21 +173,20 @@ def test_tampered_historical_actual_and_residual_are_rejected() -> None:
 
 
 def test_tampered_baseline_prediction_and_parameter_are_rejected() -> None:
-    model, solution = _solution()
-    points = list(solution.points)
-    last = points[-1]
-    points[-1] = ForecastPoint(
-        timestamp=last.timestamp,
-        predicted=last.predicted + 1,
-        segment=ForecastSegment.FUTURE,
-    )
-    tampered = replace(
-        solution,
-        points=tuple(points),
-        parameters=(("last_value", 999),),
-    )
+    model, serialized = _serialized()
 
-    report = ForecastingIndependentSolutionValidator()(model, tampered)
+    def mutate(result: dict[str, JsonValue]) -> None:
+        row = _rows(result)[-1]
+        row["predicted"] = float(row["predicted"]) + 1
+        parameters = result["parameters"]
+        assert isinstance(parameters, list)
+        assert isinstance(parameters[0], dict)
+        parameters[0]["value"] = 999
+
+    report = ForecastingIndependentSolutionValidator()(
+        model,
+        _tamper(serialized, mutate),
+    )
 
     assert report.status is SolutionValidationStatus.FAILED
     assert any(
@@ -188,22 +196,21 @@ def test_tampered_baseline_prediction_and_parameter_are_rejected() -> None:
 
 
 def test_unsupported_interval_is_rejected_for_initial_methods() -> None:
-    model, solution = _solution()
-    points = list(solution.points)
-    last = points[-1]
-    points[-1] = ForecastPoint(
-        timestamp=last.timestamp,
-        predicted=last.predicted,
-        segment=ForecastSegment.FUTURE,
-        interval=PredictionInterval(
-            lower=last.predicted - 1,
-            upper=last.predicted + 1,
-            coverage=0.95,
-        ),
-    )
-    tampered = replace(solution, points=tuple(points))
+    model, serialized = _serialized()
 
-    report = ForecastingIndependentSolutionValidator()(model, tampered)
+    def mutate(result: dict[str, JsonValue]) -> None:
+        row = _rows(result)[-1]
+        predicted = float(row["predicted"])
+        row["interval"] = {
+            "lower": predicted - 1,
+            "upper": predicted + 1,
+            "coverage": 0.95,
+        }
+
+    report = ForecastingIndependentSolutionValidator()(
+        model,
+        _tamper(serialized, mutate),
+    )
 
     assert report.status is SolutionValidationStatus.FAILED
     assert any(
@@ -211,3 +218,13 @@ def test_unsupported_interval_is_rejected_for_initial_methods() -> None:
         for violation in report.violations
         if violation.code == "forecast_method_invariant_mismatch"
     )
+
+
+def test_malformed_public_result_is_rejected_before_arithmetic_checks() -> None:
+    model, serialized = _serialized()
+    tampered = _tamper(serialized, lambda result: result.pop("points"))
+
+    report = ForecastingIndependentSolutionValidator()(model, tampered)
+
+    assert report.status is SolutionValidationStatus.FAILED
+    assert report.violations[0].code == "invalid_forecast_result_contract"

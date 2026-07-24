@@ -8,7 +8,10 @@ import pytest
 fastapi = pytest.importorskip("fastapi")
 httpx = pytest.importorskip("httpx")
 
-from optees.interfaces.http.local_api import create_local_api, run_local_api
+from optees.interfaces.http.local_api import (  # noqa: E402
+    create_local_api,
+    run_local_api,
+)
 
 
 TOKEN = "test-token-" + "x" * 32
@@ -191,14 +194,20 @@ def test_discovery_exposes_capability_contracts_without_cors_headers():
             "/api/v1/capabilities/packing.single_container_3d",
             headers=AUTH,
         )
+        forecasting = client.get(
+            "/api/v1/capabilities/ml.forecasting.univariate",
+            headers=AUTH,
+        )
         missing = client.get("/api/v1/capabilities/missing", headers=AUTH)
 
     capability_ids = {item["id"] for item in response.json()["capabilities"]}
     assert response.status_code == 200
     assert "lp.continuous" in capability_ids
     assert "packing.single_container_3d" in capability_ids
+    assert "ml.forecasting.univariate" in capability_ids
     assert "access-control-allow-origin" not in response.headers
     assert packing.json()["supports_cancellation"] is True
+    assert forecasting.json()["example_problem"]["observations"]
     assert missing.status_code == 404
     assert _error_code(missing) == "capability_not_found"
 
@@ -341,6 +350,68 @@ def test_batch_api_validates_submits_and_aggregates_individual_results():
         "optimal": 2
     }
     assert result.json()["summary"]["validation_status_counts"] == {
+        "verified": 2
+    }
+
+
+def test_forecasting_api_executes_descriptor_example_as_job_and_batch():
+    with ASGIClient(create_local_api(token=TOKEN)) as client:
+        descriptor_response = client.get(
+            "/api/v1/capabilities/ml.forecasting.univariate",
+            headers=AUTH,
+        )
+        problem = descriptor_response.json()["example_problem"]
+        request = {
+            "capability_id": "ml.forecasting.univariate",
+            "problem": problem,
+        }
+        submitted = client.post("/api/v1/jobs", headers=AUTH, json=request)
+        job_id = submitted.json()["job_id"]
+
+        deadline = monotonic() + 10
+        while monotonic() < deadline:
+            snapshot = client.get(f"/api/v1/jobs/{job_id}", headers=AUTH)
+            if snapshot.json()["job_status"] == "completed":
+                break
+            sleep(0.01)
+        result = client.get(f"/api/v1/jobs/{job_id}/result", headers=AUTH)
+
+        batch_request = {
+            "version": "1",
+            "items": [
+                {
+                    "client_item_id": f"forecast-{index}",
+                    "capability_id": "ml.forecasting.univariate",
+                    "problem": problem,
+                }
+                for index in range(2)
+            ],
+        }
+        batch = client.post("/api/v1/batches", headers=AUTH, json=batch_request)
+        batch_id = batch.json()["batch_id"]
+        while monotonic() < deadline:
+            batch_snapshot = client.get(
+                f"/api/v1/batches/{batch_id}",
+                headers=AUTH,
+            )
+            if batch_snapshot.json()["batch_status"] == "completed":
+                break
+            sleep(0.01)
+        batch_result = client.get(
+            f"/api/v1/batches/{batch_id}/result",
+            headers=AUTH,
+        )
+
+    assert descriptor_response.status_code == 200
+    assert submitted.status_code == 202
+    assert result.status_code == 200
+    assert result.json()["mathematical_status"] == "feasible"
+    assert result.json()["validation"]["status"] == "verified"
+    assert batch.status_code == 202
+    assert batch_result.json()["summary"]["mathematical_status_counts"] == {
+        "feasible": 2
+    }
+    assert batch_result.json()["summary"]["validation_status_counts"] == {
         "verified": 2
     }
 

@@ -3,6 +3,8 @@ from __future__ import annotations
 import math
 from datetime import datetime
 
+from optees.application.contracts.execution import MathematicalStatus, SerializedResult
+from optees.application.contracts.json_value import JsonValue
 from optees.application.contracts.solution_validation import (
     SolutionValidation,
     ValidationCheck,
@@ -10,10 +12,12 @@ from optees.application.contracts.solution_validation import (
     ValidationViolation,
 )
 from optees.domain.entities.forecasting import (
+    ForecastEvaluationFold,
     ForecastMetricSet,
     ForecastPoint,
     ForecastSegment,
     ForecastingSolution,
+    PredictionInterval,
 )
 from optees.domain.models.forecasting import ForecastingModel
 from optees.domain.value_objects.forecasting import (
@@ -44,15 +48,40 @@ class ForecastingIndependentSolutionValidator:
     def __call__(
         self,
         model: ForecastingModel,
-        solution: ForecastingSolution,
+        serialized: SerializedResult,
     ) -> SolutionValidation:
-        if solution.status in {ForecastingStatus.FAILED, ForecastingStatus.CANCELLED}:
+        if serialized.mathematical_status is not MathematicalStatus.FEASIBLE:
             return SolutionValidation.not_available(
                 "No complete forecast is available for independent validation."
             )
 
         checks: list[ValidationCheck] = []
         violations: list[ValidationViolation] = []
+        try:
+            solution = _solution_from_public_result(serialized.result)
+        except (KeyError, TypeError, ValueError) as exc:
+            violation = _violation(
+                "invalid_forecast_result_contract",
+                "forecast.public_result",
+                "$.result",
+                "The public forecast result does not match schema version 1.",
+                {"reason": str(exc)},
+            )
+            return SolutionValidation.from_checks(
+                (
+                    _check(
+                        "forecast.public_result",
+                        False,
+                        "The serialized result contains the complete Forecasting v1 structure.",
+                        {},
+                    ),
+                ),
+                violations=(violation,),
+                tolerances={
+                    "absolute": self._absolute_tolerance,
+                    "relative": self._relative_tolerance,
+                },
+            )
 
         temporal_violations = self._validate_temporal_structure(model, solution)
         violations.extend(temporal_violations)
@@ -505,3 +534,167 @@ def _violation(
         message=message,
         measurements=measurements,  # type: ignore[arg-type]
     )
+
+
+def _solution_from_public_result(
+    result: dict[str, JsonValue],
+) -> ForecastingSolution:
+    required = {
+        "forecast_available",
+        "method",
+        "origin",
+        "points",
+        "metrics",
+        "evaluation",
+        "parameters",
+    }
+    if set(result) != required:
+        raise ValueError("result fields do not match the Forecasting v1 contract")
+    if result["forecast_available"] is not True:
+        raise ValueError("forecast_available must be true for a feasible result")
+    evaluation = _object(result["evaluation"], "$.result.evaluation")
+    if set(evaluation) != {"status", "folds"}:
+        raise ValueError("$.result.evaluation has invalid fields")
+    raw_folds = _array(evaluation["folds"], "$.result.evaluation.folds")
+    raw_parameters = _array(result["parameters"], "$.result.parameters")
+    return ForecastingSolution(
+        status=ForecastingStatus.FORECASTED,
+        method=ForecastingMethod.from_value(
+            _string(result["method"], "$.result.method")
+        ),
+        origin=_timestamp(result["origin"], "$.result.origin"),
+        points=tuple(
+            _point(row, f"$.result.points[{index}]")
+            for index, row in enumerate(
+                _array(result["points"], "$.result.points")
+            )
+        ),
+        metrics=_metric_set(result["metrics"], "$.result.metrics"),
+        evaluation_status=ForecastEvaluationStatus(
+            _string(evaluation["status"], "$.result.evaluation.status")
+        ),
+        evaluation_folds=tuple(
+            _fold(row, f"$.result.evaluation.folds[{index}]")
+            for index, row in enumerate(raw_folds)
+        ),
+        parameters=tuple(
+            _parameter(row, f"$.result.parameters[{index}]")
+            for index, row in enumerate(raw_parameters)
+        ),
+    )
+
+
+def _point(value: JsonValue, path: str) -> ForecastPoint:
+    row = _object(value, path)
+    if set(row) != {
+        "timestamp",
+        "actual",
+        "predicted",
+        "residual",
+        "interval",
+        "segment",
+    }:
+        raise ValueError(f"{path} has invalid fields")
+    interval_value = row["interval"]
+    interval = None
+    if interval_value is not None:
+        interval_row = _object(interval_value, f"{path}.interval")
+        if set(interval_row) != {"lower", "upper", "coverage"}:
+            raise ValueError(f"{path}.interval has invalid fields")
+        interval = PredictionInterval(
+            lower=_number(interval_row["lower"], f"{path}.interval.lower"),
+            upper=_number(interval_row["upper"], f"{path}.interval.upper"),
+            coverage=_number(
+                interval_row["coverage"],
+                f"{path}.interval.coverage",
+            ),
+        )
+    return ForecastPoint(
+        timestamp=_timestamp(row["timestamp"], f"{path}.timestamp"),
+        actual=_optional_number(row["actual"], f"{path}.actual"),
+        predicted=_number(row["predicted"], f"{path}.predicted"),
+        residual=_optional_number(row["residual"], f"{path}.residual"),
+        interval=interval,
+        segment=ForecastSegment(_string(row["segment"], f"{path}.segment")),
+    )
+
+
+def _fold(value: JsonValue, path: str) -> ForecastEvaluationFold:
+    row = _object(value, path)
+    if set(row) != {"origin", "training_size", "points", "metrics"}:
+        raise ValueError(f"{path} has invalid fields")
+    training_size = row["training_size"]
+    if isinstance(training_size, bool) or not isinstance(training_size, int):
+        raise ValueError(f"{path}.training_size must be an integer")
+    return ForecastEvaluationFold(
+        origin=_timestamp(row["origin"], f"{path}.origin"),
+        training_size=training_size,
+        points=tuple(
+            _point(item, f"{path}.points[{index}]")
+            for index, item in enumerate(_array(row["points"], f"{path}.points"))
+        ),
+        metrics=_metric_set(row["metrics"], f"{path}.metrics"),
+    )
+
+
+def _metric_set(value: JsonValue, path: str) -> ForecastMetricSet:
+    row = _object(value, path)
+    if set(row) != {"mae", "rmse", "mape", "mase"}:
+        raise ValueError(f"{path} has invalid fields")
+    return ForecastMetricSet(
+        mae=_optional_number(row["mae"], f"{path}.mae"),
+        rmse=_optional_number(row["rmse"], f"{path}.rmse"),
+        mape=_optional_number(row["mape"], f"{path}.mape"),
+        mase=_optional_number(row["mase"], f"{path}.mase"),
+    )
+
+
+def _parameter(value: JsonValue, path: str) -> tuple[str, float]:
+    row = _object(value, path)
+    if set(row) != {"name", "value"}:
+        raise ValueError(f"{path} has invalid fields")
+    return (
+        _string(row["name"], f"{path}.name"),
+        _number(row["value"], f"{path}.value"),
+    )
+
+
+def _object(value: JsonValue, path: str) -> dict[str, JsonValue]:
+    if not isinstance(value, dict):
+        raise ValueError(f"{path} must be an object")
+    return value
+
+
+def _array(value: JsonValue, path: str) -> list[JsonValue]:
+    if not isinstance(value, list):
+        raise ValueError(f"{path} must be an array")
+    return value
+
+
+def _string(value: JsonValue, path: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{path} must be a non-empty string")
+    return value.strip()
+
+
+def _timestamp(value: JsonValue, path: str) -> datetime:
+    raw = _string(value, path)
+    if raw.endswith("Z"):
+        raw = raw[:-1] + "+00:00"
+    try:
+        return datetime.fromisoformat(raw)
+    except ValueError as exc:
+        raise ValueError(f"{path} must be a valid ISO 8601 timestamp") from exc
+
+
+def _number(value: JsonValue, path: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{path} must be a finite number")
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError(f"{path} must be a finite number")
+    return number
+
+
+def _optional_number(value: JsonValue, path: str) -> float | None:
+    return None if value is None else _number(value, path)

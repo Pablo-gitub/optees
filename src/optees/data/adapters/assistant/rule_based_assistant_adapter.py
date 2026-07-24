@@ -19,6 +19,7 @@ _FAMILY_KNAPSACK = "knapsack"
 _FAMILY_NLP = "nlp"
 _FAMILY_REGRESSION = "regression"
 _FAMILY_CLASSIFICATION = "classification"
+_FAMILY_FORECASTING = "forecasting"
 _FAMILY_GRAPH = "graph"
 _FAMILY_SCHEDULING = "scheduling"
 _FAMILY_ROBUST = "robust"
@@ -193,6 +194,22 @@ class RuleBasedAssistantAdapter:
             ),
         ),
         _KeywordRule(
+            _FAMILY_FORECASTING,
+            6,
+            (
+                "time series",
+                "serie temporale",
+                "forecast horizon",
+                "orizzonte di previsione",
+                "seasonal naive",
+                "naive stagionale",
+                "holt-winters",
+                "holt winters",
+                "trend and seasonality",
+                "trend e stagionalita",
+            ),
+        ),
+        _KeywordRule(
             _FAMILY_GRAPH,
             5,
             (
@@ -313,6 +330,7 @@ class RuleBasedAssistantAdapter:
             _FAMILY_NLP,
             _FAMILY_REGRESSION,
             _FAMILY_CLASSIFICATION,
+            _FAMILY_FORECASTING,
             _FAMILY_GRAPH,
         }
         load_target = (
@@ -354,6 +372,8 @@ class RuleBasedAssistantAdapter:
             model_json, missing = self._draft_classification(original, language)
             if model_json is not None:
                 load_target = _FAMILY_CLASSIFICATION
+        elif family == _FAMILY_FORECASTING:
+            missing.append(_msg(language, "forecasting_explicit_series"))
         elif family == _FAMILY_GRAPH:
             missing.append(_msg(language, "graph_drafting_deferred"))
         elif family in {_FAMILY_SCHEDULING, _FAMILY_ROBUST}:
@@ -389,6 +409,7 @@ class RuleBasedAssistantAdapter:
             _FAMILY_NLP: 0,
             _FAMILY_REGRESSION: 0,
             _FAMILY_CLASSIFICATION: 0,
+            _FAMILY_FORECASTING: 0,
             _FAMILY_GRAPH: 0,
             _FAMILY_SCHEDULING: 0,
             _FAMILY_ROBUST: 0,
@@ -603,6 +624,49 @@ class RuleBasedAssistantAdapter:
         ):
             scores[_FAMILY_REGRESSION] += 12
 
+        if _has_any(
+            text,
+            (
+                "forecast",
+                "previsione",
+                "previsioni",
+                "predict next",
+                "prevedere i prossimi",
+                "next periods",
+                "periodi successivi",
+                "future periods",
+                "periodi futuri",
+                "next days",
+                "prossimi giorni",
+            ),
+        ) and _has_any(
+            text,
+            (
+                "chronological",
+                "cronologic",
+                "daily",
+                "giornal",
+                "weekly",
+                "settiman",
+                "monthly",
+                "mensil",
+                "quarterly",
+                "trimestral",
+                "yearly",
+                "annual",
+                "timestamp",
+                "date",
+                "data",
+                "history",
+                "storico",
+                "historical series",
+                "serie storica",
+                "seasonal",
+                "stagional",
+            ),
+        ):
+            scores[_FAMILY_FORECASTING] += 16
+
         if _has_any(text, ("yes or no", "si o no", "whether", "aprire", "open")) and _has_any(
             text,
             ("warehouse", "warehouses", "magazzino", "magazzini", "ship", "spedire"),
@@ -732,6 +796,8 @@ class RuleBasedAssistantAdapter:
             return "linear_regression"
         if family == _FAMILY_CLASSIFICATION:
             return "binary_logistic_regression"
+        if family == _FAMILY_FORECASTING:
+            return "univariate_time_series"
         if family == _FAMILY_SCHEDULING:
             if _has_any(text, ("macchine parallele", "parallel machines")):
                 return "parallel_machines"
@@ -772,6 +838,8 @@ class RuleBasedAssistantAdapter:
             reasons.append(_msg(language, "reason_regression"))
         elif family == _FAMILY_CLASSIFICATION:
             reasons.append(_msg(language, "reason_classification"))
+        elif family == _FAMILY_FORECASTING:
+            reasons.append(_msg(language, "reason_forecasting"))
         elif family == _FAMILY_GRAPH:
             reasons.append(_msg(language, "reason_graph"))
         elif family == _FAMILY_SCHEDULING:
@@ -1149,6 +1217,7 @@ def _priority(family: str) -> int:
         _FAMILY_MILP: 3,
         _FAMILY_REGRESSION: 3,
         _FAMILY_CLASSIFICATION: 4,
+        _FAMILY_FORECASTING: 5,
         _FAMILY_GRAPH: 5,
         _FAMILY_NLP: 2,
         _FAMILY_LP: 1,
@@ -1526,6 +1595,7 @@ _MESSAGES = {
         "nlp_drafting_deferred": "The NLP form is available, but rule-based NLP JSON drafting is not implemented yet.",
         "supervised_dataset_format": "an explicit dataset table: features: f1, f2; target: y; rows: 1 | 2 | label_or_value; ...",
         "graph_drafting_deferred": "The Shortest Path graph form is available, but rule-based graph JSON drafting is not implemented yet.",
+        "forecasting_explicit_series": "explicit timestamped observations, frequency, forecast horizon, and method",
         "problem_family": "problem family",
         "capacity": "capacity",
         "items_with_value_weight": "items with value and weight",
@@ -1543,6 +1613,7 @@ _MESSAGES = {
         "reason_nlp": "The prompt mentions nonlinear expressions, curves, products of variables, or derivatives.",
         "reason_regression": "The prompt asks to estimate or predict a continuous outcome from previous numerical observations.",
         "reason_classification": "The prompt asks to predict one of two named outcomes from previous observations.",
+        "reason_forecasting": "The prompt asks for future periods from one chronologically ordered historical series.",
         "reason_graph": "The prompt asks for the shortest or cheapest route between two points across a network of connections.",
         "reason_scheduling": "The prompt mentions jobs, machines, sequences, deadlines, or makespan.",
         "reason_robust": "The prompt mentions uncertainty, scenarios, regret, or worst-case decisions.",
@@ -1556,6 +1627,7 @@ _MESSAGES = {
         "nlp_drafting_deferred": "La schermata NLP e' disponibile, ma la generazione rule-based di JSON NLP non e' ancora implementata.",
         "supervised_dataset_format": "una tabella dati esplicita: caratteristiche: f1, f2; bersaglio: y; righe: 1 | 2 | etichetta_o_valore; ...",
         "graph_drafting_deferred": "La schermata del grafo (cammino minimo) e' disponibile, ma la generazione rule-based di JSON per i grafi non e' ancora implementata.",
+        "forecasting_explicit_series": "osservazioni esplicite con timestamp, frequenza, orizzonte di previsione e metodo",
         "problem_family": "famiglia del problema",
         "capacity": "capacita'",
         "items_with_value_weight": "oggetti con valore e peso",
@@ -1573,6 +1645,7 @@ _MESSAGES = {
         "reason_nlp": "Il testo cita espressioni non lineari, curve, prodotti tra variabili o derivate.",
         "reason_regression": "Il testo chiede di stimare o prevedere un risultato continuo a partire da osservazioni numeriche precedenti.",
         "reason_classification": "Il testo chiede di prevedere uno di due esiti nominati a partire da osservazioni precedenti.",
+        "reason_forecasting": "Il testo chiede periodi futuri a partire da una singola serie storica ordinata cronologicamente.",
         "reason_graph": "Il testo chiede il percorso piu' breve o economico tra due punti in una rete di collegamenti.",
         "reason_scheduling": "Il testo cita lavori, macchine, sequenze, scadenze o makespan.",
         "reason_robust": "Il testo cita incertezza, scenari, regret o decisioni worst-case.",

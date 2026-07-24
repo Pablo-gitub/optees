@@ -13,6 +13,7 @@ DIJKSTRA_CAPABILITY_ID = "graph.shortest_path.dijkstra"
 NLP_CAPABILITY_ID = "nlp.continuous_local"
 REGRESSION_CAPABILITY_ID = "ml.regression.linear"
 CLASSIFICATION_CAPABILITY_ID = "ml.classification.binary_logistic"
+FORECASTING_CAPABILITY_ID = "ml.forecasting.univariate"
 PACKING_CAPABILITY_ID = "packing.single_container_3d"
 
 PUBLIC_CAPABILITY_IDS = (
@@ -27,5 +28,6 @@ PUBLIC_CAPABILITY_IDS = (
     NLP_CAPABILITY_ID,
     REGRESSION_CAPABILITY_ID,
     CLASSIFICATION_CAPABILITY_ID,
+    FORECASTING_CAPABILITY_ID,
     PACKING_CAPABILITY_ID,
 )
