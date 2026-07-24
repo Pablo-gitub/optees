@@ -29,6 +29,7 @@ class ArtifactStatus(str, Enum):
     RENDERING = "rendering"
     AVAILABLE = "available"
     FAILED = "failed"
+    CANCELLED = "cancelled"
     EXPIRED = "expired"
 
 
@@ -195,6 +196,8 @@ class ArtifactManifestEntry:
     expires_at: str
     size_bytes: int | None = None
     sha256: str | None = None
+    progress_percent: int = 0
+    progress_stage: str = "queued"
     error: StructuredError | None = None
 
     def __post_init__(self) -> None:
@@ -216,6 +219,13 @@ class ArtifactManifestEntry:
             raise ValueError("size_bytes must be null or a non-negative integer")
         if self.sha256 is not None and not re.fullmatch(r"[0-9a-f]{64}", self.sha256):
             raise ValueError("sha256 must be null or 64 lowercase hexadecimal characters")
+        if (
+            isinstance(self.progress_percent, bool)
+            or not isinstance(self.progress_percent, int)
+            or not 0 <= self.progress_percent <= 100
+        ):
+            raise ValueError("progress_percent must be between 0 and 100")
+        _require_identifier(self.progress_stage, "progress_stage")
         if self.status is ArtifactStatus.AVAILABLE:
             if self.size_bytes is None or self.sha256 is None:
                 raise ValueError("available artifacts require size_bytes and sha256")
@@ -237,6 +247,8 @@ class ArtifactManifestEntry:
                 "status": self.status.value,
                 "size_bytes": self.size_bytes,
                 "sha256": self.sha256,
+                "progress_percent": self.progress_percent,
+                "progress_stage": self.progress_stage,
                 "created_at": self.created_at,
                 "expires_at": self.expires_at,
                 "provenance": self.provenance.to_dict(),

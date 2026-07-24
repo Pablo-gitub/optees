@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from optees.application.contracts.artifact import ArtifactManifestEntry
 from optees.application.contracts.execution import ExecutionEnvelope
 from optees.application.contracts.report import ReportRequest
+from optees.application.contracts.report_backend import ReportBackendAsset
+from optees.application.contracts.report_conversion import ConvertedReportArtifact
 
 
 @dataclass(frozen=True)
@@ -13,6 +15,7 @@ class ResolvedReportArtifact:
     manifest: ArtifactManifestEntry | None = None
     content: bytes | None = None
     unavailable_reason: str | None = None
+    conversion: ConvertedReportArtifact | None = None
 
 
 @dataclass(frozen=True)
@@ -31,3 +34,4 @@ class ComposedReport:
     source_job_ids: tuple[str, ...]
     source_artifact_ids: tuple[str, ...]
     unsupported_block_count: int
+    assets: tuple[ReportBackendAsset, ...] = ()

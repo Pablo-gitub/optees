@@ -39,6 +39,18 @@ def test_report_codec_builds_a_strict_versioned_request():
     assert request.to_dict() == _request()
 
 
+def test_report_codec_accepts_pdf_and_bounded_artifact_views():
+    payload = _request()
+    payload["format"] = "pdf"
+    payload["sections"][0]["blocks"][2]["views"] = ["isometric", "top"]
+
+    request = report_request_from_dict(payload)
+
+    assert request.format is ReportFormat.PDF
+    assert request.sections[0].blocks[2].views == ("isometric", "top")
+    assert request.to_dict() == payload
+
+
 @pytest.mark.parametrize(
     ("mutation", "message"),
     [
@@ -55,6 +67,18 @@ def test_report_codec_builds_a_strict_versioned_request():
             "external or unsafe",
         ),
         (
+            lambda payload: payload["sections"][0]["blocks"][0].update(
+                {"content": "![local](../../private.png)"}
+            ),
+            "filesystem or relative",
+        ),
+        (
+            lambda payload: payload["sections"][0]["blocks"][0].update(
+                {"content": "[private]: /etc/passwd"}
+            ),
+            "reference targets",
+        ),
+        (
             lambda payload: payload.update({"destination_path": "/tmp/report.md"}),
             "unsupported fields",
         ),
@@ -63,6 +87,12 @@ def test_report_codec_builds_a_strict_versioned_request():
                 {"type": "shell"}
             ),
             "not a supported",
+        ),
+        (
+            lambda payload: payload["sections"][0]["blocks"][2].update(
+                {"views": ["isometric", "diagonal"]}
+            ),
+            "unsupported camera",
         ),
     ],
 )

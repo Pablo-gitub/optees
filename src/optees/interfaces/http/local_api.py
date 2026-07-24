@@ -96,7 +96,7 @@ class ReportGenerationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     contract_version: str = Field(pattern="^1$")
-    format: str = Field(pattern="^markdown$")
+    format: str = Field(pattern="^(markdown|pdf)$")
     locale: str = Field(pattern="^(en|it)$")
     title: str = Field(min_length=1, max_length=200)
     sections: list[dict[str, Any]] = Field(min_length=1, max_length=32)
@@ -436,6 +436,17 @@ def create_local_api(
             },
         )
 
+    @app.post(
+        "/api/v1/artifacts/{artifact_id}/cancel",
+        dependencies=protected,
+    )
+    async def cancel_artifact(artifact_id: str, body: CancelRequest):
+        del body
+        outcome = artifacts.cancel(artifact_id)
+        if isinstance(outcome, StructuredError):
+            _raise_structured(outcome)
+        return outcome.to_dict()
+
     @app.post("/api/v1/reports", status_code=202, dependencies=protected)
     async def create_report(
         body: ReportGenerationRequest,
@@ -459,6 +470,26 @@ def create_local_api(
             _raise_structured(outcome)
         return outcome.to_dict()
 
+    @app.get("/api/v1/reports/backends", dependencies=protected)
+    async def report_backends():
+        return {
+            "backends": [
+                diagnostic.to_dict()
+                for diagnostic in reports.backend_diagnostics()
+            ]
+        }
+
+    @app.post(
+        "/api/v1/reports/{report_id}/cancel",
+        dependencies=protected,
+    )
+    async def cancel_report(report_id: str, body: CancelRequest):
+        del body
+        outcome = reports.cancel(report_id)
+        if isinstance(outcome, StructuredError):
+            _raise_structured(outcome)
+        return outcome.to_dict()
+
     @app.get("/api/v1/reports/{report_id}", dependencies=protected)
     async def report_status(report_id: str):
         outcome = reports.get(report_id)
@@ -473,12 +504,15 @@ def create_local_api(
             _raise_structured(outcome)
         assert isinstance(outcome, StoredArtifactPayload)
         metadata = outcome.artifact
+        suffix = ".pdf" if metadata.media_type == "application/pdf" else ".md"
         return Response(
             content=outcome.content,
             media_type=metadata.media_type,
             headers={
                 "Cache-Control": "private, no-store",
-                "Content-Disposition": f'attachment; filename="{report_id}.md"',
+                "Content-Disposition": (
+                    f'attachment; filename="{report_id}{suffix}"'
+                ),
                 "ETag": f'"sha256-{metadata.sha256}"',
                 "X-Content-SHA256": metadata.sha256,
             },

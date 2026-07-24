@@ -203,3 +203,40 @@ def test_renderer_exception_does_not_expose_private_backend_details(tmp_path):
     finally:
         artifacts.close()
         jobs.shutdown()
+
+
+def test_rendering_artifact_can_be_cancelled_without_late_publication(tmp_path):
+    jobs = create_local_job_service()
+    artifacts = ArtifactGenerationService(
+        jobs,
+        LocalArtifactStore(parent_directory=tmp_path),
+        registrations=(_registration(CsvRenderer(delay=0.15)),),
+    )
+    try:
+        job_id = _completed_job(jobs)
+        submitted = artifacts.submit(job_id, _request())
+        assert isinstance(submitted, ArtifactBatchManifest)
+        artifact_id = submitted.artifacts[0].artifact_id
+        deadline = monotonic() + 2
+        while monotonic() < deadline:
+            entry = artifacts.manifest_entry(artifact_id)
+            assert not isinstance(entry, StructuredError)
+            if entry.status is ArtifactStatus.RENDERING:
+                break
+            sleep(0.005)
+
+        cancelled = artifacts.cancel(artifact_id)
+        assert not isinstance(cancelled, StructuredError)
+        assert cancelled.status is ArtifactStatus.CANCELLED
+        assert cancelled.progress_stage == "cancelled"
+        sleep(0.2)
+
+        final = artifacts.manifest_entry(artifact_id)
+        assert not isinstance(final, StructuredError)
+        assert final.status is ArtifactStatus.CANCELLED
+        unavailable = artifacts.download(artifact_id)
+        assert isinstance(unavailable, StructuredError)
+        assert unavailable.code is ErrorCode.ARTIFACT_RESULT_NOT_AVAILABLE
+    finally:
+        artifacts.close()
+        jobs.shutdown()

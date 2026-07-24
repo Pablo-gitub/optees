@@ -19,10 +19,13 @@ _UNSAFE_TARGET = re.compile(
     r"\]\(\s*(?:https?://|file:|data:|javascript:)",
     re.IGNORECASE,
 )
+_MARKDOWN_TARGET = re.compile(r"!?\[[^\]]*\]\(\s*([^)]+)\)")
+_REFERENCE_TARGET = re.compile(r"^\s*\[[^\]]+\]:\s*\S+", re.MULTILINE)
 
 
 class ReportFormat(str, Enum):
     MARKDOWN = "markdown"
+    PDF = "pdf"
 
 
 class ReportStatus(str, Enum):
@@ -30,6 +33,7 @@ class ReportStatus(str, Enum):
     COMPOSING = "composing"
     AVAILABLE = "available"
     FAILED = "failed"
+    CANCELLED = "cancelled"
     EXPIRED = "expired"
 
 
@@ -61,19 +65,28 @@ class JobStatusReportBlock:
 class ArtifactReportBlock:
     artifact_id: str
     caption: str | None = None
+    views: tuple[str, ...] = ()
     type: str = field(default="artifact", init=False)
 
     def __post_init__(self) -> None:
         _require_identifier(self.artifact_id, "artifact_id")
         if self.caption is not None:
             _require_text(self.caption, "artifact caption", maximum=500)
+        allowed_views = {"isometric", "front", "side", "top"}
+        if len(self.views) > 4 or len(set(self.views)) != len(self.views):
+            raise ValueError("artifact report views must contain at most four unique values")
+        if any(view not in allowed_views for view in self.views):
+            raise ValueError("artifact report views contain an unsupported camera")
 
     def to_dict(self) -> dict[str, JsonValue]:
-        return {
+        payload: dict[str, JsonValue] = {
             "type": self.type,
             "artifact_id": self.artifact_id,
             "caption": self.caption,
         }
+        if self.views:
+            payload["views"] = list(self.views)
+        return payload
 
 
 ReportBlock = MarkdownReportBlock | JobStatusReportBlock | ArtifactReportBlock
@@ -111,8 +124,8 @@ class ReportRequest:
     def __post_init__(self) -> None:
         if self.contract_version != "1":
             raise ValueError("unsupported report contract version")
-        if self.format is not ReportFormat.MARKDOWN:
-            raise ValueError("phase 5 supports only Markdown reports")
+        if not isinstance(self.format, ReportFormat):
+            raise ValueError("report format must use a ReportFormat value")
         if self.locale not in {"en", "it"}:
             raise ValueError("report locale must be 'en' or 'it'")
         _require_text(self.title, "report title", maximum=200)
@@ -179,6 +192,9 @@ class ReportManifest:
     size_bytes: int | None = None
     sha256: str | None = None
     unsupported_block_count: int = 0
+    progress_percent: int = 0
+    progress_stage: str = "queued"
+    backend_id: str | None = None
     error: StructuredError | None = None
     contract_version: str = "1"
 
@@ -193,6 +209,15 @@ class ReportManifest:
             raise ValueError("report media type must not be empty")
         if self.unsupported_block_count < 0:
             raise ValueError("unsupported_block_count must be non-negative")
+        if (
+            isinstance(self.progress_percent, bool)
+            or not isinstance(self.progress_percent, int)
+            or not 0 <= self.progress_percent <= 100
+        ):
+            raise ValueError("report progress_percent must be between 0 and 100")
+        _require_identifier(self.progress_stage, "progress_stage")
+        if self.backend_id is not None:
+            _require_identifier(self.backend_id, "backend_id")
         if self.status is ReportStatus.AVAILABLE:
             if self.size_bytes is None or self.sha256 is None:
                 raise ValueError("available reports require size_bytes and sha256")
@@ -216,6 +241,9 @@ class ReportManifest:
             "size_bytes": self.size_bytes,
             "sha256": self.sha256,
             "unsupported_block_count": self.unsupported_block_count,
+            "progress_percent": self.progress_percent,
+            "progress_stage": self.progress_stage,
+            "backend_id": self.backend_id,
             "error": error_payload,
         }
         normalized = require_json_value(payload, path="$.report_manifest")
@@ -229,6 +257,13 @@ def _validate_markdown(content: str) -> None:
         raise ValueError("report Markdown must not contain raw HTML")
     if _UNSAFE_TARGET.search(content):
         raise ValueError("report Markdown must not contain external or unsafe targets")
+    if _REFERENCE_TARGET.search(content):
+        raise ValueError("report Markdown must not contain reference targets")
+    for match in _MARKDOWN_TARGET.finditer(content):
+        if not match.group(1).strip().startswith("#"):
+            raise ValueError(
+                "report Markdown must not contain filesystem or relative targets"
+            )
 
 
 def _require_identifier(value: str, name: str) -> None:

@@ -1,0 +1,28 @@
+#set page(
+  paper: "a4",
+  margin: (x: 20mm, top: 18mm, bottom: 22mm),
+  footer: context align(center)[
+    #text(size: 8pt, fill: rgb("#2563eb"))[
+      #link("https://optees.it")[Optees - optees.it] -
+      #counter(page).display("1")
+    ]
+  ],
+)
+#set text(font: ("DejaVu Sans", "Arial", "Liberation Sans"), size: 10pt)
+#set heading(numbering: none)
+#set table(inset: 3pt)
+#show heading.where(level: 1): it => block(
+  above: 8pt,
+  below: 14pt,
+)[#text(size: 22pt, weight: "bold", fill: rgb("#172033"))[#it.body]]
+#show heading.where(level: 2): it => block(
+  above: 14pt,
+  below: 8pt,
+)[#text(size: 15pt, weight: "bold", fill: rgb("#2563eb"))[#it.body]]
+#show heading.where(level: 3): it => block(
+  above: 10pt,
+  below: 6pt,
+)[#text(size: 12pt, weight: "bold")[#it.body]]
+#show table: it => block(breakable: true)[#it]
+
+$body$

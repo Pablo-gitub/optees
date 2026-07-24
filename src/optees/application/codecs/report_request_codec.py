@@ -32,7 +32,7 @@ def report_request_from_dict(payload: Mapping[str, object]) -> ReportRequest:
     try:
         format_ = ReportFormat(str(payload.get("format", "markdown")))
     except ValueError as exc:
-        raise ValueError("$.format must be 'markdown'") from exc
+        raise ValueError("$.format must be 'markdown' or 'pdf'") from exc
     return ReportRequest(
         contract_version=_string(payload, "contract_version", default="1"),
         format=format_,
@@ -77,13 +77,21 @@ def _block(value: object, path: str):
         _reject_extra(value, {"type", "job_id"}, path)
         return JobStatusReportBlock(_string(value, "job_id", path=path))
     if type_ == "artifact":
-        _reject_extra(value, {"type", "artifact_id", "caption"}, path)
+        _reject_extra(value, {"type", "artifact_id", "caption", "views"}, path)
         caption = value.get("caption")
         if caption is not None and not isinstance(caption, str):
             raise ValueError(f"{path}.caption must be a string or null")
+        views_value = value.get("views", [])
+        if not isinstance(views_value, Sequence) or isinstance(
+            views_value, (str, bytes)
+        ):
+            raise ValueError(f"{path}.views must be an array")
+        if any(not isinstance(view, str) for view in views_value):
+            raise ValueError(f"{path}.views must contain strings")
         return ArtifactReportBlock(
             _string(value, "artifact_id", path=path),
             caption=caption,
+            views=tuple(views_value),
         )
     raise ValueError(f"{path}.type is not a supported report block type")
 

@@ -4,9 +4,9 @@ import json
 from copy import deepcopy
 from collections.abc import Callable, Mapping
 from concurrent.futures import Future, ThreadPoolExecutor, TimeoutError
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
-from threading import RLock
+from threading import Event, RLock
 from time import time
 from typing import TypeAlias
 from uuid import uuid4
@@ -76,6 +76,7 @@ class _ArtifactRecord:
     entry: ArtifactManifestEntry
     storage_id: str | None = None
     fingerprint: str | None = None
+    cancellation: Event = field(default_factory=Event)
 
 
 @dataclass(frozen=True)
@@ -404,6 +405,26 @@ class ArtifactGenerationService:
                 artifact_id,
             )
 
+    def cancel(self, artifact_id: str) -> ArtifactManifestEntry | StructuredError:
+        with self._lock:
+            record = self._records.get(artifact_id)
+            if record is None:
+                return _artifact_error(
+                    ErrorCode.ARTIFACT_NOT_FOUND,
+                    "The artifact was not found.",
+                    artifact_id,
+                )
+            if record.entry.status in {
+                ArtifactStatus.AVAILABLE,
+                ArtifactStatus.FAILED,
+                ArtifactStatus.CANCELLED,
+                ArtifactStatus.EXPIRED,
+            }:
+                return record.entry
+            record.cancellation.set()
+            self._mark_cancelled(artifact_id)
+            return record.entry
+
     def pin(self, artifact_id: str) -> StructuredError | None:
         """Prevent one available public artifact from expiring during composition."""
 
@@ -467,12 +488,19 @@ class ArtifactGenerationService:
             if not self._accepting:
                 return
             self._accepting = False
+            for record in self._records.values():
+                record.cancellation.set()
         self._coordinator.shutdown(wait=wait, cancel_futures=True)
         self._renderer.shutdown(wait=wait, cancel_futures=True)
         self._storage.close()
 
     def _render_batch(self, tasks: tuple[_RenderTask, ...]) -> None:
         for task in tasks:
+            with self._lock:
+                record = self._records.get(task.public_artifact_id)
+                if record is None or record.cancellation.is_set():
+                    self._mark_cancelled(task.public_artifact_id)
+                    continue
             self._render_one(task)
 
     def _render_one(self, task: _RenderTask) -> None:
@@ -481,7 +509,15 @@ class ArtifactGenerationService:
             record = self._records.get(task.public_artifact_id)
             if record is None:
                 return
-            record.entry = replace(record.entry, status=ArtifactStatus.RENDERING)
+            if record.cancellation.is_set():
+                self._mark_cancelled(task.public_artifact_id)
+                return
+            record.entry = replace(
+                record.entry,
+                status=ArtifactStatus.RENDERING,
+                progress_percent=10,
+                progress_stage="rendering",
+            )
 
         context = ArtifactRenderContext(
             capability_id=source.capability_id,
@@ -497,6 +533,11 @@ class ArtifactGenerationService:
         )
         try:
             rendered = render_future.result(timeout=self._render_timeout_seconds)
+            with self._lock:
+                record = self._records.get(task.public_artifact_id)
+                if record is None or record.cancellation.is_set():
+                    self._mark_cancelled(task.public_artifact_id)
+                    return
             expected_media_type = task.registration.media_types[task.format]
             if rendered.media_type != expected_media_type:
                 raise ValueError("renderer returned an unexpected media type")
@@ -539,6 +580,9 @@ class ArtifactGenerationService:
             record = self._records.get(task.public_artifact_id)
             if record is None:
                 return
+            if record.cancellation.is_set():
+                self._mark_cancelled(task.public_artifact_id)
+                return
             record.storage_id = stored.artifact_id
             record.entry = replace(
                 record.entry,
@@ -548,6 +592,8 @@ class ArtifactGenerationService:
                 sha256=stored.sha256,
                 created_at=stored.created_at,
                 expires_at=stored.expires_at,
+                progress_percent=100,
+                progress_stage="complete",
             )
             if record.fingerprint is not None:
                 self._fingerprints[record.fingerprint] = task.public_artifact_id
@@ -557,10 +603,28 @@ class ArtifactGenerationService:
             record = self._records.get(artifact_id)
             if record is None:
                 return
+            if record.entry.status is ArtifactStatus.CANCELLED:
+                return
             record.entry = replace(
                 record.entry,
                 status=ArtifactStatus.FAILED,
+                progress_stage="failed",
                 error=StructuredError(code=code, message=message),
+            )
+
+    def _mark_cancelled(self, artifact_id: str) -> None:
+        with self._lock:
+            record = self._records.get(artifact_id)
+            if record is None or record.entry.status in {
+                ArtifactStatus.AVAILABLE,
+                ArtifactStatus.FAILED,
+                ArtifactStatus.EXPIRED,
+            }:
+                return
+            record.entry = replace(
+                record.entry,
+                status=ArtifactStatus.CANCELLED,
+                progress_stage="cancelled",
             )
 
     def _reusable_artifact_id(self, fingerprint: str) -> str | None:

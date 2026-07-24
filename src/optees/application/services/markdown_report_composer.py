@@ -16,6 +16,7 @@ from optees.application.contracts.report_composition import (
     ReportCompositionContext,
     ResolvedReportArtifact,
 )
+from optees.application.contracts.report_backend import ReportBackendAsset
 
 
 class MarkdownReportComposer:
@@ -32,6 +33,7 @@ class MarkdownReportComposer:
             lines.append("")
 
         unsupported = 0
+        report_assets: list[ReportBackendAsset] = []
         for section in request.sections:
             lines.extend((f"## {section.heading}", ""))
             for block in section.blocks:
@@ -60,6 +62,7 @@ class MarkdownReportComposer:
                     if rendered[1]:
                         unsupported += 1
                     lines.extend(rendered[0])
+                    report_assets.extend(rendered[2])
 
         lines.extend(
             (
@@ -82,6 +85,7 @@ class MarkdownReportComposer:
             ),
             source_artifact_ids=tuple(sorted(context.artifacts)),
             unsupported_block_count=unsupported,
+            assets=tuple(report_assets),
         )
 
 
@@ -129,7 +133,7 @@ def _artifact(
     labels: dict[str, str],
     resolved: ResolvedReportArtifact,
     caption: str | None,
-) -> tuple[list[str], bool]:
+) -> tuple[list[str], bool, tuple[ReportBackendAsset, ...]]:
     manifest = resolved.manifest
     if manifest is None or resolved.content is None:
         return (
@@ -140,9 +144,11 @@ def _artifact(
                 resolved.unavailable_reason or labels["not_available"],
             ),
             True,
+            (),
         )
     title = caption or manifest.artifact_type
     lines = [f"### {_escape(title)}", ""]
+    assets: tuple[ReportBackendAsset, ...] = ()
     if manifest.format is ArtifactFormat.MARKDOWN:
         lines.extend((resolved.content.decode("utf-8", errors="replace").rstrip(), ""))
     elif manifest.format is ArtifactFormat.CSV:
@@ -160,6 +166,7 @@ def _artifact(
                     labels["invalid_content"],
                 ),
                 True,
+                (),
             )
         table = _json_table(payload)
         if table is None:
@@ -174,12 +181,47 @@ def _artifact(
         else:
             lines.extend(_markdown_table(table))
     elif manifest.format in {ArtifactFormat.PNG, ArtifactFormat.SVG}:
+        suffix = ".png" if manifest.format is ArtifactFormat.PNG else ".svg"
         lines.extend(
             (
                 f"![{_escape(title)}](optees-artifact://{manifest.artifact_id})",
                 "",
             )
         )
+        assets = (
+            ReportBackendAsset(
+                manifest.artifact_id,
+                manifest.media_type,
+                suffix,
+                resolved.content,
+            ),
+        )
+    elif resolved.conversion is not None:
+        conversion = resolved.conversion
+        if conversion.markdown is not None:
+            lines.extend((conversion.markdown.rstrip(), ""))
+        elif conversion.assets:
+            for asset in conversion.assets:
+                label = asset.asset_id.rsplit("-", 1)[-1].replace("_", " ")
+                lines.extend(
+                    (
+                        f"![{_escape(title)} - {_escape(label)}]"
+                        f"(optees-report-asset://{asset.asset_id})",
+                        "",
+                    )
+                )
+        else:
+            return (
+                _unsupported(
+                    labels,
+                    "artifact",
+                    resolved.artifact_id,
+                    conversion.unavailable_reason or labels["not_available"],
+                ),
+                True,
+                (),
+            )
+        assets = conversion.assets
     else:
         return (
             _unsupported(
@@ -189,6 +231,7 @@ def _artifact(
                 labels["format_not_embeddable"].format(format=manifest.format.value),
             ),
             True,
+            (),
         )
     lines.extend(
         (
@@ -198,7 +241,7 @@ def _artifact(
             "",
         )
     )
-    return lines, False
+    return lines, False, assets
 
 
 def _json_table(payload: object) -> list[list[object]] | None:

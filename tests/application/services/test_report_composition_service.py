@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from threading import Event
 from time import monotonic, sleep
 
 from optees.application.codecs.report_request_codec import report_request_from_dict
@@ -11,6 +12,11 @@ from optees.application.contracts.artifact import (
 )
 from optees.application.contracts.errors import StructuredError
 from optees.application.contracts.report import ReportStatus
+from optees.application.contracts.report_backend import (
+    RenderedReport,
+    ReportBackendCancelledError,
+    ReportBackendDiagnostic,
+)
 from optees.application.services.report_composition_service import (
     ReportCompositionService,
 )
@@ -19,6 +25,35 @@ from optees.composition.local_agent import (
     create_local_job_service,
 )
 from optees.data.adapters.artifacts.local_artifact_store import LocalArtifactStore
+
+
+class _FakePdfBackend:
+    backend_id = "fake.pdf.v1"
+
+    def diagnostic(self):
+        return ReportBackendDiagnostic(self.backend_id, True, "fake")
+
+    def render(self, request, *, cancellation, progress):
+        assert b"Optees" in request.markdown
+        assert not cancellation.is_set()
+        progress(75, "rendering_pdf")
+        return RenderedReport(
+            "application/pdf",
+            b"%PDF-1.7\n% deterministic test\n",
+            self.backend_id,
+        )
+
+
+class _BlockingPdfBackend(_FakePdfBackend):
+    def __init__(self) -> None:
+        self.started = Event()
+
+    def render(self, request, *, cancellation, progress):
+        del request
+        progress(75, "rendering_pdf")
+        self.started.set()
+        assert cancellation.wait(timeout=2)
+        raise ReportBackendCancelledError("cancelled")
 
 
 def _lp_payload() -> dict:
@@ -172,6 +207,124 @@ def test_missing_sources_are_visible_unsupported_blocks_not_silent_failures(tmp_
         assert downloaded.content.decode("utf-8").count(
             "unsupported_artifact"
         ) == 2
+    finally:
+        reports.close()
+        artifacts.close()
+        jobs.shutdown()
+
+
+def test_pdf_report_uses_explicit_backend_and_publishes_progress(tmp_path):
+    jobs = create_local_job_service()
+    artifacts = create_local_artifact_service(jobs)
+    reports = ReportCompositionService(
+        jobs,
+        artifacts,
+        LocalArtifactStore(parent_directory=tmp_path),
+        backend=_FakePdfBackend(),
+    )
+    try:
+        request = report_request_from_dict(
+            {
+                "format": "pdf",
+                "title": "PDF report",
+                "sections": [
+                    {
+                        "section_id": "summary",
+                        "heading": "Summary",
+                        "blocks": [
+                            {"type": "markdown", "content": "Validated result."}
+                        ],
+                    }
+                ],
+            }
+        )
+        submitted = reports.submit(request)
+        assert not isinstance(submitted, StructuredError)
+        available = _wait_for_report(reports, submitted.report_id)
+        downloaded = reports.download(submitted.report_id)
+        assert not isinstance(downloaded, StructuredError)
+
+        assert available.media_type == "application/pdf"
+        assert available.backend_id == "fake.pdf.v1"
+        assert available.progress_percent == 100
+        assert available.progress_stage == "complete"
+        assert downloaded.content.startswith(b"%PDF-")
+    finally:
+        reports.close()
+        artifacts.close()
+        jobs.shutdown()
+
+
+def test_pdf_report_fails_before_queue_when_backend_is_unavailable(tmp_path):
+    jobs = create_local_job_service()
+    artifacts = create_local_artifact_service(jobs)
+    reports = ReportCompositionService(
+        jobs,
+        artifacts,
+        LocalArtifactStore(parent_directory=tmp_path),
+    )
+    try:
+        request = report_request_from_dict(
+            {
+                "format": "pdf",
+                "title": "Unavailable PDF",
+                "sections": [
+                    {
+                        "section_id": "summary",
+                        "heading": "Summary",
+                        "blocks": [{"type": "markdown", "content": "Content."}],
+                    }
+                ],
+            }
+        )
+        outcome = reports.submit(request)
+
+        assert isinstance(outcome, StructuredError)
+        assert outcome.code.value == "report_backend_unavailable"
+        assert outcome.context["backend"]["available"] is False
+    finally:
+        reports.close()
+        artifacts.close()
+        jobs.shutdown()
+
+
+def test_composing_pdf_report_can_be_cancelled(tmp_path):
+    jobs = create_local_job_service()
+    artifacts = create_local_artifact_service(jobs)
+    backend = _BlockingPdfBackend()
+    reports = ReportCompositionService(
+        jobs,
+        artifacts,
+        LocalArtifactStore(parent_directory=tmp_path),
+        backend=backend,
+    )
+    try:
+        request = report_request_from_dict(
+            {
+                "format": "pdf",
+                "title": "Cancelled PDF",
+                "sections": [
+                    {
+                        "section_id": "summary",
+                        "heading": "Summary",
+                        "blocks": [{"type": "markdown", "content": "Content."}],
+                    }
+                ],
+            }
+        )
+        submitted = reports.submit(request)
+        assert not isinstance(submitted, StructuredError)
+        assert backend.started.wait(timeout=2)
+
+        cancelled = reports.cancel(submitted.report_id)
+
+        assert not isinstance(cancelled, StructuredError)
+        assert cancelled.status is ReportStatus.CANCELLED
+        assert cancelled.progress_stage == "cancelled"
+        sleep(0.05)
+        final = reports.get(submitted.report_id)
+        assert not isinstance(final, StructuredError)
+        assert final.status is ReportStatus.CANCELLED
     finally:
         reports.close()
         artifacts.close()

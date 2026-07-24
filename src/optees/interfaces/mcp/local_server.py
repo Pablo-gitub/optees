@@ -282,6 +282,17 @@ class LocalMcpToolFacade:
             )
         return payload
 
+    def cancel_artifact(self, artifact_id: str) -> dict[str, object]:
+        if self._artifacts is None:
+            return _tool_error(
+                "artifact_service_unavailable",
+                "Artifact generation is not configured for this MCP session.",
+            )
+        outcome = self._artifacts.cancel(artifact_id)
+        if isinstance(outcome, StructuredError):
+            return {"ok": False, "error": outcome.to_dict()["error"]}
+        return {"ok": True, "artifact": outcome.to_dict()}
+
     def read_artifact_resource(self, artifact_id: str) -> bytes:
         if self._artifacts is None:
             raise ValueError("artifact service is unavailable")
@@ -315,6 +326,31 @@ class LocalMcpToolFacade:
             },
         }
 
+    def get_report_backends(self) -> dict[str, object]:
+        if self._reports is None:
+            return _tool_error(
+                "report_service_unavailable",
+                "Report composition is not configured for this MCP session.",
+            )
+        return {
+            "ok": True,
+            "backends": [
+                diagnostic.to_dict()
+                for diagnostic in self._reports.backend_diagnostics()
+            ],
+        }
+
+    def cancel_report(self, report_id: str) -> dict[str, object]:
+        if self._reports is None:
+            return _tool_error(
+                "report_service_unavailable",
+                "Report composition is not configured for this MCP session.",
+            )
+        outcome = self._reports.cancel(report_id)
+        if isinstance(outcome, StructuredError):
+            return {"ok": False, "error": outcome.to_dict()["error"]}
+        return {"ok": True, "report": outcome.to_dict()}
+
     def get_report_status(self, report_id: str) -> dict[str, object]:
         if self._reports is None:
             return _tool_error(
@@ -340,7 +376,8 @@ class LocalMcpToolFacade:
         if report.get("status") == "available":
             payload["resource_uri"] = f"optees-report://{report_id}"
             payload["retrieval_instruction"] = (
-                "Read the resource URI only when the user needs the Markdown bytes."
+                "Read the resource URI only when the user needs the report bytes; "
+                "inspect media_type first."
             )
         return payload
 
@@ -543,6 +580,14 @@ def create_mcp_server(
     def optees_get_artifact(artifact_id: str) -> dict[str, object]:
         return facade.get_artifact(artifact_id)
 
+    @server.tool(
+        name="optees_cancel_artifact",
+        description="Request cancellation of one queued or rendering artifact.",
+        structured_output=True,
+    )
+    def optees_cancel_artifact(artifact_id: str) -> dict[str, object]:
+        return facade.cancel_artifact(artifact_id)
+
     @server.resource(
         "optees-artifact://{artifact_id}",
         name="Optees result artifact",
@@ -558,13 +603,32 @@ def create_mcp_server(
     @server.tool(
         name="optees_compose_report",
         description=(
-            "Compose a bounded deterministic Markdown report from safe Markdown, "
-            "Optees job statuses, and existing result artifact IDs."
+            "Compose a bounded deterministic Markdown or optional PDF report from "
+            "safe Markdown, Optees job statuses, and existing result artifact IDs."
         ),
         structured_output=True,
     )
     def optees_compose_report(request: dict[str, Any]) -> dict[str, object]:
         return facade.compose_report(request)
+
+    @server.tool(
+        name="optees_get_report_backends",
+        description=(
+            "Inspect optional local report backend availability and versions before "
+            "requesting PDF output."
+        ),
+        structured_output=True,
+    )
+    def optees_get_report_backends() -> dict[str, object]:
+        return facade.get_report_backends()
+
+    @server.tool(
+        name="optees_cancel_report",
+        description="Request cancellation of one queued or composing report.",
+        structured_output=True,
+    )
+    def optees_cancel_report(report_id: str) -> dict[str, object]:
+        return facade.cancel_report(report_id)
 
     @server.tool(
         name="optees_get_report_status",
@@ -587,11 +651,12 @@ def create_mcp_server(
 
     @server.resource(
         "optees-report://{report_id}",
-        name="Optees Markdown report",
+        name="Optees report",
         description=(
-            "Explicitly retrieve one bounded, verified Markdown report by opaque ID."
+            "Explicitly retrieve one bounded, verified report by opaque ID after "
+            "inspecting its media type."
         ),
-        mime_type="text/markdown",
+        mime_type="application/octet-stream",
     )
     def optees_report_resource(report_id: str) -> bytes:
         return facade.read_report_resource(report_id)

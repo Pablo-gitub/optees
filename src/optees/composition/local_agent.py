@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from optees.application.codecs.knapsack_bounded_problem_codec import (
     knapsack_bounded_model_from_dict,
 )
@@ -440,9 +442,16 @@ def create_local_report_service(
     job_service: LocalJobService,
     artifact_service: ArtifactGenerationService,
 ) -> ReportCompositionService:
-    """Build bounded session-local Markdown report composition."""
+    """Build bounded session-local Markdown/PDF report composition."""
 
     from optees.data.adapters.artifacts.local_artifact_store import LocalArtifactStore
+    from optees.data.adapters.reports.pandoc_typst_report_backend import (
+        PandocTypstReportBackend,
+    )
+    from optees.data.adapters.reports.validated_report_asset_converter import (
+        ValidatedReportAssetConverter,
+    )
+    from optees.core.assets import asset
 
     report_output_bytes = 64 * 1024 * 1024
     return ReportCompositionService(
@@ -453,6 +462,10 @@ def create_local_report_service(
             max_total_bytes=256 * 1024 * 1024,
             max_artifacts=64,
         ),
+        backend=PandocTypstReportBackend(
+            template_path=Path(asset("reports/optees.typst")),
+        ),
+        asset_converter=ValidatedReportAssetConverter(),
     )
 
 

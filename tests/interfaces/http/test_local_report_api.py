@@ -73,3 +73,14 @@ def test_report_api_rejects_raw_html_and_arbitrary_destination_fields():
     assert unsafe.json()["error"]["code"] == "report_request_invalid"
     assert arbitrary.status_code == 422
     assert "/tmp/report.md" not in arbitrary.text
+
+
+def test_report_api_exposes_pdf_backend_diagnostics():
+    with ASGIClient(create_local_api(token=TOKEN)) as client:
+        response = client.get("/api/v1/reports/backends", headers=AUTH)
+
+    assert response.status_code == 200
+    diagnostic = response.json()["backends"][0]
+    assert diagnostic["backend_id"] == "pandoc.typst.v1"
+    assert diagnostic["engine"] == "typst"
+    assert isinstance(diagnostic["available"], bool)

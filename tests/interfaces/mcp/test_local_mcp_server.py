@@ -53,7 +53,10 @@ TOOL_NAMES = {
     "optees_list_result_artifacts",
     "optees_render_result_artifacts",
     "optees_get_artifact",
+    "optees_cancel_artifact",
     "optees_compose_report",
+    "optees_get_report_backends",
+    "optees_cancel_report",
     "optees_get_report_status",
     "optees_get_report",
 }
