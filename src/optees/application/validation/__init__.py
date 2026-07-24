@@ -9,7 +9,11 @@ from optees.application.validation.regression_solution_validator import (
 )
 
 __all__ = [
+    "ForecastingIndependentSolutionValidator",
     "LPIndependentSolutionValidator",
     "MILPIndependentSolutionValidator",
     "RegressionIndependentSolutionValidator",
 ]
+from optees.application.validation.forecasting_solution_validator import (
+    ForecastingIndependentSolutionValidator,
+)

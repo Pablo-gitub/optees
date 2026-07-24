@@ -124,16 +124,16 @@ the chosen dependency can be packaged on Windows, macOS, and Linux.
 - [x] Implement chronological holdout without shuffling.
 - [x] Implement bounded rolling-origin evaluation with explicit origin count,
   step, horizon, and minimum training window.
-- [ ] Recompute MAE, RMSE, and every other published metric independently from
+- [x] Recompute MAE, RMSE, and every other published metric independently from
   public predictions and observations.
-- [ ] Validate that every fitted, holdout, and future timestamp belongs to the
+- [x] Validate that every fitted, holdout, and future timestamp belongs to the
   correct temporal segment and that no training row occurs after its evaluation
   target.
-- [ ] Validate finite outputs, residual identities, interval ordering, horizon
+- [x] Validate finite outputs, residual identities, interval ordering, horizon
   length, frequency progression, and method-specific invariants.
-- [ ] Distinguish execution success, forecast availability, evaluation
+- [x] Distinguish execution success, forecast availability, evaluation
   availability, and independent validation status.
-- [ ] Tamper-test timestamps, predictions, residuals, metrics, intervals,
+- [x] Tamper-test timestamps, predictions, residuals, metrics, intervals,
   parameters, and split accounting.
 
 ### A4 - Versioned JSON And Capability Registration
