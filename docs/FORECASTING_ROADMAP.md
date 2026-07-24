@@ -108,8 +108,8 @@ the chosen dependency can be packaged on Windows, macOS, and Linux.
 
 ### A2 - Baselines And Forecasting Adapter
 
-- [ ] Implement exact deterministic naive forecasting.
-- [ ] Implement exact deterministic seasonal-naive forecasting with a declared
+- [x] Implement exact deterministic naive forecasting.
+- [x] Implement exact deterministic seasonal-naive forecasting with a declared
   season length.
 - [ ] Implement the selected maintained trend/seasonality adapter behind the
   same port.
