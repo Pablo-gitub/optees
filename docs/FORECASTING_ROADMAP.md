@@ -111,10 +111,10 @@ the chosen dependency can be packaged on Windows, macOS, and Linux.
 - [x] Implement exact deterministic naive forecasting.
 - [x] Implement exact deterministic seasonal-naive forecasting with a declared
   season length.
-- [ ] Implement the selected maintained trend/seasonality adapter behind the
+- [x] Implement the selected maintained trend/seasonality adapter behind the
   same port.
-- [ ] Preserve timestamp alignment and original scale in all returned rows.
-- [ ] Map numerical warnings and convergence failures to stable Optees
+- [x] Preserve timestamp alignment and original scale in all returned rows.
+- [x] Map numerical warnings and convergence failures to stable Optees
   diagnostics without leaking raw library exceptions into public contracts.
 - [ ] Add cancellation and bounded runtime/options where the selected backend
   can perform iterative fitting.
