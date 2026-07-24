@@ -1,3 +1,5 @@
+#let horizontalrule = line(start: (25%, 0%), end: (75%, 0%))
+
 #set page(
   paper: "a4",
   margin: (x: 20mm, top: 18mm, bottom: 22mm),
@@ -11,6 +13,7 @@
 #set text(font: ("DejaVu Sans", "Arial", "Liberation Sans"), size: 10pt)
 #set heading(numbering: none)
 #set table(inset: 3pt)
+#set image(width: 100%, height: 80mm, fit: "contain")
 #show heading.where(level: 1): it => block(
   above: 8pt,
   below: 14pt,

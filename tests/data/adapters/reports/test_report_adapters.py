@@ -329,5 +329,7 @@ def test_bundled_typst_template_defines_bounded_page_and_footer():
     assert 'paper: "a4"' in template
     assert "margin:" in template
     assert "breakable: true" in template
+    assert "#let horizontalrule" in template
+    assert '#set image(width: 100%, height: 80mm, fit: "contain")' in template
     assert '#link("https://optees.it")' in template
     assert "#counter(page).display" in template
