@@ -1,7 +1,21 @@
+import tomllib
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_release_dependencies_pin_validated_frozen_scipy_series():
+    with (ROOT / "pyproject.toml").open("rb") as manifest:
+        dependencies = tomllib.load(manifest)["project"]["dependencies"]
+
+    assert "scipy>=1.16,<1.18" in dependencies
+
+
+def test_linux_release_jobs_install_qt_xcb_cursor_runtime():
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+
+    assert workflow.count("libxcb-cursor0") == 2
 
 
 def test_release_build_installs_and_smoke_tests_local_service_extra():

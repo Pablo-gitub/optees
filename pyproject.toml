@@ -10,7 +10,7 @@ dependencies = [
     "certifi>=2025.1.31",
     "PySide6",
     "numpy",
-    "scipy",
+    "scipy>=1.16,<1.18",
     "ortools",
     "markdown",
 ]

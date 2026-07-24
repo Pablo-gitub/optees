@@ -21,6 +21,12 @@ tools are intentionally separate and exactly pinned in
 `packaging/requirements-build.txt`; changing those versions requires review and
 new artifact verification on Windows, macOS, and Linux.
 
+SciPy is currently constrained to the validated `>=1.16,<1.18` series. With
+SciPy 1.18, the pinned PyInstaller toolchain produced a Linux bundle whose
+frozen HiGHS backend failed its packaged health check. Do not remove or widen
+this bound until the packaged MCP smoke test solves `lp.continuous`
+successfully on all three release platforms.
+
 The Linux workflow downloads `appimagetool` 1.9.1 from the official
 `AppImage/appimagetool` release and checks its published SHA-256 digest before
 executing it. Do not replace this with a `continuous` or latest-release URL.
