@@ -247,28 +247,28 @@ code or documentation.
 
 ### B3 - Educational Content And Examples
 
-- [ ] Write matched English and Italian problem-description pages explaining
+- [x] Write matched English and Italian problem-description pages explaining
   temporal order, horizon, trend, seasonality, holdout, rolling origin,
   residuals, uncertainty, leakage, and why forecasting is not causality.
-- [ ] Write at least three worked examples: stable demand, trend, and seasonal
+- [x] Write at least three worked examples: stable demand, trend, and seasonal
   demand. Each example must use a committed valid payload and verified result.
-- [ ] Explain when naive or seasonal-naive is a stronger baseline than a more
+- [x] Explain when naive or seasonal-naive is a stronger baseline than a more
   complex fitted model.
-- [ ] Document insufficient history, structural breaks, outliers, missing
+- [x] Document insufficient history, structural breaks, outliers, missing
   periods, and interval limitations without promising production accuracy.
-- [ ] Add JSON-format and solver-option information dialogs derived from the
+- [x] Add JSON-format and solver-option information dialogs derived from the
   frozen contract.
 - [ ] Update README, agent configuration guidance, and the website only after
   the released desktop and service behavior matches the copy.
 
 ### B4 - Presentation Verification
 
-- [ ] Add focused navigation, manual-entry, JSON-import, solve, error,
+- [x] Add focused navigation, manual-entry, JSON-import, solve, error,
   cancellation, localization, info-dialog, and result-view tests.
-- [ ] Verify English and Italian layouts at supported desktop sizes.
-- [ ] Verify table headers, long timestamps, chart legends, interval bands,
+- [x] Verify English and Italian layouts at supported desktop sizes.
+- [x] Verify table headers, long timestamps, chart legends, interval bands,
   focus order, and info-button visibility.
-- [ ] Run targeted GUI tests during implementation and the release gates
+- [x] Run targeted GUI tests during implementation and the release gates
   required by `docs/TESTING.md` before publication.
 - [ ] Capture final dark-theme screenshots only from the verified release
   candidate for README and website use.
