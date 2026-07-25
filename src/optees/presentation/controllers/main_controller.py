@@ -51,6 +51,8 @@ class MainController(QObject):
             home.go_regression.connect(lambda: self.window.goto("regression"))
         if hasattr(home, "go_classification"):
             home.go_classification.connect(lambda: self.window.goto("classification"))
+        if hasattr(home, "go_forecasting"):
+            home.go_forecasting.connect(lambda: self.window.goto("forecasting"))
 
         # LP -> Solution
         lp: LPView = self.window.page("lp")  # type: ignore[assignment]

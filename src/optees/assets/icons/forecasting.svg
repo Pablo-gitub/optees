@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Optees — Time-series Forecasting</title>
+  <desc>A historical line, a forecast-origin marker, and a dashed future continuation.</desc>
+  <g fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M52 202 H208"/>
+    <path d="M52 202 V54"/>
+    <path d="M66 168 L96 122 L126 150 L156 92"/>
+    <path d="M156 92 L188 118 L206 80" stroke-dasharray="4 20"/>
+  </g>
+  <path d="M156 58 V196" stroke="currentColor" stroke-width="6" stroke-dasharray="3 12" fill="none"/>
+  <circle cx="156" cy="92" r="11" fill="currentColor"/>
+</svg>

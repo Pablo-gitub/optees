@@ -25,6 +25,7 @@ from optees.presentation.views.graph_solution_view import GraphSolutionView
 from optees.presentation.views.packing_view import PackingView
 from optees.presentation.views.packing_solution_view import PackingSolutionView
 from optees.presentation.views.regression_view import RegressionView
+from optees.presentation.views.forecasting_view import ForecastingView
 from optees.presentation.views.regression_solution_view import RegressionSolutionView
 from optees.presentation.views.classification_view import ClassificationView
 from optees.presentation.views.classification_solution_view import ClassificationSolutionView
@@ -59,6 +60,7 @@ from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
 from optees.application.usecases.solve_nlp_usecase import SolveNLPUseCase
 from optees.application.usecases.solve_shortest_path_usecase import SolveShortestPathUseCase
 from optees.application.usecases.train_regression_usecase import TrainRegressionUseCase
+from optees.application.usecases.forecast_time_series_usecase import ForecastTimeSeriesUseCase
 from optees.application.usecases.train_classification_usecase import TrainClassificationUseCase
 from optees.application.usecases.solve_single_container_packing_usecase import (
     SolveSingleContainerPackingUseCase,
@@ -83,6 +85,11 @@ from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
 from optees.data.adapters.nlp.nlp_solver_adapter import ScipyNLPSolverAdapter
 from optees.data.adapters.graph.dijkstra_solver_adapter import DijkstraSolverAdapter
 from optees.data.adapters.regression.numpy_regression_adapter import NumpyRegressionAdapter
+from optees.data.adapters.forecasting import (
+    BaselineForecastingAdapter,
+    HoltWintersForecastingAdapter,
+)
+from optees.domain.value_objects.forecasting import ForecastingMethod
 from optees.data.adapters.classification.numpy_classification_adapter import NumpyClassificationAdapter
 from optees.data.adapters.packing.ortools_single_container_packing_adapter import (
     OrtoolsSingleContainerPackingAdapter,
@@ -163,6 +170,18 @@ class MainWindow(QMainWindow):
         self.classification_solver_port = NumpyClassificationAdapter()
         self.train_classification_uc = TrainClassificationUseCase(self.classification_solver_port)
         self.classification_page.set_solve_usecase(self.train_classification_uc)
+
+        self.forecasting_page = ForecastingView()
+        forecasting_baseline = BaselineForecastingAdapter()
+        forecasting_trend = HoltWintersForecastingAdapter()
+        self.forecast_uc = ForecastTimeSeriesUseCase(
+            {
+                ForecastingMethod.NAIVE: forecasting_baseline,
+                ForecastingMethod.SEASONAL_NAIVE: forecasting_baseline,
+                ForecastingMethod.HOLT_WINTERS_ADDITIVE: forecasting_trend,
+            }
+        )
+        self.forecasting_page.set_solve_usecase(self.forecast_uc)
 
         self.knap_page = KnapsackView()
         self.knapsack_controller = KnapsackController()
@@ -257,6 +276,7 @@ class MainWindow(QMainWindow):
         self.register_page("classification_example", self.classification_example_page)
         self.register_page("classification_problem", self.classification_problem_page)
         self.register_page("classification_solution", self.classification_solution_page)
+        self.register_page("forecasting", self.forecasting_page)
         self.register_page("lp_solution", self.lp_solution_page)
         self.register_page("milp", self.milp_page)
         self.register_page("milp_solution", self.milp_solution_page)
@@ -447,6 +467,7 @@ class MainWindow(QMainWindow):
                     self.regression_problem_page, self.regression_solution_page,
                     self.classification_page, self.classification_example_page,
                     self.classification_problem_page, self.classification_solution_page,
+                    self.forecasting_page,
                     self.assistant_page,
                     self.settings_page):
             if hasattr(page, "refresh_theme"):
@@ -486,6 +507,7 @@ class MainWindow(QMainWindow):
                  self.regression_problem_page, self.regression_solution_page,
                  self.classification_page, self.classification_example_page,
                  self.classification_problem_page, self.classification_solution_page,
+                 self.forecasting_page,
                  self.assistant_page,
                  self.settings_page):
             if hasattr(page, "refresh_strings"):

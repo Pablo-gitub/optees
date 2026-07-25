@@ -42,6 +42,10 @@
     "classification": {
       "title": "Binary Classification",
       "subtitle": "Use this method to predict one of two named classes from numeric observations, then evaluate the prediction on held-out data."
+    },
+    "forecasting": {
+      "title": "Time-series Forecasting",
+      "subtitle": "Use this method to estimate future values from one ordered historical series, keeping trend, seasonality, and evaluation visible."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -993,5 +997,74 @@
       "predictions": { "section": "Predictions", "hint": "Probability is P(positive label | features). A value at least 50% is classified as the positive label.", "row": "Row", "partition": "Partition", "actual": "Actual", "predicted": "Predicted", "probability": "Positive probability" },
       "boundary": { "section": "2D decision boundary", "hint": "The black contour is the 50% decision boundary. Background shading indicates the predicted-class probability; points are actual observations.", "unavailable": "A decision-boundary chart is available only when the model uses exactly two features and matplotlib is installed.", "legend": "Actual label" }
     }
+  },
+  "forecasting": {
+    "header": {
+      "title": "Time-series Forecasting",
+      "section": "What this does",
+      "description": "Estimate future values from a single ordered historical series. Optees trains only on past observations and never treats time as if the rows were independent.",
+      "buttons": { "example": "Worked examples", "problem": "Problem description" }
+    },
+    "import": {
+      "button": "Import JSON",
+      "dialog_title": "Open a forecasting problem",
+      "error_title": "Import failed",
+      "error_body": "This file is not a valid forecasting problem. {detail}",
+      "info_tooltip": "Versioned JSON format",
+      "info_title": "Forecasting JSON format",
+      "info_body": "Problem schema version 1, problem_type \"univariate_forecasting\". Provide the target name, frequency, horizon, method, and an ordered list of timestamp/value observations.",
+      "info_html": "<pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"univariate_forecasting\",\n  \"target_name\": \"units_sold\",\n  \"frequency\": \"monthly\",\n  \"horizon\": 3,\n  \"method\": \"seasonal_naive\",\n  \"season_length\": 12,\n  \"observations\": [\n    {\"timestamp\": \"2024-01-01\", \"value\": 120},\n    {\"timestamp\": \"2024-02-01\", \"value\": 135}\n  ]\n}</pre>"
+    },
+    "series": {
+      "section": "Historical series",
+      "hint": "One row per period: an ISO-8601 timestamp and a finite numeric value, in chronological order. Duplicate or out-of-order timestamps are rejected.",
+      "info_tooltip": "How the series is read",
+      "target": "Series name",
+      "start": "Start date",
+      "autofill": "Auto-fill dates",
+      "autofill_tooltip": "Generate regular timestamps from the start date and the chosen frequency, so you only type values.",
+      "paste": "Paste",
+      "paste_tooltip": "Paste two columns (timestamp, value) copied from a spreadsheet.",
+      "add": "Add row",
+      "remove": "Remove selected",
+      "timestamp": "Timestamp",
+      "value": "Value",
+      "info_title": "Reading the series",
+      "info_body": "A forecast is only as honest as its history. Timestamps must be regularly spaced for the chosen frequency and strictly increasing.",
+      "info_html": "<p>Optees does not reorder your data: enter observations in time order. Missing periods are rejected unless a policy is set, and values must be finite numbers.</p>"
+    },
+    "config": {
+      "section": "Method and evaluation",
+      "hint": "Choose how the forecast is produced and how it is checked on past data before predicting the future.",
+      "info_tooltip": "Method and evaluation options",
+      "method": "Method",
+      "horizon": "Horizon (periods)",
+      "frequency": "Frequency",
+      "season": "Season length",
+      "season_hint": "e.g. {suggestion} for this frequency",
+      "max_iterations": "Max iterations",
+      "tolerance": "Tolerance",
+      "evaluation": "Evaluation",
+      "holdout_size": "Holdout size",
+      "origin_count": "Rolling origins",
+      "step": "Step",
+      "eval_horizon": "Eval. horizon",
+      "min_training": "Min. training",
+      "info_title": "Method and evaluation",
+      "info_body": "Evaluation always keeps training strictly before its test window, so no future value ever leaks into a past decision.",
+      "info_html": "<p><b>Holdout</b> reserves the final periods as one test window. <b>Rolling origin</b> repeats that test across several moving windows. <b>None</b> skips evaluation and only produces the future forecast.</p>"
+    },
+    "method": {
+      "name": { "naive": "Naive", "seasonal_naive": "Seasonal naive", "holt_winters_additive": "Holt-Winters (additive)" },
+      "rationale": {
+        "naive": "Repeats the last observed value. A strong baseline when the series has no trend and no stable season.",
+        "seasonal_naive": "Repeats the value from one season ago. Best when a fixed repeating cycle dominates the series.",
+        "holt_winters_additive": "Fits level, additive trend, and additive seasonality. Use it when both a trend and a seasonal cycle are present."
+      }
+    },
+    "frequency": { "hourly": "Hourly", "daily": "Daily", "weekly": "Weekly", "monthly": "Monthly", "quarterly": "Quarterly", "yearly": "Yearly" },
+    "strategy": { "none": "None", "holdout": "Holdout", "rolling_origin": "Rolling origin" },
+    "actions": { "forecast": "Forecast" },
+    "validation": { "title": "Check the inputs", "body": "The series cannot be forecast yet. {detail}" }
   }
 }

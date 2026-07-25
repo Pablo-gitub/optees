@@ -64,6 +64,7 @@ class HomePage(QWidget):
     go_packing = Signal()
     go_regression = Signal()
     go_classification = Signal()
+    go_forecasting = Signal()
     update_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None):
@@ -145,6 +146,11 @@ class HomePage(QWidget):
             S.t("cards.classification.subtitle"),
             icon_path=str(asset("icons/classification.svg")),
         )
+        self.card_forecasting = CardButton(
+            S.t("cards.forecasting.title"),
+            S.t("cards.forecasting.subtitle"),
+            icon_path=str(asset("icons/forecasting.svg")),
+        )
 
         # wire signals
         self.card_lp.clicked.connect(self.go_lp.emit)
@@ -155,6 +161,7 @@ class HomePage(QWidget):
         self.card_packing.clicked.connect(self.go_packing.emit)
         self.card_regression.clicked.connect(self.go_regression.emit)
         self.card_classification.clicked.connect(self.go_classification.emit)
+        self.card_forecasting.clicked.connect(self.go_forecasting.emit)
 
         # add cards to the first optimization category
         for card in (self.card_lp, self.card_milp, self.card_knap, self.card_packing):
@@ -168,6 +175,7 @@ class HomePage(QWidget):
 
         self.cat_ml.add_card(self.card_regression)
         self.cat_ml.add_card(self.card_classification)
+        self.cat_ml.add_card(self.card_forecasting)
         root.addWidget(self.cat_ml)
         self._coming_labels = []
 
@@ -221,6 +229,10 @@ class HomePage(QWidget):
             f"<span style='font-weight:700'>{S.t('cards.classification.title')}</span>"
         )
         self.card_classification._sub.setText(S.t("cards.classification.subtitle"))
+        self.card_forecasting._title.setText(
+            f"<span style='font-weight:700'>{S.t('cards.forecasting.title')}</span>"
+        )
+        self.card_forecasting._sub.setText(S.t("cards.forecasting.subtitle"))
 
         # placeholders
         cs = S.t("home.comingSoon")

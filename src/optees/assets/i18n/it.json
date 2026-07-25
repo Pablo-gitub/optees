@@ -42,6 +42,10 @@
     "classification": {
       "title": "Classificazione binaria",
       "subtitle": "Usa questo metodo per prevedere una di due classi nominate da osservazioni numeriche e valutarla su dati lasciati fuori."
+    },
+    "forecasting": {
+      "title": "Previsione di serie storiche",
+      "subtitle": "Usa questo metodo per stimare valori futuri da una singola serie storica ordinata, tenendo visibili trend, stagionalita' e valutazione."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -991,5 +995,74 @@
       "predictions": { "section": "Previsioni", "hint": "La probabilita' e' P(classe positiva | feature). Un valore almeno del 50% viene classificato come classe positiva.", "row": "Riga", "partition": "Partizione", "actual": "Reale", "predicted": "Prevista", "probability": "Probabilita' positiva" },
       "boundary": { "section": "Confine decisionale 2D", "hint": "Il contorno nero e' il confine decisionale al 50%. Lo sfondo indica la probabilita' della classe prevista; i punti sono le osservazioni reali.", "unavailable": "Un grafico del confine decisionale e' disponibile solo quando il modello usa esattamente due feature e matplotlib e' installato.", "legend": "Classe reale" }
     }
+  },
+  "forecasting": {
+    "header": {
+      "title": "Previsione di serie storiche",
+      "section": "Cosa fa",
+      "description": "Stima valori futuri da una singola serie storica ordinata. Optees addestra solo sulle osservazioni passate e non tratta mai il tempo come se le righe fossero indipendenti.",
+      "buttons": { "example": "Esempi pratici", "problem": "Descrizione del problema" }
+    },
+    "import": {
+      "button": "Importa JSON",
+      "dialog_title": "Apri un problema di previsione",
+      "error_title": "Import fallito",
+      "error_body": "Questo file non e' un problema di previsione valido. {detail}",
+      "info_tooltip": "Formato JSON versionato",
+      "info_title": "Formato JSON della previsione",
+      "info_body": "Schema problema versione 1, problem_type \"univariate_forecasting\". Fornisci nome della serie, frequenza, orizzonte, metodo e una lista ordinata di osservazioni timestamp/valore.",
+      "info_html": "<pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"univariate_forecasting\",\n  \"target_name\": \"units_sold\",\n  \"frequency\": \"monthly\",\n  \"horizon\": 3,\n  \"method\": \"seasonal_naive\",\n  \"season_length\": 12,\n  \"observations\": [\n    {\"timestamp\": \"2024-01-01\", \"value\": 120},\n    {\"timestamp\": \"2024-02-01\", \"value\": 135}\n  ]\n}</pre>"
+    },
+    "series": {
+      "section": "Serie storica",
+      "hint": "Una riga per periodo: un timestamp ISO-8601 e un valore numerico finito, in ordine cronologico. Timestamp duplicati o fuori ordine vengono rifiutati.",
+      "info_tooltip": "Come viene letta la serie",
+      "target": "Nome serie",
+      "start": "Data iniziale",
+      "autofill": "Compila date",
+      "autofill_tooltip": "Genera timestamp regolari dalla data iniziale e dalla frequenza scelta, cosi' digiti solo i valori.",
+      "paste": "Incolla",
+      "paste_tooltip": "Incolla due colonne (timestamp, valore) copiate da un foglio di calcolo.",
+      "add": "Aggiungi riga",
+      "remove": "Rimuovi selezionate",
+      "timestamp": "Timestamp",
+      "value": "Valore",
+      "info_title": "Leggere la serie",
+      "info_body": "Una previsione e' onesta quanto la sua storia. I timestamp devono essere regolarmente spaziati per la frequenza scelta e strettamente crescenti.",
+      "info_html": "<p>Optees non riordina i dati: inserisci le osservazioni in ordine temporale. I periodi mancanti vengono rifiutati se non e' impostata una politica, e i valori devono essere numeri finiti.</p>"
+    },
+    "config": {
+      "section": "Metodo e valutazione",
+      "hint": "Scegli come produrre la previsione e come verificarla sui dati passati prima di prevedere il futuro.",
+      "info_tooltip": "Opzioni di metodo e valutazione",
+      "method": "Metodo",
+      "horizon": "Orizzonte (periodi)",
+      "frequency": "Frequenza",
+      "season": "Lunghezza stagione",
+      "season_hint": "es. {suggestion} per questa frequenza",
+      "max_iterations": "Iterazioni max",
+      "tolerance": "Tolleranza",
+      "evaluation": "Valutazione",
+      "holdout_size": "Ampiezza holdout",
+      "origin_count": "Origini rolling",
+      "step": "Passo",
+      "eval_horizon": "Orizzonte val.",
+      "min_training": "Training min.",
+      "info_title": "Metodo e valutazione",
+      "info_body": "La valutazione tiene sempre l'addestramento strettamente prima della sua finestra di test, cosi' nessun valore futuro entra in una decisione passata.",
+      "info_html": "<p><b>Holdout</b> riserva gli ultimi periodi come unica finestra di test. <b>Rolling origin</b> ripete quel test su piu' finestre mobili. <b>Nessuna</b> salta la valutazione e produce solo la previsione futura.</p>"
+    },
+    "method": {
+      "name": { "naive": "Naive", "seasonal_naive": "Naive stagionale", "holt_winters_additive": "Holt-Winters (additivo)" },
+      "rationale": {
+        "naive": "Ripete l'ultimo valore osservato. Una baseline forte quando la serie non ha trend ne' una stagione stabile.",
+        "seasonal_naive": "Ripete il valore di una stagione fa. Ideale quando un ciclo fisso ripetuto domina la serie.",
+        "holt_winters_additive": "Stima livello, trend additivo e stagionalita' additiva. Usalo quando sono presenti sia un trend sia un ciclo stagionale."
+      }
+    },
+    "frequency": { "hourly": "Oraria", "daily": "Giornaliera", "weekly": "Settimanale", "monthly": "Mensile", "quarterly": "Trimestrale", "yearly": "Annuale" },
+    "strategy": { "none": "Nessuna", "holdout": "Holdout", "rolling_origin": "Rolling origin" },
+    "actions": { "forecast": "Prevedi" },
+    "validation": { "title": "Controlla gli input", "body": "La serie non puo' ancora essere prevista. {detail}" }
   }
 }
