@@ -322,3 +322,13 @@ class PackingExampleView(LPInfoView):
 class PackingProblemDescriptionView(LPInfoView):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__("packing_problem", parent=parent)
+
+
+class ForecastingExampleView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("forecasting_example", parent=parent)
+
+
+class ForecastingProblemDescriptionView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("forecasting_problem", parent=parent)

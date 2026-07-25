@@ -52,6 +52,8 @@ from optees.presentation.views.lp_info_view import (
     ClassificationProblemDescriptionView,
     PackingExampleView,
     PackingProblemDescriptionView,
+    ForecastingExampleView,
+    ForecastingProblemDescriptionView,
 )
 from optees.presentation.controllers.lp_controller import LPController
 from optees.presentation.controllers.milp_controller import MILPController
@@ -236,6 +238,8 @@ class MainWindow(QMainWindow):
         self.regression_problem_page = RegressionProblemDescriptionView()
         self.classification_example_page = ClassificationExampleView()
         self.classification_problem_page = ClassificationProblemDescriptionView()
+        self.forecasting_example_page = ForecastingExampleView()
+        self.forecasting_problem_page = ForecastingProblemDescriptionView()
 
         # (NEW) solution page placeholder
         self.lp_solution_page = LPSolutionView()
@@ -277,6 +281,8 @@ class MainWindow(QMainWindow):
         self.register_page("classification", self.classification_page)
         self.register_page("classification_example", self.classification_example_page)
         self.register_page("classification_problem", self.classification_problem_page)
+        self.register_page("forecasting_example", self.forecasting_example_page)
+        self.register_page("forecasting_problem", self.forecasting_problem_page)
         self.register_page("classification_solution", self.classification_solution_page)
         self.register_page("forecasting", self.forecasting_page)
         self.register_page("forecasting_solution", self.forecasting_solution_page)
@@ -473,7 +479,8 @@ class MainWindow(QMainWindow):
                     self.regression_problem_page, self.regression_solution_page,
                     self.classification_page, self.classification_example_page,
                     self.classification_problem_page, self.classification_solution_page,
-                    self.forecasting_page,
+                    self.forecasting_page, self.forecasting_example_page,
+                    self.forecasting_problem_page,
                     self.assistant_page,
                     self.settings_page):
             if hasattr(page, "refresh_theme"):
@@ -514,7 +521,8 @@ class MainWindow(QMainWindow):
                  self.regression_problem_page, self.regression_solution_page,
                  self.classification_page, self.classification_example_page,
                  self.classification_problem_page, self.classification_solution_page,
-                 self.forecasting_page,
+                 self.forecasting_page, self.forecasting_example_page,
+                 self.forecasting_problem_page,
                  self.assistant_page,
                  self.settings_page):
             if hasattr(page, "refresh_strings"):

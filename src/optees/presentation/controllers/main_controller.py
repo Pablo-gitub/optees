@@ -175,6 +175,20 @@ class MainController(QObject):
         forecasting = self.window.page("forecasting")
         if hasattr(forecasting, "solve_completed"):
             forecasting.solve_completed.connect(self._on_forecasting_completed)
+        if hasattr(forecasting, "example_requested"):
+            forecasting.example_requested.connect(
+                lambda: self.window.goto("forecasting_example")
+            )
+        if hasattr(forecasting, "problem_description_requested"):
+            forecasting.problem_description_requested.connect(
+                lambda: self.window.goto("forecasting_problem")
+            )
+        for name in ("forecasting_example", "forecasting_problem"):
+            info_view = self.window.page(name)
+            if hasattr(info_view, "back_requested"):
+                info_view.back_requested.connect(
+                    lambda _=False: self.window.goto("forecasting")
+                )
         forecasting_solution = self.window.page("forecasting_solution")
         if hasattr(forecasting_solution, "back_requested"):
             forecasting_solution.back_requested.connect(
