@@ -1066,6 +1066,37 @@
     "frequency": { "hourly": "Hourly", "daily": "Daily", "weekly": "Weekly", "monthly": "Monthly", "quarterly": "Quarterly", "yearly": "Yearly" },
     "strategy": { "none": "None", "holdout": "Holdout", "rolling_origin": "Rolling origin" },
     "actions": { "forecast": "Forecast" },
-    "validation": { "title": "Check the inputs", "body": "The series cannot be forecast yet. {detail}" }
+    "validation": { "title": "Check the inputs", "body": "The series cannot be forecast yet. {detail}" },
+    "solution": {
+      "title": "Forecast result",
+      "back": "Back",
+      "empty": "No forecast result is available.",
+      "status_line": "Status: <b>{status}</b>",
+      "status": { "forecasted": "Forecast produced", "partial": "Partial result", "failed": "Failed", "cancelled": "Cancelled" },
+      "notice": "A forecast estimates future values from historical temporal patterns. It is not a causal claim or a guarantee, and its reliability depends on the data and evaluation design.",
+      "summary": { "section": "Forecast status" },
+      "details": { "section": "Execution details", "method": "Method", "horizon": "Forecast horizon", "origin": "Forecast origin", "evaluation": "Temporal evaluation", "validation": "Independent validation" },
+      "evaluation": { "not_requested": "Not requested", "evaluated": "Evaluated", "partial": "Partial", "failed": "Failed" },
+      "validation": { "verified": "Verified", "partial": "Partially verified", "failed": "Failed", "not_available": "Not available" },
+      "metrics": { "section": "Forecast metrics", "scope": "Scope", "aggregate": "Aggregate evaluation", "fold": "Evaluation fold {number}" },
+      "parameters": { "section": "Fitted parameters", "name": "Parameter", "value": "Value" },
+      "points": { "section": "Forecast rows", "timestamp": "Timestamp", "segment": "Segment", "actual": "Actual", "predicted": "Predicted", "residual": "Residual", "lower": "Lower bound", "upper": "Upper bound" },
+      "segment": { "fitted": "Fitted", "holdout": "Holdout", "future": "Future" },
+      "diagnostics": { "section": "Diagnostics", "severity": "Severity", "code": "Code", "message": "Message" },
+      "severity": { "info": "Info", "warning": "Warning", "error": "Error" },
+      "chart": {
+        "section": "Temporal profile",
+        "unavailable": "The forecast chart is unavailable.",
+        "hint": "Actual, fitted, evaluated and future values are shown on the same temporal axis.",
+        "sampled": "The chart shows a deterministic sample of {count} historical points; the complete rows remain available in the table.",
+        "actual": "Actual history",
+        "fitted": "Fitted values",
+        "holdout": "Holdout predictions",
+        "future": "Future forecast",
+        "interval": "{coverage} prediction interval",
+        "origin": "Forecast origin",
+        "time": "Time"
+      }
+    }
   }
 }

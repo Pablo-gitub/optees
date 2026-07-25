@@ -1064,6 +1064,37 @@
     "frequency": { "hourly": "Oraria", "daily": "Giornaliera", "weekly": "Settimanale", "monthly": "Mensile", "quarterly": "Trimestrale", "yearly": "Annuale" },
     "strategy": { "none": "Nessuna", "holdout": "Holdout", "rolling_origin": "Rolling origin" },
     "actions": { "forecast": "Prevedi" },
-    "validation": { "title": "Controlla gli input", "body": "La serie non puo' ancora essere prevista. {detail}" }
+    "validation": { "title": "Controlla gli input", "body": "La serie non puo' ancora essere prevista. {detail}" },
+    "solution": {
+      "title": "Risultato della previsione",
+      "back": "Indietro",
+      "empty": "Non e' disponibile alcun risultato di previsione.",
+      "status_line": "Stato: <b>{status}</b>",
+      "status": { "forecasted": "Previsione prodotta", "partial": "Risultato parziale", "failed": "Fallito", "cancelled": "Annullato" },
+      "notice": "Una previsione stima valori futuri dai pattern temporali storici. Non e' una relazione causale ne' una garanzia, e la sua affidabilita' dipende dai dati e dal disegno della valutazione.",
+      "summary": { "section": "Stato della previsione" },
+      "details": { "section": "Dettagli di esecuzione", "method": "Metodo", "horizon": "Orizzonte di previsione", "origin": "Origine della previsione", "evaluation": "Valutazione temporale", "validation": "Validazione indipendente" },
+      "evaluation": { "not_requested": "Non richiesta", "evaluated": "Valutata", "partial": "Parziale", "failed": "Fallita" },
+      "validation": { "verified": "Verificata", "partial": "Verificata parzialmente", "failed": "Fallita", "not_available": "Non disponibile" },
+      "metrics": { "section": "Metriche della previsione", "scope": "Ambito", "aggregate": "Valutazione aggregata", "fold": "Finestra di valutazione {number}" },
+      "parameters": { "section": "Parametri stimati", "name": "Parametro", "value": "Valore" },
+      "points": { "section": "Righe della previsione", "timestamp": "Timestamp", "segment": "Segmento", "actual": "Reale", "predicted": "Previsto", "residual": "Residuo", "lower": "Limite inferiore", "upper": "Limite superiore" },
+      "segment": { "fitted": "Stimato", "holdout": "Holdout", "future": "Futuro" },
+      "diagnostics": { "section": "Diagnostica", "severity": "Gravita'", "code": "Codice", "message": "Messaggio" },
+      "severity": { "info": "Info", "warning": "Avviso", "error": "Errore" },
+      "chart": {
+        "section": "Profilo temporale",
+        "unavailable": "Il grafico della previsione non e' disponibile.",
+        "hint": "Valori reali, stimati, valutati e futuri sono mostrati sullo stesso asse temporale.",
+        "sampled": "Il grafico mostra un campione deterministico di {count} punti storici; tutte le righe restano disponibili nella tabella.",
+        "actual": "Storico reale",
+        "fitted": "Valori stimati",
+        "holdout": "Previsioni holdout",
+        "future": "Previsione futura",
+        "interval": "Intervallo di previsione {coverage}",
+        "origin": "Origine previsione",
+        "time": "Tempo"
+      }
+    }
   }
 }

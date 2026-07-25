@@ -433,8 +433,11 @@ class ForecastingView(QWidget):
             max_iterations=_parse_int(self.edit_max_iter.text(), "max iterations"),
             tolerance=float(self.edit_tolerance.text().strip().replace(",", ".")),
         )
+        target_name = self.edit_target.text().strip()
+        if not target_name:
+            raise ValueError("target name is required")
         return ForecastingModel(
-            target_name=self.edit_target.text().strip() or "value",
+            target_name=target_name,
             observations=observations,
             method=method,
             horizon=_parse_int(self.edit_horizon.text(), "horizon"),
@@ -464,7 +467,12 @@ class ForecastingView(QWidget):
         except ValueError as exc:
             self._show_validation_error(exc)
             return
-        self.solve_completed.emit(self._solve_usecase.execute(model))
+        try:
+            solution = self._solve_usecase.execute(model)
+        except ValueError as exc:
+            self._show_validation_error(exc)
+            return
+        self.solve_completed.emit(solution)
 
     def _on_autofill_timestamps(self) -> None:
         try:

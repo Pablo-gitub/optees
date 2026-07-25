@@ -172,6 +172,15 @@ class MainController(QObject):
         if hasattr(classification_solution, "back_requested"):
             classification_solution.back_requested.connect(lambda: self.window.goto("classification"))
 
+        forecasting = self.window.page("forecasting")
+        if hasattr(forecasting, "solve_completed"):
+            forecasting.solve_completed.connect(self._on_forecasting_completed)
+        forecasting_solution = self.window.page("forecasting_solution")
+        if hasattr(forecasting_solution, "back_requested"):
+            forecasting_solution.back_requested.connect(
+                lambda: self.window.goto("forecasting")
+            )
+
         assistant = self.window.page("assistant")
         if hasattr(assistant, "back_requested"):
             assistant.back_requested.connect(lambda: self.window.goto("home"))
@@ -327,6 +336,19 @@ class MainController(QObject):
         if hasattr(sol_view, "set_solution"):
             sol_view.set_solution(solution)  # type: ignore[attr-defined]
         self.window.goto("classification_solution")
+
+    def _on_forecasting_completed(self, solution) -> None:
+        solution_view = self.window.page("forecasting_solution")
+        try:
+            if hasattr(solution_view, "set_problem"):
+                solution_view.set_problem(
+                    self.window.forecasting_page.current_model()
+                )
+        except Exception:
+            pass
+        if hasattr(solution_view, "set_solution"):
+            solution_view.set_solution(solution)
+        self.window.goto("forecasting_solution")
 
     def _load_assistant_lp_model(self, data: object) -> None:
         try:

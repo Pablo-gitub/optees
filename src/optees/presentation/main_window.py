@@ -26,6 +26,7 @@ from optees.presentation.views.packing_view import PackingView
 from optees.presentation.views.packing_solution_view import PackingSolutionView
 from optees.presentation.views.regression_view import RegressionView
 from optees.presentation.views.forecasting_view import ForecastingView
+from optees.presentation.views.forecasting_solution_view import ForecastingSolutionView
 from optees.presentation.views.regression_solution_view import RegressionSolutionView
 from optees.presentation.views.classification_view import ClassificationView
 from optees.presentation.views.classification_solution_view import ClassificationSolutionView
@@ -245,6 +246,7 @@ class MainWindow(QMainWindow):
         self.packing_solution_page = PackingSolutionView()
         self.regression_solution_page = RegressionSolutionView()
         self.classification_solution_page = ClassificationSolutionView()
+        self.forecasting_solution_page = ForecastingSolutionView()
 
         # register pages
         self.register_page("home", self.home_page)
@@ -277,6 +279,7 @@ class MainWindow(QMainWindow):
         self.register_page("classification_problem", self.classification_problem_page)
         self.register_page("classification_solution", self.classification_solution_page)
         self.register_page("forecasting", self.forecasting_page)
+        self.register_page("forecasting_solution", self.forecasting_solution_page)
         self.register_page("lp_solution", self.lp_solution_page)
         self.register_page("milp", self.milp_page)
         self.register_page("milp_solution", self.milp_solution_page)

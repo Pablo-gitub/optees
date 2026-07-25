@@ -221,26 +221,26 @@ code or documentation.
 
 ### B1 - Navigation And Formulation View
 
-- [ ] Add Forecasting under the existing AI & Machine Learning navigation menu,
+- [x] Add Forecasting under the existing AI & Machine Learning navigation menu,
   not as a new top-level menu item.
-- [ ] Build timestamp/target table entry and versioned JSON import.
-- [ ] Add method, horizon, frequency, season length, evaluation strategy, and
+- [x] Build timestamp/target table entry and versioned JSON import.
+- [x] Add method, horizon, frequency, season length, evaluation strategy, and
   bounded advanced options with controls appropriate to each value type.
-- [ ] Dynamically show only method-relevant fields while preserving entered
+- [x] Dynamically show only method-relevant fields while preserving entered
   values when switching methods where safe.
-- [ ] Make validation errors local, actionable, and synchronized in English and
+- [x] Make validation errors local, actionable, and synchronized in English and
   Italian.
-- [ ] Use the established Optees info-button component and modal layout.
+- [x] Use the established Optees info-button component and modal layout.
 
 ### B2 - Solution View
 
-- [ ] Show forecast status, method, horizon, origin, evaluation strategy,
+- [x] Show forecast status, method, horizon, origin, evaluation strategy,
   metrics, parameters, diagnostics, and independent validation status.
-- [ ] Present actual, fitted, holdout, and future rows in a sortable/readable
+- [x] Present actual, fitted, holdout, and future rows in a sortable/readable
   table without implying that unavailable actual future values are zero.
-- [ ] Reuse the headless chart semantics for the interactive desktop chart.
-- [ ] Keep interval bands visually distinct and label their exact semantics.
-- [ ] Handle long histories with stable dimensions, bounded rendering, and
+- [x] Reuse the headless chart semantics for the interactive desktop chart.
+- [x] Keep interval bands visually distinct and label their exact semantics.
+- [x] Handle long histories with stable dimensions, bounded rendering, and
   usable scrolling or sampling controls.
 - [ ] Expose optional artifact/report generation through existing workflows
   rather than duplicating export logic in the view.
