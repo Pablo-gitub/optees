@@ -28,6 +28,31 @@ LP_PROBLEM = {
         {"coefficients": [1, 1], "relation": "<=", "rhs": 4},
     ],
 }
+FORECASTING_PROBLEM = {
+    "version": "1",
+    "problem_type": "univariate_forecasting",
+    "target_name": "monthly_orders",
+    "frequency": "monthly",
+    "horizon": 3,
+    "method": "holt_winters_additive",
+    "season_length": 3,
+    "missing_period_policy": "reject",
+    "observations": [
+        {"timestamp": "2025-01-01T00:00:00", "value": 10},
+        {"timestamp": "2025-02-01T00:00:00", "value": 20},
+        {"timestamp": "2025-03-01T00:00:00", "value": 30},
+        {"timestamp": "2025-04-01T00:00:00", "value": 10},
+        {"timestamp": "2025-05-01T00:00:00", "value": 20},
+        {"timestamp": "2025-06-01T00:00:00", "value": 30},
+        {"timestamp": "2025-07-01T00:00:00", "value": 10},
+        {"timestamp": "2025-08-01T00:00:00", "value": 20},
+        {"timestamp": "2025-09-01T00:00:00", "value": 30},
+        {"timestamp": "2025-10-01T00:00:00", "value": 10},
+        {"timestamp": "2025-11-01T00:00:00", "value": 20},
+        {"timestamp": "2025-12-01T00:00:00", "value": 30},
+    ],
+    "evaluation": {"strategy": "none"},
+}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -155,6 +180,7 @@ def _wait_for_health(client: _Client, process: subprocess.Popen[bytes]) -> None:
 
 def _verify_reporting(client: _Client) -> None:
     capabilities, _ = client.request("GET", "/api/v1/capabilities")
+    _verify_forecasting(client, capabilities)
     lp = next(
         (
             item
@@ -291,6 +317,113 @@ def _verify_reporting(client: _Client) -> None:
         )
         if not pdf.startswith(b"%PDF-"):
             raise RuntimeError("packaged PDF report content is invalid")
+
+
+def _verify_forecasting(
+    client: _Client,
+    capabilities: dict[str, object],
+) -> None:
+    forecasting = next(
+        (
+            item
+            for item in capabilities.get("capabilities", [])
+            if isinstance(item, dict)
+            and item.get("id") == "ml.forecasting.univariate"
+        ),
+        None,
+    )
+    if not isinstance(forecasting, dict) or forecasting.get("available") is not True:
+        raise RuntimeError(
+            f"packaged forecasting capability is unavailable: {forecasting!r}"
+        )
+    available = {
+        item.get("artifact_type")
+        for item in forecasting.get("available_artifacts", [])
+        if isinstance(item, dict)
+    }
+    if not {"forecast_table", "forecast_chart", "residual_chart"} <= available:
+        raise RuntimeError(
+            f"packaged forecasting artifact inventory is incomplete: {available}"
+        )
+
+    submitted, _ = client.request(
+        "POST",
+        "/api/v1/jobs",
+        {
+            "capability_id": "ml.forecasting.univariate",
+            "problem": FORECASTING_PROBLEM,
+        },
+    )
+    job_id = _required_identifier(submitted, "job_id")
+    job = _poll_object(
+        client,
+        f"/api/v1/jobs/{job_id}",
+        "job_status",
+        {"completed", "failed", "cancelled"},
+    )
+    if job.get("job_status") != "completed":
+        raise RuntimeError(f"packaged forecasting job did not complete: {job!r}")
+
+    result, _ = client.request("GET", f"/api/v1/jobs/{job_id}/result")
+    if (
+        result.get("mathematical_status") != "feasible"
+        or not isinstance(result.get("validation"), dict)
+        or result["validation"].get("status") != "partial"
+    ):
+        raise RuntimeError(
+            f"packaged forecasting result is not valid and feasible: {result!r}"
+        )
+    future_values = [
+        point.get("predicted")
+        for point in result.get("result", {}).get("points", [])
+        if isinstance(point, dict) and point.get("segment") == "future"
+    ]
+    if len(future_values) != 3 or any(
+        not isinstance(value, (int, float))
+        for value in future_values
+    ):
+        raise RuntimeError(
+            f"packaged forecasting future values are incomplete: {future_values!r}"
+        )
+    for actual, expected in zip(future_values, (10.0, 20.0, 30.0), strict=True):
+        if abs(float(actual) - expected) > 1e-4:
+            raise RuntimeError(
+                f"packaged Holt-Winters forecast is unexpected: {future_values!r}"
+            )
+
+    client.request(
+        "POST",
+        f"/api/v1/jobs/{job_id}/artifacts",
+        {
+            "contract_version": "1",
+            "requests": [
+                {
+                    "artifact_type": "forecast_table",
+                    "formats": ["markdown"],
+                    "options": {"locale": "en"},
+                },
+                {
+                    "artifact_type": "forecast_chart",
+                    "formats": ["png"],
+                    "options": {
+                        "locale": "en",
+                        "theme": "light",
+                        "width": 480,
+                        "height": 320,
+                        "max_points": 100,
+                    },
+                },
+            ],
+        },
+    )
+    artifacts = _poll_artifacts(client, job_id)
+    by_type = {item["artifact_type"]: item for item in artifacts}
+    table_content = _verify_download(client, by_type["forecast_table"])
+    chart_content = _verify_download(client, by_type["forecast_chart"])
+    if b"| Timestamp |" not in table_content:
+        raise RuntimeError("packaged forecast Markdown table content is invalid")
+    if not chart_content.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise RuntimeError("packaged forecast chart content is not a PNG")
 
 
 def _compose_report(

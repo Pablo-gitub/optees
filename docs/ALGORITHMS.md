@@ -91,6 +91,24 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
   two-dimensional dataset. Results are explicitly educational predictive fits,
   not evidence of fairness, causality, or future real-world performance.
 
+### AI & Machine Learning: Univariate Time-series Forecasting
+
+- Regular univariate histories with explicit timestamp frequency, future
+  horizon, missing-period rejection, and chronological ordering.
+- Deterministic naive and seasonal-naive baselines plus additive Holt-Winters
+  through statsmodels behind a shared forecasting port.
+- No random split: evaluation uses a contiguous holdout or bounded
+  rolling-origin windows in which training always precedes evaluation.
+- MAE, RMSE, MAPE with explicit zero-denominator unavailability, and MASE where
+  enough history exists. Independent validation recomputes published metrics,
+  residuals, timestamp segments, and horizon progression.
+- Versioned JSON, CLI, authenticated REST, MCP, bounded batch execution,
+  canonical tables, forecast and residual charts, and report composition use
+  the same application service.
+- The headless engine is implemented. Desktop formulation and solution views,
+  localized teaching pages, and worked examples remain the separate Part B
+  workstream in `docs/FORECASTING_ROADMAP.md`.
+
 ### Modeling Assistant
 
 - Local deterministic family recommendation for LP, MILP, Knapsack, NLP,
@@ -116,13 +134,10 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
 
 The next sections are introduced in this order:
 
-1. Educational AI & Machine Learning: time-series Forecasting with chronological
-   evaluation, explicit horizons, uncertainty diagnostics, and leakage
-   safeguards.
-2. Scheduling: Unrelated Parallel Machines with required-job makespan and
+1. Scheduling: Unrelated Parallel Machines with required-job makespan and
    optional-job lexicographic value/makespan modes. Identical machines and
    repeated equal jobs are compact input specializations of this model.
-3. Game Theory: finite two-player zero-sum matrix games, pure saddle-point
+2. Game Theory: finite two-player zero-sum matrix games, pure saddle-point
    analysis, and LP-based mixed strategies.
 
 After these business-decision workflows, the planned sequence returns to

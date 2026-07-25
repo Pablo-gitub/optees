@@ -84,6 +84,8 @@ a = Analysis(
         "scipy.linalg.cython_lapack",
         "scipy.optimize._highspy",
         "scipy.optimize._linprog_highs",
+        # Forecasting backend selected through a runtime method registry.
+        "statsmodels.tsa.holtwinters",
         # Markdown extensions loaded by name at runtime
         "markdown.extensions.tables",
         "markdown.extensions.fenced_code",

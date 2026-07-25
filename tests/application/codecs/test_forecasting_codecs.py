@@ -63,6 +63,16 @@ def test_problem_codec_parses_complete_versioned_payload() -> None:
     assert model.method_options.max_iterations == 500
 
 
+def test_problem_codec_rejects_shuffled_history_before_evaluation() -> None:
+    payload = _payload()
+    observations = payload["observations"]
+    assert isinstance(observations, list)
+    observations[1], observations[2] = observations[2], observations[1]
+
+    with pytest.raises(ValueError, match="missing or off-frequency period"):
+        forecasting_model_from_public_dict(payload)  # type: ignore[arg-type]
+
+
 @pytest.mark.parametrize(
     ("mutation", "error_code"),
     [

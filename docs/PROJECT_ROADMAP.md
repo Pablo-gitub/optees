@@ -103,25 +103,26 @@ independent validation, optional result artifacts, and reports.
 ### Priority 1 - Time-series Forecasting
 
 The detailed two-part implementation and handoff checklist is maintained in
-`docs/FORECASTING_ROADMAP.md`.
+`docs/FORECASTING_ROADMAP.md`. Part A, the headless engine and public-service
+contract, is complete. Part B owns desktop presentation and educational copy.
 
-- [ ] Define a versioned time-series model with ordered timestamps, one target,
+- [x] Define a versioned time-series model with ordered timestamps, one target,
   an explicit forecast horizon, frequency handling, and missing-value policy.
-- [ ] Establish deterministic naive and seasonal-naive baselines before adding
+- [x] Establish deterministic naive and seasonal-naive baselines before adding
   a trend/seasonality model; method selection must remain visible to the user.
-- [ ] Use chronological holdout or rolling-origin evaluation. Random train/test
+- [x] Use chronological holdout or rolling-origin evaluation. Random train/test
   splitting and leakage from future observations are forbidden.
-- [ ] Report fitted values, forecasts, residuals, horizon metrics, uncertainty
+- [x] Report fitted values, forecasts, residuals, horizon metrics, uncertainty
   intervals where the selected method supports them, and warnings for weak or
   insufficient history.
-- [ ] Provide an actual-versus-fitted-versus-forecast chart and a residual
+- [x] Provide an actual-versus-fitted-versus-forecast chart and a residual
   diagnostic suitable for both the desktop view and optional API artifacts.
-- [ ] Add analytic references, edge cases, and a reviewed public benchmark
+- [x] Add analytic references, edge cases, and a reviewed public benchmark
   before making claims beyond the documented educational scope.
 
-The first implementation plan must choose the initial maintained forecasting
-adapter and freeze its assumptions before code is written. It must not retrofit
-forecasting into the existing random-split regression contract.
+The implemented engine uses statsmodels additive Holt-Winters beside exact
+naive baselines and does not retrofit forecasting into the existing
+random-split regression contract.
 
 ### Priority 2 - Unrelated Parallel Machines Scheduling
 

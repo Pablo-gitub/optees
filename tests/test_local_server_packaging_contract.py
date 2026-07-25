@@ -96,3 +96,16 @@ def test_native_bundles_smoke_test_artifact_and_report_workflow():
     assert "Optees · optees.it" in smoke
     assert 'pdf.startswith(b"%PDF-")' in smoke
     assert "x-content-sha256" in smoke
+
+
+def test_native_bundles_include_and_smoke_test_forecasting_backend():
+    spec = (ROOT / "optees.spec").read_text(encoding="utf-8")
+    smoke = (
+        ROOT / "packaging" / "smoke_packaged_reporting.py"
+    ).read_text(encoding="utf-8")
+
+    assert '"statsmodels.tsa.holtwinters"' in spec
+    assert '"ml.forecasting.univariate"' in smoke
+    assert '"method": "holt_winters_additive"' in smoke
+    assert '"forecast_table"' in smoke
+    assert '"forecast_chart"' in smoke

@@ -50,7 +50,7 @@ flowchart LR
 
     Core --> Registry["Versioned capability registry"]
     Core --> Adapters["Solver adapters"]
-    Adapters --> Engines["SciPy, NumPy, OR-Tools, and internal algorithms"]
+    Adapters --> Engines["SciPy, statsmodels, NumPy, OR-Tools, and internal algorithms"]
 ```
 
 All components shown above execute on the user's computer. Optees does not
@@ -216,14 +216,14 @@ only forward these lifecycle operations.
 
 Production renderers include canonical result tables, bounded categorical
 charts, LP feasible regions, analytical NLP, graph, regression, and
-classification visuals, plus Packing PNG camera views and OBJ+MTL scene
-archives. Application-owned definitions select stable semantic rows and
-declare visual semantics, options, result states, and dimensional
-preconditions. Infrastructure adapters serialize tables as deterministic JSON,
-RFC 4180 CSV, or Markdown, render visuals through Matplotlib Agg as SVG or PNG,
-and package Packing geometry as a deterministic OBJ/MTL/manifest ZIP. The same
-definitions populate capability discovery, so a format cannot be advertised
-without a corresponding renderer registration.
+classification visuals, Forecasting timeline and residual charts, plus Packing
+PNG camera views and OBJ+MTL scene archives. Application-owned definitions
+select stable semantic rows and declare visual semantics, options, result
+states, and dimensional preconditions. Infrastructure adapters serialize
+tables as deterministic JSON, RFC 4180 CSV, or Markdown, render visuals through
+Matplotlib Agg as SVG or PNG, and package Packing geometry as a deterministic
+OBJ/MTL/manifest ZIP. The same definitions populate capability discovery, so a
+format cannot be advertised without a corresponding renderer registration.
 
 The artifact definition registry deliberately remains separate from
 `RegisteredCapability`: solving must work without storage or rendering
@@ -558,6 +558,10 @@ Current production registrations provide independent validators for:
 - `ml.regression.linear`: finite public parameters, complete prediction rows,
   prediction and residual arithmetic, train/test split accounting, and
   recomputed metrics.
+- `ml.forecasting.univariate`: chronological segment and timestamp alignment,
+  finite predictions, residual identities, future-horizon progression,
+  interval ordering, split accounting, and independently recomputed temporal
+  metrics.
 
 Other capabilities explicitly return `not_available` until a dedicated
 validator is implemented. Passing these checks verifies the recorded
@@ -579,7 +583,7 @@ business meaning changes.
 ```mermaid
 flowchart LR
     Data["Historical demand data"] --> Agent["External agent or workflow engine"]
-    Agent --> Forecast["ml.regression.linear"]
+    Agent --> Forecast["ml.forecasting.univariate"]
     Forecast -->|"forecast + declared assumptions"| Agent
     Agent --> Plan["milp.linear"]
     Plan -->|"production quantities"| Agent
@@ -591,6 +595,14 @@ flowchart LR
 
 Each capability validates only its own contract and result. Optees does not
 currently certify the semantic correctness of the complete composed workflow.
+
+Forecasting preserves the same dependency direction as other capabilities.
+Immutable chronological domain objects and the application use case know
+nothing about statsmodels. Deterministic baselines and the concrete
+Holt-Winters implementation live behind the forecasting port; chronological
+evaluation and independent validation remain application-owned. GUI, CLI,
+REST, MCP, batch execution, artifacts, and reports all resolve the same
+registered capability and versioned codecs.
 
 Headless result rendering follows the same boundary. Application-owned
 definitions advertise artifact semantics and options; adapters perform the

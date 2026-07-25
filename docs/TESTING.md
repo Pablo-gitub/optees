@@ -117,6 +117,17 @@ metadata-only MCP retrieval.
 - `tests/data/adapters/reports/test_report_adapters.py`: bounded XLSX and
   OBJ+MTL report conversion, archive/geometry rejection, PDF backend
   diagnostics, fixed-command execution, and verified PDF output.
+- Forecasting domain, codec, adapter, use-case, service, transport, artifact,
+  and validator tests cover strict chronology, no-leakage training prefixes,
+  deterministic naive baselines, statsmodels Holt-Winters, holdout and
+  rolling-origin evaluation, independent metric recomputation, and versioned
+  public behavior.
+- `tests/utility/test_forecasting_reference_cases.py`: constant, trend,
+  seasonal, short-history, zero-actual, and noisy deterministic reference
+  cases in the normal fast gate.
+- `tests/utility/test_forecasting_sunspots_benchmark.py`: checksummed
+  public-domain annual Sunspots data under a fixed seasonal-naive temporal
+  protocol in the measured `benchmark` gate.
 
 Ruff is available through the `dev` extra and applies to new or modified
 Python code. Whole-repository linting is not yet a CI gate because legacy
@@ -139,6 +150,18 @@ PYTHONPATH=src python -m pytest -q -m gui
 
 # scientific/external benchmark integrations
 PYTHONPATH=src python -m pytest -q -m benchmark
+
+# forecasting engine, deterministic references, and public benchmark
+PYTHONPATH=src python -m pytest -q \
+  tests/domain/test_forecasting_model.py \
+  tests/domain/test_forecasting_solution.py \
+  tests/application/codecs/test_forecasting_codecs.py \
+  tests/adapters/test_forecasting_baseline_adapter.py \
+  tests/adapters/test_holt_winters_forecasting_adapter.py \
+  tests/application/usecases/test_forecast_time_series_usecase.py \
+  tests/application/validation/test_forecasting_solution_validator.py \
+  tests/utility/test_forecasting_reference_cases.py \
+  tests/utility/test_forecasting_sunspots_benchmark.py
 
 # real loopback transport and subprocess lifecycle
 PYTHONPATH=src python -m pytest -q -m tcp
@@ -221,15 +244,19 @@ the exact tagged commit, installs all test extras, runs the complete suite
 under Xvfb, and only then permits the platform build matrix to start.
 Each platform build must also complete a small continuous LP through its
 packaged MCP companion and verify both the optimal result and independent
-validation report. Capability listing alone is not considered a sufficient
-backend smoke test.
+validation report. The packaged REST companion additionally executes additive
+Holt-Winters Forecasting and renders its canonical Markdown table and PNG
+forecast chart, proving that statsmodels and the headless renderer are present.
+Capability listing alone is not considered a sufficient backend smoke test.
 
-Headless artifact tests render LP and Packing reference scenes through
-Matplotlib Agg. They verify SVG structure and semantic labels, and inspect PNG
-signatures, requested dimensions, and nonblank pixel variance. Packing tests
-also validate every named camera and the deterministic OBJ/MTL/manifest
-archive. These checks intentionally avoid exact pixel snapshots, which vary
-across rendering platforms without providing stronger mathematical assurance.
+Headless artifact tests render LP, Forecasting, and Packing reference scenes
+through Matplotlib Agg. They verify SVG structure and semantic labels, and
+inspect PNG signatures, requested dimensions, and nonblank pixel variance.
+Forecasting tests verify origin boundaries, timeline sampling, and residual
+semantics. Packing tests also validate every named camera and the deterministic
+OBJ/MTL/manifest archive. These checks intentionally avoid exact pixel
+snapshots, which vary across rendering platforms without providing stronger
+mathematical assurance.
 
 Report tests use controlled fake Pandoc and Typst executables to verify command
 boundaries and lifecycle semantics without making the local suite depend on

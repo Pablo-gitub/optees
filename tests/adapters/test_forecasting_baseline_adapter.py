@@ -75,7 +75,7 @@ def test_seasonal_naive_repeats_latest_complete_training_season() -> None:
     assert output.parameters == (("season_length", 3.0),)
 
 
-def test_adapter_rejects_non_prefix_training_history() -> None:
+def test_adapter_rejects_leaked_non_prefix_training_history() -> None:
     model = _model((10, 12, 14), ForecastingMethod.NAIVE)
 
     with pytest.raises(ValueError, match="exact model-history prefix"):

@@ -61,7 +61,7 @@ def test_holt_winters_preserves_additive_seasonal_cycle() -> None:
     assert output.diagnostics == ()
 
 
-def test_holt_winters_rejects_non_prefix_training_history() -> None:
+def test_holt_winters_rejects_leaked_non_prefix_training_history() -> None:
     model = _model((10, 20, 30, 10, 20, 30))
 
     with pytest.raises(ValueError, match="exact model-history prefix"):

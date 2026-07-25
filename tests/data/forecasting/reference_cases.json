@@ -1,0 +1,169 @@
+[
+  {
+    "id": "constant_series",
+    "problem": {
+      "version": "1",
+      "problem_type": "univariate_forecasting",
+      "target_name": "constant_demand",
+      "frequency": "daily",
+      "horizon": 2,
+      "method": "naive",
+      "missing_period_policy": "reject",
+      "observations": [
+        {"timestamp": "2026-01-01T00:00:00", "value": 5},
+        {"timestamp": "2026-01-02T00:00:00", "value": 5},
+        {"timestamp": "2026-01-03T00:00:00", "value": 5},
+        {"timestamp": "2026-01-04T00:00:00", "value": 5}
+      ],
+      "evaluation": {"strategy": "holdout", "holdout_size": 1}
+    },
+    "expected": {
+      "future_values": [5, 5],
+      "evaluation_status": "evaluated",
+      "validation_status": "verified",
+      "metrics": {"mae": 0, "rmse": 0, "mape": 0, "mase": null}
+    }
+  },
+  {
+    "id": "linear_trend_naive_baseline",
+    "problem": {
+      "version": "1",
+      "problem_type": "univariate_forecasting",
+      "target_name": "growing_demand",
+      "frequency": "daily",
+      "horizon": 2,
+      "method": "naive",
+      "missing_period_policy": "reject",
+      "observations": [
+        {"timestamp": "2026-01-01T00:00:00", "value": 2},
+        {"timestamp": "2026-01-02T00:00:00", "value": 4},
+        {"timestamp": "2026-01-03T00:00:00", "value": 6},
+        {"timestamp": "2026-01-04T00:00:00", "value": 8},
+        {"timestamp": "2026-01-05T00:00:00", "value": 10}
+      ],
+      "evaluation": {"strategy": "holdout", "holdout_size": 2}
+    },
+    "expected": {
+      "future_values": [10, 10],
+      "evaluation_status": "evaluated",
+      "validation_status": "verified",
+      "metrics": {
+        "mae": 3,
+        "rmse": 3.1622776601683795,
+        "mape": 32.5,
+        "mase": 1.5
+      }
+    }
+  },
+  {
+    "id": "seasonal_cycle",
+    "problem": {
+      "version": "1",
+      "problem_type": "univariate_forecasting",
+      "target_name": "seasonal_demand",
+      "frequency": "monthly",
+      "horizon": 3,
+      "method": "seasonal_naive",
+      "season_length": 3,
+      "missing_period_policy": "reject",
+      "observations": [
+        {"timestamp": "2025-01-01T00:00:00", "value": 10},
+        {"timestamp": "2025-02-01T00:00:00", "value": 20},
+        {"timestamp": "2025-03-01T00:00:00", "value": 30},
+        {"timestamp": "2025-04-01T00:00:00", "value": 10},
+        {"timestamp": "2025-05-01T00:00:00", "value": 20},
+        {"timestamp": "2025-06-01T00:00:00", "value": 30},
+        {"timestamp": "2025-07-01T00:00:00", "value": 10},
+        {"timestamp": "2025-08-01T00:00:00", "value": 20},
+        {"timestamp": "2025-09-01T00:00:00", "value": 30}
+      ],
+      "evaluation": {"strategy": "holdout", "holdout_size": 3}
+    },
+    "expected": {
+      "future_values": [10, 20, 30],
+      "evaluation_status": "evaluated",
+      "validation_status": "verified",
+      "metrics": {"mae": 0, "rmse": 0, "mape": 0, "mase": null}
+    }
+  },
+  {
+    "id": "short_history",
+    "problem": {
+      "version": "1",
+      "problem_type": "univariate_forecasting",
+      "target_name": "new_product_demand",
+      "frequency": "daily",
+      "horizon": 2,
+      "method": "naive",
+      "missing_period_policy": "reject",
+      "observations": [
+        {"timestamp": "2026-01-01T00:00:00", "value": 3},
+        {"timestamp": "2026-01-02T00:00:00", "value": 7}
+      ],
+      "evaluation": {"strategy": "none"}
+    },
+    "expected": {
+      "future_values": [7, 7],
+      "evaluation_status": "not_requested",
+      "validation_status": "verified",
+      "metrics": {"mae": null, "rmse": null, "mape": null, "mase": null}
+    }
+  },
+  {
+    "id": "zero_actual_in_holdout",
+    "problem": {
+      "version": "1",
+      "problem_type": "univariate_forecasting",
+      "target_name": "intermittent_demand",
+      "frequency": "daily",
+      "horizon": 1,
+      "method": "naive",
+      "missing_period_policy": "reject",
+      "observations": [
+        {"timestamp": "2026-01-01T00:00:00", "value": 1},
+        {"timestamp": "2026-01-02T00:00:00", "value": 2},
+        {"timestamp": "2026-01-03T00:00:00", "value": 3},
+        {"timestamp": "2026-01-04T00:00:00", "value": 0}
+      ],
+      "evaluation": {"strategy": "holdout", "holdout_size": 1}
+    },
+    "expected": {
+      "future_values": [0],
+      "evaluation_status": "evaluated",
+      "validation_status": "verified",
+      "metrics": {"mae": 3, "rmse": 3, "mape": null, "mase": 3}
+    }
+  },
+  {
+    "id": "noisy_deterministic",
+    "problem": {
+      "version": "1",
+      "problem_type": "univariate_forecasting",
+      "target_name": "noisy_demand",
+      "frequency": "daily",
+      "horizon": 2,
+      "method": "naive",
+      "missing_period_policy": "reject",
+      "observations": [
+        {"timestamp": "2026-01-01T00:00:00", "value": 10},
+        {"timestamp": "2026-01-02T00:00:00", "value": 13},
+        {"timestamp": "2026-01-03T00:00:00", "value": 11},
+        {"timestamp": "2026-01-04T00:00:00", "value": 15},
+        {"timestamp": "2026-01-05T00:00:00", "value": 12},
+        {"timestamp": "2026-01-06T00:00:00", "value": 18}
+      ],
+      "evaluation": {"strategy": "holdout", "holdout_size": 2}
+    },
+    "expected": {
+      "future_values": [18, 18],
+      "evaluation_status": "evaluated",
+      "validation_status": "verified",
+      "metrics": {
+        "mae": 3,
+        "rmse": 3,
+        "mape": 20.833333333333332,
+        "mase": 1
+      }
+    }
+  }
+]

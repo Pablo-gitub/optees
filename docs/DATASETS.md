@@ -142,6 +142,45 @@ split, metrics, and 2D visualization inputs. A future external classification
 dataset must be redistributable, documented with its intended evaluation
 protocol, and kept separate from fairness or real-world deployment claims.
 
+## Univariate Forecasting Reference Cases
+
+- **Included file:** `tests/data/forecasting/reference_cases.json`.
+- **Cases:** constant demand, a linear trend measured with a naive baseline, an
+  exact seasonal cycle, minimum valid history, a zero holdout actual, and a
+  deterministic noisy series.
+- **Tests:** `tests/utility/test_forecasting_reference_cases.py`, plus domain,
+  codec, adapter, use-case, validator, service, transport, artifact, and
+  assistant tests.
+
+These tiny cases run in normal CI. They verify exact future values, metric
+semantics, edge-case status, and independent validation. They are reference
+fixtures, not evidence of general forecasting accuracy.
+
+## Univariate Forecasting: Statsmodels Sunspots
+
+- **Upstream distribution:** statsmodels `datasets.sunspots`, sourced from the
+  National Geophysical Data Center.
+- **Usage terms:** the statsmodels dataset module declares the data public
+  domain.
+- **Data:** 309 annual observations from 1700 through 2008.
+- **File used:** the `sunspots.csv` installed with the selected statsmodels
+  runtime; Optees does not vendor a second copy.
+- **SHA-256:** `f67889b1d9002cd5227f0e0ef54e35b419cdd85a31279adef6f73fb41e5c0a9b`.
+- **Protocol:** seasonal-naive forecasting with an 11-year season, a final
+  22-year chronological holdout, and an 11-year future horizon. No row is
+  shuffled and no future observation enters a training prefix.
+- **Expected holdout metrics:** MAE `38.47272727272727`, RMSE
+  `45.02725437291992`, MAPE `98.8100019183094`, and MASE
+  `1.7262160400683966`.
+- **Test:** `tests/utility/test_forecasting_sunspots_benchmark.py`.
+- **CI budget:** no network, 309 input rows, and less than five seconds on the
+  supported CI Python runtime. It is marked `benchmark` and therefore runs in
+  the scheduled/manual scientific gate rather than the fast push gate.
+
+This benchmark verifies a public temporal protocol and reproducible arithmetic;
+it does not claim that seasonal naive is an accurate sunspot model or that one
+dataset establishes production forecasting quality.
+
 ## Graph Theory: Dijkstra Reference Cases
 
 The first shortest-path workflow uses small hand-built directed, undirected,
@@ -191,6 +230,8 @@ tests/data/
     reference_cases.json            # Analytic OLS regression cases
   classification/
     reference_cases.json            # Logistic-regression reference case
+  forecasting/
+    reference_cases.json            # Deterministic temporal reference cases
   packing/
     orlib/thpack1.txt                # Bischoff/Ratcliff single-container data
 ```

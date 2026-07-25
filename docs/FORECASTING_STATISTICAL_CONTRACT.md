@@ -10,13 +10,14 @@ these decisions. Planned behavior is identified explicitly.
 | --- | --- | --- | --- |
 | `naive` | Every future value equals the latest training value. | Internal deterministic baseline | Unavailable |
 | `seasonal_naive` | Each future value repeats the corresponding value from the latest complete season. | Internal deterministic baseline | Unavailable |
-| `holt_winters_additive` | Additive level, trend, and seasonality estimated with Holt-Winters exponential smoothing. | statsmodels `ExponentialSmoothing` | Unavailable in the first adapter |
+| `holt_winters_additive` | Additive level, trend, and seasonality estimated with Holt-Winters exponential smoothing. | statsmodels `ExponentialSmoothing` | Unavailable |
 
 The maintained trend/seasonality implementation is statsmodels. Version 0.14.6
 provides Python 3.12 wheels, uses a three-clause BSD license, and exposes a
 complete Holt-Winters implementation. It adds a numerical package and its
-transitive dependencies to native bundles, so Phase A2 must add dependency and
-packaged smoke coverage together. SciPy is already bundled but offers
+transitive dependencies to native bundles. It is included in the base runtime,
+declared explicitly to PyInstaller, and exercised by the native release smoke
+on Windows, macOS, and Linux. SciPy is already bundled but offers
 detrending and signal primitives rather than a maintained full Holt-Winters
 forecasting estimator. Implementing the estimator inside Optees would create a
 second statistical library to maintain and is therefore rejected.

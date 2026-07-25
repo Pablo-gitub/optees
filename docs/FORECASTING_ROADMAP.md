@@ -168,17 +168,17 @@ the chosen dependency can be packaged on Windows, macOS, and Linux.
 
 ### A6 - Reference Cases, Benchmarks, And Packaging
 
-- [ ] Add analytic constant, linear-trend, seasonal-cycle, short-history,
+- [x] Add analytic constant, linear-trend, seasonal-cycle, short-history,
   zero-valued, and noisy deterministic reference cases.
-- [ ] Add tests proving that shuffled or leaked evaluation data is rejected.
-- [ ] Select one redistributable public time-series benchmark only after source,
+- [x] Add tests proving that shuffled or leaked evaluation data is rejected.
+- [x] Select one redistributable public time-series benchmark only after source,
   license, expected protocol, checksum, and CI budget are documented in
   `docs/DATASETS.md`.
-- [ ] Keep tiny references in normal CI and mark external or measured cases as
+- [x] Keep tiny references in normal CI and mark external or measured cases as
   `benchmark`.
-- [ ] Add packaged capability discovery and solve smoke tests for Windows,
+- [x] Add packaged capability discovery and solve smoke tests for Windows,
   macOS, and Linux.
-- [ ] Verify that any new numerical dependency and artifact renderer are
+- [x] Verify that any new numerical dependency and artifact renderer are
   included in native installers and do not break headless startup.
 
 ## Part A Completion Gate
@@ -193,6 +193,11 @@ Part B may begin only when all of the following are true:
 6. reference fixtures and expected statuses are committed;
 7. `docs/ARCHITECTURE.md`, `docs/TESTING.md`, and the algorithm catalogue
    describe the shipped engine honestly.
+
+**Status:** Part A is complete. The focused engine, reference, benchmark, and
+packaging-contract gate passes locally. The native release workflow owns the
+final Windows, macOS, and Linux executable smoke because packaged subprocess
+and loopback execution require platform runners.
 
 ## Part B - Desktop, Teaching, And Examples
 
