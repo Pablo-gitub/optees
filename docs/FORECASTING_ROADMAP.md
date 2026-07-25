@@ -153,17 +153,17 @@ the chosen dependency can be packaged on Windows, macOS, and Linux.
 
 ### A5 - Headless Result Artifacts And Reports
 
-- [ ] Add a canonical forecast table containing timestamp, actual value where
+- [x] Add a canonical forecast table containing timestamp, actual value where
   available, fitted/forecast value, residual, interval bounds, and segment.
-- [ ] Add a headless actual-versus-fitted-versus-forecast chart with an explicit
+- [x] Add a headless actual-versus-fitted-versus-forecast chart with an explicit
   forecast-origin boundary and interval band when available.
-- [ ] Add a residual-over-time diagnostic and avoid meaningless categorical
+- [x] Add a residual-over-time diagnostic and avoid meaningless categorical
   charts for long series.
-- [ ] Declare renderer limits and deterministic downsampling/truncation metadata
+- [x] Declare renderer limits and deterministic downsampling/truncation metadata
   for large histories.
-- [ ] Register artifacts through the existing bounded storage, SHA-256,
+- [x] Register artifacts through the existing bounded storage, SHA-256,
   expiration, REST download, MCP resource, and Markdown/PDF report paths.
-- [ ] Ensure renderers consume only the versioned problem/result pair and never
+- [x] Ensure renderers consume only the versioned problem/result pair and never
   refit the model.
 
 ### A6 - Reference Cases, Benchmarks, And Packaging

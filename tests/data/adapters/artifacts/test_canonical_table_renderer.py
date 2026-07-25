@@ -148,6 +148,60 @@ _RESULTS = {
             }
         ],
     },
+    "ml.forecasting.univariate": {
+        "forecast_available": True,
+        "method": "naive",
+        "origin": "2026-01-04T00:00:00",
+        "points": [
+            {
+                "timestamp": "2026-01-02T00:00:00",
+                "actual": 12.0,
+                "predicted": 10.0,
+                "residual": 2.0,
+                "interval": None,
+                "segment": "fitted",
+            },
+            {
+                "timestamp": "2026-01-05T00:00:00",
+                "actual": None,
+                "predicted": 16.0,
+                "residual": None,
+                "interval": {
+                    "lower": 14.0,
+                    "upper": 18.0,
+                    "coverage": 0.95,
+                },
+                "segment": "future",
+            },
+        ],
+        "metrics": {"mae": 2.0, "rmse": 2.0, "mape": 0.2, "mase": 1.0},
+        "evaluation": {
+            "status": "evaluated",
+            "folds": [
+                {
+                    "origin": "2026-01-03T00:00:00",
+                    "training_size": 3,
+                    "points": [
+                        {
+                            "timestamp": "2026-01-04T00:00:00",
+                            "actual": 16.0,
+                            "predicted": 14.0,
+                            "residual": 2.0,
+                            "interval": None,
+                            "segment": "holdout",
+                        }
+                    ],
+                    "metrics": {
+                        "mae": 2.0,
+                        "rmse": 2.0,
+                        "mape": 0.125,
+                        "mase": 1.0,
+                    },
+                }
+            ],
+        },
+        "parameters": [{"name": "last_value", "value": 16.0}],
+    },
     "packing.single_container_3d": {
         "requested": {
             "objective": 5.0,
@@ -212,6 +266,7 @@ def _context(
         format=format_,
         problem={
             "version": "1",
+            "target_name": "daily_orders",
             "dataset": {"target_name": "target"},
         },
         envelope=envelope,
@@ -307,6 +362,38 @@ def test_markdown_declares_truncation_and_escapes_table_content():
     assert '"truncated": true' in markdown
     assert "Mostrate 2 righe su 3" in markdown
     assert "third" not in markdown
+
+
+def test_forecast_table_preserves_segments_intervals_and_sampling_metadata():
+    definition = canonical_table_definition("ml.forecasting.univariate")
+    assert definition is not None
+    context = _context(
+        "ml.forecasting.univariate",
+        ArtifactFormat.JSON,
+    )
+    context = replace(
+        context,
+        options=replace(context.options, extra={"max_rows": 2}),
+    )
+
+    rendered = CanonicalTableRenderer(definition.builder).render(context)
+    repeated = CanonicalTableRenderer(definition.builder).render(context)
+    payload = json.loads(rendered.content)
+
+    assert rendered.content == repeated.content
+    assert payload["summary"] == {
+        "target_name": "daily_orders",
+        "method": "naive",
+        "forecast_origin": "2026-01-04T00:00:00",
+        "metrics": {"mae": 2.0, "mape": 0.2, "mase": 1.0, "rmse": 2.0},
+        "total_rows": 3,
+        "displayed_rows": 2,
+        "truncated": True,
+        "sampling": "evenly_spaced_with_endpoints",
+    }
+    assert payload["rows"][0]["segment"] == "fitted"
+    assert payload["rows"][-1]["segment"] == "holdout"
+    assert payload["rows"][-1]["evaluation_origin"] == "2026-01-03T00:00:00"
 
 
 def test_milp_validation_and_diagnostics_preserve_machine_readable_semantics():

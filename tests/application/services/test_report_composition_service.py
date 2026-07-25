@@ -65,6 +65,25 @@ def _lp_payload() -> dict:
     }
 
 
+def _forecast_payload() -> dict:
+    return {
+        "version": "1",
+        "problem_type": "univariate_forecasting",
+        "target_name": "daily_orders",
+        "frequency": "daily",
+        "horizon": 2,
+        "method": "naive",
+        "missing_period_policy": "reject",
+        "observations": [
+            {"timestamp": "2026-01-01T00:00:00", "value": 10.0},
+            {"timestamp": "2026-01-02T00:00:00", "value": 12.0},
+            {"timestamp": "2026-01-03T00:00:00", "value": 14.0},
+            {"timestamp": "2026-01-04T00:00:00", "value": 16.0},
+        ],
+        "evaluation": {"strategy": "holdout", "holdout_size": 1},
+    }
+
+
 def _wait_for_job(jobs, job_id: str) -> None:
     deadline = monotonic() + 5
     while monotonic() < deadline:
@@ -163,6 +182,73 @@ def test_report_service_composes_jobs_tables_provenance_and_footer(tmp_path):
         assert "Stato del solver" in markdown
         assert "Soluzione" in markdown
         assert artifact.sha256 in markdown
+        assert "[Optees · optees.it](https://optees.it)" in markdown
+    finally:
+        reports.close()
+        artifacts.close()
+        jobs.shutdown()
+
+
+def test_forecast_table_flows_into_markdown_report_without_refitting(tmp_path):
+    jobs = create_local_job_service()
+    artifacts = create_local_artifact_service(jobs)
+    reports = ReportCompositionService(
+        jobs,
+        artifacts,
+        LocalArtifactStore(parent_directory=tmp_path),
+    )
+    try:
+        job = jobs.submit("ml.forecasting.univariate", _forecast_payload())
+        assert not isinstance(job, StructuredError)
+        _wait_for_job(jobs, job.job_id)
+        artifacts.submit(
+            job.job_id,
+            ArtifactBatchRequest(
+                (
+                    ArtifactRequest(
+                        "forecast_table",
+                        (ArtifactFormat.MARKDOWN,),
+                    ),
+                )
+            ),
+        )
+        artifact = _wait_for_artifact(artifacts, job.job_id)
+        request = report_request_from_dict(
+            {
+                "contract_version": "1",
+                "format": "markdown",
+                "locale": "en",
+                "title": "Demand forecast",
+                "sections": [
+                    {
+                        "section_id": "forecast",
+                        "heading": "Forecast result",
+                        "blocks": [
+                            {"type": "job_status", "job_id": job.job_id},
+                            {
+                                "type": "artifact",
+                                "artifact_id": artifact.artifact_id,
+                                "caption": "Forecast timeline",
+                            },
+                        ],
+                    }
+                ],
+            }
+        )
+
+        submitted = reports.submit(request)
+        assert not isinstance(submitted, StructuredError)
+        available = _wait_for_report(reports, submitted.report_id)
+        downloaded = reports.download(submitted.report_id)
+        assert not isinstance(downloaded, StructuredError)
+        markdown = downloaded.content.decode("utf-8")
+
+        assert available.source_job_ids == (job.job_id,)
+        assert available.source_artifact_ids == (artifact.artifact_id,)
+        assert "Forecast result" in markdown
+        assert "Forecast timeline" in markdown
+        assert "Timestamp" in markdown
+        assert "future" in markdown
         assert "[Optees · optees.it](https://optees.it)" in markdown
     finally:
         reports.close()

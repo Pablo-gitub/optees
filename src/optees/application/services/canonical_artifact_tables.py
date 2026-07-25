@@ -18,6 +18,7 @@ from optees.application.contracts.artifact_table import (
 from optees.application.contracts.capability_ids import (
     CLASSIFICATION_CAPABILITY_ID,
     DIJKSTRA_CAPABILITY_ID,
+    FORECASTING_CAPABILITY_ID,
     KNAPSACK_BOUNDED_CAPABILITY_ID,
     KNAPSACK_FRACTIONAL_CAPABILITY_ID,
     KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID,
@@ -403,6 +404,100 @@ def _classification_predictions(context: ArtifactRenderContext) -> ArtifactTable
     )
 
 
+def _forecast_points(context: ArtifactRenderContext) -> ArtifactTable:
+    rows: list[dict[str, TableCell]] = []
+    for point in _object_rows(context.envelope.result.get("points")):
+        rows.append(_forecast_point_row(point))
+
+    evaluation = context.envelope.result.get("evaluation")
+    evaluation = evaluation if isinstance(evaluation, dict) else {}
+    for fold_index, fold in enumerate(_object_rows(evaluation.get("folds"))):
+        for point in _object_rows(fold.get("points")):
+            rows.append(
+                _forecast_point_row(
+                    point,
+                    fold_index=fold_index,
+                    evaluation_origin=_scalar(fold.get("origin")),
+                )
+            )
+
+    total_rows = len(rows)
+    max_rows = _table_max_rows(context, default=500)
+    sampled = _sample_rows(rows, max_rows)
+    return _table(
+        context,
+        columns=(
+            ("timestamp", "Timestamp"),
+            ("actual", "Actual"),
+            ("predicted", "Predicted"),
+            ("residual", "Residual"),
+            ("interval_lower", "Interval lower"),
+            ("interval_upper", "Interval upper"),
+            ("interval_coverage", "Interval coverage"),
+            ("segment", "Segment"),
+            ("fold_index", "Fold"),
+            ("evaluation_origin", "Evaluation origin"),
+        ),
+        rows=tuple(sampled),
+        summary={
+            "target_name": context.problem.get("target_name"),
+            "method": context.envelope.result.get("method"),
+            "forecast_origin": context.envelope.result.get("origin"),
+            "metrics": context.envelope.result.get("metrics"),
+            "total_rows": total_rows,
+            "displayed_rows": len(sampled),
+            "truncated": len(sampled) < total_rows,
+            "sampling": "evenly_spaced_with_endpoints",
+        },
+    )
+
+
+def _forecast_point_row(
+    point: dict[str, JsonValue],
+    *,
+    fold_index: int | None = None,
+    evaluation_origin: TableCell = None,
+) -> dict[str, TableCell]:
+    interval = point.get("interval")
+    interval = interval if isinstance(interval, dict) else {}
+    return {
+        "timestamp": _scalar(point.get("timestamp")),
+        "actual": _scalar(point.get("actual")),
+        "predicted": _scalar(point.get("predicted")),
+        "residual": _scalar(point.get("residual")),
+        "interval_lower": _scalar(interval.get("lower")),
+        "interval_upper": _scalar(interval.get("upper")),
+        "interval_coverage": _scalar(interval.get("coverage")),
+        "segment": _scalar(point.get("segment")),
+        "fold_index": fold_index,
+        "evaluation_origin": evaluation_origin,
+    }
+
+
+def _table_max_rows(context: ArtifactRenderContext, *, default: int) -> int:
+    raw = (context.options.extra or {}).get("max_rows", default)
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        raise ValueError("max_rows must be an integer")
+    if raw < 1 or raw > 1000:
+        raise ValueError("max_rows must be between 1 and 1000")
+    return raw
+
+
+def _sample_rows(
+    rows: list[dict[str, TableCell]],
+    maximum: int,
+) -> list[dict[str, TableCell]]:
+    if len(rows) <= maximum:
+        return rows
+    if maximum == 1:
+        return [rows[-1]]
+    indices = {
+        round(index * (len(rows) - 1) / (maximum - 1))
+        for index in range(maximum)
+    }
+    return [rows[index] for index in sorted(indices)]
+
+
 def _placements(context: ArtifactRenderContext) -> ArtifactTable:
     result = context.envelope.result
     requested = result.get("requested")
@@ -763,6 +858,13 @@ _DEFINITIONS = (
         "prediction_table",
         "Classification predictions",
         _classification_predictions,
+    ),
+    CanonicalTableDefinition(
+        FORECASTING_CAPABILITY_ID,
+        "forecast_table",
+        "Forecast timeline",
+        _forecast_points,
+        (MathematicalStatus.FEASIBLE,),
     ),
     CanonicalTableDefinition(
         PACKING_CAPABILITY_ID,

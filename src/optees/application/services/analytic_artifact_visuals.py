@@ -6,6 +6,7 @@ from optees.application.contracts.artifact import ArtifactFormat, AvailableArtif
 from optees.application.contracts.capability_ids import (
     CLASSIFICATION_CAPABILITY_ID,
     DIJKSTRA_CAPABILITY_ID,
+    FORECASTING_CAPABILITY_ID,
     NLP_CAPABILITY_ID,
     REGRESSION_CAPABILITY_ID,
 )
@@ -102,6 +103,22 @@ _DEFINITIONS = (
         "decision_boundary",
         "Classification decision boundary",
         "classification_boundary",
+        _FEASIBLE,
+        supports_max_points=True,
+    ),
+    AnalyticVisualDefinition(
+        FORECASTING_CAPABILITY_ID,
+        "forecast_chart",
+        "Actual, fitted, and future forecast",
+        "forecast_timeline",
+        _FEASIBLE,
+        supports_max_points=True,
+    ),
+    AnalyticVisualDefinition(
+        FORECASTING_CAPABILITY_ID,
+        "residual_chart",
+        "Forecast residuals over time",
+        "forecast_residuals",
         _FEASIBLE,
         supports_max_points=True,
     ),

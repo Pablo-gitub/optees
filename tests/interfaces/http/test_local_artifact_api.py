@@ -388,6 +388,11 @@ def test_production_discovery_exposes_analytic_artifact_inventory():
             "confusion_matrix",
             "decision_boundary",
         },
+        "ml.forecasting.univariate": {
+            "forecast_table",
+            "forecast_chart",
+            "residual_chart",
+        },
         "packing.single_container_3d": {
             "placement_table",
             "capacity_table",
@@ -407,6 +412,106 @@ def test_production_discovery_exposes_analytic_artifact_inventory():
         if item["id"] in expected
     }
     assert capabilities == expected
+
+
+def test_production_forecasting_artifact_lifecycle():
+    with ASGIClient(create_local_api(token=TOKEN)) as client:
+        descriptor_response = client.get(
+            "/api/v1/capabilities/ml.forecasting.univariate",
+            headers=AUTH,
+        )
+        assert descriptor_response.status_code == 200
+        descriptor = descriptor_response.json()
+
+        submitted = client.post(
+            "/api/v1/jobs",
+            headers=AUTH,
+            json={
+                "capability_id": "ml.forecasting.univariate",
+                "problem": descriptor["example_problem"],
+            },
+        )
+        assert submitted.status_code == 202
+        job_id = submitted.json()["job_id"]
+        deadline = monotonic() + 10
+        while monotonic() < deadline:
+            job = client.get(f"/api/v1/jobs/{job_id}", headers=AUTH)
+            if job.json()["job_status"] == "completed":
+                break
+            sleep(0.01)
+        assert job.json()["mathematical_status"] == "feasible"
+
+        created = client.post(
+            f"/api/v1/jobs/{job_id}/artifacts",
+            headers=AUTH,
+            json={
+                "contract_version": "1",
+                "requests": [
+                    {
+                        "artifact_type": "forecast_table",
+                        "formats": ["markdown"],
+                        "options": {"locale": "en", "max_rows": 100},
+                    },
+                    {
+                        "artifact_type": "forecast_chart",
+                        "formats": ["png"],
+                        "options": {
+                            "locale": "en",
+                            "theme": "dark",
+                            "width": 640,
+                            "height": 480,
+                            "max_points": 100,
+                        },
+                    },
+                    {
+                        "artifact_type": "residual_chart",
+                        "formats": ["png"],
+                        "options": {
+                            "locale": "en",
+                            "theme": "dark",
+                            "width": 640,
+                            "height": 480,
+                            "max_points": 100,
+                        },
+                    },
+                ],
+            },
+        )
+        assert created.status_code == 202
+
+        artifacts = []
+        while monotonic() < deadline:
+            listing = client.get(
+                f"/api/v1/jobs/{job_id}/artifacts",
+                headers=AUTH,
+            )
+            artifacts = listing.json()["artifact_batches"][0]["artifacts"]
+            if all(item["status"] == "available" for item in artifacts):
+                break
+            sleep(0.01)
+
+        assert [item["status"] for item in artifacts] == [
+            "available",
+            "available",
+            "available",
+        ]
+        table = client.get(
+            f"/api/v1/artifacts/{artifacts[0]['artifact_id']}",
+            headers=AUTH,
+        )
+        timeline = client.get(
+            f"/api/v1/artifacts/{artifacts[1]['artifact_id']}",
+            headers=AUTH,
+        )
+        residuals = client.get(
+            f"/api/v1/artifacts/{artifacts[2]['artifact_id']}",
+            headers=AUTH,
+        )
+
+    assert table.headers["content-type"].startswith("text/markdown")
+    assert "Timestamp" in table.text
+    assert timeline.content.startswith(b"\x89PNG\r\n\x1a\n")
+    assert residuals.content.startswith(b"\x89PNG\r\n\x1a\n")
 
 
 def test_production_packing_artifact_lifecycle(tmp_path):

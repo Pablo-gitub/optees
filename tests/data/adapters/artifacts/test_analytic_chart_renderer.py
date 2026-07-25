@@ -131,6 +131,73 @@ def _fixtures(capability_id: str) -> tuple[dict, dict, dict]:
             },
             {},
         )
+    if capability_id == "ml.forecasting.univariate":
+        points = [
+            {
+                "timestamp": f"2026-01-{day:02d}T00:00:00",
+                "actual": float(day),
+                "predicted": float(day - 1),
+                "residual": 1.0,
+                "interval": None,
+                "segment": "fitted",
+            }
+            for day in range(2, 13)
+        ]
+        points.extend(
+            [
+                {
+                    "timestamp": f"2026-01-{day:02d}T00:00:00",
+                    "actual": None,
+                    "predicted": 12.0,
+                    "residual": None,
+                    "interval": {
+                        "lower": 10.0,
+                        "upper": 14.0,
+                        "coverage": 0.95,
+                    },
+                    "segment": "future",
+                }
+                for day in (13, 14)
+            ]
+        )
+        return (
+            {
+                "version": "1",
+                "problem_type": "univariate_forecasting",
+                "target_name": "daily_orders",
+                "frequency": "daily",
+                "horizon": 2,
+                "method": "naive",
+                "observations": [],
+            },
+            {
+                "forecast_available": True,
+                "method": "naive",
+                "origin": "2026-01-12T00:00:00",
+                "points": points,
+                "evaluation": {
+                    "status": "evaluated",
+                    "folds": [
+                        {
+                            "origin": "2026-01-10T00:00:00",
+                            "training_size": 10,
+                            "points": [
+                                {
+                                    "timestamp": "2026-01-11T00:00:00",
+                                    "actual": 11.0,
+                                    "predicted": 10.0,
+                                    "residual": 1.0,
+                                    "interval": None,
+                                    "segment": "holdout",
+                                }
+                            ],
+                            "metrics": {},
+                        }
+                    ],
+                },
+            },
+            {},
+        )
     return (
         {
             "version": "1",
@@ -177,8 +244,10 @@ def _options(artifact_type: str) -> dict:
         "convergence_chart",
         "fit_chart",
         "decision_boundary",
+        "forecast_chart",
+        "residual_chart",
     }:
-        return {"max_points": 100}
+        return {"max_points": 10}
     return {}
 
 
@@ -257,3 +326,18 @@ def test_decision_boundary_rejects_non_two_feature_dataset():
 
     with pytest.raises(ValueError, match="exactly two features"):
         AnalyticChartRenderer(definition).render(context)
+
+
+@pytest.mark.parametrize("artifact_type", ("forecast_chart", "residual_chart"))
+def test_forecasting_charts_apply_bounded_sampling(artifact_type):
+    definition = next(
+        item
+        for item in analytic_visual_definitions()
+        if item.artifact_type == artifact_type
+    )
+
+    rendered = AnalyticChartRenderer(definition).render(_context(definition))
+    svg = rendered.content.decode("utf-8")
+
+    assert "Showing 10 of " in svg
+    assert "Optees" in svg

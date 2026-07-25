@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from io import BytesIO
+import json
 from math import cos, isfinite, pi, sin
+from datetime import datetime
 
 import numpy as np
 from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -74,6 +76,8 @@ class AnalyticChartRenderer:
             "regression_fit": _draw_regression_fit,
             "classification_confusion": _draw_confusion,
             "classification_boundary": _draw_decision_boundary,
+            "forecast_timeline": _draw_forecast_timeline,
+            "forecast_residuals": _draw_forecast_residuals,
         }
         drawers[kind](axes, context, palette)
         _style(axes, palette)
@@ -472,6 +476,224 @@ def _draw_decision_boundary(axes, context, palette) -> None:
     )
 
 
+def _draw_forecast_timeline(axes, context, palette) -> None:
+    points = _forecast_rows(context)
+    if not points:
+        raise ValueError("forecast chart requires forecast points")
+    sampled, sampling = _sample_timestamped(points, _max_points(context))
+
+    actual = [point for point in sampled if point["actual"] is not None]
+    historical = [
+        point for point in sampled if point["segment"] != "future"
+    ]
+    future = [point for point in sampled if point["segment"] == "future"]
+    if actual:
+        axes.plot(
+            [point["timestamp"] for point in actual],
+            [point["actual"] for point in actual],
+            color=palette["text"],
+            linewidth=1.8,
+            marker="o",
+            markersize=3,
+            label="Reale" if context.options.locale == "it" else "Actual",
+        )
+    if historical:
+        axes.plot(
+            [point["timestamp"] for point in historical],
+            [point["predicted"] for point in historical],
+            color=palette["secondary"],
+            linewidth=1.8,
+            label="Adattato" if context.options.locale == "it" else "Fitted",
+        )
+    if future:
+        axes.plot(
+            [point["timestamp"] for point in future],
+            [point["predicted"] for point in future],
+            color=palette["accent"],
+            linewidth=2.4,
+            marker="o",
+            markersize=3,
+            label="Previsione" if context.options.locale == "it" else "Forecast",
+        )
+        interval = [
+            point for point in future
+            if point["lower"] is not None and point["upper"] is not None
+        ]
+        if interval:
+            axes.fill_between(
+                [point["timestamp"] for point in interval],
+                [point["lower"] for point in interval],
+                [point["upper"] for point in interval],
+                color=palette["accent"],
+                alpha=0.18,
+                label=(
+                    "Intervallo di previsione"
+                    if context.options.locale == "it"
+                    else "Prediction interval"
+                ),
+            )
+
+    origin = _timestamp(context.envelope.result.get("origin"))
+    if origin is not None:
+        axes.axvline(
+            origin,
+            color=palette["negative"],
+            linestyle="--",
+            linewidth=1.5,
+            label=(
+                "Origine previsione"
+                if context.options.locale == "it"
+                else "Forecast origin"
+            ),
+        )
+    axes.set_ylabel(
+        str(context.problem.get("target_name") or "Target"),
+        color=palette["text"],
+    )
+    axes.set_title(
+        "Serie storica e previsione"
+        if context.options.locale == "it"
+        else "History and forecast",
+        color=palette["text"],
+    )
+    axes.legend()
+    _sampling_note(axes, sampling, context, palette)
+
+
+def _draw_forecast_residuals(axes, context, palette) -> None:
+    points = [
+        point
+        for point in _forecast_rows(context, include_folds=True)
+        if point["residual"] is not None
+    ]
+    if not points:
+        raise ValueError("residual chart requires evaluated residuals")
+    sampled, sampling = _sample_timestamped(points, _max_points(context))
+    colors = [
+        (
+            palette["negative"]
+            if point["segment"] == "holdout"
+            else palette["secondary"]
+        )
+        for point in sampled
+    ]
+    axes.scatter(
+        [point["timestamp"] for point in sampled],
+        [point["residual"] for point in sampled],
+        color=colors,
+        s=24,
+    )
+    axes.plot(
+        [point["timestamp"] for point in sampled],
+        [point["residual"] for point in sampled],
+        color=palette["inactive"],
+        linewidth=1,
+        alpha=0.7,
+    )
+    axes.axhline(0.0, color=palette["text"], linewidth=1.2)
+    axes.set_ylabel(
+        "Residuo" if context.options.locale == "it" else "Residual",
+        color=palette["text"],
+    )
+    axes.set_title(
+        "Residui nel tempo"
+        if context.options.locale == "it"
+        else "Residuals over time",
+        color=palette["text"],
+    )
+    _sampling_note(axes, sampling, context, palette)
+
+
+def _forecast_rows(context, *, include_folds: bool = False) -> list[dict]:
+    raw_points = _objects(context.envelope.result.get("points"))
+    if include_folds:
+        evaluation = context.envelope.result.get("evaluation")
+        evaluation = evaluation if isinstance(evaluation, dict) else {}
+        for fold in _objects(evaluation.get("folds")):
+            raw_points.extend(_objects(fold.get("points")))
+    points: list[dict] = []
+    for point in raw_points:
+        timestamp = _timestamp(point.get("timestamp"))
+        predicted = _number(point.get("predicted"))
+        if timestamp is None or predicted is None:
+            continue
+        interval = point.get("interval")
+        interval = interval if isinstance(interval, dict) else {}
+        points.append(
+            {
+                "timestamp": timestamp,
+                "actual": _number(point.get("actual")),
+                "predicted": predicted,
+                "residual": _number(point.get("residual")),
+                "lower": _number(interval.get("lower")),
+                "upper": _number(interval.get("upper")),
+                "segment": str(point.get("segment") or ""),
+            }
+        )
+    return sorted(points, key=lambda point: point["timestamp"])
+
+
+def _timestamp(value) -> datetime | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _max_points(context) -> int:
+    raw = _extra(context, "max_points", 500)
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        raise ValueError("max_points must be an integer")
+    if raw < 10 or raw > 2000:
+        raise ValueError("max_points must be between 10 and 2000")
+    return raw
+
+
+def _sample_timestamped(
+    values: list[dict],
+    maximum: int,
+) -> tuple[list[dict], dict[str, object]]:
+    total = len(values)
+    if total <= maximum:
+        sampled = values
+    else:
+        indices = np.linspace(0, total - 1, maximum, dtype=int)
+        sampled = [values[int(index)] for index in indices]
+    return sampled, {
+        "total_points": total,
+        "displayed_points": len(sampled),
+        "downsampled": len(sampled) < total,
+        "sampling": "evenly_spaced_with_endpoints",
+    }
+
+
+def _sampling_note(axes, metadata, context, palette) -> None:
+    if not metadata["downsampled"]:
+        return
+    if context.options.locale == "it":
+        text = (
+            f"Mostrati {metadata['displayed_points']} di "
+            f"{metadata['total_points']} punti"
+        )
+    else:
+        text = (
+            f"Showing {metadata['displayed_points']} of "
+            f"{metadata['total_points']} points"
+        )
+    axes.text(
+        1.0,
+        -0.16,
+        text,
+        transform=axes.transAxes,
+        ha="right",
+        va="top",
+        color=palette["muted"],
+        fontsize=8,
+    )
+
+
 def _style(axes, palette) -> None:
     axes.tick_params(colors=palette["muted"])
     axes.grid(True, color=palette["grid"], alpha=0.35)
@@ -490,12 +712,20 @@ def _encode(figure, context, palette) -> RenderedArtifact:
         )
         return RenderedArtifact("image/svg+xml", stream.getvalue())
     if context.format is ArtifactFormat.PNG:
+        rendering_metadata = json.dumps(
+            {
+                "artifact_type": context.artifact_type,
+                "renderer": AnalyticChartRenderer.renderer_version,
+            },
+            sort_keys=True,
+            separators=(",", ":"),
+        )
         figure.savefig(
             stream,
             format="png",
             facecolor=palette["background"],
             dpi=100,
-            metadata={"Software": "Optees"},
+            metadata={"Software": "Optees", "Description": rendering_metadata},
         )
         return RenderedArtifact("image/png", stream.getvalue())
     raise ValueError("analytic renderer received an unsupported format")
