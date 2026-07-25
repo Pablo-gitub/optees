@@ -96,6 +96,7 @@ def test_toolbar_groups_machine_learning_actions(window) -> None:
     assert window.drop_ml.menu().actions() == [
         window.act_regression,
         window.act_classification,
+        window.act_forecasting,
     ]
 
 

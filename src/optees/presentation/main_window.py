@@ -427,6 +427,9 @@ class MainWindow(QMainWindow):
         self.act_classification = QAction(S.t("alg.classification"), self)
         self.act_classification.triggered.connect(lambda: self.goto("classification"))
         ml_menu.addAction(self.act_classification)
+        self.act_forecasting = QAction(S.t("alg.forecasting"), self)
+        self.act_forecasting.triggered.connect(lambda: self.goto("forecasting"))
+        ml_menu.addAction(self.act_forecasting)
         self.drop_ml.setMenu(ml_menu)
         self.toolbar.addWidget(self.drop_ml)
 
@@ -488,6 +491,7 @@ class MainWindow(QMainWindow):
         self.drop_ml.setText(S.t("nav.machine_learning").replace("&", "&&"))
         self.act_regression.setText(S.t("alg.regression"))
         self.act_classification.setText(S.t("alg.classification"))
+        self.act_forecasting.setText(S.t("alg.forecasting"))
         self.act_settings.setText(S.t("nav.settings"))
         self.act_settings.setToolTip(S.t("nav.settings"))
         if hasattr(self, "assistant_bubble"):

@@ -66,7 +66,8 @@
     "graph": "Cammino minimo (Dijkstra)",
     "packing": "Packing e caricamento 3D",
     "regression": "Regressione lineare",
-    "classification": "Classificazione binaria"
+    "classification": "Classificazione binaria",
+    "forecasting": "Previsione di serie storiche"
   },
   "settings": {
     "title": "Impostazioni",
