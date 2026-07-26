@@ -3,10 +3,12 @@ from PySide6.QtCore import QLocale, QSize, Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices, QIcon
 from PySide6.QtWidgets import (
     QComboBox,
+    QFileDialog,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QSpinBox,
     QVBoxLayout,
@@ -31,6 +33,7 @@ PERSONAL_WEBSITE_URL = "https://paolopietrelli.com"
 
 
 class SettingsView(QWidget):
+    export_directory_change_requested = Signal(str)
     service_start_requested = Signal(int)
     service_stop_requested = Signal()
     service_copy_url_requested = Signal()
@@ -86,6 +89,28 @@ class SettingsView(QWidget):
         form.addRow(self.lbl_version, self.value_version)
         form.addRow(self.lbl_update, self.value_update)
         root.addLayout(form)
+
+        self.export_group = QGroupBox(self)
+        export_layout = QVBoxLayout(self.export_group)
+        self.export_description = QLabel(self.export_group)
+        self.export_description.setWordWrap(True)
+        export_layout.addWidget(self.export_description)
+        export_row = QHBoxLayout()
+        self.export_directory_label = QLabel(self.export_group)
+        self.export_directory = QLineEdit(self.export_group)
+        self.export_directory.setObjectName("exportDirectory")
+        self.export_directory.setReadOnly(True)
+        self.export_choose_button = QPushButton(self.export_group)
+        self.export_choose_button.setObjectName("exportDirectoryChooseButton")
+        export_row.addWidget(self.export_directory_label)
+        export_row.addWidget(self.export_directory, 1)
+        export_row.addWidget(self.export_choose_button)
+        export_layout.addLayout(export_row)
+        self.export_security_note = QLabel(self.export_group)
+        self.export_security_note.setWordWrap(True)
+        export_layout.addWidget(self.export_security_note)
+        root.addWidget(self.export_group)
+        self.export_choose_button.clicked.connect(self._choose_export_directory)
 
         self.service_group = QGroupBox(self)
         service_layout = QVBoxLayout(self.service_group)
@@ -213,6 +238,15 @@ class SettingsView(QWidget):
         if code and code != S.get_language():
             S.set_language(code)  # emit language_changed
 
+    def _choose_export_directory(self) -> None:
+        selected = QFileDialog.getExistingDirectory(
+            self,
+            S.t("settings.exports.dialog_title"),
+            self.export_directory.text(),
+        )
+        if selected:
+            self.export_directory_change_requested.emit(selected)
+
     def _make_external_link_button(
         self,
         object_name: str,
@@ -236,6 +270,11 @@ class SettingsView(QWidget):
         self.lbl_choose.setText(S.t("settings.choose_language"))
         self.lbl_version.setText(S.t("settings.version_label"))
         self.lbl_update.setText(S.t("settings.update_label"))
+        self.export_group.setTitle(S.t("settings.exports.title"))
+        self.export_description.setText(S.t("settings.exports.description"))
+        self.export_directory_label.setText(S.t("settings.exports.directory"))
+        self.export_choose_button.setText(S.t("settings.exports.choose"))
+        self.export_security_note.setText(S.t("settings.exports.security_note"))
         self.service_group.setTitle(S.t("settings.local_service.title"))
         self.service_description.setText(S.t("settings.local_service.description"))
         self.service_port_label.setText(S.t("settings.local_service.port"))
@@ -288,6 +327,17 @@ class SettingsView(QWidget):
             self.combo_lang.setItemText(i, labels.get(code, code))
         self._refresh_update_text()
         self.set_service_snapshot(self._service_snapshot)
+
+    def set_export_directory(self, directory: str) -> None:
+        self.export_directory.setText(directory)
+        self.export_directory.setToolTip(directory)
+        self.export_directory.setStyleSheet("")
+
+    def set_export_directory_error(self, detail: str) -> None:
+        self.export_directory.setToolTip(
+            S.t("settings.exports.error", detail=detail)
+        )
+        self.export_directory.setStyleSheet("border: 1px solid #ef4444;")
 
     def set_service_snapshot(self, snapshot: LocalServerSnapshot) -> None:
         self._service_snapshot = snapshot

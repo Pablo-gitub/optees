@@ -90,6 +90,15 @@
     "update_launching": "Apertura del pacchetto scaricato. Completa i passaggi di sostituzione della piattaforma dopo la chiusura di Optees.",
     "update_unknown": "Non e' stato possibile stabilire se questa e' l'ultima versione.",
     "update_error": "Impossibile controllare gli aggiornamenti: {detail}",
+    "exports": {
+      "title": "Artifact e report scaricati",
+      "description": "Scegli dove Optees salva i file scaricati esplicitamente dagli agenti locali tramite MCP. I download REST restano controllati dal client che effettua la chiamata.",
+      "directory": "Cartella di destinazione",
+      "choose": "Scegli cartella",
+      "dialog_title": "Scegli la cartella di download di Optees",
+      "security_note": "Gli agenti possono salvare in questa cartella solo artifact e report generati da Optees. Non possono indicare percorsi arbitrari.",
+      "error": "Non e' stato possibile salvare la cartella selezionata: {detail}"
+    },
     "links": {
       "github": "Optees su GitHub",
       "github_tooltip": "Apri il repository Optees su GitHub",

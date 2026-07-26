@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
@@ -13,6 +14,10 @@ from optees.application.services.local_server_process import (
 from optees.presentation.controllers.local_server_controller import (
     LocalServerController,
 )
+from optees.presentation.controllers.export_settings_controller import (
+    ExportSettingsController,
+)
+from optees.data.adapters.settings import LocalExportSettings
 from optees.presentation.views.settings_view import SettingsView
 
 
@@ -117,3 +122,20 @@ def test_running_fallback_is_reported_and_locks_port_editor(qtbot):
     assert "45123" in view.service_status_value.text()
     assert view.service_port.isEnabled() is False
     assert view.service_stop_button.isEnabled() is True
+
+
+def test_export_directory_is_shared_through_the_settings_adapter(
+    qtbot,
+    tmp_path: Path,
+):
+    view = SettingsView()
+    qtbot.addWidget(view)
+    settings = LocalExportSettings(tmp_path / "settings.json")
+    controller = ExportSettingsController(view, settings)
+    selected = tmp_path / "exports"
+
+    view.export_directory_change_requested.emit(str(selected))
+
+    assert settings.get_directory() == selected
+    assert view.export_directory.text() == str(selected)
+    assert controller.parent() is None

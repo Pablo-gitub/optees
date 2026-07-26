@@ -90,6 +90,15 @@
     "update_launching": "Opening the downloaded package. Complete the platform replacement steps after Optees closes.",
     "update_unknown": "Could not determine whether this is the latest version.",
     "update_error": "Could not check updates: {detail}",
+    "exports": {
+      "title": "Downloaded artifacts and reports",
+      "description": "Choose where Optees saves files explicitly downloaded by local agents through MCP. REST downloads remain controlled by the calling client.",
+      "directory": "Destination folder",
+      "choose": "Choose folder",
+      "dialog_title": "Choose the Optees download folder",
+      "security_note": "Agents can save only generated Optees artifacts and reports in this folder. They cannot supply arbitrary paths.",
+      "error": "The selected folder could not be saved: {detail}"
+    },
     "links": {
       "github": "Optees on GitHub",
       "github_tooltip": "Open the Optees repository on GitHub",

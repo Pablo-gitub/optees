@@ -71,8 +71,12 @@ Cancellation is cooperative. It immediately makes the public operation
 terminal and prevents a late renderer result from being published. The
 Pandoc+Typst adapter also terminates its isolated process group.
 
-Artifact bytes remain available only through authenticated REST downloads or
-explicit MCP resources. Reports follow the same rule. Metadata tools never
+Artifact bytes remain available through authenticated REST downloads or
+explicit MCP resources. With explicit user intent, MCP can also call
+`optees_download_artifact` or `optees_download_report` to save verified bytes
+inside the export directory selected in Optees Settings. These tools accept a
+safe filename, never an arbitrary destination path. Reports follow the same
+rule. Metadata tools never
 return binary content or absolute temporary paths.
 
 ## Native Acceptance

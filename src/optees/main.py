@@ -16,6 +16,11 @@ def main(argv: list[str] | None = None) -> int:
             raise RuntimeError("The GitHub update endpoint returned no release tag.")
         print(f"GitHub update endpoint reachable: {release.tag_name}")
         return 0
+    if len(arguments) == 2 and arguments[0] == "--set-export-directory":
+        from optees.data.adapters.settings import LocalExportSettings
+
+        LocalExportSettings().set_directory(arguments[1])
+        return 0
     if arguments and arguments[0] == "--local-server":
         from optees.local_server import main as server_main
 

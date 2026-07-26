@@ -17,6 +17,17 @@ def test_inno_setup_is_per_user_and_has_stable_identity():
     assert "Flags: unchecked" in script
 
 
+def test_inno_setup_initializes_a_shared_export_directory_once():
+    script = (ROOT / "packaging/windows/optees.iss").read_text(encoding="utf-8")
+
+    assert "CreateInputDirPage(" in script
+    assert "{userdownloads}\\Optees" in script
+    assert "--set-export-directory" in script
+    assert "Check: ShouldInitializeExportDirectory" in script
+    assert "{localappdata}\\Optees\\settings.json" in script
+    assert "function ShouldSkipPage(PageID: Integer): Boolean;" in script
+
+
 def test_release_builds_native_and_explicit_portable_windows_artifacts():
     workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
 

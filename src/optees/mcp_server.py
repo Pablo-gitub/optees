@@ -11,6 +11,9 @@ from optees.composition.local_agent import (
     create_local_report_service,
 )
 from optees.interfaces.mcp.local_server import create_mcp_server
+from optees.data.adapters.artifacts.configured_local_export_adapter import (
+    ConfiguredLocalExportAdapter,
+)
 
 
 def main() -> None:
@@ -21,7 +24,12 @@ def main() -> None:
     reports = create_local_report_service(service, artifacts)
     try:
         with _isolated_frozen_stdio():
-            create_mcp_server(service, artifacts, reports).run(transport="stdio")
+            create_mcp_server(
+                service,
+                artifacts,
+                reports,
+                ConfiguredLocalExportAdapter(),
+            ).run(transport="stdio")
     except ImportError:
         print(
             "The optional MCP dependency is missing. Install optees[mcp].",

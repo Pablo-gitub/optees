@@ -111,7 +111,11 @@ from optees.presentation.views.lp_solution_view.lp_solution_view import LPSoluti
 from optees.presentation.controllers.main_controller import MainController
 from optees.presentation.controllers.update_controller import UpdateController
 from optees.presentation.controllers.local_server_controller import LocalServerController
+from optees.presentation.controllers.export_settings_controller import (
+    ExportSettingsController,
+)
 from optees.application.services.local_server_process import LocalServerProcessManager
+from optees.data.adapters.settings import LocalExportSettings
 
 
 class MainWindow(QMainWindow):
@@ -216,6 +220,12 @@ class MainWindow(QMainWindow):
         )
         self.knap_page.set_multi_dimensional_milp_solve_usecase(self.solve_milp_uc)
         self.settings_page = SettingsView()
+        self.export_settings = LocalExportSettings()
+        self.export_settings_controller = ExportSettingsController(
+            self.settings_page,
+            self.export_settings,
+            self,
+        )
         self.local_server_manager = LocalServerProcessManager()
         self.local_server_controller = LocalServerController(
             self.settings_page,

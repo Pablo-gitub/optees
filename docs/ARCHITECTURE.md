@@ -183,10 +183,19 @@ or access filesystem paths.
 
 The MCP adapter exposes the same service through metadata-first tools.
 Discovery, rendering, and manifest inspection return structured JSON only;
-artifact bytes are available solely through an explicit
-`optees-artifact://{artifact_id}` resource read. This prevents charts, ZIP
-archives, and other binaries from entering model context as an incidental tool
-result.
+artifact bytes are available through an explicit
+`optees-artifact://{artifact_id}` resource read or an explicit local-download
+tool. This prevents charts, ZIP archives, and other binaries from entering
+model context as an incidental tool result.
+
+Local export is a separate user-authorized infrastructure boundary behind
+`LocalExportPort`; it does not weaken the private temporary-storage contract.
+Its adapter verifies the retained SHA-256 digest, accepts only a safe basename,
+and writes atomically inside the configured export root. The desktop GUI and
+packaged MCP companion are separate processes, but share that root through a
+small platform-specific JSON settings file. The installer initializes it to
+the user's `Downloads/Optees` directory on first installation, while subsequent
+GUI changes are read by the MCP adapter on every explicit download request.
 
 `ReportCompositionService` is a second application-owned asynchronous
 orchestrator. It resolves execution envelopes through `LocalJobService`, pins
@@ -194,8 +203,9 @@ verified artifact inputs through `ArtifactGenerationService`, delegates
 deterministic Markdown assembly to `MarkdownReportComposer`, and writes the
 result to its own bounded `ArtifactStoragePort`. The composer owns no
 filesystem, HTTP, MCP, Qt, Pandoc, or solver dependency. REST and MCP expose
-metadata-first report operations; report bytes are read only through an
-authenticated download or explicit `optees-report://{report_id}` resource.
+metadata-first report operations; report bytes are read through an
+authenticated download, explicit `optees-report://{report_id}` resource, or
+the constrained local-download tool.
 Unavailable inputs are represented in-band as `unsupported_artifact` blocks,
 so a generated document cannot silently omit requested evidence.
 

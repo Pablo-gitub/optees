@@ -297,8 +297,12 @@ binary content. Markdown reports are always local and dependency-free; PDF
 requires the optional Pandoc+Typst backend.
 
 Before requesting PDF, call `optees_get_report_backends`. Compose with
-`optees_compose_report`, poll `optees_get_report_status`, and retrieve bytes
-only through the returned `optees-report://` resource. Packing OBJ+MTL
+`optees_compose_report` and poll `optees_get_report_status`. Agents may read
+bytes through the returned `optees-report://` resource, or use
+`optees_download_report` after explicit user intent to save the file in the
+directory authorized in Optees Settings. The corresponding artifact operation
+is `optees_download_artifact`. These tools accept an optional safe filename,
+not a filesystem path, and verify SHA-256 before writing. Packing OBJ+MTL
 artifacts can request `isometric`, `front`, `side`, or `top` views. For long
 operations, inspect progress and use `optees_cancel_artifact` or
 `optees_cancel_report` when the user cancels the task.

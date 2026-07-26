@@ -22,6 +22,7 @@ from optees.application.services.local_job_service import LocalJobService
 from optees.application.services.report_composition_service import (
     ReportCompositionService,
 )
+from optees.application.ports.local_export_port import LocalExportPort
 
 
 class LocalMcpToolFacade:
@@ -32,10 +33,12 @@ class LocalMcpToolFacade:
         job_service: LocalJobService,
         artifact_service: ArtifactGenerationService | None = None,
         report_service: ReportCompositionService | None = None,
+        export_port: LocalExportPort | None = None,
     ) -> None:
         self._jobs = job_service
         self._artifacts = artifact_service
         self._reports = report_service
+        self._export = export_port
         self._described_capabilities: set[str] = set()
         self._validated_problems: set[str] = set()
         self._validated_batches: set[str] = set()
@@ -389,17 +392,79 @@ class LocalMcpToolFacade:
             raise ValueError(outcome.message)
         return outcome.content
 
+    def download_artifact(
+        self,
+        artifact_id: str,
+        filename: str | None = None,
+        overwrite: bool = False,
+    ) -> dict[str, object]:
+        if self._artifacts is None or self._export is None:
+            return _tool_error("export_unavailable", "Local export is not configured.")
+        manifest = self._artifacts.manifest_entry(artifact_id)
+        if isinstance(manifest, StructuredError):
+            return {"ok": False, "error": manifest.to_dict()["error"]}
+        payload = self._artifacts.download(artifact_id)
+        if isinstance(payload, StructuredError):
+            return {"ok": False, "error": payload.to_dict()["error"]}
+        try:
+            exported = self._export.export(
+                payload.content,
+                suggested_filename=(
+                    f"{manifest.artifact_type}-{artifact_id}.{_artifact_extension(manifest.format.value)}"
+                ),
+                media_type=manifest.media_type,
+                expected_sha256=payload.artifact.sha256,
+                filename=filename,
+                overwrite=overwrite,
+            )
+        except (OSError, ValueError) as error:
+            return _tool_error("export_failed", str(error))
+        return {"ok": True, "export": exported.to_dict()}
+
+    def download_report(
+        self,
+        report_id: str,
+        filename: str | None = None,
+        overwrite: bool = False,
+    ) -> dict[str, object]:
+        if self._reports is None or self._export is None:
+            return _tool_error("export_unavailable", "Local export is not configured.")
+        manifest = self._reports.get(report_id)
+        if isinstance(manifest, StructuredError):
+            return {"ok": False, "error": manifest.to_dict()["error"]}
+        payload = self._reports.download(report_id)
+        if isinstance(payload, StructuredError):
+            return {"ok": False, "error": payload.to_dict()["error"]}
+        try:
+            exported = self._export.export(
+                payload.content,
+                suggested_filename=f"{report_id}.{manifest.format.value}",
+                media_type=manifest.media_type,
+                expected_sha256=payload.artifact.sha256,
+                filename=filename,
+                overwrite=overwrite,
+            )
+        except (OSError, ValueError) as error:
+            return _tool_error("export_failed", str(error))
+        return {"ok": True, "export": exported.to_dict()}
+
 
 def create_mcp_server(
     job_service: LocalJobService,
     artifact_service: ArtifactGenerationService | None = None,
     report_service: ReportCompositionService | None = None,
+    export_port: LocalExportPort | None = None,
 ):
     """Create the stdio MCP server without starting or owning the job service."""
 
     from mcp.server.fastmcp import FastMCP
 
-    facade = LocalMcpToolFacade(job_service, artifact_service, report_service)
+    facade = LocalMcpToolFacade(
+        job_service,
+        artifact_service,
+        report_service,
+        export_port,
+    )
     server = FastMCP(
         "Optees Local Solver",
         instructions=(
@@ -581,6 +646,21 @@ def create_mcp_server(
         return facade.get_artifact(artifact_id)
 
     @server.tool(
+        name="optees_download_artifact",
+        description=(
+            "Save one available artifact into the user-authorized Optees export "
+            "directory. The agent may choose a safe filename but never a path."
+        ),
+        structured_output=True,
+    )
+    def optees_download_artifact(
+        artifact_id: str,
+        filename: str | None = None,
+        overwrite: bool = False,
+    ) -> dict[str, object]:
+        return facade.download_artifact(artifact_id, filename, overwrite)
+
+    @server.tool(
         name="optees_cancel_artifact",
         description="Request cancellation of one queued or rendering artifact.",
         structured_output=True,
@@ -649,6 +729,21 @@ def create_mcp_server(
     def optees_get_report(report_id: str) -> dict[str, object]:
         return facade.get_report(report_id)
 
+    @server.tool(
+        name="optees_download_report",
+        description=(
+            "Save one available report into the user-authorized Optees export "
+            "directory. The agent may choose a safe filename but never a path."
+        ),
+        structured_output=True,
+    )
+    def optees_download_report(
+        report_id: str,
+        filename: str | None = None,
+        overwrite: bool = False,
+    ) -> dict[str, object]:
+        return facade.download_report(report_id, filename, overwrite)
+
     @server.resource(
         "optees-report://{report_id}",
         name="Optees report",
@@ -662,6 +757,13 @@ def create_mcp_server(
         return facade.read_report_resource(report_id)
 
     return server
+
+
+def _artifact_extension(format_value: str) -> str:
+    return {
+        "data_json": "json",
+        "obj_mtl_zip": "zip",
+    }.get(format_value, format_value)
 
 
 def _problem_key(capability_id: str, problem: Mapping[str, object]) -> str:

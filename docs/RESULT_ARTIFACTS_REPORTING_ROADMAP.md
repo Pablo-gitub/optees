@@ -125,10 +125,18 @@ Suggested MCP tools:
 - `optees_compose_report`;
 - `optees_get_report_status`;
 - `optees_get_report` or a local-resource equivalent.
+- `optees_download_artifact` and `optees_download_report` for explicit exports
+  into the user-authorized local directory.
 
 The final MCP transfer mechanism must respect client size limits. Large binary
 files should be exposed as authenticated local resources or explicit local
 downloads rather than copied into the model context.
+
+Desktop and packaged MCP processes share the selected export directory through
+a platform-native JSON settings file. The Windows installer initializes it to
+`Downloads\Optees`; upgrades preserve an existing selection. Export tools
+accept only bounded file names, write below that configured directory, verify
+SHA-256, and refuse implicit overwrites.
 
 ## Capability Artifact Baseline
 

@@ -48,6 +48,14 @@ UsePreviousAppDir=yes
 Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 
+[CustomMessages]
+english.ExportDirectoryTitle=Artifact and report downloads
+english.ExportDirectoryDescription=Choose where Optees should save artifacts and reports downloaded by local agents.
+english.ExportDirectoryPrompt=Destination folder:
+italian.ExportDirectoryTitle=Download di artifact e report
+italian.ExportDirectoryDescription=Scegli dove Optees deve salvare gli artifact e i report scaricati dagli agenti locali.
+italian.ExportDirectoryPrompt=Cartella di destinazione:
+
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
@@ -59,4 +67,47 @@ Name: "{group}\Optees"; Filename: "{app}\{#AppExecutable}"
 Name: "{autodesktop}\Optees"; Filename: "{app}\{#AppExecutable}"; Tasks: desktopicon
 
 [Run]
+Filename: "{app}\{#AppExecutable}"; Parameters: "--set-export-directory ""{code:GetExportDirectory}"""; Flags: runhidden waituntilterminated; Check: ShouldInitializeExportDirectory
 Filename: "{app}\{#AppExecutable}"; Description: "{cm:LaunchProgram,Optees}"; Flags: nowait postinstall skipifsilent
+
+[Code]
+var
+  ExportDirectoryPage: TInputDirWizardPage;
+
+procedure InitializeWizard;
+begin
+  ExportDirectoryPage :=
+    CreateInputDirPage(
+      wpSelectDir,
+      ExpandConstant('{cm:ExportDirectoryTitle}'),
+      ExpandConstant('{cm:ExportDirectoryDescription}'),
+      ExpandConstant('{cm:ExportDirectoryPrompt}'),
+      False,
+      ''
+    );
+  ExportDirectoryPage.Add('');
+  ExportDirectoryPage.Values[0] := ExpandConstant('{userdownloads}\Optees');
+end;
+
+function GetExportDirectory(Param: String): String;
+begin
+  Result := ExportDirectoryPage.Values[0];
+end;
+
+function HasExportSettings: Boolean;
+begin
+  Result := FileExists(ExpandConstant('{localappdata}\Optees\settings.json'));
+end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result :=
+    (ExportDirectoryPage <> nil) and
+    (PageID = ExportDirectoryPage.ID) and
+    HasExportSettings;
+end;
+
+function ShouldInitializeExportDirectory: Boolean;
+begin
+  Result := not HasExportSettings;
+end;

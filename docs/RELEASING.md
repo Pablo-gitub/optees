@@ -189,3 +189,8 @@ is the visible per-user Inno Setup installer; the ZIP remains an explicitly
 portable fallback. On macOS and Linux, installation remains an operating-system
 workflow: dragging the app from a DMG or replacing/running the AppImage. Optees
 does not silently overwrite a running installation.
+
+On its first installation, Inno Setup also asks for the artifact/report export
+directory and defaults to `Downloads\Optees`. The value is stored in
+`%LOCALAPPDATA%\Optees\settings.json` for both desktop and MCP companions.
+Upgrades must skip this initialization when the shared settings file exists.
