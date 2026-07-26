@@ -48,6 +48,19 @@ def localized_error_detail(scope: str, error: Exception | str) -> str:
             return S.t("error_feedback.classification.options")
         return S.t("error_feedback.classification.dataset")
 
+    if scope == "forecasting_validation":
+        if _contains(detail, "two complete seasons", "season length"):
+            return S.t("error_feedback.forecasting.seasons")
+        if _contains(detail, "holdout leaves insufficient"):
+            return S.t("error_feedback.forecasting.holdout")
+        if _contains(detail, "rolling-origin"):
+            return S.t("error_feedback.forecasting.rolling")
+        if _contains(detail, "timestamp", "missing or off-frequency"):
+            return S.t("error_feedback.forecasting.timestamps")
+        if _contains(detail, "horizon", "iterations", "tolerance"):
+            return S.t("error_feedback.forecasting.options")
+        return S.t("error_feedback.forecasting.series")
+
     if scope == "graph_validation":
         if _contains(detail, "weight", "peso"):
             return S.t("error_feedback.graph.weights")

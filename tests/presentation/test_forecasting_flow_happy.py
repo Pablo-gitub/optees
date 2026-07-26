@@ -12,7 +12,11 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QMessageBox
 
 from optees.core.string_manager import strings as S
-from optees.domain.entities.forecasting import ForecastObservation
+from optees.domain.entities.forecasting import (
+    ForecastObservation,
+    ForecastPoint,
+    ForecastSegment,
+)
 from optees.domain.models.forecasting import (
     ForecastingEvaluationOptions,
     ForecastingModel,
@@ -154,6 +158,39 @@ def test_forecasting_controls_retranslate_and_info_buttons_remain_visible(
         S.set_language(previous)
 
 
+@pytest.mark.parametrize(
+    ("language", "series_terms", "config_terms"),
+    [
+        (
+            "en",
+            ("Series name", "Start date", "Timestamp", "Value", "Paste"),
+            ("Method", "Horizon", "Frequency", "Season length", "Evaluation"),
+        ),
+        (
+            "it",
+            ("Nome serie", "Data iniziale", "Timestamp", "Valore", "Incolla"),
+            ("Metodo", "Orizzonte", "Frequenza", "Lunghezza stagione", "Valutazione"),
+        ),
+    ],
+)
+def test_forecasting_section_info_explains_each_input_group(
+    language: str,
+    series_terms: tuple[str, ...],
+    config_terms: tuple[str, ...],
+) -> None:
+    previous = S.current_language()
+    try:
+        S.set_language(language)
+        series_info = S.t("forecasting.series.info_html")
+        config_info = S.t("forecasting.config.info_html")
+
+        assert all(term in series_info for term in series_terms)
+        assert all(term in config_info for term in config_terms)
+        assert "two complete seasons" in config_info or "due stagioni complete" in config_info
+    finally:
+        S.set_language(previous)
+
+
 def test_forecasting_chart_bounds_long_history_sampling() -> None:
     from optees.presentation.views.forecasting_solution_view import _sample
 
@@ -163,3 +200,35 @@ def test_forecasting_chart_bounds_long_history_sampling() -> None:
     assert len(sampled) <= 500
     assert sampled[0] == values[0]
     assert sampled[-1] == values[-1]
+
+
+def test_future_plot_starts_from_last_observed_value() -> None:
+    from optees.presentation.views.forecasting_solution_view import (
+        _future_plot_series,
+    )
+
+    actual = (
+        ForecastObservation(datetime(2025, 11, 1), 203),
+        ForecastObservation(datetime(2025, 12, 1), 212),
+    )
+    future = (
+        ForecastPoint(
+            timestamp=datetime(2026, 1, 1),
+            predicted=212,
+            segment=ForecastSegment.FUTURE,
+        ),
+        ForecastPoint(
+            timestamp=datetime(2026, 2, 1),
+            predicted=212,
+            segment=ForecastSegment.FUTURE,
+        ),
+    )
+
+    timestamps, values = _future_plot_series(actual, future)
+
+    assert timestamps == (
+        datetime(2025, 12, 1),
+        datetime(2026, 1, 1),
+        datetime(2026, 2, 1),
+    )
+    assert values == (212, 212, 212)

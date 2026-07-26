@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
@@ -28,6 +29,7 @@ from optees.core.design import tokens
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
 from optees.domain.entities.forecasting import (
+    ForecastObservation,
     ForecastPoint,
     ForecastSegment,
     ForecastingSolution,
@@ -132,12 +134,14 @@ class ForecastingChartWidget(QWidget):
                 zorder=4,
             )
         if future:
+            future_timestamps, future_values = _future_plot_series(actual, future)
             axis.plot(
-                [item.timestamp for item in future],
-                [item.predicted for item in future],
+                future_timestamps,
+                future_values,
                 color=charts.to_mpl(colors.success),
                 linewidth=2.2,
                 marker="o",
+                markevery=range(1, len(future_timestamps)),
                 label=S.t("forecasting.solution.chart.future"),
             )
             intervals = [point for point in future if point.interval is not None]
@@ -496,3 +500,18 @@ def _sample(values: tuple[object, ...], limit: int) -> tuple[object, ...]:
     step = max((len(values) - 1) / (limit - 1), 1)
     indices = sorted({round(index * step) for index in range(limit)})
     return tuple(values[min(index, len(values) - 1)] for index in indices)
+
+
+def _future_plot_series(
+    actual: tuple[ForecastObservation, ...],
+    future: tuple[ForecastPoint, ...],
+) -> tuple[tuple[datetime, ...], tuple[float, ...]]:
+    """Anchor the forecast line to the latest observation."""
+    timestamps = tuple(point.timestamp for point in future)
+    values = tuple(point.predicted for point in future)
+    if not actual:
+        return timestamps, values
+    return (
+        (actual[-1].timestamp, *timestamps),
+        (actual[-1].value, *values),
+    )

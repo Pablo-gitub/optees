@@ -216,6 +216,14 @@
       "dataset": "Usa esattamente due classi non vuote, almeno tre osservazioni complete per classe, valori numerici finiti per le feature e nomi feature univoci.",
       "options": "Controlla quota test, seed casuale, learning rate, limite di iterazioni e valore non negativo di alpha L2."
     },
+    "forecasting": {
+      "series": "Inserisci almeno due osservazioni finite e un nome non vuoto per la serie.",
+      "timestamps": "Inserisci timestamp univoci in ordine strettamente crescente, senza periodi mancanti rispetto alla frequenza selezionata.",
+      "options": "Usa valori positivi per orizzonte di previsione, limite di iterazioni e tolleranza.",
+      "seasons": "Un metodo stagionale richiede almeno due stagioni complete per il training. Con stagione 12 e holdout 2, per esempio, servono almeno 26 osservazioni. Aggiungi storico oppure riduci stagione o holdout.",
+      "holdout": "L'holdout esclude dal training gli ultimi periodi. Aggiungi abbastanza storico affinche' la finestra di training rispetti ancora i requisiti del metodo, oppure riduci l'holdout.",
+      "rolling": "La valutazione rolling-origin richiede storico sufficiente per il training minimo e per tutte le origini richieste. Riduci origini, passo o orizzonte di valutazione, oppure aggiungi osservazioni."
+    },
     "graph": {
       "weights": "Ogni peso di un arco deve essere un numero finito non negativo: Dijkstra non puo' usare pesi negativi.",
       "topology": "Dichiara vertici univoci, scegli sorgente e destinazione e assicurati che ogni arco colleghi due vertici distinti dichiarati.",
@@ -1030,7 +1038,7 @@
       "value": "Valore",
       "info_title": "Leggere la serie",
       "info_body": "Una previsione e' onesta quanto la sua storia. I timestamp devono essere regolarmente spaziati per la frequenza scelta e strettamente crescenti.",
-      "info_html": "<p>Optees non riordina i dati: inserisci le osservazioni in ordine temporale. I periodi mancanti vengono rifiutati se non e' impostata una politica, e i valori devono essere numeri finiti.</p>"
+      "info_html": "<h3>Nome serie</h3><p>Una breve descrizione della grandezza misurata, per esempio ordini mensili o consumo energetico. Diventa l'etichetta dell'asse dei valori nel risultato.</p><h3>Data iniziale e Compila date</h3><p>Inserisci il timestamp della prima riga, scegli sotto la frequenza e usa Compila date per generare un timestamp regolare per ogni riga.</p><h3>Timestamp</h3><p>Il periodo rappresentato dalla riga. I timestamp devono essere univoci, strettamente crescenti e allineati esattamente alla frequenza selezionata.</p><h3>Valore</h3><p>L'osservazione numerica finita misurata nel periodo. Non inserire valori futuri o segnaposto come zero per periodi non ancora avvenuti.</p><h3>Incolla</h3><p>Incolla due colonne separate da tabulazione copiate da un foglio di calcolo: prima timestamp, poi valore. Optees non riordina le righe e non completa silenziosamente i periodi mancanti.</p>"
     },
     "config": {
       "section": "Metodo e valutazione",
@@ -1051,7 +1059,7 @@
       "min_training": "Training min.",
       "info_title": "Metodo e valutazione",
       "info_body": "La valutazione tiene sempre l'addestramento strettamente prima della sua finestra di test, cosi' nessun valore futuro entra in una decisione passata.",
-      "info_html": "<p><b>Holdout</b> riserva gli ultimi periodi come unica finestra di test. <b>Rolling origin</b> ripete quel test su piu' finestre mobili. <b>Nessuna</b> salta la valutazione e produce solo la previsione futura.</p>"
+      "info_html": "<h3>Metodo</h3><p><b>Naive</b> ripete l'ultima osservazione. <b>Naive stagionale</b> ripete il valore di una stagione completa prima. <b>Holt-Winters additivo</b> stima livello, trend e uno schema stagionale additivo.</p><h3>Orizzonte</h3><p>Il numero di periodi futuri da prevedere dopo l'ultima osservazione.</p><h3>Frequenza</h3><p>La distanza attesa tra i timestamp. Determina anche le date future generate dal modello.</p><h3>Lunghezza stagione</h3><p>Il numero di periodi di un ciclo completo, per esempio 12 per una stagionalita' annuale su dati mensili o 7 per una stagionalita' settimanale su dati giornalieri. I metodi stagionali richiedono almeno due stagioni complete nella finestra di training.</p><h3>Valutazione</h3><p><b>Holdout</b> riserva gli ultimi periodi come unica finestra di test. La sua ampiezza e' il numero di osservazioni escluse dal training. <b>Rolling origin</b> ripete la valutazione da piu' origini passate: Origini indica il numero di finestre, Passo la distanza tra le origini, Orizzonte val. il numero di previsioni per origine e Training min. la minima finestra di training consentita. <b>Nessuna</b> salta la valutazione storica e produce solo la previsione futura.</p><h3>Opzioni numeriche</h3><p>Iterazioni max limita il lavoro di stima di Holt-Winters. Tolleranza controlla la convergenza numerica. Non modificano il numero di periodi futuri.</p>"
     },
     "method": {
       "name": { "naive": "Naive", "seasonal_naive": "Naive stagionale", "holt_winters_additive": "Holt-Winters (additivo)" },
