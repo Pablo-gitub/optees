@@ -11,6 +11,9 @@ from optees.interfaces.agents.ollama_harness import (
     OllamaClient,
     OpteesToolFacade,
 )
+from optees.data.adapters.artifacts.configured_local_export_adapter import (
+    ConfiguredLocalExportAdapter,
+)
 
 
 def main() -> None:
@@ -42,7 +45,11 @@ def main() -> None:
         "Paste the Optees token or copied connection JSON (input hidden): "
     )
     token = _connection_token(connection_value)
-    tools = OpteesToolFacade(base_url=args.optees_url, token=token)
+    tools = OpteesToolFacade(
+        base_url=args.optees_url,
+        token=token,
+        export_port=ConfiguredLocalExportAdapter(),
+    )
     harness = OllamaAgentHarness(
         ollama=OllamaClient(base_url=args.ollama_url, think=args.think),
         tools=tools,

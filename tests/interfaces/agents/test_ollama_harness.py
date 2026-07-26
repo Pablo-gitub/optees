@@ -8,6 +8,7 @@ from optees.interfaces.agents.ollama_harness import (
     OllamaAgentHarness,
     OllamaClient,
     OpteesToolFacade,
+    _download_extension,
 )
 from optees.ollama_chat import _connection_token
 
@@ -440,6 +441,24 @@ def test_tool_definitions_expose_metadata_only_artifact_and_report_lifecycle():
     } <= names
     assert "optees_download_artifact" not in names
     assert "optees_download_report" not in names
+
+
+def test_tool_definitions_expose_downloads_when_local_export_is_configured():
+    facade = OpteesToolFacade(
+        base_url="http://127.0.0.1:8765",
+        token=TOKEN,
+        transport=FakeOpteesTransport(),
+        export_port=object(),
+    )
+
+    names = {tool["function"]["name"] for tool in facade.tool_definitions}
+
+    assert "optees_download_artifact" in names
+    assert "optees_download_report" in names
+
+
+def test_download_extension_accepts_binary_response_media_type():
+    assert _download_extension({"media_type": "image/png"}) == "png"
 
 
 def test_tool_facade_requires_exact_batch_validation_before_submission():

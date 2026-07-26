@@ -11,6 +11,8 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
+from optees.application.ports.local_export_port import LocalExportPort
+
 
 JsonObject = dict[str, object]
 
@@ -125,6 +127,7 @@ class OpteesToolFacade:
         token: str,
         transport: JsonTransport | None = None,
         timeout: float = 30.0,
+        export_port: LocalExportPort | None = None,
     ) -> None:
         if len(token) < 32:
             raise ValueError("The Optees bearer token must contain at least 32 characters.")
@@ -132,6 +135,7 @@ class OpteesToolFacade:
         self._headers = {"Authorization": f"Bearer {token}"}
         self._transport = transport or UrllibJsonTransport()
         self._timeout = timeout
+        self._export = export_port
         self._described_capabilities: set[str] = set()
         self._validated_problems: set[str] = set()
         self._validated_batches: set[str] = set()
@@ -250,7 +254,7 @@ class OpteesToolFacade:
                 "additionalProperties": True,
             },
         }
-        return [
+        tools = [
             _tool(
                 "optees_list_capabilities",
                 "List available Optees solver capabilities and contract versions.",
@@ -351,6 +355,19 @@ class OpteesToolFacade:
                 ["artifact_id"],
             ),
             _tool(
+                "optees_download_artifact",
+                (
+                    "Save an available artifact in the configured Optees download "
+                    "folder. Supply a safe filename only, never a path."
+                ),
+                {
+                    "artifact_id": {"type": "string"},
+                    "filename": {"type": "string"},
+                    "overwrite": {"type": "boolean"},
+                },
+                ["artifact_id"],
+            ),
+            _tool(
                 "optees_get_report_backends",
                 (
                     "Inspect local report backend availability before requesting PDF. "
@@ -389,7 +406,28 @@ class OpteesToolFacade:
                 {"report_id": {"type": "string"}},
                 ["report_id"],
             ),
+            _tool(
+                "optees_download_report",
+                (
+                    "Save an available report in the configured Optees download "
+                    "folder. Supply a safe filename only, never a path."
+                ),
+                {
+                    "report_id": {"type": "string"},
+                    "filename": {"type": "string"},
+                    "overwrite": {"type": "boolean"},
+                },
+                ["report_id"],
+            ),
         ]
+        if self._export is None:
+            tools = [
+                tool
+                for tool in tools
+                if tool["function"]["name"]
+                not in {"optees_download_artifact", "optees_download_report"}
+            ]
+        return tools
 
     def execute(self, name: str, arguments: JsonObject) -> JsonObject:
         handlers = {
@@ -408,10 +446,12 @@ class OpteesToolFacade:
             "optees_list_result_artifacts": self._list_result_artifacts,
             "optees_render_result_artifacts": self._render_result_artifacts,
             "optees_cancel_artifact": self._cancel_artifact,
+            "optees_download_artifact": self._download_artifact,
             "optees_get_report_backends": self._get_report_backends,
             "optees_compose_report": self._compose_report,
             "optees_get_report_status": self._get_report_status,
             "optees_cancel_report": self._cancel_report,
+            "optees_download_report": self._download_report,
         }
         handler = handlers.get(name)
         if handler is None:
@@ -637,6 +677,25 @@ class OpteesToolFacade:
         )
         return {"ok": True, "artifact": response}
 
+    def _download_artifact(self, arguments: JsonObject) -> JsonObject:
+        artifact_id = _required_string(arguments, "artifact_id")
+        content, headers = self._request_bytes(
+            "GET", f"/api/v1/artifacts/{quote(artifact_id, safe='')}"
+        )
+        media_type = headers.get_content_type()
+        expected_sha256 = headers.get("X-Content-SHA256", "")
+        if not expected_sha256:
+            raise ValueError("artifact response did not include X-Content-SHA256")
+        return self._export_content(
+            content=content,
+            media_type=media_type,
+            expected_sha256=expected_sha256,
+            suggested_filename=(
+                f"{artifact_id}.{_download_extension({'media_type': media_type})}"
+            ),
+            arguments=arguments,
+        )
+
     def _get_report_backends(self, _arguments: JsonObject) -> JsonObject:
         response = self._request("GET", "/api/v1/reports/backends")
         return {"ok": True, "backends": response.get("backends", [])}
@@ -689,6 +748,84 @@ class OpteesToolFacade:
             {},
         )
         return {"ok": True, "report": response}
+
+    def _download_report(self, arguments: JsonObject) -> JsonObject:
+        report_id = _required_string(arguments, "report_id")
+        metadata = self._request(
+            "GET",
+            f"/api/v1/reports/{quote(report_id, safe='')}",
+        )
+        return self._export_remote(
+            endpoint=f"/api/v1/reports/{quote(report_id, safe='')}/download",
+            metadata=metadata,
+            suggested_filename=f"{report_id}.{_download_extension(metadata)}",
+            arguments=arguments,
+        )
+
+    def _export_remote(
+        self,
+        *,
+        endpoint: str,
+        metadata: JsonObject,
+        suggested_filename: str,
+        arguments: JsonObject,
+    ) -> JsonObject:
+        if self._export is None:
+            raise ValueError("local export is not configured")
+        expected_sha256 = _required_string(metadata, "sha256")
+        media_type = _required_string(metadata, "media_type")
+        content, _headers = self._request_bytes("GET", endpoint)
+        return self._export_content(
+            content=content,
+            media_type=media_type,
+            expected_sha256=expected_sha256,
+            suggested_filename=suggested_filename,
+            arguments=arguments,
+        )
+
+    def _export_content(
+        self,
+        *,
+        content: bytes,
+        media_type: str,
+        expected_sha256: str,
+        suggested_filename: str,
+        arguments: JsonObject,
+    ) -> JsonObject:
+        if self._export is None:
+            raise ValueError("local export is not configured")
+        filename = arguments.get("filename")
+        if filename is not None and not isinstance(filename, str):
+            raise ValueError("filename must be a string")
+        overwrite = arguments.get("overwrite", False)
+        if not isinstance(overwrite, bool):
+            raise ValueError("overwrite must be a boolean")
+        result = self._export.export(
+            content,
+            suggested_filename=suggested_filename,
+            media_type=media_type,
+            expected_sha256=expected_sha256,
+            filename=filename,
+            overwrite=overwrite,
+        )
+        return {"ok": True, "export": result.to_dict()}
+
+    def _request_bytes(self, method: str, path: str):
+        request = Request(
+            f"{self._base_url}{path}",
+            headers={"Accept": "*/*", **self._headers},
+            method=method,
+        )
+        try:
+            with urlopen(request, timeout=self._timeout) as response:
+                return response.read(), response.headers
+        except HTTPError as exc:
+            raise RemoteApiError(exc.code, _error_payload(exc.read())) from exc
+        except URLError as exc:
+            raise RemoteApiError(
+                None,
+                {"code": "connection_failed", "message": str(exc.reason)},
+            ) from exc
 
     def _problem_arguments(self, arguments: JsonObject) -> tuple[str, JsonObject]:
         capability_id = _required_string(arguments, "capability_id")
@@ -1043,6 +1180,28 @@ def _normalize_agent_report_request(request: JsonObject) -> JsonObject:
         normalized_sections.append(normalized_section)
     normalized["sections"] = normalized_sections
     return normalized
+
+
+def _download_extension(metadata: JsonObject) -> str:
+    value = metadata.get("format")
+    if isinstance(value, str) and value:
+        return {
+            "data_json": "json",
+            "obj_mtl_zip": "zip",
+        }.get(value, value)
+    media_type = metadata.get("media_type")
+    if isinstance(media_type, str):
+        extension = {
+            "application/json": "json",
+            "application/pdf": "pdf",
+            "application/zip": "zip",
+            "image/png": "png",
+            "image/svg+xml": "svg",
+            "text/markdown": "md",
+        }.get(media_type)
+        if extension is not None:
+            return extension
+    raise ValueError("download metadata has no recognized format")
 
 
 def _tool_error(code: str, message: str) -> JsonObject:

@@ -278,6 +278,11 @@ configuration. Input is hidden in the terminal. The native PyInstaller
 artifacts do not currently expose this chat command; a packaged Local Agent
 desktop module is planned.
 
+When the harness runs from source or an installed Python package, it also
+exposes `optees_download_artifact` and `optees_download_report`. Files are
+written only to the export directory authorized in Optees Settings; the model
+may choose a safe filename but cannot choose an arbitrary filesystem path.
+
 When a request contains several independent models, agents should use
 `optees_validate_batch`, `optees_create_batch`, `optees_get_batch_status`, and
 `optees_get_batch_result`. The batch accepts at most 32 items and preserves the
