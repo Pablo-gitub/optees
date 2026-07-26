@@ -379,7 +379,7 @@ validators are supplied as callables on the registration object.
 
 ## Capability Inventory
 
-The production composition currently registers 12 capability IDs:
+The production composition currently registers 13 capability IDs:
 
 - `lp.continuous`
 - `milp.linear`
@@ -392,6 +392,7 @@ The production composition currently registers 12 capability IDs:
 - `graph.shortest_path.dijkstra`
 - `ml.regression.linear`
 - `ml.classification.binary_logistic`
+- `ml.forecasting.univariate`
 - `packing.single_container_3d`
 
 The runtime descriptor is authoritative for availability, accepted schema,

@@ -29,14 +29,14 @@
 Optees gives the same tested optimization core two interfaces. People can
 formulate problems in a guided bilingual desktop application, visualize the
 solution, and study the mathematics. Scripts and compatible AI agents can
-discover 12 versioned capabilities, inspect their exact schemas, validate a
+discover 13 versioned capabilities, inspect their exact schemas, validate a
 formulation, execute a job, and retrieve a structured result without driving
 the GUI.
 
 | Desktop workbench | Local solver platform |
 | --- | --- |
-| Guided LP, MILP, Knapsack, NLP, graph, ML, and 3D Packing workflows | Capability discovery through CLI, authenticated loopback REST, and private MCP stdio |
-| Examples, mathematical descriptions, JSON import, diagnostics, and solution visualizations | Versioned problem/result contracts, exact-payload validation, asynchronous jobs, cancellation where supported, and structured failures |
+| Guided LP, MILP, Knapsack, NLP, graph, Forecasting, ML, and 3D Packing workflows | Capability discovery through CLI, authenticated loopback REST, and private MCP stdio |
+| Examples, mathematical descriptions, JSON import, diagnostics, and solution visualizations | Versioned contracts, asynchronous jobs, optional result artifacts and composed Markdown/PDF reports |
 | Deterministic bilingual Modeling Assistant with no LLM or cloud dependency | Local agents can compose atomic solvers while Optees remains responsible for validation and calculation |
 
 ## Built For Local Agent Workflows
@@ -48,13 +48,14 @@ validate the exact formulation, and only then submit a solver job.
 ```mermaid
 flowchart LR
     User["Business problem and local data"] --> Agent["Local software or AI agent"]
-    Agent --> Discover["Discover 12 capabilities"]
+    Agent --> Discover["Discover 13 capabilities"]
     Discover --> Inspect["Inspect versioned schema"]
     Inspect --> Validate["Validate exact payload"]
     Validate --> Solve["Run Optees solver job"]
     Solve --> Verify["Read status, result, and validation"]
     Verify --> Agent
-    Agent --> Report["Explanation, report, or next solver step"]
+    Agent --> Artifacts["Optional tables, charts, 3D models, or reports"]
+    Agent --> Next["Optional next solver step"]
 ```
 
 - **Authenticated local REST API:** start a loopback-only server from Settings
@@ -67,9 +68,16 @@ flowchart LR
 - **Structured guarantees:** job lifecycle, mathematical status, solver
   diagnostics, and independent validation availability are reported as
   separate fields rather than compressed into one success flag.
-- **Composable methods:** an agent can use Regression, MILP, Packing, Graph, or
-  other registered capabilities in sequence while each atomic calculation
-  remains reproducible and inspectable.
+- **Opt-in result artifacts:** agents and users may request canonical tables,
+  charts, 3D assets, and composed Markdown/PDF reports. Raw JSON remains the
+  default, and generated files carry provenance and SHA-256 hashes.
+- **Composable methods:** a capable agent can, for example, forecast demand,
+  feed the validated forecast into a MILP plan, then request a chart and a
+  report. Every atomic calculation remains reproducible and inspectable.
+
+Optees validates contracts and calculations, not the business interpretation
+chosen by an agent. Users remain responsible for objectives, assumptions,
+data quality, and whether a multi-step workflow represents the real decision.
 
 Claude Desktop/Cowork and the experimental Ollama harness have completed local
 vertical tests. See the [agent service configuration guide](docs/AGENTS_SERVICE_CONFIG.md)
@@ -89,8 +97,8 @@ acceptance remains required before each stable release.
   outside the app; an optional external agent remains subject to that client's
   own data and model policy.
 - **Honest result views:** an LP optimum, a feasible MILP incumbent, an NLP
-  local numerical candidate, and a predictive ML fit are deliberately not
-  presented as the same kind of guarantee.
+  local numerical candidate, a time-series forecast, and a predictive ML fit
+  are deliberately not presented as the same kind of guarantee.
 - **Educational by design:** examples, mathematical explanations, result
   contracts, diagnostics, and visualizations make assumptions visible.
 - **Structured workflows:** use formulation screens, versioned JSON, or public
@@ -126,7 +134,23 @@ More real application screens and platform downloads are available on the
 | **Graph Theory** | Dijkstra shortest paths on directed or undirected graphs with finite, non-negative weights, route reconstruction, and graph visualization. |
 | **Linear Regression** | Local OLS and Ridge regression for numeric tables, deterministic train/test splits, residuals, metrics, and a one-feature fit chart. |
 | **Binary Classification** | Local logistic regression for two labels, stratified held-out evaluation, accuracy/precision/recall/F1, confusion matrices, probabilities, and an optional 2D decision boundary. |
+| **Univariate Forecasting** | Naive, seasonal-naive, and additive Holt-Winters forecasts with chronological holdout or rolling-origin evaluation, future timestamps, diagnostics, independent validation, and optional table/chart artifacts. |
 | **Modeling Assistant** | English/Italian local rule-based recommendations for solver families. It drafts validated LP, MILP, Knapsack, Regression, and Binary Classification JSON only from explicit structured data; it never invents observations from prose. |
+
+## Result Artifacts And Reports
+
+Structured JSON is always the primary result. When a person or agent needs a
+deliverable, Optees can render only the requested assets:
+
+- canonical Markdown tables and capability-specific PNG charts;
+- 3D Packing views plus OBJ/MTL geometry;
+- downloadable files in a user-authorized directory with bounded storage,
+  expiration, integrity hashes, and path traversal protection;
+- composed Markdown or PDF reports that reuse validated artifacts instead of
+  asking an agent to redraw the solver output.
+
+Artifact availability is declared per capability. Generation is never
+automatic, so clients that prefer raw data can avoid the extra work entirely.
 
 ## Download And Run
 
@@ -175,7 +199,9 @@ PYTHONPATH=src python -m pytest -q
 The project keeps executable tests and reference data close to each solver
 family. LP uses LPnetlib; MILP uses a bounded MIPLIB subset; Knapsack uses
 Burkardt and OR-Library cases; NLP, regression, classification, and graph
-workflows use documented analytic or deterministic reference cases. The full
+workflows use documented analytic or deterministic reference cases.
+Forecasting includes analytic baselines, temporal evaluation checks, and
+independent recomputation of forecast metrics. The full
 source and provenance are described in [Datasets](docs/DATASETS.md) and the
 test strategy in [Testing](docs/TESTING.md).
 
@@ -188,6 +214,8 @@ model is suitable for a consequential real-world decision. In particular:
   planned rather than advertised as available.
 - Regression and classification describe fitted predictive relationships; they
   do not establish causality, fairness, or future performance.
+- Forecasts extrapolate historical structure and can fail under structural
+  breaks, poor data quality, or a future unlike the observed history.
 
 ## Documentation
 

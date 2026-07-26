@@ -163,7 +163,7 @@ Use the Optees tools to list all available solver capabilities.
 Do not answer from your own knowledge: call optees_list_capabilities.
 ```
 
-The wording may vary, but a successful answer should report these 12
+The wording may vary, but a successful answer should report these 13
 capabilities:
 
 ```text
@@ -185,6 +185,7 @@ Linear and nonlinear programming
 Machine learning (educational)
 - ml.regression.linear - Linear regression
 - ml.classification.binary_logistic - Binary logistic classification
+- ml.forecasting.univariate - Univariate time-series forecasting
 
 Packing
 - packing.single_container_3d - Orthogonal single-container 3D packing
@@ -330,7 +331,7 @@ Use the Optees tools to list all available solver capabilities.
 Do not answer from your own knowledge: call optees_list_capabilities.
 ```
 
-A successful response must be based on the returned 12 capability descriptors,
+A successful response must be based on the returned 13 capability descriptors,
 not on model memory. No speculative JSON configuration should be copied into
 this guide before that workflow succeeds from a clean setup.
 

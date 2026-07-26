@@ -29,6 +29,9 @@ flowchart LR
 ## Product Rules
 
 - Solving, rendering, and report composition are separate operations.
+- The validated result envelope is the default output. Artifacts are generated
+  only after an explicit user or agent request; solving never creates files
+  automatically.
 - Artifact requests never change the mathematical problem or solver result.
 - Binary content is never embedded as Base64 in the primary result envelope.
 - Every capability advertises only the artifact types it can actually produce.
@@ -51,7 +54,7 @@ flowchart LR
 | Two-dimensional chart | SVG | PNG, data JSON | SVG is scalable; PNG maximizes client compatibility. |
 | Three-dimensional scene | OBJ + MTL ZIP | GLB later | MTL carries portable material/color information; plain OBJ alone is insufficient. |
 | Three-dimensional views | PNG | SVG where meaningful | Named camera presets: isometric, front, side, and top. |
-| Table | JSON | CSV, Markdown, XLSX | JSON remains canonical; presentation formats are derived. |
+| Table | JSON | CSV, Markdown, XLSX | JSON remains canonical. CSV is preferred for one interoperable table; XLSX is preferred for a multi-table or multi-sheet result. |
 | Validation summary | JSON | Markdown, HTML | Must preserve check identifiers and status semantics. |
 | Report | Markdown | PDF | PDF is produced by an optional local document backend. |
 
@@ -152,6 +155,7 @@ contracts are frozen. The intended minimum is:
 | Dijkstra | Distance/path table | Highlighted graph and path |
 | Regression | Coefficients and metrics table | Fit plot, residual plot, prediction intervals later |
 | Classification | Metrics/confusion table | Confusion matrix and supported decision boundary |
+| Forecasting | Forecast, fitted-value, residual, and metrics tables | Forecast chart, diagnostics, CSV, and a multi-sheet XLSX workbook |
 | Packing 3D | Placement table | OBJ + MTL bundle and requested static camera views |
 
 ## Known Desktop Scalability Gap
@@ -463,6 +467,40 @@ inspected as a valid single-page A4 document. This is useful compatibility
 evidence, but it is one synthetic run rather than the multi-model empirical
 study required by Phase 4.
 
+### Phase 8 - Desktop Artifact Export UX
+
+The headless artifact pipeline is already available to REST and MCP clients,
+but desktop users cannot yet request and save the same outputs from solution
+views. This phase closes that presentation gap without making artifact
+generation automatic.
+
+- [ ] Add one consistent `Export results` action to every solution view.
+- [ ] Populate the export dialog exclusively from the capability's advertised
+  `available_artifacts`; the desktop must not guess types or formats.
+- [ ] Let the user select individual artifact types and formats before any
+  rendering starts. Opening a solution view or completing a solve must not
+  create files.
+- [ ] Keep raw validated result data available without requiring an artifact.
+- [ ] Reuse `ArtifactGenerationService`, renderer ports, manifests, SHA-256
+  verification, cancellation, progress, and error semantics. Presentation code
+  must not reimplement renderers.
+- [ ] Save completed files through the configured user-authorized export
+  directory and bounded file-name policy shared with packaged MCP.
+- [ ] Show generation progress, terminal errors, expiration, and the final saved
+  location in a localized desktop flow.
+- [ ] Offer CSV and XLSX only when advertised. CSV represents one flat table;
+  XLSX may contain multiple named sheets for forecasts, fitted values,
+  residuals, metrics, diagnostics, or other capability-specific result groups.
+- [ ] Keep PDF report tables compact and readable; detailed rows belong in a
+  separately requested CSV/XLSX artifact rather than an oversized report table.
+- [ ] Add focused presentation tests for opt-in behavior, discovery-driven
+  choices, cancellation, failures, overwrite refusal, and English/Italian text.
+
+Packing remains a notable agent use case because OBJ+MTL and named views avoid
+reconstructing geometry from raw coordinates. Other agents may reasonably
+request only the canonical result data and generate their own charts. Neither
+choice is treated as preferred or triggered implicitly by Optees.
+
 ## Completion Gate
 
 This initiative is complete only when:
@@ -475,4 +513,6 @@ This initiative is complete only when:
 6. PDF reports fail clearly when their local backend is unavailable;
 7. unsupported inputs are visible rather than silently dropped;
 8. native release candidates pass one end-to-end solve, render, compose, and
-   download smoke test on every supported platform.
+   download smoke test on every supported platform;
+9. a desktop user can explicitly select, generate, and save every artifact
+   advertised by the solution's capability without using REST or MCP.

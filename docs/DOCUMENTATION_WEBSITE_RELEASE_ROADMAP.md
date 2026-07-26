@@ -190,16 +190,20 @@ correct solver use from merely attractive presentation.
 
 ## Phase 7 - Agent Integration Page And Public Evidence
 
-- [ ] Add a second landing route only after the complex benchmark has passed
-  review.
-- [ ] Explain supported clients, local security boundaries, setup, discovery,
-  validation, and composed workflows.
+- [x] Add a second landing route for factual setup instructions independently
+  from benchmark publication.
+- [x] Explain supported clients, local security boundaries, Claude Desktop
+  setup, discovery, validation, optional artifacts, and composed workflows.
 - [ ] Publish selected prompt excerpts, result summaries, presentation images,
-  architecture diagrams, and methodology links.
+  architecture diagrams, and methodology links only after the corresponding
+  benchmark evidence has passed review.
 - [ ] Avoid presenting a single successful agent run as a general reliability
   claim.
 - [ ] Reuse optimized visual assets in the README, landing page, release notes,
   and any public project article.
+
+The setup page documents shipped behavior. Public benchmark evidence remains a
+separate gate and must not be implied by the existence of that page.
 
 ## Branch And Commit Sequence
 

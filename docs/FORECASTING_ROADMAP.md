@@ -215,7 +215,8 @@ code or documentation.
   validation rule, default, and localized label.
 - [ ] Provide a solution-state matrix for success, warnings, partial evaluation,
   invalid input, fitting failure, and cancellation.
-- [ ] Provide the registered artifact list and sample generated files.
+- [x] Provide the registered artifact list and generated-file workflow in the
+  public README and agent-service guide.
 - [ ] State explicitly which language may describe assumptions and which claims
   are forbidden.
 
@@ -242,8 +243,10 @@ code or documentation.
 - [x] Keep interval bands visually distinct and label their exact semantics.
 - [x] Handle long histories with stable dimensions, bounded rendering, and
   usable scrolling or sampling controls.
-- [ ] Expose optional artifact/report generation through existing workflows
-  rather than duplicating export logic in the view.
+- [ ] Expose optional artifact/report generation in the desktop solution view
+  without duplicating renderer logic. The headless REST/MCP flow is complete;
+  desktop export is tracked by Phase 8 of
+  `docs/RESULT_ARTIFACTS_REPORTING_ROADMAP.md`.
 
 ### B3 - Educational Content And Examples
 
