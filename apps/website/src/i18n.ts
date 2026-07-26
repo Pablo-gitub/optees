@@ -7,6 +7,7 @@ export type AlgorithmId =
   | "nlp"
   | "regression"
   | "classification"
+  | "forecasting"
   | "graph";
 export type PreviewId =
   | "home"
@@ -47,7 +48,7 @@ type AlgorithmCopy = {
   formula: string;
   description: string;
   details: string[];
-  preview: PreviewId;
+  preview?: PreviewId;
 };
 
 type PreviewCopy = {
@@ -93,6 +94,7 @@ type SiteCopy = {
     algorithms: string;
     machineLearning: string;
     previews: string;
+    setup: string;
     faq: string;
     download: string;
     github: string;
@@ -136,6 +138,7 @@ type SiteCopy = {
     steps: Array<{ label: string; body: string }>;
     assistantTitle: string;
     assistantBody: string;
+    setupCta: string;
   };
   algorithms: {
     eyebrow: string;
@@ -158,7 +161,7 @@ type SiteCopy = {
       title: string;
       body: string;
       points: string[];
-      preview: PreviewId;
+      preview?: PreviewId;
     }>;
   };
   previews: {
@@ -166,6 +169,31 @@ type SiteCopy = {
     title: string;
     body: string;
     items: PreviewCopy[];
+  };
+  agentSetup: {
+    eyebrow: string;
+    title: string;
+    body: string;
+    back: string;
+    boundaryTitle: string;
+    boundaryBody: string;
+    stepsTitle: string;
+    steps: Array<{ title: string; body: string }>;
+    configTitle: string;
+    configBody: string;
+    pathsTitle: string;
+    paths: Array<{ platform: string; command: string; args: string }>;
+    promptTitle: string;
+    promptBody: string;
+    prompt: string;
+    expectedTitle: string;
+    expectedBody: string;
+    workflowTitle: string;
+    workflowBody: string;
+    workflowSteps: string[];
+    troubleshootingTitle: string;
+    troubleshooting: string[];
+    docsCta: string;
   };
   workflow: {
     eyebrow: string;
@@ -218,9 +246,9 @@ export const copy: Record<Language, SiteCopy> = {
     meta: {
       title: "Optees — Local Optimization Workbench and Solver Platform",
       description:
-        "Open-source desktop optimization workbench and local solver platform for people, scripts, and AI agents, with 12 versioned capabilities through GUI, CLI, REST, and MCP.",
+        "Open-source desktop optimization workbench and local solver platform for people, scripts, and AI agents, with 13 versioned capabilities through GUI, CLI, REST, and MCP.",
       ogDescription:
-        "Model visually or expose 12 versioned local solver capabilities to scripts and AI agents through authenticated REST and private MCP stdio.",
+        "Model visually or expose 13 versioned local solver capabilities to scripts and AI agents through authenticated REST and private MCP stdio.",
     },
     nav: {
       aria: "Primary navigation",
@@ -231,6 +259,7 @@ export const copy: Record<Language, SiteCopy> = {
       algorithms: "Algorithms",
       machineLearning: "AI & Machine Learning",
       previews: "Screens",
+      setup: "Agent setup",
       faq: "FAQ",
       download: "Download",
       github: "GitHub",
@@ -249,13 +278,13 @@ export const copy: Record<Language, SiteCopy> = {
       title: "Optees:",
       titleAccent: "optimization for people and agents.",
       copy:
-        "Model and understand optimization problems in the desktop workbench, or expose the same 12 versioned solver capabilities to local scripts and AI agents through CLI, authenticated REST, and private MCP stdio.",
+        "Model and understand optimization problems in the desktop workbench, or expose the same 13 versioned solver capabilities to local scripts and AI agents through CLI, authenticated REST, and private MCP stdio.",
       source: "Star on GitHub",
       stackLabel: "Powered by",
       stack: ["SciPy", "HiGHS", "OR-Tools", "FastAPI", "MCP"],
       metricsAria: "Project highlights",
       metrics: [
-        { value: "12", label: "Versioned solver capabilities" },
+        { value: "13", label: "Versioned solver capabilities" },
         { value: "5", label: "Knapsack variants in one flow" },
         { value: "100%", label: "Local & private, no cloud" },
       { value: "Apache 2.0", label: "Free and open source" },
@@ -275,8 +304,8 @@ export const copy: Record<Language, SiteCopy> = {
           kicker: "Business automation",
           title: "A local solver platform for AI agents",
           body:
-            "Use Optees as a private optimization backend for operational workflows. Local agents and applications can discover 12 versioned capabilities, validate exact JSON contracts, run solver jobs, and inspect mathematical and independent-validation statuses.",
-          highlights: ["12 versioned capabilities", "Authenticated REST", "Private MCP stdio"],
+            "Use Optees as a private optimization backend for operational workflows. Local agents and applications can discover 13 versioned capabilities, validate exact JSON contracts, run solver jobs, and inspect mathematical and independent-validation statuses.",
+          highlights: ["13 versioned capabilities", "Authenticated REST", "Private MCP stdio"],
           cta: "Explore agent integration",
         },
         {
@@ -349,6 +378,7 @@ export const copy: Record<Language, SiteCopy> = {
       assistantTitle: "Two assistants, two different roles",
       assistantBody:
         "The in-app Modeling Assistant is deterministic pattern matching and never calls an LLM. External agents and the optional Ollama harness are separate clients: they may reason over your request, but Optees remains responsible for strict contracts and mathematical execution.",
+      setupCta: "Configure an AI agent",
     },
     algorithms: {
       eyebrow: "Algorithms",
@@ -437,6 +467,16 @@ export const copy: Record<Language, SiteCopy> = {
           preview: "classificationSolution",
         },
         {
+          id: "forecasting",
+          label: "Univariate Forecasting",
+          short: "FRC",
+          status: "Available",
+          formula: "ŷₜ₊ₕ = forecast(y₁, …, yₜ)",
+          description:
+            "Forecast one ordered time series with naive, seasonal-naive, or additive Holt-Winters methods and chronological holdout or rolling-origin evaluation.",
+          details: ["Leakage-safe evaluation", "MAE / RMSE / MAPE / MASE", "Forecast tables and charts"],
+        },
+        {
           id: "graph",
           label: "Graph Theory: Dijkstra",
           short: "DSP",
@@ -461,6 +501,12 @@ export const copy: Record<Language, SiteCopy> = {
       },
       workflows: [
         {
+          title: "Univariate Forecasting",
+          body:
+            "Project an ordered time series into future periods, compare transparent baselines with additive Holt-Winters, and evaluate only against observations that occur after each training window.",
+          points: ["Naive, seasonal-naive and Holt-Winters", "Holdout and rolling-origin evaluation", "Optional tables, charts and reports"],
+        },
+        {
           title: "Linear Regression",
           body:
             "Fit OLS or Ridge models for a continuous numeric target, then compare training and held-out errors instead of trusting a single fitted line.",
@@ -475,6 +521,56 @@ export const copy: Record<Language, SiteCopy> = {
           preview: "classificationSolution",
         },
       ],
+    },
+    agentSetup: {
+      eyebrow: "Agent setup",
+      title: "Connect a local AI agent to Optees",
+      body:
+        "A compatible desktop agent can launch the private Optees MCP companion and discover all 13 capabilities without opening a network port. The agent reasons about the workflow; Optees validates versioned payloads, executes the mathematics, and can render requested artifacts and reports.",
+      back: "Back to the landing page",
+      boundaryTitle: "What this connection does",
+      boundaryBody:
+        "MCP runs as a private stdio subprocess on your computer. It does not use the REST bearer token and does not expose Optees to the Internet. A frontier or local tool-capable agent may chain jobs such as Forecasting → MILP → chart/report, but the user remains responsible for business meaning, assumptions, and final decisions.",
+      stepsTitle: "Claude Desktop setup",
+      steps: [
+        { title: "Open the configuration", body: "In Claude Desktop open Settings → Developer → Edit Config." },
+        { title: "Add Optees", body: "Add the mcpServers object at the JSON top level, beside preferences rather than inside it." },
+        { title: "Select the native command", body: "Use the absolute executable path for your operating system from the table below." },
+        { title: "Restart and verify", body: "Quit Claude Desktop completely, reopen it, then run the verification prompt." },
+      ],
+      configTitle: "Configuration example",
+      configBody: "This macOS example shows the required shape. Replace command and args with the platform-specific values below.",
+      pathsTitle: "Packaged and source commands",
+      paths: [
+        { platform: "macOS", command: "/Applications/optees.app/Contents/MacOS/optees-mcp", args: "[]" },
+        { platform: "Windows", command: "%LOCALAPPDATA%\\Programs\\Optees\\optees-mcp.exe", args: "[]" },
+        { platform: "Linux AppImage", command: "/absolute/path/to/Optees.AppImage", args: "[\"--mcp-server\"]" },
+        { platform: "Python source", command: "/absolute/path/to/python", args: "[\"-m\", \"optees.mcp_server\"]" },
+      ],
+      promptTitle: "Verify tool discovery",
+      promptBody: "Ask the agent to call the tool instead of answering from memory:",
+      prompt: "Use the Optees tools to list all available solver capabilities. Do not answer from your own knowledge: call optees_list_capabilities.",
+      expectedTitle: "Expected result",
+      expectedBody:
+        "The response should list 13 versioned capabilities, including ml.forecasting.univariate, LP, MILP, five Knapsack variants, NLP, Dijkstra, regression, classification, and single-container 3D Packing.",
+      workflowTitle: "A reliable agent workflow",
+      workflowBody:
+        "For each mathematical step, the agent should use the same explicit lifecycle:",
+      workflowSteps: [
+        "Discover the relevant capability and inspect its exact schema.",
+        "Formulate a versioned payload and validate it before execution.",
+        "Create and poll the job, then read mathematical and independent-validation statuses.",
+        "Request only the artifacts or reports needed by the user.",
+        "Use a result as input to a later solver only after stating assumptions and transformations.",
+      ],
+      troubleshootingTitle: "Troubleshooting",
+      troubleshooting: [
+        "Use optees-mcp, not optees-server: the latter is the authenticated REST companion.",
+        "Use an absolute command path and valid JSON; backslashes in Windows JSON must be escaped.",
+        "Do not add a REST authorization token to an MCP stdio configuration.",
+        "After changing the file, quit Claude Desktop completely before reopening it.",
+      ],
+      docsCta: "Open the complete agent-service guide on GitHub",
     },
     previews: {
       eyebrow: "Explore the app",
@@ -666,9 +762,9 @@ export const copy: Record<Language, SiteCopy> = {
     meta: {
       title: "Optees — Ambiente di Ottimizzazione e Piattaforma Solver Locale",
       description:
-        "Ambiente desktop open source e piattaforma solver locale per persone, script e agenti AI, con 12 capability versionate tramite GUI, CLI, REST e MCP.",
+        "Ambiente desktop open source e piattaforma solver locale per persone, script e agenti AI, con 13 capability versionate tramite GUI, CLI, REST e MCP.",
       ogDescription:
-        "Modella visivamente o esponi 12 capability solver locali e versionate a script e agenti AI tramite REST autenticata e MCP stdio privato.",
+        "Modella visivamente o esponi 13 capability solver locali e versionate a script e agenti AI tramite REST autenticata e MCP stdio privato.",
     },
     nav: {
       aria: "Navigazione principale",
@@ -679,6 +775,7 @@ export const copy: Record<Language, SiteCopy> = {
       algorithms: "Algoritmi",
       machineLearning: "AI e Machine Learning",
       previews: "Schermate",
+      setup: "Configura agenti",
       faq: "FAQ",
       download: "Download",
       github: "GitHub",
@@ -697,13 +794,13 @@ export const copy: Record<Language, SiteCopy> = {
       title: "Optees:",
       titleAccent: "ottimizzazione per persone e agenti.",
       copy:
-        "Modella e comprendi problemi di ottimizzazione nell'ambiente desktop, oppure esponi le stesse 12 capability versionate a script e agenti AI locali tramite CLI, REST autenticata e MCP stdio privato.",
+        "Modella e comprendi problemi di ottimizzazione nell'ambiente desktop, oppure esponi le stesse 13 capability versionate a script e agenti AI locali tramite CLI, REST autenticata e MCP stdio privato.",
       source: "Metti una stella su GitHub",
       stackLabel: "Basato su",
       stack: ["SciPy", "HiGHS", "OR-Tools", "FastAPI", "MCP"],
       metricsAria: "Punti chiave del progetto",
       metrics: [
-        { value: "12", label: "Capability solver versionate" },
+        { value: "13", label: "Capability solver versionate" },
         { value: "5", label: "Varianti Knapsack in un solo flusso" },
         { value: "100%", label: "Locale e privato, nessun cloud" },
       { value: "Apache 2.0", label: "Gratuito e open source" },
@@ -723,8 +820,8 @@ export const copy: Record<Language, SiteCopy> = {
           kicker: "Automazione aziendale",
           title: "Una piattaforma solver locale per agenti AI",
           body:
-            "Usa Optees come backend di ottimizzazione privato per workflow operativi. Agenti e applicazioni locali possono scoprire 12 capability versionate, validare contratti JSON esatti, eseguire job e leggere stato matematico e validazione indipendente.",
-          highlights: ["12 capability versionate", "REST autenticata", "MCP stdio privato"],
+            "Usa Optees come backend di ottimizzazione privato per workflow operativi. Agenti e applicazioni locali possono scoprire 13 capability versionate, validare contratti JSON esatti, eseguire job e leggere stato matematico e validazione indipendente.",
+          highlights: ["13 capability versionate", "REST autenticata", "MCP stdio privato"],
           cta: "Esplora l'integrazione agentica",
         },
         {
@@ -797,6 +894,7 @@ export const copy: Record<Language, SiteCopy> = {
       assistantTitle: "Due assistenti, due ruoli diversi",
       assistantBody:
         "L'Assistente di modellazione interno usa pattern deterministici e non chiama mai un LLM. Gli agenti esterni e l'harness Ollama opzionale sono client separati: possono ragionare sulla richiesta, mentre Optees resta responsabile di contratti rigorosi ed esecuzione matematica.",
+      setupCta: "Configura un agente AI",
     },
     algorithms: {
       eyebrow: "Algoritmi",
@@ -885,6 +983,16 @@ export const copy: Record<Language, SiteCopy> = {
           preview: "classificationSolution",
         },
         {
+          id: "forecasting",
+          label: "Forecasting univariato",
+          short: "FRC",
+          status: "Disponibile",
+          formula: "ŷₜ₊ₕ = previsione(y₁, …, yₜ)",
+          description:
+            "Prevede una serie temporale ordinata con metodi naive, naive stagionale o Holt-Winters additivo e valutazione holdout cronologica o rolling origin.",
+          details: ["Valutazione senza leakage", "MAE / RMSE / MAPE / MASE", "Tabelle e grafici previsionali"],
+        },
+        {
           id: "graph",
           label: "Teoria dei Grafi: Dijkstra",
           short: "DSP",
@@ -909,6 +1017,12 @@ export const copy: Record<Language, SiteCopy> = {
       },
       workflows: [
         {
+          title: "Forecasting univariato",
+          body:
+            "Proietta una serie temporale ordinata nei periodi futuri, confronta baseline trasparenti con Holt-Winters additivo e valuta solo osservazioni successive a ciascuna finestra di training.",
+          points: ["Naive, naive stagionale e Holt-Winters", "Holdout e rolling origin", "Tabelle, grafici e report opzionali"],
+        },
+        {
           title: "Regressione Lineare",
           body:
             "Adatta modelli OLS o Ridge per un target numerico continuo, poi confronta errori di training e su righe lasciate fuori invece di fidarti di una sola retta stimata.",
@@ -923,6 +1037,56 @@ export const copy: Record<Language, SiteCopy> = {
           preview: "classificationSolution",
         },
       ],
+    },
+    agentSetup: {
+      eyebrow: "Configurazione agenti",
+      title: "Collega un agente AI locale a Optees",
+      body:
+        "Un agente desktop compatibile può avviare il companion MCP privato di Optees e scoprire tutte le 13 capability senza aprire porte di rete. L'agente ragiona sul workflow; Optees valida payload versionati, esegue la matematica e può renderizzare artifact e report richiesti.",
+      back: "Torna alla landing page",
+      boundaryTitle: "Cosa fa questa connessione",
+      boundaryBody:
+        "MCP viene eseguito come processo stdio privato sul computer. Non usa il token Bearer REST e non espone Optees a Internet. Un agente frontier o locale con supporto tool può concatenare job come Forecasting → MILP → grafico/report, ma significato aziendale, assunzioni e decisioni finali restano responsabilità dell'utente.",
+      stepsTitle: "Configurazione Claude Desktop",
+      steps: [
+        { title: "Apri la configurazione", body: "In Claude Desktop apri Impostazioni → Sviluppatore → Modifica configurazione." },
+        { title: "Aggiungi Optees", body: "Inserisci l'oggetto mcpServers al livello principale del JSON, accanto a preferences e non al suo interno." },
+        { title: "Scegli il comando nativo", body: "Usa il percorso assoluto dell'eseguibile per il tuo sistema operativo dalla tabella seguente." },
+        { title: "Riavvia e verifica", body: "Chiudi completamente Claude Desktop, riaprilo e lancia il prompt di verifica." },
+      ],
+      configTitle: "Esempio di configurazione",
+      configBody: "Questo esempio macOS mostra la struttura richiesta. Sostituisci command e args con i valori specifici della piattaforma.",
+      pathsTitle: "Comandi per pacchetti e sorgente",
+      paths: [
+        { platform: "macOS", command: "/Applications/optees.app/Contents/MacOS/optees-mcp", args: "[]" },
+        { platform: "Windows", command: "%LOCALAPPDATA%\\Programs\\Optees\\optees-mcp.exe", args: "[]" },
+        { platform: "Linux AppImage", command: "/percorso/assoluto/Optees.AppImage", args: "[\"--mcp-server\"]" },
+        { platform: "Sorgente Python", command: "/percorso/assoluto/python", args: "[\"-m\", \"optees.mcp_server\"]" },
+      ],
+      promptTitle: "Verifica la scoperta dei tool",
+      promptBody: "Chiedi all'agente di chiamare il tool invece di rispondere a memoria:",
+      prompt: "Use the Optees tools to list all available solver capabilities. Do not answer from your own knowledge: call optees_list_capabilities.",
+      expectedTitle: "Risultato atteso",
+      expectedBody:
+        "La risposta deve elencare 13 capability versionate, tra cui ml.forecasting.univariate, LP, MILP, cinque varianti Knapsack, NLP, Dijkstra, regressione, classificazione e Packing 3D in singolo container.",
+      workflowTitle: "Un workflow agentico affidabile",
+      workflowBody:
+        "Per ogni passaggio matematico l'agente dovrebbe usare lo stesso ciclo esplicito:",
+      workflowSteps: [
+        "Scoprire la capability pertinente e ispezionarne lo schema esatto.",
+        "Formulare un payload versionato e validarlo prima dell'esecuzione.",
+        "Creare e monitorare il job, poi leggere stato matematico e validazione indipendente.",
+        "Richiedere solo gli artifact o report necessari all'utente.",
+        "Usare un risultato come input di un solver successivo solo dopo aver dichiarato assunzioni e trasformazioni.",
+      ],
+      troubleshootingTitle: "Risoluzione problemi",
+      troubleshooting: [
+        "Usa optees-mcp, non optees-server: quest'ultimo è il companion REST autenticato.",
+        "Usa un percorso assoluto e JSON valido; le barre inverse nei percorsi Windows devono essere escapate.",
+        "Non aggiungere un token di autorizzazione REST alla configurazione MCP stdio.",
+        "Dopo una modifica chiudi completamente Claude Desktop prima di riaprirlo.",
+      ],
+      docsCta: "Apri la guida completa al servizio agentico su GitHub",
     },
     previews: {
       eyebrow: "Esplora l'app",

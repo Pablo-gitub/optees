@@ -2123,3 +2123,222 @@ main,
     transition: none;
   }
 }
+
+/* Agent setup guide ------------------------------------------------------ */
+
+.agent-platform-cta {
+  width: max-content;
+  margin: 0 28px 28px;
+}
+
+.machine-learning-workflow-text {
+  align-content: start;
+}
+
+.agent-setup-main {
+  position: relative;
+  z-index: 1;
+  width: min(var(--maxw), calc(100% - 40px));
+  margin: 0 auto;
+  padding: 150px 0 96px;
+}
+
+.agent-setup-hero {
+  max-width: 900px;
+  margin-bottom: 44px;
+}
+
+.agent-setup-hero h1 {
+  max-width: 820px;
+  margin: 14px 0 22px;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 6vw, 5.2rem);
+  line-height: 1.02;
+  letter-spacing: 0;
+}
+
+.agent-setup-hero > p:last-child {
+  max-width: 760px;
+  color: var(--text-2);
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.agent-setup-boundary,
+.agent-setup-section {
+  border-top: 1px solid var(--border);
+  padding: 38px 0;
+}
+
+.agent-setup-boundary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.agent-setup-boundary svg {
+  width: 24px;
+  height: 24px;
+  color: var(--cyan);
+}
+
+.agent-setup-boundary p,
+.agent-setup-section > p {
+  max-width: 850px;
+  margin: 0;
+  color: var(--text-2);
+  line-height: 1.7;
+}
+
+.agent-setup-section h2 {
+  margin: 0 0 14px;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  letter-spacing: 0;
+}
+
+.agent-setup-section,
+.agent-setup-two-column > div {
+  min-width: 0;
+}
+
+.agent-setup-two-column {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 48px;
+}
+
+.agent-setup-steps,
+.agent-setup-workflow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 28px 0;
+  padding: 1px;
+  list-style: none;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.agent-setup-steps li,
+.agent-setup-workflow li {
+  min-height: 150px;
+  padding: 24px;
+  background: var(--surface);
+}
+
+.agent-setup-steps strong,
+.agent-setup-workflow strong {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+
+.agent-setup-steps span,
+.agent-setup-workflow span {
+  color: var(--text-2);
+  line-height: 1.6;
+}
+
+.agent-setup-code {
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: auto;
+  margin: 24px 0;
+  padding: 22px;
+  color: #d8e7ff;
+  background: #070b14;
+  border: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  white-space: pre;
+}
+
+.agent-setup-paths {
+  display: grid;
+  gap: 10px;
+  margin: 22px 0 0;
+}
+
+.agent-setup-paths div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 14px;
+  align-items: baseline;
+}
+
+.agent-setup-path {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.agent-setup-path code {
+  min-width: 0;
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+.agent-setup-paths dt {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.agent-setup-paths dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  overflow-wrap: anywhere;
+}
+
+.agent-setup-prompt {
+  margin: 22px 0;
+  padding: 20px 22px;
+  color: var(--text);
+  background: var(--surface);
+  border-left: 3px solid var(--cyan);
+  font-family: var(--font-mono);
+  line-height: 1.6;
+}
+
+.agent-setup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+@media (max-width: 900px) {
+  .agent-setup-two-column {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .agent-setup-steps,
+  .agent-setup-workflow {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-setup-steps li,
+  .agent-setup-workflow li {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .agent-setup-main {
+    width: min(100% - 32px, var(--maxw));
+    padding-top: 124px;
+  }
+
+  .agent-setup-boundary {
+    grid-template-columns: 1fr;
+  }
+
+  .agent-setup-paths div {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

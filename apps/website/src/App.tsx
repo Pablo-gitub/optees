@@ -12,6 +12,7 @@ import {
 const repositoryUrl = "https://github.com/Pablo-gitub/optees";
 const releasesUrl = `${repositoryUrl}/releases`;
 const roadmapUrl = `${repositoryUrl}/blob/main/docs/PROJECT_ROADMAP.md`;
+const agentGuideUrl = `${repositoryUrl}/blob/main/docs/AGENTS_SERVICE_CONFIG.md`;
 const issuesUrl = `${repositoryUrl}/issues`;
 const latestReleaseApi = "https://api.github.com/repos/Pablo-gitub/optees/releases/latest";
 const assetUrl = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;
@@ -415,7 +416,7 @@ function DownloadButton({
 /* App                                                                        */
 /* -------------------------------------------------------------------------- */
 
-function App() {
+function LandingPage() {
   const [language, setLanguage] = useState<Language>(getInitialLanguage);
   const t = copy[language];
   const [activeAlgorithm, setActiveAlgorithm] = useState(t.algorithms.items[0].id);
@@ -497,10 +498,16 @@ function App() {
     [algorithms, activeAlgorithm],
   );
 
-  const screenshots = t.previews.items.map((shot) => ({
-    ...shot,
-    src: assetUrl(previewAssets[shot.id]),
-  }));
+  const screenshots = t.previews.items
+    .filter((shot) =>
+      (["assistant", "lpSolution", "packingSolution", "classificationSolution"] as PreviewId[]).includes(
+        shot.id,
+      ),
+    )
+    .map((shot) => ({
+      ...shot,
+      src: assetUrl(previewAssets[shot.id]),
+    }));
 
   const os = useMemo(() => detectOS(), []);
   const downloadHref = assetHrefFor(release, os);
@@ -527,7 +534,7 @@ function App() {
             <a href="#agent-platform">{t.nav.agents}</a>
             <a href="#algorithms">{t.nav.algorithms}</a>
             <a href="#machine-learning">{t.nav.machineLearning}</a>
-            <a href="#previews">{t.nav.previews}</a>
+            <a href={`${import.meta.env.BASE_URL}agents/`}>{t.nav.setup}</a>
             <a href="#faq">{t.nav.faq}</a>
           </nav>
           <div className="topbar-actions">
@@ -657,7 +664,10 @@ function App() {
                   </ul>
                 )}
                 {feature.cta && (
-                  <a className="bento-cta" href="#agent-platform">
+                  <a
+                    className="bento-cta"
+                    href={feature.id === "agentPlatform" ? "#agent-platform" : "#features"}
+                  >
                     {feature.cta}
                     <Icon name="arrow" />
                   </a>
@@ -715,6 +725,10 @@ function App() {
                 </p>
               </div>
             </div>
+            <a className="button primary agent-platform-cta" href={`${import.meta.env.BASE_URL}agents/`}>
+              {t.agentPlatform.setupCta}
+              <Icon name="arrow" />
+            </a>
           </div>
         </section>
 
@@ -810,11 +824,14 @@ function App() {
           <div className="machine-learning-workflows">
             {t.machineLearning.workflows.map((workflow, index) => {
               const preview = screenshots.find((shot) => shot.id === workflow.preview);
-              if (!preview) return null;
 
               return (
                 <article
-                  className="machine-learning-workflow"
+                  className={
+                    preview
+                      ? "machine-learning-workflow"
+                      : "machine-learning-workflow machine-learning-workflow-text"
+                  }
                   key={workflow.title}
                   data-reveal
                   style={{ transitionDelay: `${index * 90}ms` }}
@@ -831,12 +848,14 @@ function App() {
                       ))}
                     </ul>
                   </div>
-                  <WindowFrame
-                    className="machine-learning-shot"
-                    title={preview.window}
-                    src={preview.src}
-                    alt={preview.alt}
-                  />
+                  {preview && (
+                    <WindowFrame
+                      className="machine-learning-shot"
+                      title={preview.window}
+                      src={preview.src}
+                      alt={preview.alt}
+                    />
+                  )}
                 </article>
               );
             })}
@@ -1006,6 +1025,148 @@ function App() {
       </footer>
     </div>
   );
+}
+
+function AgentSetupPage() {
+  const [language, setLanguage] = useState<Language>(getInitialLanguage);
+  const t = copy[language];
+  const setup = t.agentSetup;
+  const configExample = `{
+  "mcpServers": {
+    "optees": {
+      "command": "/Applications/optees.app/Contents/MacOS/optees-mcp",
+      "args": []
+    }
+  }
+}`;
+
+  useEffect(() => {
+    window.localStorage.setItem(languageStorageKey, language);
+    document.documentElement.lang = language;
+    document.title = `${setup.title} — Optees`;
+    setMetaContent('meta[name="description"]', setup.body);
+    setMetaContent('meta[property="og:title"]', `${setup.title} — Optees`);
+    setMetaContent('meta[property="og:description"]', setup.body);
+    setMetaContent('meta[name="twitter:description"]', setup.body);
+  }, [language, setup]);
+
+  return (
+    <div className="site-shell agent-setup-page">
+      <div className="bg-grid" aria-hidden="true" />
+      <header className="topbar scrolled" aria-label={t.nav.aria}>
+        <div className="topbar-inner">
+          <a className="brand" href={import.meta.env.BASE_URL} aria-label={t.nav.brandAria}>
+            <img className="brand-mark" src={assetUrl("logo/optees-appicon.png")} alt="" />
+            <span>{t.footer.product}</span>
+          </a>
+          <div className="topbar-actions">
+            <div className="language-switch" role="group" aria-label={t.language.aria}>
+              {supportedLanguages.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={language === option}
+                  className={language === option ? "active" : ""}
+                  onClick={() => setLanguage(option)}
+                >
+                  {t.language.options[option]}
+                </button>
+              ))}
+            </div>
+            <a className="ghost-link" href={repositoryUrl} aria-label="GitHub">
+              <Icon name="github" />
+            </a>
+          </div>
+        </div>
+      </header>
+
+      <main className="agent-setup-main">
+        <section className="agent-setup-hero">
+          <p className="eyebrow">{setup.eyebrow}</p>
+          <h1>{setup.title}</h1>
+          <p>{setup.body}</p>
+          <a className="button secondary" href={import.meta.env.BASE_URL}>
+            <Icon name="arrow" />
+            {setup.back}
+          </a>
+        </section>
+
+        <section className="agent-setup-boundary">
+          <span className="bento-icon"><Icon name="local" /></span>
+          <div>
+            <h2>{setup.boundaryTitle}</h2>
+            <p>{setup.boundaryBody}</p>
+          </div>
+        </section>
+
+        <section className="agent-setup-section">
+          <h2>{setup.stepsTitle}</h2>
+          <ol className="agent-setup-steps">
+            {setup.steps.map((step, index) => (
+              <li key={step.title}>
+                <span>{index + 1}</span>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+
+        <section className="agent-setup-section agent-setup-two-column">
+          <div>
+            <h2>{setup.configTitle}</h2>
+            <p>{setup.configBody}</p>
+            <pre className="agent-setup-code"><code>{configExample}</code></pre>
+          </div>
+          <div>
+            <h2>{setup.pathsTitle}</h2>
+            <div className="agent-setup-paths">
+              {setup.paths.map((path) => (
+                <div className="setup-path" key={path.platform}>
+                  <strong>{path.platform}</strong>
+                  <code>{path.command}</code>
+                  <code>{path.args}</code>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="agent-setup-section agent-setup-two-column">
+          <div>
+            <h2>{setup.promptTitle}</h2>
+            <p>{setup.promptBody}</p>
+            <pre className="agent-setup-code agent-setup-prompt"><code>{setup.prompt}</code></pre>
+            <h3>{setup.expectedTitle}</h3>
+            <p>{setup.expectedBody}</p>
+          </div>
+          <div>
+            <h2>{setup.workflowTitle}</h2>
+            <p>{setup.workflowBody}</p>
+            <ol className="agent-setup-workflow">
+              {setup.workflowSteps.map((step) => <li key={step}>{step}</li>)}
+            </ol>
+          </div>
+        </section>
+
+        <section className="agent-setup-section">
+          <h2>{setup.troubleshootingTitle}</h2>
+          <ul className="setup-troubleshooting">
+            {setup.troubleshooting.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+          <a className="button primary" href={agentGuideUrl} target="_blank" rel="noreferrer">
+            {setup.docsCta}
+            <Icon name="arrow" />
+          </a>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+function App() {
+  const path = window.location.pathname.replace(/\/+$/, "");
+  return path.endsWith("/agents") ? <AgentSetupPage /> : <LandingPage />;
 }
 
 export default App;

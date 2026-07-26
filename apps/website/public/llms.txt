@@ -20,17 +20,23 @@ through CLI, authenticated loopback REST, or private MCP stdio.
   non-negative weights.
 - Educational Linear Regression and Binary Logistic Classification with
   reproducible held-out evaluation.
+- Univariate Forecasting with naive, seasonal-naive, and additive Holt-Winters
+  methods, chronological evaluation, and independently checked metrics.
 - A fully local, deterministic rule-based modeling assistant for LP, MILP,
   Knapsack, NLP, graph, and educational ML recommendations and validated JSON
   drafts where supported. This assistant is not an LLM.
 
 ## Local Agent Service
 
-- 12 versioned capability descriptors with input and result JSON schemas.
+- 13 versioned capability descriptors with input and result JSON schemas.
 - Exact payload validation before solver execution.
 - Asynchronous local jobs with separate lifecycle, mathematical, termination,
   and solution-validation statuses.
-- Independent result checks currently registered for LP and MILP.
+- Optional, explicitly requested tables, charts, 3D models, and Markdown/PDF
+  reports with provenance and SHA-256 hashes.
+- Agents may compose validated atomic jobs, for example Forecasting followed by
+  MILP planning. Optees validates each contract and calculation, not the
+  agent's business interpretation of the overall workflow.
 - REST binds only to 127.0.0.1 and requires a per-session bearer token.
 - MCP uses a private stdio subprocess and does not open a network port.
 - Hosted agents cannot access a user's localhost without an explicit bridge.
