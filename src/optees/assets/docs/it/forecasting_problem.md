@@ -35,6 +35,51 @@ mescolato.
 - **Stagionalita'** — un pattern che si ripete a ogni lunghezza di stagione.
 - **Residuo** — reale meno stimato; cio' che il modello non ha spiegato.
 
+## Come ogni metodo calcola una previsione
+
+Notazione: la serie di addestramento e' `y[1], y[2], ..., y[T]`, dove `T` e'
+l'origine della previsione (l'ultimo periodo osservato). Una previsione a `h`
+passi si scrive `yhat[T+h]` e `m` e' la lunghezza della stagione.
+
+### Naive
+
+```
+yhat[T+h] = y[T]        per ogni h = 1, 2, 3, ...
+```
+
+Ogni valore futuro e' uguale all'ultimo valore osservato. Porta avanti il
+livello attuale e assume nessun trend e nessuna stagione. E' esatto quando la
+serie e' piatta.
+
+### Naive stagionale
+
+```
+yhat[T+h] = y[T + h - m * (floor((h - 1) / m) + 1)]
+```
+
+Ogni previsione ripete il valore nella posizione corrispondente dell'ultima
+stagione completa. Con dati mensili e `m = 12`, il prossimo gennaio e' uguale
+allo scorso gennaio. Richiede almeno due stagioni complete di storia.
+
+### Holt-Winters (additivo)
+
+Tre componenti vengono aggiornate a ogni passo con pesi di smoothing
+`alpha, beta, gamma` in `[0, 1]`:
+
+```
+livello   l[t] = alpha*(y[t] - s[t-m]) + (1 - alpha)*(l[t-1] + b[t-1])
+trend     b[t] = beta *(l[t] - l[t-1]) + (1 - beta )*b[t-1]
+stagione  s[t] = gamma*(y[t] - l[t-1] - b[t-1]) + (1 - gamma)*s[t-m]
+previsione yhat[T+h] = l[T] + h*b[T] + s[T + h - m*(floor((h-1)/m) + 1)]
+```
+
+Il **livello** indica dove si trova ora la serie, il **trend** quanto
+velocemente si muove e i termini **stagionali** gli scarti ripetuti che si
+sommano sopra. Un peso piu' grande reagisce piu' in fretta ai dati recenti; un
+peso piu' piccolo e' piu' liscio. Optees stima `alpha, beta, gamma` in modo
+deterministico tramite lo stimatore `ExponentialSmoothing` di statsmodels (in
+questa versione solo trend e stagione additivi).
+
 ## Scegliere un metodo
 
 Optees offre tre metodi deterministici. Un metodo piu' complesso **non** e'
@@ -61,6 +106,18 @@ significa che hai battuto naive, sopra 1 che hai fatto peggio.
 - **Rolling origin** ripete quel test su piu' finestre mobili, dando una stima
   piu' stabile sulle serie corte.
 - **Nessuna** salta la valutazione e produce solo la previsione futura.
+
+Sulle coppie valutate di valori `reale` e `previsto`, le metriche sono:
+
+```
+MAE  = mean(|reale - previsto|)                  errore medio, stessa unita' di y
+RMSE = sqrt(mean((reale - previsto)^2))           penalizza di piu' gli errori grandi
+MAPE = 100 * mean(|(reale - previsto) / reale|)   errore percentuale; indefinito se qualche reale = 0
+MASE = MAE / mean(|y[t] - y[t-m]|)                errore relativo a un passo naive (m = 1, o la lunghezza stagione)
+```
+
+`MASE < 1` significa che hai battuto la baseline naive; `MASE > 1` che hai fatto
+peggio.
 
 Le metriche riportate sono ricalcolate in modo **indipendente** dalle previsioni
 e osservazioni pubbliche, non prese sulla fiducia dal solver. Il MAPE resta
