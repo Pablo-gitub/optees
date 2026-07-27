@@ -181,8 +181,8 @@ python -m optees.main
 ```
 
 The checked-in `environment.yml` reproduces the complete Conda development
-environment. Ubuntu system dependencies, a standard `venv` alternative, and
-graphics diagnostics are documented in the
+environment on macOS, Windows, and Linux. Platform prerequisites, a standard
+`venv` alternative, and Linux graphics diagnostics are documented in the
 [development setup guide](docs/DEVELOPMENT.md).
 
 To develop or use the optional local solver API, install the dedicated extra:

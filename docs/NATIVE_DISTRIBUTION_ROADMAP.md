@@ -203,8 +203,9 @@ solver job, and removal of the application bundle.
 - [x] Hand a verified `.deb` update to the system package installer and state
   clearly that administrator confirmation is required; Optees must not attempt
   silent privilege escalation.
-- [x] Check in a reproducible Python 3.12 Conda environment and document both
-  Conda and standard-library `venv` setup for a fresh Ubuntu source checkout.
+- [x] Check in a reproducible Python 3.12 Conda environment and document Conda
+  and standard-library `venv` setup for fresh macOS, Windows, and Linux source
+  checkouts.
 - [ ] Test the final AppImage itself, not only its source PyInstaller directory.
 - [ ] Verify normal FUSE execution and the documented extract-and-run fallback
   separately.
