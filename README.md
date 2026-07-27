@@ -158,6 +158,11 @@ Prebuilt desktop packages for macOS Apple Silicon, Windows x64, and Linux x86_64
 are published on [GitHub Releases](https://github.com/Pablo-gitub/optees/releases).
 Each release includes `SHA256SUMS` for verification.
 
+When a release includes `optees-linux-x86_64.deb`, Ubuntu and Debian users
+should choose it for native installation and desktop integration. The Linux
+AppImage remains the portable fallback. Windows users should choose the Setup
+executable rather than the portable ZIP for a normal installation.
+
 On macOS, current packages are ad-hoc signed because the project does not use
 an Apple Developer ID. Gatekeeper may require you to explicitly open the app
 after download. See the [release procedure](docs/RELEASING.md) for the precise
@@ -170,11 +175,15 @@ Optees requires Python 3.12 or later.
 ```bash
 git clone https://github.com/Pablo-gitub/optees.git
 cd optees
-conda create -n optees python=3.12
+conda env create --file environment.yml
 conda activate optees
-python -m pip install -e ".[plot,local-service,mcp,test]"
 python -m optees.main
 ```
+
+The checked-in `environment.yml` reproduces the complete Conda development
+environment. Ubuntu system dependencies, a standard `venv` alternative, and
+graphics diagnostics are documented in the
+[development setup guide](docs/DEVELOPMENT.md).
 
 To develop or use the optional local solver API, install the dedicated extra:
 

@@ -32,19 +32,27 @@ class CheckForUpdatesUseCase:
         current_version: str,
         system_name: Optional[str] = None,
         machine: Optional[str] = None,
+        linux_distribution: Optional[str] = None,
     ) -> None:
         self._provider = provider
         self._current_version = current_version
         self._system_name = system_name
         self._machine = machine
+        self._linux_distribution = linux_distribution
 
     def execute(self) -> UpdateCheckResult:
         release = self._provider.get_latest_release()
         latest = release.version or release.tag_name
+        system_name = self._system_name or platform.system()
         plan = build_update_plan(
             release,
-            system_name=self._system_name or platform.system(),
+            system_name=system_name,
             machine=self._machine or platform.machine(),
+            linux_distribution=(
+                self._linux_distribution
+                if self._linux_distribution is not None
+                else _detect_linux_distribution(system_name)
+            ),
         )
         available = is_newer_version(latest, self._current_version)
 
@@ -72,8 +80,14 @@ def select_platform_asset(
     *,
     system_name: str,
     machine: str,
+    linux_distribution: Optional[str] = None,
 ) -> Optional[ReleaseAsset]:
-    plan = build_update_plan(release, system_name=system_name, machine=machine)
+    plan = build_update_plan(
+        release,
+        system_name=system_name,
+        machine=machine,
+        linux_distribution=linux_distribution,
+    )
     return plan.artifact if plan is not None else None
 
 
@@ -82,13 +96,19 @@ def build_update_plan(
     *,
     system_name: str,
     machine: str,
+    linux_distribution: Optional[str] = None,
 ) -> Optional[UpdatePlan]:
     platform_value = _normalize_platform(system_name)
     architecture = _normalize_architecture(machine)
     if platform_value is None or architecture is None:
         return None
 
-    selection = _select_artifact_contract(release, platform_value, architecture)
+    selection = _select_artifact_contract(
+        release,
+        platform_value,
+        architecture,
+        linux_distribution=linux_distribution,
+    )
     if selection is None:
         return None
 
@@ -112,6 +132,8 @@ def _select_artifact_contract(
     release: AppRelease,
     platform_value: UpdatePlatform,
     architecture: CpuArchitecture,
+    *,
+    linux_distribution: Optional[str] = None,
 ) -> Optional[tuple[ReleaseAsset, UpdateArtifactKind, UpdateHandoffMethod]]:
     if platform_value is UpdatePlatform.MACOS and architecture is CpuArchitecture.ARM64:
         asset = release.asset_named("optees-macos-arm64.dmg")
@@ -141,6 +163,14 @@ def _select_artifact_contract(
             )
 
     if platform_value is UpdatePlatform.LINUX and architecture is CpuArchitecture.X86_64:
+        if _is_debian_family(linux_distribution):
+            installer = release.asset_named("optees-linux-x86_64.deb")
+            if installer is not None:
+                return (
+                    installer,
+                    UpdateArtifactKind.LINUX_DEB,
+                    UpdateHandoffMethod.LAUNCH_INSTALLER,
+                )
         asset = release.asset_named("optees-linux-x86_64.AppImage")
         if asset is not None:
             return (
@@ -149,6 +179,32 @@ def _select_artifact_contract(
                 UpdateHandoffMethod.OPEN_PORTABLE_PACKAGE,
             )
     return None
+
+
+def _detect_linux_distribution(system_name: str) -> Optional[str]:
+    if system_name.strip().lower() != "linux":
+        return None
+    try:
+        release = platform.freedesktop_os_release()
+    except OSError:
+        return None
+    detected = " ".join(
+        value.strip().lower()
+        for value in (release.get("ID", ""), release.get("ID_LIKE", ""))
+        if value.strip()
+    )
+    return detected or None
+
+
+def _is_debian_family(linux_distribution: Optional[str]) -> bool:
+    if not linux_distribution:
+        return False
+    tokens = {
+        token.strip().lower()
+        for token in linux_distribution.replace(",", " ").split()
+        if token.strip()
+    }
+    return bool(tokens & {"debian", "ubuntu"})
 
 
 def _normalize_platform(value: str) -> Optional[UpdatePlatform]:

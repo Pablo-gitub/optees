@@ -13,6 +13,7 @@ Native releases expose MCP without requiring a separate Python installation:
 | --- | --- |
 | Windows installer | `%LOCALAPPDATA%\\Programs\\Optees\\optees-mcp.exe` |
 | macOS | `/Applications/optees.app/Contents/MacOS/optees-mcp` |
+| Ubuntu/Debian `.deb` | `/usr/bin/optees-mcp` |
 | Linux AppImage | `/absolute/path/to/optees-linux-x86_64.AppImage --mcp-server` |
 
 `optees-server` is not interchangeable with `optees-mcp`. It exposes the REST

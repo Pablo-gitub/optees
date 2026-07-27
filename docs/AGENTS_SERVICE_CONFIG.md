@@ -45,6 +45,7 @@ Use the command matching the installation:
 | Windows installer | `%LOCALAPPDATA%\\Programs\\Optees\\optees-mcp.exe` | `[]` |
 | Windows portable ZIP | Absolute extracted path to `optees-mcp.exe` | `[]` |
 | macOS DMG installation | `/Applications/optees.app/Contents/MacOS/optees-mcp` | `[]` |
+| Ubuntu/Debian `.deb` | `/usr/bin/optees-mcp` | `[]` |
 | Linux AppImage | Absolute path to the AppImage | `["--mcp-server"]` |
 
 These paths apply to native releases that include the packaged MCP companion.

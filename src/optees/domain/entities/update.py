@@ -43,6 +43,7 @@ class UpdateArtifactKind(str, Enum):
     WINDOWS_INSTALLER = "windows_installer"
     WINDOWS_PORTABLE_ZIP = "windows_portable_zip"
     MACOS_DMG = "macos_dmg"
+    LINUX_DEB = "linux_deb"
     LINUX_APPIMAGE = "linux_appimage"
 
 

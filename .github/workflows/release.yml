@@ -368,6 +368,26 @@ jobs:
           APPIMAGE_EXTRACT_AND_RUN=1 python packaging/smoke_mcp.py \
             ./optees-linux-x86_64.AppImage --mcp-server
 
+      - name: Build Debian package (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          version="$(python -c 'import optees; print(optees.__version__)')"
+          bash packaging/linux/build_deb.sh \
+            "${version}" dist/optees optees-linux-x86_64.deb
+          dpkg-deb --info optees-linux-x86_64.deb
+          dpkg-deb --contents optees-linux-x86_64.deb
+
+      - name: Smoke test Debian package payload (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          package_root="${RUNNER_TEMP}/optees-deb"
+          dpkg-deb --extract optees-linux-x86_64.deb "${package_root}"
+          "${package_root}/opt/optees/optees" --update-probe
+          python packaging/smoke_mcp.py \
+            "${package_root}/opt/optees/optees-mcp"
+
       # ── Package: Windows → native installer + explicit portable ZIP ──────
       - name: Install pinned Inno Setup (Windows)
         if: runner.os == 'Windows'
@@ -565,6 +585,13 @@ jobs:
           name: optees-windows-x64-portable.zip
           path: optees-windows-x64-portable.zip
 
+      - name: Upload Debian package
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: optees-linux-x86_64.deb
+          path: optees-linux-x86_64.deb
+
 # ---------------------------------------------------------------------------
 # Release job — runs after all builds succeed
 # ---------------------------------------------------------------------------
@@ -600,7 +627,8 @@ jobs:
             | macOS 14+ (Apple Silicon) | `optees-macos-arm64.dmg` | Open DMG → drag `optees.app` to Applications |
             | Windows 10/11 (x64) | `optees-windows-x64-setup.exe` | Per-user installer; no administrator privileges required |
             | Windows 10/11 (x64, portable) | `optees-windows-x64-portable.zip` | Unzip and run `optees.exe`; no installation or automatic replacement |
-            | Linux (x86_64) | `optees-linux-x86_64.AppImage` | See instructions below |
+            | Ubuntu/Debian (x86_64) | `optees-linux-x86_64.deb` | Native package with GNOME desktop integration |
+            | Linux (x86_64, portable) | `optees-linux-x86_64.AppImage` | Portable fallback; see instructions below |
 
             ### macOS
             Open the DMG and drag `optees.app` to `Applications`.
@@ -617,11 +645,16 @@ jobs:
             Click **More info → Run anyway**.
 
             ### Linux
+            On Ubuntu or Debian, install the native package:
+            ```bash
+            sudo apt install ./optees-linux-x86_64.deb
+            ```
+            Optees then appears in the desktop application launcher. The
+            AppImage remains available as a portable alternative:
             ```bash
             chmod +x optees-linux-x86_64.AppImage
-            ./optees-linux-x86_64.AppImage
+            APPIMAGE_EXTRACT_AND_RUN=1 ./optees-linux-x86_64.AppImage
             ```
-            FUSE is not required (extracted mode).
             If the app fails to start, install: `sudo apt install libgl1 libegl1`
 
           files: artifacts/*

@@ -135,7 +135,8 @@ Pushing the tag starts `.github/workflows/release.yml`. The workflow builds:
 | macOS 14+ Apple Silicon | `optees-macos-arm64.dmg` |
 | Windows x64 | `optees-windows-x64-setup.exe` |
 | Windows x64, portable | `optees-windows-x64-portable.zip` |
-| Linux x86_64 | `optees-linux-x86_64.AppImage` |
+| Ubuntu/Debian x86_64 | `optees-linux-x86_64.deb` |
+| Linux x86_64 portable | `optees-linux-x86_64.AppImage` |
 
 Before packaging, each native build runs the bundled executable's
 `--update-probe`. This verifies that the packaged CA bundle can establish an
@@ -186,11 +187,16 @@ and choosing **Open**.
 The updater downloads and checksum-verifies the release artifact, opens it with
 the operating system, and then closes Optees. On Windows, the preferred artifact
 is the visible per-user Inno Setup installer; the ZIP remains an explicitly
-portable fallback. On macOS and Linux, installation remains an operating-system
-workflow: dragging the app from a DMG or replacing/running the AppImage. Optees
-does not silently overwrite a running installation.
+portable fallback. On Ubuntu and Debian, the preferred artifact is the `.deb`,
+which is handed to the system package installer and requires the user's normal
+administrator confirmation. Other Linux distributions retain the AppImage
+portable flow. On macOS, the user drags the app from the DMG. Optees does not
+silently elevate privileges or overwrite a running installation.
 
 On its first installation, Inno Setup also asks for the artifact/report export
-directory and defaults to `Downloads\Optees`. The value is stored in
+directory and defaults to the current user's conventional
+`%USERPROFILE%\Downloads\Optees` path. The destination remains editable in the
+installer so users with redirected or organization-managed folders can select
+the appropriate location. The value is stored in
 `%LOCALAPPDATA%\Optees\settings.json` for both desktop and MCP companions.
 Upgrades must skip this initialization when the shared settings file exists.

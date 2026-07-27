@@ -164,7 +164,29 @@ def test_windows_plan_labels_zip_as_portable_fallback():
     assert plan.handoff_method is UpdateHandoffMethod.OPEN_ARCHIVE
 
 
-def test_linux_plan_accepts_amd64_alias_and_describes_appimage_handoff():
+def test_linux_plan_prefers_native_deb_over_portable_appimage():
+    release = _release(
+        "0.2.0",
+        "optees-linux-x86_64.AppImage",
+        "optees-linux-x86_64.deb",
+    )
+
+    plan = build_update_plan(
+        release,
+        system_name="Linux",
+        machine="amd64",
+        linux_distribution="ubuntu debian",
+    )
+
+    assert plan is not None
+    assert plan.platform is UpdatePlatform.LINUX
+    assert plan.architecture is CpuArchitecture.X86_64
+    assert plan.artifact.name == "optees-linux-x86_64.deb"
+    assert plan.artifact_kind is UpdateArtifactKind.LINUX_DEB
+    assert plan.handoff_method is UpdateHandoffMethod.LAUNCH_INSTALLER
+
+
+def test_linux_plan_uses_appimage_as_portable_fallback():
     release = _release("0.2.0", "optees-linux-x86_64.AppImage")
 
     plan = build_update_plan(release, system_name="Linux", machine="amd64")
@@ -174,6 +196,50 @@ def test_linux_plan_accepts_amd64_alias_and_describes_appimage_handoff():
     assert plan.architecture is CpuArchitecture.X86_64
     assert plan.artifact_kind is UpdateArtifactKind.LINUX_APPIMAGE
     assert plan.handoff_method is UpdateHandoffMethod.OPEN_PORTABLE_PACKAGE
+
+
+def test_linux_non_debian_distribution_keeps_portable_appimage():
+    release = _release(
+        "0.2.0",
+        "optees-linux-x86_64.AppImage",
+        "optees-linux-x86_64.deb",
+    )
+
+    plan = build_update_plan(
+        release,
+        system_name="Linux",
+        machine="amd64",
+        linux_distribution="fedora",
+    )
+
+    assert plan is not None
+    assert plan.artifact.name == "optees-linux-x86_64.AppImage"
+    assert plan.artifact_kind is UpdateArtifactKind.LINUX_APPIMAGE
+
+
+def test_check_detects_ubuntu_and_selects_native_package(monkeypatch):
+    provider = FakeUpdateProvider(
+        _release(
+            "0.2.0",
+            "optees-linux-x86_64.AppImage",
+            "optees-linux-x86_64.deb",
+        )
+    )
+    monkeypatch.setattr(
+        "optees.application.usecases.check_for_updates_usecase."
+        "platform.freedesktop_os_release",
+        lambda: {"ID": "ubuntu", "ID_LIKE": "debian"},
+    )
+
+    result = CheckForUpdatesUseCase(
+        provider,
+        current_version="0.1.0",
+        system_name="Linux",
+        machine="x86_64",
+    ).execute()
+
+    assert result.plan is not None
+    assert result.plan.artifact.name == "optees-linux-x86_64.deb"
 
 
 @pytest.mark.parametrize(

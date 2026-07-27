@@ -50,7 +50,7 @@ system accepted a request to open the downloaded file.
 | --- | --- | --- | --- |
 | Windows x64 | `optees-windows-x64-setup.exe` built with Inno Setup | Portable ZIP | Per-user application directory under Local AppData |
 | macOS Apple Silicon | Signed/notarized DMG when credentials are available | Ad-hoc signed contributor DMG | `/Applications/Optees.app` through the normal drag workflow |
-| Linux x86_64 | AppImage with accurate runtime and update documentation | Debian package only after a separate decision | User-owned persistent location selected or documented by Optees |
+| Linux x86_64 | Debian package for Ubuntu and Debian | AppImage labelled **Portable** | `/opt/optees` with launchers and desktop integration registered by the package |
 
 Architectures not present in this matrix must be reported as unsupported; a
 same-platform asset must not be selected while silently ignoring architecture.
@@ -180,28 +180,51 @@ uninstall without leaving application binaries behind.
 attributes, manual update over an older version, local-service startup, one
 solver job, and removal of the application bundle.
 
-## Phase 5 - Linux Portable Distribution
+## Phase 5 - Linux Native And Portable Distribution
 
-- [ ] Decide and document that AppImage is a portable contract rather than a
-  package-manager installation.
+- [x] Define the AppImage as a portable contract rather than a package-manager
+  installation.
+- [x] Select a Debian package as the canonical installed-app contract for
+  supported Ubuntu and Debian x86-64 systems. This does not imply support for
+  every Linux distribution.
+- [x] Build a versioned `.deb` whose payload lives under `/opt/optees`, with
+  stable `optees`, `optees-server`, and `optees-mcp` launchers under
+  `/usr/bin`.
+- [x] Register the desktop entry and application icon under the standard
+  `/usr/share/applications` and `/usr/share/icons/hicolor` locations so Optees
+  appears in the GNOME application launcher like a normal installed app.
+- [x] Declare package metadata, runtime requirements, upgrade behavior, and
+  ownership so `apt`/`dpkg` can install, replace, and remove application files
+  without deleting per-user settings or exported results.
+- [ ] Build and inspect the `.deb` in release CI, then install it on a clean
+  Ubuntu 24.04 LTS runner or VM before executing the packaged self-test.
+- [x] Update release discovery to prefer the `.deb` on supported Debian-family
+  systems while retaining AppImage selection for the portable flow.
+- [x] Hand a verified `.deb` update to the system package installer and state
+  clearly that administrator confirmation is required; Optees must not attempt
+  silent privilege escalation.
+- [x] Check in a reproducible Python 3.12 Conda environment and document both
+  Conda and standard-library `venv` setup for a fresh Ubuntu source checkout.
 - [ ] Test the final AppImage itself, not only its source PyInstaller directory.
 - [ ] Verify normal FUSE execution and the documented extract-and-run fallback
   separately.
 - [ ] Add complete desktop metadata, version metadata, icon, and categories.
-- [ ] Decide whether Optees manages a persistent per-user AppImage location or
-  delegates integration to external desktop tools; do not mix both behaviors.
+- [x] Keep AppImage desktop integration outside the Optees contract. Users who
+  choose the portable artifact run it from their selected location; Optees
+  does not silently move or register it.
 - [ ] If self-update is retained, embed reviewed AppImage update information,
   publish the matching `.zsync` asset, and use an atomic replacement strategy.
 - [ ] Otherwise, present a verified download and explicit manual replacement
   instructions without closing the current application prematurely.
-- [ ] Evaluate a Debian package only as an additional distribution channel,
-  not as a replacement claimed to support every Linux distribution.
 - [x] Expose the bundled MCP stdio companion through the stable AppImage
   argument `--mcp-server` and smoke-test the final AppImage entry point.
 
-**Acceptance tests:** Ubuntu LTS CI plus manual verification on at least one
-non-Debian desktop distribution; launch, desktop integration where promised,
-one solver job, local-service startup, update/replacement, and removal.
+**Acceptance tests:** on a clean Ubuntu 24.04 LTS x86-64 installation, install
+the `.deb`, launch Optees from GNOME, run one solver job, start the REST and MCP
+companions, upgrade over an older package, confirm preserved user settings, and
+remove it through the package manager. Test the AppImage separately on Ubuntu
+and at least one non-Debian desktop distribution, including the observed
+NVIDIA/Qt/OpenGL startup path and software-rendering fallback.
 
 ## Phase 6 - Packaged Runtime Self-Test
 
@@ -245,7 +268,8 @@ verified together in the same artifacts users download.
 
 - Platform-aware update orchestration and persistent staging.
 - Progress reporting and post-update version confirmation.
-- AppImage integration/update decision.
+- Ubuntu/Debian `.deb` packaging and native desktop integration.
+- AppImage runtime diagnostics and portable update behavior.
 - Build dependency constraints and reproducibility evidence.
 
 ### P2 - Later Distribution Depth
@@ -253,7 +277,8 @@ verified together in the same artifacts users download.
 - Windows signing certificate.
 - Apple Developer ID signing and notarization.
 - Additional CPU architectures.
-- Optional Debian package, delta updates, SBOM, and build provenance attestations.
+- Additional Linux package formats, delta updates, SBOM, and build provenance
+  attestations.
 
 ## Explicitly Deferred
 
