@@ -32,10 +32,12 @@ class GitHubUpdateProvider(UpdateProviderPort):
         repository: str = "Pablo-gitub/optees",
         timeout_seconds: float = 8.0,
         max_asset_bytes: int = DEFAULT_MAX_ASSET_BYTES,
+        api_token: Optional[str] = None,
     ) -> None:
         self._repository = repository
         self._timeout_seconds = float(timeout_seconds)
         self._max_asset_bytes = int(max_asset_bytes)
+        self._api_token = (api_token or "").strip()
         self._ssl_context = ssl.create_default_context(cafile=certifi.where())
         if self._max_asset_bytes <= 0:
             raise ValueError("max_asset_bytes must be positive.")
@@ -128,12 +130,15 @@ class GitHubUpdateProvider(UpdateProviderPort):
             return json.loads(response.read().decode("utf-8"))
 
     def _open(self, url: str):
+        headers = {
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "optees-update-checker",
+        }
+        if self._api_token:
+            headers["Authorization"] = f"Bearer {self._api_token}"
         request = Request(
             url,
-            headers={
-                "Accept": "application/vnd.github+json",
-                "User-Agent": "optees-update-checker",
-            },
+            headers=headers,
         )
         try:
             return urlopen(

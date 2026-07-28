@@ -142,7 +142,9 @@ Before packaging, each native build runs the bundled executable's
 `--update-probe`. This verifies that the packaged CA bundle can establish an
 HTTPS connection to the public GitHub Releases endpoint; a source-only network
 check is not sufficient because frozen Python runtimes have different default
-certificate paths.
+certificate paths. In GitHub Actions the probe uses the workflow's short-lived
+`GITHUB_TOKEN` to avoid shared-runner anonymous API rate limits. The token is
+passed only to the probe process and is never embedded in a release artifact.
 
 The release job then creates `SHA256SUMS` and attaches it with the artifacts.
 Check the completed GitHub Action and download the macOS DMG for a manual

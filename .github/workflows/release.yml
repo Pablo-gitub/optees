@@ -113,15 +113,21 @@ jobs:
 
       - name: Smoke test packaged update HTTPS (Linux)
         if: runner.os == 'Linux'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: dist/optees/optees --update-probe
 
       - name: Smoke test packaged update HTTPS (macOS)
         if: runner.os == 'macOS'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: dist/optees.app/Contents/MacOS/optees --update-probe
 
       - name: Smoke test packaged update HTTPS (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           $process = Start-Process `
             -FilePath 'dist\optees\optees.exe' `
@@ -381,6 +387,8 @@ jobs:
       - name: Smoke test Debian package payload (Linux)
         if: runner.os == 'Linux'
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           package_root="${RUNNER_TEMP}/optees-deb"
           dpkg-deb --extract optees-linux-x86_64.deb "${package_root}"

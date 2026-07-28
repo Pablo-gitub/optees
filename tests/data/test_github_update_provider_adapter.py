@@ -38,6 +38,38 @@ def test_provider_uses_bundled_ca_context_for_https(monkeypatch):
     assert captured["context"].check_hostname is True
 
 
+def test_provider_adds_optional_github_authorization(monkeypatch):
+    captured = {}
+
+    def fake_urlopen(request, *, timeout, context):
+        captured["request"] = request
+        return BytesIO(b"{}")
+
+    monkeypatch.setattr(update_provider_module, "urlopen", fake_urlopen)
+
+    with GitHubUpdateProvider(api_token=" release-token ")._open(
+        "https://api.github.com/example"
+    ):
+        pass
+
+    assert captured["request"].get_header("Authorization") == "Bearer release-token"
+
+
+def test_provider_omits_authorization_without_token(monkeypatch):
+    captured = {}
+
+    def fake_urlopen(request, *, timeout, context):
+        captured["request"] = request
+        return BytesIO(b"{}")
+
+    monkeypatch.setattr(update_provider_module, "urlopen", fake_urlopen)
+
+    with GitHubUpdateProvider()._open("https://api.github.com/example"):
+        pass
+
+    assert captured["request"].get_header("Authorization") is None
+
+
 def test_release_from_github_json_maps_assets():
     release = release_from_github_json(
         {

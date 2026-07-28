@@ -11,7 +11,9 @@ def main(argv: list[str] | None = None) -> int:
             GitHubUpdateProvider,
         )
 
-        release = GitHubUpdateProvider().get_latest_release()
+        release = GitHubUpdateProvider(
+            api_token=os.getenv("GITHUB_TOKEN"),
+        ).get_latest_release()
         if not release.tag_name:
             raise RuntimeError("The GitHub update endpoint returned no release tag.")
         print(f"GitHub update endpoint reachable: {release.tag_name}")
