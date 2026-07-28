@@ -21,8 +21,9 @@ def test_inno_setup_initializes_a_shared_export_directory_once():
     script = (ROOT / "packaging/windows/optees.iss").read_text(encoding="utf-8")
 
     assert "CreateInputDirPage(" in script
-    assert "{userprofile}\\Downloads\\Optees" in script
+    assert "{%USERPROFILE}\\Downloads\\Optees" in script
     assert "{userdownloads}" not in script
+    assert "{userprofile}" not in script
     assert "--set-export-directory" in script
     assert "Check: ShouldInitializeExportDirectory" in script
     assert "{localappdata}\\Optees\\settings.json" in script

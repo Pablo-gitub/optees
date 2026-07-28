@@ -86,7 +86,7 @@ begin
       ''
     );
   ExportDirectoryPage.Add('');
-  ExportDirectoryPage.Values[0] := ExpandConstant('{userprofile}\Downloads\Optees');
+  ExportDirectoryPage.Values[0] := ExpandConstant('{%USERPROFILE}\Downloads\Optees');
 end;
 
 function GetExportDirectory(Param: String): String;
