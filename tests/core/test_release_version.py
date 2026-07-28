@@ -29,8 +29,8 @@ def test_release_version_rejects_unsupported_notation(value):
 
 
 def test_release_tag_cli_accepts_current_release(capsys):
-    assert main(["v0.10.1"]) == 0
-    assert "matches Optees 0.10.1" in capsys.readouterr().out
+    assert main(["v0.10.2"]) == 0
+    assert "matches Optees 0.10.2" in capsys.readouterr().out
 
 
 def test_release_tag_cli_rejects_mismatch(capsys):
