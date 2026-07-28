@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
+from dataclasses import replace
 from typing import Annotated, Any
 
 from pydantic import Field
@@ -465,7 +466,28 @@ def create_mcp_server(
         report_service,
         export_port,
     )
-    server = FastMCP(
+
+    class OpteesFastMCP(FastMCP):
+        async def read_resource(self, uri):
+            contents = list(await super().read_resource(uri))
+            uri_value = str(uri)
+            media_type = None
+            if (
+                artifact_service is not None
+                and uri_value.startswith("optees-artifact://")
+            ):
+                artifact_id = uri_value.removeprefix("optees-artifact://")
+                manifest = artifact_service.manifest_entry(artifact_id)
+                if isinstance(manifest, StructuredError):
+                    raise ValueError(manifest.message)
+                media_type = manifest.media_type
+            if media_type is None:
+                return contents
+            # One resource template serves every artifact format, so its advertised
+            # MIME is generic. Preserve the concrete manifest MIME on each read.
+            return [replace(item, mime_type=media_type) for item in contents]
+
+    server = OpteesFastMCP(
         "Optees Local Solver",
         instructions=(
             "Inspect a capability before formulating a problem. Validate the exact "

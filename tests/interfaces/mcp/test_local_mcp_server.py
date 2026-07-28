@@ -202,6 +202,34 @@ def test_facade_renders_metadata_only_and_requires_explicit_resource_read():
         jobs.shutdown(wait=True, cancel_pending=True)
 
 
+def test_mcp_artifact_resource_preserves_the_rendered_media_type():
+    jobs = create_local_job_service()
+    artifacts = create_local_artifact_service(jobs)
+    facade = LocalMcpToolFacade(jobs, artifacts)
+    try:
+        facade.get_capability("lp.continuous")
+        facade.validate_problem("lp.continuous", LP_PROBLEM)
+        created = facade.create_job("lp.continuous", LP_PROBLEM)
+        job_id = created["job"]["job_id"]
+        _wait_for_job(jobs, job_id)
+        facade.render_result_artifacts(
+            job_id,
+            [{"artifact_type": "feasible_region", "formats": ["svg"]}],
+        )
+        entry = _wait_for_artifact(artifacts, job_id)
+        uri = f"optees-artifact://{entry['artifact_id']}"
+
+        server = create_mcp_server(jobs, artifacts)
+        resource = asyncio.run(server.read_resource(uri))
+
+        assert len(resource) == 1
+        assert resource[0].mime_type == "image/svg+xml"
+        assert resource[0].content.startswith(b"<?xml")
+    finally:
+        artifacts.close()
+        jobs.shutdown(wait=True, cancel_pending=True)
+
+
 def test_facade_requires_inspection_and_exact_validation_before_batch():
     service = create_local_job_service()
     facade = LocalMcpToolFacade(service)
@@ -382,8 +410,8 @@ async def _run_stdio_lp_workflow() -> None:
                     "job_id": job_id,
                     "requests": [
                         {
-                            "artifact_type": "solution_table",
-                            "formats": ["json"],
+                            "artifact_type": "feasible_region",
+                            "formats": ["svg"],
                         }
                     ],
                 },
@@ -422,6 +450,7 @@ async def _run_stdio_lp_workflow() -> None:
             )
             assert len(resource.contents) == 1
             assert resource.contents[0].blob is not None
+            assert resource.contents[0].mimeType == "image/svg+xml"
 
 
 def _structured(result) -> dict[str, object]:
