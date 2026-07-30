@@ -790,19 +790,55 @@ tool use; they do not replace scientific solver regressions.
 Solver cascades are a separate feature, not part of the local-service
 refactoring. They require stable, versioned capability contracts first.
 
-A future `OPTIMIZATION_WORKFLOWS_ROADMAP.md` may define:
+The dedicated `docs/OPTIMIZATION_WORKFLOWS_ROADMAP.md` now defines:
 
-- declarative steps and versioned input/output mappings;
-- conditions, stopping criteria, retries, and infeasibility handling;
-- audit records for intermediate models and results;
-- explicit human approval before material model changes;
-- deterministic feedback loops, such as capacity allocation followed by 3D
-  packing verification;
-- comparison and rollback between workflow runs.
+- declarative steps and versioned typed mappings;
+- a persistent experiment ledger outside the stateless solver core;
+- restricted SQL transformations and controlled data connectors;
+- ex-post evaluation, deterministic feedback loops, comparison, promotion, and
+  rollback;
+- validated Markdown, PDF, and safe web report templates;
+- explicit approval before material semantic or workflow changes.
 
 Initially, the calling agent orchestrates atomic Optees capabilities. Optees
 must not silently modify a previous mathematical model after a downstream
 failure.
+
+## Future - Embedded Python API And Client SDKs
+
+Optees may later expose two developer-facing integration paths that do not
+require installing or driving the desktop application:
+
+1. a stable, documented Python API for applications that deliberately embed
+   the Optees runtime and its solver dependencies in their own environment;
+2. lightweight client SDKs for applications that call an independently running
+   Optees local service.
+
+The Python API would wrap the same application services, capability registry,
+versioned codecs, validation, and error model used by the existing runtime. It
+must not create a second solver implementation or expose internal composition
+objects as an accidental public contract.
+
+Client SDKs should be generated from, or kept mechanically aligned with, the
+versioned OpenAPI contract. Dart is the preferred first non-Python candidate so
+Flutter and Dart applications can use discovery, validation, jobs, batches,
+artifacts, reports, and downloads through typed models. Python and TypeScript
+clients may follow when demand justifies their maintenance cost.
+
+These integrations have separate versioning responsibilities:
+
+- an embedding application pins and upgrades the Optees Python package through
+  its own dependency manager and release pipeline;
+- an SDK negotiates documented API and contract versions with the local
+  service;
+- neither path silently updates the embedded runtime;
+- desktop self-update behavior remains unrelated to library or SDK dependency
+  management.
+
+Before implementation, Optees must define a public API stability policy,
+supported compatibility window, package publication process, generated-client
+verification, and end-to-end tests against packaged local-service releases.
+This is a future direction, not part of the current implementation priority.
 
 ## Security And Operational Non-Goals
 

@@ -194,8 +194,10 @@ Its adapter verifies the retained SHA-256 digest, accepts only a safe basename,
 and writes atomically inside the configured export root. The desktop GUI and
 packaged MCP companion are separate processes, but share that root through a
 small platform-specific JSON settings file. The installer initializes it to
-the user's `Downloads/Optees` directory on first installation, while subsequent
-GUI changes are read by the MCP adapter on every explicit download request.
+the conventional `%USERPROFILE%/Downloads/Optees` directory on first
+installation, while allowing a different destination for redirected or
+organization-managed folders. Subsequent GUI changes are read by the MCP
+adapter on every explicit download request.
 
 `ReportCompositionService` is a second application-owned asynchronous
 orchestrator. It resolves execution envelopes through `LocalJobService`, pins
@@ -606,6 +608,11 @@ flowchart LR
 
 Each capability validates only its own contract and result. Optees does not
 currently certify the semantic correctness of the complete composed workflow.
+The planned workflow registry, restricted transformation engine, persistent
+experiment ledger, adaptive loop controller, and validated template registry
+are specified in `docs/OPTIMIZATION_WORKFLOWS_ROADMAP.md`. They are not shipped
+runtime architecture yet, and they will remain outside the stateless capability
+core when implemented.
 
 Forecasting preserves the same dependency direction as other capabilities.
 Immutable chronological domain objects and the application use case know

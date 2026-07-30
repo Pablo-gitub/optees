@@ -15,6 +15,11 @@ Related documents:
   loading horizontal expansion;
 - `docs/LOCAL_AGENT_SERVICE_ROADMAP.md` for the shared headless execution
   platform, local API, and future agent-facing contracts;
+- `docs/OPTIMIZATION_WORKFLOWS_ROADMAP.md` for planned declarative workflows,
+  the persistent experiment ledger, restricted transformations, adaptive
+  loops, and validated report templates;
+- `docs/SEQUENTIAL_DECISION_BENCHMARK_ROADMAP.md` for the planned
+  domain-neutral competition between frozen sequential decision policies;
 - `docs/RESULT_ARTIFACTS_REPORTING_ROADMAP.md` for optional result charts,
   tables, 3D exports, and local Markdown/PDF report composition;
 - `docs/RESULT_ARTIFACTS_CONTRACT.md` for the frozen artifact inventory,
@@ -99,6 +104,13 @@ different strategic-decision workflow after those two operational capabilities
 are stable. Each stage is delivered as a complete vertical slice and exposed
 consistently through desktop, versioned JSON, the local REST service, MCP,
 independent validation, optional result artifacts, and reports.
+
+The cross-capability workflow and experiment-ledger platform is a separate
+strategic track documented in `docs/OPTIMIZATION_WORKFLOWS_ROADMAP.md`. It will
+make validated compositions repeatable and stateful without moving memory into
+the solvers. Its presence here does not silently replace the capability order
+above; implementation sequencing must be chosen explicitly after its Phase 0
+contracts and threat model are reviewed.
 
 ### Priority 1 - Time-series Forecasting
 
@@ -498,10 +510,10 @@ order that reuses the new foundations.
 
 | Family | Next capabilities |
 | --- | --- |
-| LP / MILP | Dedicated `MILPSolutionView`, MPS import adapter, threshold-model wizard, linear minimax/maximin, Chebyshev goal programming, and min-max regret where the model is linear. |
+| LP / MILP | Dedicated `MILPSolutionView`, MPS import adapter, threshold-model wizard, convex Quadratic Programming (QP), convex Mixed-Integer Quadratic Programming (MIQP), linear minimax/maximin, Chebyshev goal programming, and min-max regret where the model is linear. QP should precede MIQP so convexity checks, quadratic contracts, validation, and educational diagnostics are established before integer decisions are added. |
 | Knapsack | Multiple-choice Knapsack, additional benchmark suites, and heuristic-versus-exact comparison for instances where DP or MILP becomes expensive. |
 | Packing & Loading | Orthogonal single- and multi-container 3D packing, interactive refinement, industrial constraints, heuristic comparison, and capacity-only allocation. |
-| NLP | Nonlinear constraints, least squares, quadratic programming, nonlinear minimax, and global methods such as differential evolution. |
+| NLP | Nonlinear constraints, nonlinear least squares, genuinely non-convex quadratic models, nonlinear minimax, and global methods such as differential evolution. Convex QP and MIQP belong to the structured LP/MILP expansion above rather than the generic local-NLP workflow. |
 | Graph Theory | Bellman-Ford, minimum spanning tree, max flow/min cut, matching, and exact/heuristic TSP comparison. |
 | AI & Machine Learning | Time-series forecasting first; regularization, classification hardening, and clustering diagnostics follow after the current business-decision sequence. |
 | Heuristics | Simulated Annealing, then problem-specific Genetic Algorithm or Tabu Search; every result keeps seed, budget, incumbent trace, and feasibility diagnostics. |
