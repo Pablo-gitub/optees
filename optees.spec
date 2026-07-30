@@ -84,6 +84,10 @@ a = Analysis(
         "scipy.linalg.cython_lapack",
         "scipy.optimize._highspy",
         "scipy.optimize._linprog_highs",
+        # Matplotlib selects non-default output backends dynamically. Agg is
+        # imported directly by the renderers, while SVG must be explicit for
+        # frozen builds.
+        "matplotlib.backends.backend_svg",
         # Forecasting backend selected through a runtime method registry.
         "statsmodels.tsa.holtwinters",
         # Markdown extensions loaded by name at runtime

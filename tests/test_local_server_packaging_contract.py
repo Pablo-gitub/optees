@@ -83,15 +83,19 @@ def test_final_appimage_dispatches_and_smoke_tests_mcp():
 
 
 def test_native_bundles_smoke_test_artifact_and_report_workflow():
+    spec = (ROOT / "optees.spec").read_text(encoding="utf-8")
     workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
     smoke_path = ROOT / "packaging" / "smoke_packaged_reporting.py"
     smoke = smoke_path.read_text(encoding="utf-8")
 
+    assert '"matplotlib.backends.backend_svg"' in spec
     assert workflow.count("Smoke test packaged artifact reporting") == 3
     assert workflow.count("packaging/smoke_packaged_reporting.py") == 3
     assert workflow.count("Verify packaged report template") == 3
     assert "solution_table" in smoke
     assert "feasible_region" in smoke
+    assert '"formats": ["png", "svg"]' in smoke
+    assert 'b"<svg"' in smoke
     assert "/api/v1/reports/backends" in smoke
     assert "Optees · optees.it" in smoke
     assert 'pdf.startswith(b"%PDF-")' in smoke
