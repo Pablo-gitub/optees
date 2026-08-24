@@ -1,29 +1,36 @@
 # Native Distribution And Update Roadmap
 
-This document defines how Optees will move from downloadable platform bundles
-to explicit, tested installation and update contracts. It covers release CI,
-artifact reproducibility, native installation, update handoff, and acceptance
-testing. It does not change solver behavior or the local-service API.
+## Document Status
 
-Implementation starts from `main` on a dedicated `codex/native-installers`
-branch after the local solver platform has been merged. The current artifacts
-remain available until their replacements pass the acceptance matrix.
-Source-derived baseline evidence and the manual clean-account matrix are kept
-in [Native distribution audit](../evidence/native-distribution-audit.md).
+- **State:** in progress
+- **Shipped baseline:** test-gated native release workflow, Windows per-user
+  installer and portable ZIP, macOS DMG, Debian package, portable AppImage,
+  checksum publication, updater handoff, and packaged MCP/reporting smoke tests
+- **Remaining scope:** clean-account acceptance, signing and notarization,
+  post-install version confirmation, AppImage hardening, and bounded self-test
+- **Historical evidence:** the pre-installer audit is archived and must not be
+  used as the current artifact matrix
+
+This document records the move from portable platform bundles to explicit,
+tested installation and update contracts, and tracks the remaining hardening.
+It covers release CI, artifact reproducibility, native installation, update
+handoff, and acceptance testing. It does not change solver behavior or the
+local-service API.
 
 ## Current Baseline
 
 | Platform | Current artifact | Current behavior | Main limitation |
 | --- | --- | --- | --- |
-| Windows x64 | ZIP containing a PyInstaller onedir build | Extract and run from any writable location | Portable bundle, not an installed application |
+| Windows x64 | Inno Setup per-user installer; portable ZIP retained | Install under Local AppData or explicitly choose the portable flow | Signing and post-install version confirmation remain |
 | macOS Apple Silicon | DMG containing `optees.app` and an Applications shortcut | User drags the app to Applications | Smooth first launch requires Developer ID signing and notarization |
-| Linux x86_64 | AppImage | Mark executable and run from its current path | Portable file with no guaranteed desktop integration or persistent update location |
+| Ubuntu/Debian x86_64 | `.deb` package | Install through `apt`/`dpkg` with desktop integration | Clean-account installation and upgrade evidence remains |
+| Other Linux x86_64 | AppImage | Mark executable and run from its selected location | Portable fallback with limited desktop integration |
 
 The application checks the latest stable GitHub Release, downloads the selected
-asset into a temporary version directory, verifies it when a matching checksum
-is available, opens it through the operating system, and closes Optees. Opening
-an archive or disk image is only an update handoff; it is not proof that the new
-version was installed.
+asset into a bounded staging location, verifies its checksum, and hands it to
+the operating system using platform-specific behavior. An installer launch,
+package-manager handoff, or opened disk image is not proof that the new version
+was installed; post-install confirmation remains a separate state.
 
 ## Product Contracts
 
@@ -62,10 +69,10 @@ same-platform asset must not be selected while silently ignoring architecture.
 - [ ] Record the exact behavior of every currently published artifact on a
   clean operating-system account.
 - [ ] Record where the current updater downloads files and what application the
-  operating system opens for ZIP, DMG, and AppImage assets.
+  operating system opens for setup, DMG, Debian, and AppImage assets.
 - [ ] Confirm whether user configuration and generated data live outside the
   replaceable application directory on every platform.
-- [ ] Correct documentation that calls a portable archive an installer or an
+- [x] Correct documentation that calls a portable archive an installer or an
   update handoff an installed update.
 
 **Exit criterion:** the current behavior and every known manual step are
@@ -160,16 +167,16 @@ uninstall without leaving application binaries behind.
 
 ## Phase 4 - macOS Distribution And Update Handoff
 
-- [ ] Keep the DMG drag-to-Applications workflow as the canonical installation
+- [x] Keep the DMG drag-to-Applications workflow as the canonical installation
   contract.
 - [ ] Normalize the bundle display name and application filename as `Optees`.
 - [ ] Mount the final DMG in CI and verify bundle metadata, resources, signature,
   local-service startup, and one small solver execution from the mounted image.
 - [ ] When credentials exist, sign nested binaries, enable hardened runtime,
   notarize, staple, and validate the final distributed artifact.
-- [ ] When credentials do not exist, label the artifact as an ad-hoc signed
+- [x] When credentials do not exist, label the artifact as an ad-hoc signed
   contributor build and retain accurate Gatekeeper instructions.
-- [ ] Make the updater open the verified DMG and present the remaining
+- [x] Make the updater open the verified DMG and present the remaining
   drag/replace step instead of claiming automatic installation.
 - [ ] Test replacement of an existing `/Applications/Optees.app` copy and
   confirm that user settings survive.
@@ -243,27 +250,33 @@ verified together in the same artifacts users download.
 
 ## Phase 7 - Release Candidate And Documentation
 
-- [ ] Update `README.md`, `docs/architecture/overview.md`, `docs/guides/releasing.md`, and the
+- [x] Update `README.md`, `docs/architecture/overview.md`, `docs/guides/releasing.md`, and the
   landing page with the local solver platform and truthful platform-specific
   installation/update instructions.
-- [ ] Publish a release candidate before the stable release.
+- [x] Publish a release candidate before the stable release.
 - [ ] Download every release-candidate artifact from GitHub rather than testing
   only local build outputs.
 - [ ] Execute and record the platform acceptance matrix.
-- [ ] Promote the stable release only after all mandatory cells pass or are
-  explicitly documented as unsupported.
-- [ ] Update the local-service packaging acceptance criterion after the tagged
+- [x] Promote stable releases only after mandatory automated gates pass and
+  remaining manual acceptance limitations are recorded explicitly.
+- [x] Update the local-service packaging acceptance criterion after the tagged
   artifacts have been verified.
 
 ## Priority
 
-### P0 - Required Before The Next Stable Release
+### Delivered Release Foundation
 
 - Test-gated release workflow.
 - Fail-closed checksum verification.
 - Final-artifact smoke tests with one real solver execution.
 - Windows Inno Setup installer and truthful portable ZIP labelling.
 - Accurate macOS and Linux update handoff text.
+
+### Remaining Release Acceptance
+
+- Clean-account installation and upgrade evidence on every target platform.
+- Post-install version confirmation where the native handoff cannot prove it.
+- The bounded packaged self-test described in Phase 6.
 
 ### P1 - Product Hardening
 

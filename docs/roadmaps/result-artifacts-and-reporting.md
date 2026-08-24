@@ -1,12 +1,21 @@
 # Result Artifacts And Local Reporting Roadmap
 
+## Document Status
+
+- **State:** in progress
+- **Shipped baseline:** bounded headless artifacts, Markdown reports, optional
+  Pandoc+Typst PDF, REST/MCP access, conversion, cancellation, progress, and
+  packaged smoke coverage
+- **Remaining scope:** installed-package acceptance evidence, empirical agent
+  studies, large-instance presentation policy, and desktop export UX
+- **Contract authority:** `docs/contracts/result-artifacts-contract.md`
+
 ## Purpose
 
-Optees currently exposes versioned mathematical results through the desktop,
-REST, and MCP surfaces, while most educational charts and tables are owned by
-the desktop presentation layer. This roadmap makes those visual and tabular
-outputs available on demand to local clients and agents, then adds a local
-report composer that can assemble validated results into Markdown or PDF.
+Optees exposes versioned mathematical results and optional bounded artifacts
+and reports through desktop-adjacent services, REST, and MCP. This roadmap
+records the delivered headless foundation and owns the remaining desktop,
+large-instance, acceptance, and empirical-evidence work.
 
 Both features are opt-in. A normal solver job must remain as small and fast as
 it is today when no artifacts or reports are requested.

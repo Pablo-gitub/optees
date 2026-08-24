@@ -1,5 +1,14 @@
 # Packing & Loading Feature Roadmap
 
+## Document Status
+
+- **State:** in progress
+- **Shipped baseline:** version 1 single-container orthogonal 3D packing,
+  validation, desktop workflow, public service capability, and result artifacts
+- **Remaining scope:** support-aware and multi-container workflows, interactive
+  refinement, benchmark depth, and the later capacity-allocation workflow
+- **Safety boundary:** output is not a physical load-safety certification
+
 This document defines the horizontal expansion that introduces geometric
 packing and container loading to Optees. The feature remains educational: each
 workflow must expose its mathematical formulation, solver status, limitations,

@@ -1,5 +1,9 @@
 # MILP Feature Implementation Plan
 
+> **Superseded plan:** the foundational implementation described here has
+> shipped. The active source of MILP completion work is
+> `docs/roadmaps/milp.md`; this file remains only as design history.
+
 Questo documento descrive come implementare la feature MILP in Optees mantenendo
 coerenza con l'implementazione LP gia' presente: stessa architettura a layer,
 stesso stile di UI a sezioni, stesso flusso formulazione -> solve -> solution

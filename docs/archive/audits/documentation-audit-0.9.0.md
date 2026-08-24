@@ -1,5 +1,9 @@
 # Documentation Truth Audit
 
+> **Archived evidence:** this audit records the `0.9.0` local-service baseline
+> and 12 capabilities. It is retained for provenance and is not a description
+> of the current release. See `docs/roadmaps/project.md` for current scope.
+
 This audit compares public documentation with the implementation on the
 `codex/local-agent-service` branch. It is a working record for Phase 1 of
 `docs/roadmaps/documentation-website-release.md`, not a replacement for the

@@ -39,8 +39,8 @@ changes.
 ## Evidence And Audits
 
 - [Agent benchmark protocol](evidence/agent-benchmarks.md)
-- [Documentation truth audit](evidence/documentation-audit.md)
-- [Native distribution factual audit](evidence/native-distribution-audit.md)
+- Historical audits are indexed in the [archive](archive/README.md); they are
+  provenance snapshots, not current product truth.
 
 ## Historical Material
 

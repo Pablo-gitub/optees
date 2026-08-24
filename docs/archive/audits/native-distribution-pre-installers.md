@@ -1,5 +1,10 @@
 # Native Distribution Factual Audit
 
+> **Archived evidence:** this audit predates the Windows installer and Debian
+> package now produced by the release workflow. It is retained to explain the
+> original portable-package baseline, not as current installation guidance.
+> See `docs/roadmaps/native-distribution.md` and `docs/guides/releasing.md`.
+
 This audit records the behavior that can be established from the current
 source, release workflow, and package contracts. Clean-account observations
 remain explicitly separate: source inspection cannot prove how a particular

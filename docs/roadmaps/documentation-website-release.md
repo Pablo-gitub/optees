@@ -1,7 +1,19 @@
 # Documentation, Website, Release, And Demonstration Roadmap
 
-This roadmap coordinates the documentation and product work required after the
-local solver platform refactoring. It keeps four concerns separate:
+## Document Status
+
+- **State:** in progress
+- **Shipped baseline:** the local-service documentation refactoring,
+  architecture diagrams, first landing refresh, native release pipelines, and
+  initial agent examples
+- **Remaining scope:** installed-artifact evidence, Local Agent desktop work,
+  controlled demonstrations, and publication of benchmark evidence
+- **Historical evidence:** the original `0.9.0` documentation audit is archived
+  and is not a statement of the current 13-capability baseline
+
+This roadmap originated after the local solver platform refactoring and now
+coordinates the remaining documentation, product, release, and demonstration
+work. It keeps four concerns separate:
 
 1. describe the implementation truthfully;
 2. explain the architecture clearly;
@@ -29,10 +41,11 @@ integration order and the release gates between them.
 ## Phase 1 - Documentation Truth Audit
 
 - [x] Create this cross-project roadmap.
-- [x] Compare the 12 registered local-service capabilities with `README.md`,
+- [x] Compare the then-current 12 registered local-service capabilities with `README.md`,
   `docs/reference/algorithms.md`, `docs/reference/datasets.md`, `docs/architecture/overview.md`, and the
   landing-page catalogue.
-- [x] Record the initial findings in `docs/evidence/documentation-audit.md`.
+- [x] Record the initial findings in
+  `docs/archive/audits/documentation-audit-0.9.0.md`.
 - [x] Add the omitted single-container 3D Packing workflow to the README and
   concise algorithm catalogue.
 - [x] Reframe the README around Optees' dual identity: a desktop workbench for
@@ -137,16 +150,17 @@ workflows and local solver platform available at the intended release commit.
 
 - [x] Complete the local-service branch documentation and test gates.
 - [x] Merge the stable local solver platform into `main`.
-- [ ] Create `codex/native-installers` from the updated `main`.
-- [ ] Complete the P0 items in `docs/roadmaps/native-distribution.md`, including
+- [x] Create `codex/native-installers` from the updated `main`.
+- [x] Complete the source and release-workflow P0 items in
+  `docs/roadmaps/native-distribution.md`, including
   test-gated releases, final-artifact smoke tests, checksum behavior, Windows
   Inno Setup, and truthful macOS/Linux update handoff.
 - [ ] Verify that installed artifacts can run a solver and start the packaged
   local service.
-- [ ] Merge native-distribution work into `main` only after the acceptance
-  matrix is recorded.
-- [ ] Publish an application release from the verified commit.
-- [ ] Publish the matching landing deployment only after release assets and
+- [x] Merge native-distribution implementation into `main`; installed-package
+  acceptance remains separately open and visible.
+- [x] Publish application releases from verified commits.
+- [x] Publish the matching landing deployment only after release assets and
   download links are live.
 
 **Exit criterion:** public documentation and downloads describe the same tested
@@ -205,16 +219,20 @@ correct solver use from merely attractive presentation.
 The setup page documents shipped behavior. Public benchmark evidence remains a
 separate gate and must not be implied by the existence of that page.
 
-## Branch And Commit Sequence
+## Delivery Sequence
 
-1. `codex/local-agent-service`: documentation audit, architecture, first
+Steps 1-4 below are historical and complete. Steps 5-6 describe remaining
+product and evidence tracks; branch names are planning labels rather than
+requirements for current Git state.
+
+1. Completed — `codex/local-agent-service`: documentation audit, architecture, first
    landing refresh, and service completion.
-2. `main`: merge only after focused and full release gates pass.
-3. `codex/native-installers`: installer and update hardening from updated
+2. Completed — `main`: merge after focused and full release gates pass.
+3. Completed — `codex/native-installers`: installer and update hardening from updated
    `main`.
-4. `main`: merge, tag, publish application, then deploy landing.
-5. `codex/local-agent-desktop`: packaged local-agent UX.
-6. `codex/agent-demo-benchmark`: complex synthetic benchmark and selected
+4. Completed — `main`: merge, tag, publish application, then deploy landing.
+5. Planned — packaged local-agent UX.
+6. Planned — complex synthetic benchmark and selected
    public evidence.
 
 Recommended commit boundaries:

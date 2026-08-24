@@ -1,5 +1,15 @@
 # Nonlinear Programming Feature Plan
 
+## Document Status
+
+- **State:** maintenance
+- **Shipped baseline:** the continuous, box-bounded local-optimization vertical
+  slice with desktop, JSON, tests, and educational material
+- **Remaining scope:** external benchmark hardening; nonlinear constraints,
+  least squares, quadratic programming, minimax, and global methods are later
+  family expansions
+- **Result boundary:** a converged candidate is not a proof of global optimality
+
 This document is the implementation contract for **Phase 1: Nonlinear
 Programming**. It deliberately starts with one complete, continuous,
 single-objective workflow instead of exposing several incomplete NLP methods.

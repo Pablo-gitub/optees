@@ -1,5 +1,15 @@
 # MILP Roadmap
 
+## Document Status
+
+- **State:** in progress
+- **Shipped baseline:** domain model, OR-Tools adapters, versioned JSON, GUI
+  formulation, public `milp.linear` capability, independent validation, and
+  headless artifacts
+- **Remaining scope:** dedicated solution presentation, MPS product import,
+  threshold-model guidance, and user-facing hardening listed below
+- **Supersedes:** the archived MILP feature implementation plan
+
 Questo documento fotografa lo stato della feature MILP e separa cio' che e'
 gia' implementato da cio' che resta da completare.
 

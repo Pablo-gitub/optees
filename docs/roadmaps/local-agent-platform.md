@@ -1,15 +1,26 @@
 # Optees Local Solver Service Roadmap
 
-This document defines the cross-cutting refactoring that makes the optimization
-capabilities already implemented in Optees available to the desktop UI, a
-headless CLI, local applications, and local AI agents through the same
-application core.
+## Document Status
+
+- **State:** in progress (post-MVP)
+- **Shipped baseline:** capability registry, versioned contracts, headless CLI,
+  bounded jobs and batches, authenticated loopback REST, MCP stdio, independent
+  validation framework, native companions, artifacts, and reports
+- **Remaining scope:** validator coverage, semantic modeling guidance, Local
+  Agent desktop integration, compatibility evidence, and agent benchmarks
+- **Workflow scope:** composite execution is owned by
+  `docs/roadmaps/optimization-workflows.md`, not by the delivered server refactor
+
+This document records the cross-cutting refactoring that made Optees
+capabilities available to the desktop UI, headless CLI, local applications,
+and local AI agents through the same application core, then tracks the
+remaining post-MVP platform work.
 
 The first delivery is deliberately smaller than a workflow-orchestration
 platform. It exposes existing, tested capabilities through versioned JSON and a
-local job API. Independent solution validation, semantic modeling assistance,
-agent-oriented documentation, MCP, and composite optimization workflows are
-sequential post-MVP phases.
+local job API. Independent solution validation and MCP are now part of the
+shipped baseline. Semantic modeling assistance, broader validator coverage,
+agent-oriented product work, and composite workflows remain post-MVP tracks.
 
 ## Product Boundary
 
@@ -23,14 +34,14 @@ The product surfaces have distinct responsibilities:
 Optees Desktop       educational formulation, visualization, and audit
 Optees CLI           headless local execution and contract verification
 Local Solver Service local automation and agent integration
-Future MCP adapter   agent-native access to the same application services
+MCP stdio adapter    agent-native access to the same application services
 ```
 
 The server is an inbound adapter. It must not duplicate solver logic or call Qt
-widgets. Desktop, CLI, REST, and future MCP interfaces invoke the same use cases
+widgets. Desktop, CLI, REST, and MCP interfaces invoke the same use cases
 and domain models.
 
-The planned headless execution path is:
+The implemented headless execution path is:
 
 ```mermaid
 sequenceDiagram
@@ -91,12 +102,13 @@ available backend and reports it in diagnostics.
 - Migrate one capability at a time with contract and regression tests.
 - Keep existing desktop behavior and JSON files backward compatible.
 
-## Existing Capability Baseline
+## Shipped Capability Baseline
 
-Phase 0 must verify, rather than assume, the exact availability and contract of
-these currently implemented workflows:
+The composition root currently registers these stable public capabilities.
+Runtime discovery remains authoritative for dependency availability and exact
+contract metadata:
 
-| Proposed capability ID | Current workflow |
+| Capability ID | Workflow |
 | --- | --- |
 | `lp.continuous` | Continuous linear programming and optimal-face ranges |
 | `milp.linear` | Mixed-integer linear programming |
@@ -109,6 +121,7 @@ these currently implemented workflows:
 | `graph.shortest_path.dijkstra` | Non-negative weighted shortest path |
 | `ml.regression.linear` | Educational linear regression |
 | `ml.classification.binary_logistic` | Educational binary classification |
+| `ml.forecasting.univariate` | Univariate time-series forecasting |
 | `packing.single_container_3d` | Orthogonal single-container 3D packing |
 
 The Modeling Assistant is not a solver capability. It may consume the registry
@@ -118,7 +131,7 @@ and semantic-analysis services in a later phase.
 
 ### Capability Descriptor
 
-Every registered capability eventually publishes:
+Every registered capability publishes:
 
 ```json
 {
@@ -253,15 +266,15 @@ their mathematical result envelope and use distinct process exit codes.
 
 ### Phase 4 - Migrate Existing Capabilities
 
-Migrate one capability per atomic step. Every migration requires:
+Each capability migration used the following acceptance template:
 
-- [ ] payload-to-domain codec using the existing validated importer contract;
-- [ ] domain-result-to-JSON codec;
-- [ ] registry descriptor and dependency availability check;
-- [ ] explicit status and diagnostics mapping;
-- [ ] one deterministic or scientific reference case;
-- [ ] contract tests and an in-process execution test;
-- [ ] unchanged desktop behavior.
+- payload-to-domain codec using the existing validated importer contract;
+- domain-result-to-JSON codec;
+- registry descriptor and dependency availability check;
+- explicit status and diagnostics mapping;
+- one deterministic or scientific reference case;
+- contract tests and an in-process execution test;
+- unchanged desktop behavior.
 
 Suggested order:
 
@@ -322,10 +335,8 @@ OR-Tools formulation, orthogonal rotation policies, scalar capacities, and
 simple-gravity post-processing used by the desktop workflow. The public result
 keeps an infeasible all-items request separate from its optional
 maximum-feasible recovery, so the recovery is never mislabelled as satisfying
-the original request. Time limits and MIP-gap diagnostics are public. The
-backend's cooperative cancellation hook will be exposed only through the
-Phase 5 job lifecycle; the current synchronous capability therefore declares
-`supports_cancellation: false`.
+the original request. Time limits, cooperative cancellation, and MIP-gap
+diagnostics are public through the job lifecycle.
 
 `knapsack.zero_one` reuses the shared schema-v1 Knapsack importer through an
 application-owned mapper, the existing `SolveKnapsackUseCase`, and the exact
@@ -440,9 +451,8 @@ only through an explicit copy action. The release matrix installs the optional
 service dependencies and smoke-tests the packaged executable against health
 and authenticated capability discovery before creating each installer.
 
-The implementation is complete. Acceptance criterion 8 remains open until a
-tagged GitHub Actions run verifies the packaged behavior on macOS, Windows,
-and Linux.
+The implementation is complete. Tagged release workflows now verify the
+packaged local-service and MCP entry points on macOS, Windows, and Linux.
 
 ## MVP Acceptance Criteria
 
@@ -459,7 +469,7 @@ The MVP is complete only when:
 5. [x] the desktop can start and stop the service without blocking;
 6. [x] existing GUI and JSON behavior remains compatible;
 7. [x] OpenAPI matches the tested endpoints;
-8. [ ] packaged macOS, Windows, and Linux builds include the service entry
+8. [x] packaged macOS, Windows, and Linux builds include the service entry
    point;
 9. [x] deterministic and scientific regressions continue to pass;
 10. [x] limitations and unavailable diagnostics are explicit.
@@ -785,24 +795,14 @@ tool use; they do not replace scientific solver regressions.
 - [ ] Maintain private holdout scenarios for regression and contamination
   checks.
 
-## Future - Composite Optimization Workflows
+## Composite Optimization Workflows
 
-Solver cascades are a separate feature, not part of the local-service
-refactoring. They require stable, versioned capability contracts first.
-
-A future `OPTIMIZATION_WORKFLOWS_ROADMAP.md` may define:
-
-- declarative steps and versioned input/output mappings;
-- conditions, stopping criteria, retries, and infeasibility handling;
-- audit records for intermediate models and results;
-- explicit human approval before material model changes;
-- deterministic feedback loops, such as capacity allocation followed by 3D
-  packing verification;
-- comparison and rollback between workflow runs.
-
-Initially, the calling agent orchestrates atomic Optees capabilities. Optees
-must not silently modify a previous mathematical model after a downstream
-failure.
+Solver cascades are a separate product feature, not unfinished local-service
+refactoring. Their contracts, audit model, execution phases, and boundary with
+Optees Decision Simulator are defined in
+`docs/roadmaps/optimization-workflows.md`. Until that roadmap is implemented,
+the calling application or agent owns orchestration between atomic Optees
+capabilities.
 
 ## Security And Operational Non-Goals
 

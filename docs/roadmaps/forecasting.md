@@ -1,5 +1,15 @@
 # Time-series Forecasting Roadmap
 
+## Document Status
+
+- **State:** closing
+- **Shipped baseline:** the version 1 engine, desktop workflow, public service
+  contracts, validation, artifacts, references, and benchmark are implemented
+- **Remaining scope:** the Part B handoff package, desktop artifact/report
+  export, and release-candidate screenshots
+- **Not a blocker for:** the deterministic backend or MCP vertical slice of
+  Optees Decision Simulator
+
 This document defines the sequential delivery plan for the first Optees
 Forecasting capability. `docs/roadmaps/project.md` remains authoritative for
 cross-family priority; this roadmap owns Forecasting scope, gates, and handoff

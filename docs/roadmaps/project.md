@@ -1,5 +1,15 @@
 # Optees Project Roadmap
 
+## Document Status
+
+- **State:** in progress
+- **Shipped baseline:** `0.10.2`, with 13 registered capabilities and desktop,
+  CLI, REST, and MCP delivery surfaces
+- **Current product sequence:** finish the Forecasting handoff, then implement
+  Unrelated Parallel Machines Scheduling and Two-player Zero-sum Game Theory
+- **Authority:** this document owns cross-family sequencing; specialized
+  roadmaps own their implementation checklists
+
 This is the authoritative implementation roadmap for Optees. Specialized
 documents keep the detail for a single family, while this page decides the
 order in which the product grows.
@@ -30,6 +40,8 @@ Related documents:
 - `docs/guides/testing.md` for the test strategy;
 - `docs/guides/releasing.md` for build, signing, and tag verification;
 - `docs/reference/algorithms.md` for the concise algorithm catalogue.
+- `docs/roadmaps/optimization-workflows.md` for future composition of atomic
+  capabilities and the boundary with Optees Decision Simulator.
 
 ## Product Standard
 
@@ -446,11 +458,11 @@ macOS and Linux must retain explicit native or portable contracts; and the
 updater must distinguish a verified download, an installation handoff, and a
 confirmed installed update.
 
-The work also introduces a test-gated release workflow, pinned packaging inputs,
-final-artifact solver smoke tests, fail-closed checksum verification, and a
-recorded clean-machine acceptance matrix. Implementation starts from `main` on
-`codex/native-installers`. The sequential plan and platform exit criteria are
-maintained in `docs/roadmaps/native-distribution.md`.
+The delivered work introduced a test-gated release workflow, pinned packaging
+inputs, final-artifact solver smoke tests, fail-closed checksum verification,
+and native installer/package outputs. Clean-machine acceptance, signing, and
+the remaining updater hardening are maintained in
+`docs/roadmaps/native-distribution.md`.
 
 ### Phase 3.5 - Heuristics & Metaheuristics: First Vertical Slice
 

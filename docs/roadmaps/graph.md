@@ -1,5 +1,12 @@
 # Graph Theory Feature Plan
 
+## Document Status
+
+- **State:** maintenance
+- **Shipped baseline:** the complete Dijkstra shortest-path vertical slice
+- **Remaining scope:** external benchmark hardening and later graph algorithms
+- **Authority:** `project.md` decides when later graph expansion resumes
+
 ## Scope: Shortest Path With Dijkstra
 
 This document records the first vertical Graph Theory slice. It deliberately

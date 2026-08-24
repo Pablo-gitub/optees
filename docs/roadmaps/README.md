@@ -22,14 +22,14 @@ stable when delivery state changes.
 | --- | --- | --- |
 | [Project](project.md) | In progress | Authoritative sequencing across all families |
 | [Forecasting](forecasting.md) | Closing | Engine and desktop workflow shipped; final handoff and desktop reporting remain |
-| [Local agent platform](local-agent-platform.md) | Maintenance | Local service and MCP baseline shipped; semantic guidance and future integrations remain |
+| [Local agent platform](local-agent-platform.md) | In progress | MVP shipped; validator breadth, semantic guidance, desktop agent work, and evidence remain |
 | [Result artifacts and reporting](result-artifacts-and-reporting.md) | In progress | Headless workflow shipped; remaining product and scalability work continues |
-| [Native distribution](native-distribution.md) | Maintenance | Native packaging exists; acceptance and updater hardening remain |
+| [Native distribution](native-distribution.md) | In progress | Native packaging exists; acceptance, signing, self-test, and updater hardening remain |
 | [Packing and loading](packing-and-loading.md) | In progress | Existing vertical slice with later expansion tracked |
 | [MILP](milp.md) | In progress | Family completion and hardening work remains |
-| [MILP feature plan](milp-feature-plan.md) | In progress | Detailed MILP implementation plan |
 | [NLP](nlp.md) | Maintenance | First vertical slice shipped; deferred extensions remain |
 | [Graph](graph.md) | Maintenance | First vertical slice shipped; deferred algorithms remain |
+| [Composite optimization workflows](optimization-workflows.md) | Planned | Contract decisions before any application-owned workflow executor |
 | [Documentation, website, and release](documentation-website-release.md) | In progress | Coordinated public documentation and release work |
 
 The register is a navigation summary. When it conflicts with a roadmap's

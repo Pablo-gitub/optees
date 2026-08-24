@@ -8,4 +8,5 @@ now implemented. The current central roadmap is:
 Specialized roadmap files:
 
 - `docs/roadmaps/milp.md`
-- `docs/roadmaps/milp-feature-plan.md`
+- archived design history:
+  `docs/archive/completed-plans/milp-feature-implementation-plan.md`
