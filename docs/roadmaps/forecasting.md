@@ -1,7 +1,7 @@
 # Time-series Forecasting Roadmap
 
 This document defines the sequential delivery plan for the first Optees
-Forecasting capability. `docs/PROJECT_ROADMAP.md` remains authoritative for
+Forecasting capability. `docs/roadmaps/project.md` remains authoritative for
 cross-family priority; this roadmap owns Forecasting scope, gates, and handoff
 requirements.
 
@@ -85,7 +85,7 @@ surface must preserve.
   failure/status vocabulary.
 
 The frozen decisions are maintained in
-`docs/FORECASTING_STATISTICAL_CONTRACT.md`.
+`docs/contracts/forecasting-statistical-contract.md`.
 
 **Exit criterion:** a reviewed contract note answers every ambiguity above and
 the chosen dependency can be packaged on Windows, macOS, and Linux.
@@ -173,7 +173,7 @@ the chosen dependency can be packaged on Windows, macOS, and Linux.
 - [x] Add tests proving that shuffled or leaked evaluation data is rejected.
 - [x] Select one redistributable public time-series benchmark only after source,
   license, expected protocol, checksum, and CI budget are documented in
-  `docs/DATASETS.md`.
+  `docs/reference/datasets.md`.
 - [x] Keep tiny references in normal CI and mark external or measured cases as
   `benchmark`.
 - [x] Add packaged capability discovery and solve smoke tests for Windows,
@@ -191,7 +191,7 @@ Part B may begin only when all of the following are true:
 4. optional tables and charts are generated without Qt;
 5. packaged smoke coverage includes the new capability;
 6. reference fixtures and expected statuses are committed;
-7. `docs/ARCHITECTURE.md`, `docs/TESTING.md`, and the algorithm catalogue
+7. `docs/architecture/overview.md`, `docs/guides/testing.md`, and the algorithm catalogue
    describe the shipped engine honestly.
 
 **Status:** Part A is complete. The focused engine, reference, benchmark, and
@@ -246,7 +246,7 @@ code or documentation.
 - [ ] Expose optional artifact/report generation in the desktop solution view
   without duplicating renderer logic. The headless REST/MCP flow is complete;
   desktop export is tracked by Phase 8 of
-  `docs/RESULT_ARTIFACTS_REPORTING_ROADMAP.md`.
+  `docs/roadmaps/result-artifacts-and-reporting.md`.
 
 ### B3 - Educational Content And Examples
 
@@ -272,7 +272,7 @@ code or documentation.
 - [x] Verify table headers, long timestamps, chart legends, interval bands,
   focus order, and info-button visibility.
 - [x] Run targeted GUI tests during implementation and the release gates
-  required by `docs/TESTING.md` before publication.
+  required by `docs/guides/testing.md` before publication.
 - [ ] Capture final dark-theme screenshots only from the verified release
   candidate for README and website use.
 

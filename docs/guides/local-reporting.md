@@ -82,7 +82,7 @@ return binary content or absolute temporary paths.
 ## Native Acceptance
 
 Before a stable release advertises PDF reporting, perform the installed
-artifact smoke procedure in [Releasing Optees](RELEASING.md) on macOS,
+artifact smoke procedure in [Releasing Optees](releasing.md) on macOS,
 Windows, and Linux. Source tests and a mocked PDF executable verify contracts
 and failure behavior; they do not replace a real Typst render from each native
 release candidate.

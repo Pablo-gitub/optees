@@ -90,5 +90,5 @@ JSON file and manually typed objective follow exactly the same validation path.
 The current NLP page intentionally does not model nonlinear equality or
 inequality constraints, global optimization, least squares, quadratic
 programming, or nonlinear min-max. These require different methods and more
-careful result semantics. They are tracked in `docs/NLP_FEATURE_PLAN.md` rather
+careful result semantics. They are tracked in `docs/roadmaps/nlp.md` rather
 than being shown as available controls.

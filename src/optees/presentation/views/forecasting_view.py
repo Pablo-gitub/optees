@@ -1,7 +1,7 @@
 """Formulation view for the first local univariate forecasting workflow.
 
 The view only collects a versioned problem and delegates every mathematical
-decision to the frozen application services (see docs/FORECASTING_ROADMAP.md,
+decision to the frozen application services (see docs/roadmaps/forecasting.md,
 Part B). It must never redefine statistical behaviour, and it must never
 fabricate timestamps, values, or uncertainty.
 """

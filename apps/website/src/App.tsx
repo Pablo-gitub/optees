@@ -11,8 +11,8 @@ import {
 
 const repositoryUrl = "https://github.com/Pablo-gitub/optees";
 const releasesUrl = `${repositoryUrl}/releases`;
-const roadmapUrl = `${repositoryUrl}/blob/main/docs/PROJECT_ROADMAP.md`;
-const agentGuideUrl = `${repositoryUrl}/blob/main/docs/AGENTS_SERVICE_CONFIG.md`;
+const roadmapUrl = `${repositoryUrl}/blob/main/docs/roadmaps/project.md`;
+const agentGuideUrl = `${repositoryUrl}/blob/main/docs/guides/agent-service-configuration.md`;
 const issuesUrl = `${repositoryUrl}/issues`;
 const latestReleaseApi = "https://api.github.com/repos/Pablo-gitub/optees/releases/latest";
 const assetUrl = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, "")}`;

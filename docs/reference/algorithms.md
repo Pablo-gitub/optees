@@ -1,7 +1,7 @@
 # Algorithms: Implemented And Planned
 
 This is the concise algorithm catalogue. The authoritative implementation order
-and completion criteria are in `docs/PROJECT_ROADMAP.md`.
+and completion criteria are in `docs/roadmaps/project.md`.
 
 ## Implemented
 
@@ -107,7 +107,7 @@ and completion criteria are in `docs/PROJECT_ROADMAP.md`.
   the same application service.
 - The headless engine is implemented. Desktop formulation and solution views,
   localized teaching pages, and worked examples remain the separate Part B
-  workstream in `docs/FORECASTING_ROADMAP.md`.
+  workstream in `docs/roadmaps/forecasting.md`.
 
 ### Modeling Assistant
 
@@ -142,7 +142,7 @@ The next sections are introduced in this order:
 
 After these business-decision workflows, the planned sequence returns to
 k-means clustering, TSP constructive/local search, Simulated Annealing, and
-the broader family expansions in `docs/PROJECT_ROADMAP.md`.
+the broader family expansions in `docs/roadmaps/project.md`.
 
 ## Cross-Family Methods
 

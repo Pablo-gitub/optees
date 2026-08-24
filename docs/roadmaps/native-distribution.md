@@ -9,7 +9,7 @@ Implementation starts from `main` on a dedicated `codex/native-installers`
 branch after the local solver platform has been merged. The current artifacts
 remain available until their replacements pass the acceptance matrix.
 Source-derived baseline evidence and the manual clean-account matrix are kept
-in [NATIVE_DISTRIBUTION_AUDIT.md](NATIVE_DISTRIBUTION_AUDIT.md).
+in [Native distribution audit](../evidence/native-distribution-audit.md).
 
 ## Current Baseline
 
@@ -243,7 +243,7 @@ verified together in the same artifacts users download.
 
 ## Phase 7 - Release Candidate And Documentation
 
-- [ ] Update `README.md`, `docs/ARCHITECTURE.md`, `docs/RELEASING.md`, and the
+- [ ] Update `README.md`, `docs/architecture/overview.md`, `docs/guides/releasing.md`, and the
   landing page with the local solver platform and truthful platform-specific
   installation/update instructions.
 - [ ] Publish a release candidate before the stable release.

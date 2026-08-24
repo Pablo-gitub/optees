@@ -4,7 +4,7 @@ This directory will contain executable, versioned experiments comparing agents
 solving the same synthetic business scenarios without Optees and with Optees.
 
 The protocol, repository structure, metrics, privacy rules, and publication
-gate are defined in [`docs/AGENT_BENCHMARKS.md`](../../docs/AGENT_BENCHMARKS.md).
+gate are defined in [`docs/evidence/agent-benchmarks.md`](../../docs/evidence/agent-benchmarks.md).
 
 The first executable scenario is
 [`manufacturing-planning-001`](scenarios/manufacturing-planning-001/README.md).
@@ -23,5 +23,5 @@ known response defects. Its prompt contains the numerical inputs, so it tests
 the agent-to-solver loop but not Excel ingestion.
 
 Scientific solver datasets remain under `tests/data/` and are documented in
-`docs/DATASETS.md`; they must not be mixed with these agent-effectiveness
+`docs/reference/datasets.md`; they must not be mixed with these agent-effectiveness
 experiments.

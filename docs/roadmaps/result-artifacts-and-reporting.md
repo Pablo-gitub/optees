@@ -245,7 +245,7 @@ source job IDs in its metadata.
 - [x] Freeze the report document schema independently from Pandoc.
 - [x] Add architecture diagrams and API examples to the canonical docs.
 
-Phase 0 is frozen in `RESULT_ARTIFACTS_CONTRACT.md`. Implementation changes
+Phase 0 is frozen in `docs/contracts/result-artifacts-contract.md`. Implementation changes
 must keep that document, capability discovery, and runtime behavior aligned.
 
 ### Phase 1 - Headless Artifact Foundation
@@ -443,7 +443,7 @@ geometry or colors are rejected.
 Artifact and report manifests now expose monotonic progress and terminal
 `cancelled` states through REST and MCP. Cancellation prevents late
 publication; the optional PDF backend also terminates its process group.
-Operational usage is documented in `LOCAL_REPORTING.md`.
+Operational usage is documented in `docs/guides/local-reporting.md`.
 
 The two remaining checkboxes are release and empirical evidence gates. They
 cannot be closed by source tests on one machine: each installed release

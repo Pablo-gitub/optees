@@ -217,22 +217,22 @@ Changing the payload after validation requires a new validation call.
 The first exploratory Cowork study uses a fully synthetic manufacturing
 workbook and two tasks:
 
-- [Single-solver prompt](../benchmarks/agents/scenarios/manufacturing-planning-001/prompt-single-solver.md)
+- [Single-solver prompt](../../benchmarks/agents/scenarios/manufacturing-planning-001/prompt-single-solver.md)
   asks Claude to formulate and solve one production-planning MILP.
-- [Orchestration prompt](../benchmarks/agents/scenarios/manufacturing-planning-001/prompt-orchestration.md)
+- [Orchestration prompt](../../benchmarks/agents/scenarios/manufacturing-planning-001/prompt-orchestration.md)
   asks Claude to run two regressions and feed their demand forecasts into a
   production-planning MILP.
-- [Synthetic input workbook](../benchmarks/agents/scenarios/manufacturing-planning-001/data/fictional_company_input.xlsx)
+- [Synthetic input workbook](../../benchmarks/agents/scenarios/manufacturing-planning-001/data/fictional_company_input.xlsx)
   is the only workbook shared with the evaluated agent.
-- [Private ground truth](../benchmarks/agents/scenarios/manufacturing-planning-001/reference/fictional_company_ground_truth.xlsx)
+- [Private ground truth](../../benchmarks/agents/scenarios/manufacturing-planning-001/reference/fictional_company_ground_truth.xlsx)
   is retained for review and must not be exposed to the agent during a run.
 
 Claude generated the following management reports:
 
-- [Direct production plan - DOCX](../benchmarks/agents/studies/claude-cowork-manufacturing-2026-07-18/outputs/Northstar_Production_Plan_Report.docx)
-- [Direct production plan - PDF](../benchmarks/agents/studies/claude-cowork-manufacturing-2026-07-18/outputs/Northstar_Production_Plan_Report.pdf)
-- [Forecast-driven production plan - DOCX](../benchmarks/agents/studies/claude-cowork-manufacturing-2026-07-18/outputs/Northstar_Forecast_Production_Plan_Report.docx)
-- [Forecast-driven production plan - PDF](../benchmarks/agents/studies/claude-cowork-manufacturing-2026-07-18/outputs/Northstar_Forecast_Production_Plan_Report.pdf)
+- [Direct production plan - DOCX](../../benchmarks/agents/studies/claude-cowork-manufacturing-2026-07-18/outputs/Northstar_Production_Plan_Report.docx)
+- [Direct production plan - PDF](../../benchmarks/agents/studies/claude-cowork-manufacturing-2026-07-18/outputs/Northstar_Production_Plan_Report.pdf)
+- [Forecast-driven production plan - DOCX](../../benchmarks/agents/studies/claude-cowork-manufacturing-2026-07-18/outputs/Northstar_Forecast_Production_Plan_Report.docx)
+- [Forecast-driven production plan - PDF](../../benchmarks/agents/studies/claude-cowork-manufacturing-2026-07-18/outputs/Northstar_Forecast_Production_Plan_Report.pdf)
 
 Both numerical results match the reviewed Optees reference. This run is
 documented as exploratory rather than a publishable provider comparison because
@@ -294,7 +294,7 @@ because those require explicit orchestration between results and inputs.
 
 The reviewed D0 prompt, model compatibility results, transcript policy, and
 security behavior are documented in
-[Ollama D0 local agent harness](local-agent/ollama-d0-harness.md).
+[Ollama D0 local agent harness](../archive/local-agent/ollama-d0-harness.md).
 
 ## Result Artifacts And Reports
 
@@ -316,7 +316,7 @@ operations, inspect progress and use `optees_cancel_artifact` or
 
 The full request example, REST equivalents, runtime diagnostics, and security
 limits are documented in
-[Local Result Artifacts And Reports](LOCAL_REPORTING.md).
+[Local Result Artifacts And Reports](local-reporting.md).
 
 ## OpenAI GPT Clients
 
@@ -341,5 +341,5 @@ this guide before that workflow succeeds from a clean setup.
 - [MCP stdio server](local-agent/mcp-stdio.md)
 - [Authenticated local REST API](local-agent/local-rest-api.md)
 - [Desktop server controls](local-agent/server-process-and-desktop.md)
-- [Ollama D0 harness](local-agent/ollama-d0-harness.md)
-- [Agent benchmark protocol](AGENT_BENCHMARKS.md)
+- [Ollama D0 harness](../archive/local-agent/ollama-d0-harness.md)
+- [Agent benchmark protocol](../evidence/agent-benchmarks.md)

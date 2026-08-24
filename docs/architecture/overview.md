@@ -158,8 +158,8 @@ flowchart TB
 The rendering worker is bounded and independent from the mathematical job
 worker, so an expensive chart or document cannot delay solver execution.
 Application contracts and lifecycle rules are defined in
-`RESULT_ARTIFACTS_CONTRACT.md`; delivery status is tracked in
-`RESULT_ARTIFACTS_REPORTING_ROADMAP.md`. Infrastructure renderers must remain
+`docs/contracts/result-artifacts-contract.md`; delivery status is tracked in
+`docs/roadmaps/result-artifacts-and-reporting.md`. Infrastructure renderers must remain
 headless and must not import PySide6 or Qt-specific Matplotlib backends.
 
 `ArtifactStoragePort` keeps artifact lifecycle semantics outside HTTP and MCP.

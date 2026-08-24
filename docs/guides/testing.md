@@ -261,7 +261,7 @@ mathematical assurance.
 Report tests use controlled fake Pandoc and Typst executables to verify command
 boundaries and lifecycle semantics without making the local suite depend on
 optional document tools. A release candidate that advertises PDF support must
-also run the installed native smoke in `docs/RELEASING.md`; a mocked `%PDF-`
+also run the installed native smoke in `docs/guides/releasing.md`; a mocked `%PDF-`
 response does not validate real fonts, pagination, tables, links, captions, or
 the bundled Typst template on a target platform.
 

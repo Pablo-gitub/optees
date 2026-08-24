@@ -1,78 +1,52 @@
 # Optees Documentation
 
-This index separates product usage, mathematical references, integration, and
-project maintenance. Statements about native installation remain subject to
-the packaged-artifact acceptance matrix.
+This index organizes the documentation by purpose. A document's directory
+describes what it is; roadmap delivery state is tracked separately in the
+[roadmap index](roadmaps/README.md), so files do not move whenever their status
+changes.
 
-## Use Optees
+## Architecture And Contracts
 
-- [Project README](../README.md): product overview, screenshots, installation,
-  source setup, and available workflows.
-- [Algorithms](ALGORITHMS.md): concise implemented and planned method
-  catalogue.
-- [Datasets and formats](DATASETS.md): scientific, external, analytic, and
+- [Architecture overview](architecture/overview.md): dependency boundaries,
+  runtime surfaces, and Mermaid diagrams.
+- [Forecasting statistical contract](contracts/forecasting-statistical-contract.md):
+  frozen statistical terminology and behavior.
+- [Result artifacts contract](contracts/result-artifacts-contract.md): frozen
+  artifact inventory, lifecycle, limits, and report schema.
+
+## User And Maintainer Guides
+
+- [Development setup](guides/development.md)
+- [Testing strategy](guides/testing.md)
+- [Release procedure](guides/releasing.md)
+- [Agent service configuration](guides/agent-service-configuration.md)
+- [Local result artifacts and reports](guides/local-reporting.md)
+- [Website deployment](guides/website-deployment.md)
+- [Local service and agent integration guides](guides/local-agent/README.md)
+
+## Mathematical Reference
+
+- [Algorithms](reference/algorithms.md): implemented and planned method
+  catalogue with honest result semantics.
+- [Datasets](reference/datasets.md): scientific, external, analytic, and
   deterministic test-data provenance.
-- [Testing](TESTING.md): local feedback, markers, focused suites, and full
-  regression commands.
 
-## Integrate Local Agents And Applications
+## Product Planning
 
-- [Agent service configuration](AGENTS_SERVICE_CONFIG.md): common setup,
-  Claude Desktop/Cowork, Ollama, and planned OpenAI GPT compatibility.
-- [Local server and desktop controls](local-agent/server-process-and-desktop.md):
-  authenticated loopback service lifecycle.
-- [Local REST API](local-agent/local-rest-api.md): HTTP endpoints, jobs,
-  authentication, and security boundaries.
-- [MCP stdio](local-agent/mcp-stdio.md): private local MCP process and
-  allowlisted tools.
-- [Headless CLI](local-agent/headless-cli.md): machine-readable discovery,
-  validation, and execution.
-- [Ollama D0 harness](local-agent/ollama-d0-harness.md): experimental local LLM
-  compatibility workflow.
-- [Pre-service capability inventory](local-agent/pre-service-capability-inventory.md):
-  historical baseline retained for refactoring evidence.
+- [Roadmap index and delivery status](roadmaps/README.md)
+- [Authoritative project roadmap](roadmaps/project.md)
 
-## Understand And Extend The Architecture
+## Evidence And Audits
 
-- [Architecture](ARCHITECTURE.md): dependency boundaries and Mermaid diagrams.
-- [Local job service](local-agent/job-service.md): application-owned execution
-  lifecycle.
-- [Result artifact and report contracts](RESULT_ARTIFACTS_CONTRACT.md): frozen
-  post-solve artifact inventory, lifecycle, limits, and report schema.
-- [Local result artifacts and reports](LOCAL_REPORTING.md): availability,
-  PDF runtime, conversion, progress, cancellation, and native acceptance.
-- [Result artifacts and local reporting roadmap](RESULT_ARTIFACTS_REPORTING_ROADMAP.md):
-  phased implementation of headless exports and report composition.
-- [Local agent service roadmap](LOCAL_AGENT_SERVICE_ROADMAP.md): contracts,
-  implementation history, independent validation, and future agent work.
-- [Algorithms](ALGORITHMS.md): supported mathematical behavior and honest
-  result semantics.
+- [Agent benchmark protocol](evidence/agent-benchmarks.md)
+- [Documentation truth audit](evidence/documentation-audit.md)
+- [Native distribution factual audit](evidence/native-distribution-audit.md)
 
-## Benchmarks And Evidence
+## Historical Material
 
-- [Agent benchmark protocol](AGENT_BENCHMARKS.md): paired unaided and
-  Optees-assisted experimental design.
-- [Datasets and formats](DATASETS.md): solver benchmark sources and scope.
-- [Documentation truth audit](DOCUMENTATION_AUDIT.md): current documentation
-  discrepancies and verification status.
+[Archive](archive/README.md) contains superseded plans and historical
+implementation evidence. Archived documents describe their original context;
+they are not current implementation instructions.
 
-## Product And Family Roadmaps
-
-- [Project roadmap](PROJECT_ROADMAP.md)
-- [Documentation, website, release, and demonstration roadmap](DOCUMENTATION_WEBSITE_RELEASE_ROADMAP.md)
-- [Native distribution roadmap](NATIVE_DISTRIBUTION_ROADMAP.md)
-- [Native distribution factual audit](NATIVE_DISTRIBUTION_AUDIT.md): current
-  artifact behavior, updater limitations, and clean-account acceptance matrix.
-- [Packing and loading roadmap](PACKING_LOADING_ROADMAP.md)
-- [Result artifacts and local reporting roadmap](RESULT_ARTIFACTS_REPORTING_ROADMAP.md)
-- [MILP roadmap](MILP_ROADMAP.md)
-- [MILP feature plan](MILP_FEATURE_PLAN.md)
-- [NLP feature plan](NLP_FEATURE_PLAN.md)
-- [Graph feature plan](GRAPH_FEATURE_PLAN.md)
-
-## Release And Website Maintenance
-
-- [Release procedure](RELEASING.md)
-- [Native distribution roadmap](NATIVE_DISTRIBUTION_ROADMAP.md)
-- [Native distribution factual audit](NATIVE_DISTRIBUTION_AUDIT.md)
-- [Website deployment](WEBSITE_DEPLOYMENT.md)
+For the product overview, installation, screenshots, and available workflows,
+return to the [project README](../README.md).

@@ -37,7 +37,7 @@ python -m ruff check src tests
 python -m pytest -q -m "not benchmark"
 ```
 
-See [TESTING.md](TESTING.md) for the authoritative test groups and commands.
+See [Testing](testing.md) for the authoritative test groups and commands.
 
 ## Platform Prerequisites
 

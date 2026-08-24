@@ -6,30 +6,30 @@ order in which the product grows.
 
 Related documents:
 
-- `docs/MILP_ROADMAP.md` for MILP-specific completion work;
-- `docs/NLP_FEATURE_PLAN.md` for the Phase 1 nonlinear-programming delivery
+- `docs/roadmaps/milp.md` for MILP-specific completion work;
+- `docs/roadmaps/nlp.md` for the Phase 1 nonlinear-programming delivery
   checklist;
-- `docs/FORECASTING_ROADMAP.md` for the engine-first Forecasting capability and
+- `docs/roadmaps/forecasting.md` for the engine-first Forecasting capability and
   its subsequent desktop and educational handoff;
-- `docs/PACKING_LOADING_ROADMAP.md` for the geometric packing and container
+- `docs/roadmaps/packing-and-loading.md` for the geometric packing and container
   loading horizontal expansion;
-- `docs/LOCAL_AGENT_SERVICE_ROADMAP.md` for the shared headless execution
+- `docs/roadmaps/local-agent-platform.md` for the shared headless execution
   platform, local API, and future agent-facing contracts;
-- `docs/RESULT_ARTIFACTS_REPORTING_ROADMAP.md` for optional result charts,
+- `docs/roadmaps/result-artifacts-and-reporting.md` for optional result charts,
   tables, 3D exports, and local Markdown/PDF report composition;
-- `docs/RESULT_ARTIFACTS_CONTRACT.md` for the frozen artifact inventory,
+- `docs/contracts/result-artifacts-contract.md` for the frozen artifact inventory,
   lifecycle, limits, errors, and report schema that implementation follows;
-- `docs/NATIVE_DISTRIBUTION_ROADMAP.md` for native installers, release CI,
+- `docs/roadmaps/native-distribution.md` for native installers, release CI,
   platform update handoff, and packaged acceptance testing;
-- `docs/AGENT_BENCHMARKS.md` for paired experiments measuring whether agents
+- `docs/evidence/agent-benchmarks.md` for paired experiments measuring whether agents
   formulate and solve synthetic business problems better with Optees;
-- `docs/DOCUMENTATION_WEBSITE_RELEASE_ROADMAP.md` for the post-refactoring
+- `docs/roadmaps/documentation-website-release.md` for the post-refactoring
   documentation audit, architecture diagrams, landing refresh, release
   coordination, and public demonstration sequence;
-- `docs/DATASETS.md` for included scientific datasets;
-- `docs/TESTING.md` for the test strategy;
-- `docs/RELEASING.md` for build, signing, and tag verification;
-- `docs/ALGORITHMS.md` for the concise algorithm catalogue.
+- `docs/reference/datasets.md` for included scientific datasets;
+- `docs/guides/testing.md` for the test strategy;
+- `docs/guides/releasing.md` for build, signing, and tag verification;
+- `docs/reference/algorithms.md` for the concise algorithm catalogue.
 
 ## Product Standard
 
@@ -103,7 +103,7 @@ independent validation, optional result artifacts, and reports.
 ### Priority 1 - Time-series Forecasting
 
 The detailed two-part implementation and handoff checklist is maintained in
-`docs/FORECASTING_ROADMAP.md`. Part A, the headless engine and public-service
+`docs/roadmaps/forecasting.md`. Part A, the headless engine and public-service
 contract, is complete. Part B owns desktop presentation and educational copy.
 
 - [x] Define a versioned time-series model with ordered timestamps, one target,
@@ -186,7 +186,7 @@ cooperative games, and game-tree minimax are explicitly deferred.
   versus `NotSolved` status.
 - Formulation UI, educational pages, threshold/piecewise examples, and MIPLIB
   regression data.
-- Remaining family-specific work is tracked in `docs/MILP_ROADMAP.md`.
+- Remaining family-specific work is tracked in `docs/roadmaps/milp.md`.
 
 ### Knapsack
 
@@ -266,7 +266,7 @@ are configured.
 code-signature check, and offscreen application startup passed for this slice.
 
 The sequential implementation contract, safety rules, test matrix, and commit
-boundaries are maintained in `docs/NLP_FEATURE_PLAN.md`.
+boundaries are maintained in `docs/roadmaps/nlp.md`.
 
 - Domain model for continuous variables, bounds, a nonlinear objective, and
   safe structured function representation. Do not evaluate arbitrary Python
@@ -387,7 +387,7 @@ later.
 
 The complete mathematical scope, JSON contracts, UI requirements, solver
 status semantics, performance policy, and sequential checklist are maintained
-in `docs/PACKING_LOADING_ROADMAP.md`.
+in `docs/roadmaps/packing-and-loading.md`.
 
 The declared Phase 1 orthogonal single-container scope is implemented: exact
 MILP solving, optional simple-gravity post-processing, interactive 3D results,
@@ -419,7 +419,7 @@ responsible for hardening, complete capability coverage, packaging, guidance,
 and client compatibility.
 
 The sequential checklist and API boundaries are maintained in
-`docs/LOCAL_AGENT_SERVICE_ROADMAP.md`.
+`docs/roadmaps/local-agent-platform.md`.
 
 The next product-facing step is a packaged Local Agent desktop module using
 Ollama on the same computer. Source checkouts and normal Python installations
@@ -436,7 +436,7 @@ experimental benchmarks will compare the same frozen synthetic-company
 scenarios under unaided and Optees-assisted conditions. They will report model
 validity, feasibility, objective quality, unsupported assumptions, tool use,
 and explanation accuracy separately. The protocol and repository organization
-are maintained in `docs/AGENT_BENCHMARKS.md`.
+are maintained in `docs/evidence/agent-benchmarks.md`.
 
 ### Phase 3.45 - Native Distribution And Update Hardening
 
@@ -450,7 +450,7 @@ The work also introduces a test-gated release workflow, pinned packaging inputs,
 final-artifact solver smoke tests, fail-closed checksum verification, and a
 recorded clean-machine acceptance matrix. Implementation starts from `main` on
 `codex/native-installers`. The sequential plan and platform exit criteria are
-maintained in `docs/NATIVE_DISTRIBUTION_ROADMAP.md`.
+maintained in `docs/roadmaps/native-distribution.md`.
 
 ### Phase 3.5 - Heuristics & Metaheuristics: First Vertical Slice
 
@@ -554,12 +554,12 @@ family by itself.
 ## Benchmark And Documentation Policy
 
 - Every imported dataset records source, license or usage notes, file format,
-  expected result, and the tests that consume it in `docs/DATASETS.md`.
+  expected result, and the tests that consume it in `docs/reference/datasets.md`.
 - Small deterministic cases belong in the standard suite; large scientific cases
   may use `slow` markers.
 - Each educational page must distinguish exact algorithms, numerical local
   optimization, and heuristics.
-- `docs/PROJECT_ROADMAP.md` owns sequencing; specialized documents own detailed
+- `docs/roadmaps/project.md` owns sequencing; specialized documents own detailed
   implementation checklists.
 
 ## Website Delivery Track

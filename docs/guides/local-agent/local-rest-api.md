@@ -179,7 +179,7 @@ LP/MILP, `selection_table` for Knapsack, `coefficient_table` for regression and
 classification, and `placement_table` for packing. Clients must use discovery
 instead of hardcoding this mapping. Requests outside the advertised inventory
 return `artifact_not_supported`. See
-[Result Artifacts Contract](../RESULT_ARTIFACTS_CONTRACT.md) for formats,
+[Result Artifacts Contract](../../contracts/result-artifacts-contract.md) for formats,
 limits, provenance, and lifecycle semantics.
 
 ## Local Reports
@@ -199,5 +199,5 @@ Markdown is always available. PDF requests require the optional
 `pandoc.typst.v1` backend; inspect its structured diagnostic before submission.
 Reports expose the same progress, cancellation, SHA-256, expiry, and private
 download semantics as artifacts. See
-[Local Result Artifacts And Reports](../LOCAL_REPORTING.md) for the bounded
+[Local Result Artifacts And Reports](../local-reporting.md) for the bounded
 request and conversion behavior.

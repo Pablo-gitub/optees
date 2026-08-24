@@ -123,7 +123,7 @@ reduce malformed nested arguments from small local models:
 The harness converts that bounded shape into the canonical versioned REST
 contract before validation. Direct callers of the REST API continue to use
 `content`, `job_id`, and `artifact_id` as documented in
-`docs/LOCAL_REPORTING.md`.
+`docs/guides/local-reporting.md`.
 
 These tools expose metadata, status, media type, size, SHA-256, and an
 authenticated relative download endpoint. They never place image, spreadsheet,

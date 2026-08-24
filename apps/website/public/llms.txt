@@ -41,11 +41,11 @@ through CLI, authenticated loopback REST, or private MCP stdio.
 - MCP uses a private stdio subprocess and does not open a network port.
 - Hosted agents cannot access a user's localhost without an explicit bridge.
 
-Agent setup: https://github.com/Pablo-gitub/optees/blob/main/docs/AGENTS_SERVICE_CONFIG.md
+Agent setup: https://github.com/Pablo-gitub/optees/blob/main/docs/guides/agent-service-configuration.md
 
 ## Links
 
 - Website: %SITE_URL%/
 - Repository: https://github.com/Pablo-gitub/optees
 - Releases: https://github.com/Pablo-gitub/optees/releases
-- Roadmap: https://github.com/Pablo-gitub/optees/blob/main/docs/PROJECT_ROADMAP.md
+- Roadmap: https://github.com/Pablo-gitub/optees/blob/main/docs/roadmaps/project.md

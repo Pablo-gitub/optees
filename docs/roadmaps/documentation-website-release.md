@@ -30,19 +30,19 @@ integration order and the release gates between them.
 
 - [x] Create this cross-project roadmap.
 - [x] Compare the 12 registered local-service capabilities with `README.md`,
-  `docs/ALGORITHMS.md`, `docs/DATASETS.md`, `docs/ARCHITECTURE.md`, and the
+  `docs/reference/algorithms.md`, `docs/reference/datasets.md`, `docs/architecture/overview.md`, and the
   landing-page catalogue.
-- [x] Record the initial findings in `docs/DOCUMENTATION_AUDIT.md`.
+- [x] Record the initial findings in `docs/evidence/documentation-audit.md`.
 - [x] Add the omitted single-container 3D Packing workflow to the README and
   concise algorithm catalogue.
 - [x] Reframe the README around Optees' dual identity: a desktop workbench for
   people and a local solver platform for scripts and compatible AI agents.
 - [x] Replace agent-specific entry documents with one
-  `docs/AGENTS_SERVICE_CONFIG.md` configuration guide containing shared setup
+  `docs/guides/agent-service-configuration.md` configuration guide containing shared setup
   and separate Claude, Ollama, and future OpenAI GPT sections.
 - [x] Update every reference to `docs/CLAUDE_CONFIG.md`, then remove the old
   entry document without deleting protocol-specific technical references.
-- [x] Reclassify `docs/local-agent/current-capability-inventory.md` as a
+- [x] Reclassify `docs/archive/local-agent/pre-service-capability-inventory.md` as a
   historical pre-service baseline or replace it with a generated/current
   inventory; do not leave a historical snapshot named as current truth.
 - [x] Verify source capability counts, application version, entry points,
@@ -62,7 +62,7 @@ phase with an explicit verification gate.
 
 ## Phase 2 - Architecture Documentation And Mermaid
 
-- [x] Rewrite `docs/ARCHITECTURE.md` around the current source tree and runtime
+- [x] Rewrite `docs/architecture/overview.md` around the current source tree and runtime
   boundaries instead of the original desktop-only structure.
 - [x] Add a system-context diagram covering the user, desktop GUI, CLI, REST,
   MCP, local LLM harness, application services, solver adapters, and external
@@ -138,7 +138,7 @@ workflows and local solver platform available at the intended release commit.
 - [x] Complete the local-service branch documentation and test gates.
 - [x] Merge the stable local solver platform into `main`.
 - [ ] Create `codex/native-installers` from the updated `main`.
-- [ ] Complete the P0 items in `docs/NATIVE_DISTRIBUTION_ROADMAP.md`, including
+- [ ] Complete the P0 items in `docs/roadmaps/native-distribution.md`, including
   test-gated releases, final-artifact smoke tests, checksum behavior, Windows
   Inno Setup, and truthful macOS/Linux update handoff.
 - [ ] Verify that installed artifacts can run a solver and start the packaged
@@ -157,7 +157,7 @@ artifact behavior on every supported platform.
 - [ ] Create `codex/local-agent-desktop` from the released `main`; do not
   continue long-lived work on an already merged branch.
 - [ ] Implement the Local Ollama desktop module defined in
-  `docs/LOCAL_AGENT_SERVICE_ROADMAP.md`.
+  `docs/roadmaps/local-agent-platform.md`.
 - [ ] Test and document OpenAI GPT integration only against a verified local
   client or MCP surface, including transport and localhost limitations.
 - [ ] Maintain one shared agent-service configuration guide while keeping

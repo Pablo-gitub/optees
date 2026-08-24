@@ -25,5 +25,5 @@ usage, tool transcript, controlled unaided condition, and repeated trials were
 not recorded. Those omissions are retained explicitly rather than guessed.
 
 See the [scenario](../../scenarios/manufacturing-planning-001/README.md),
-[agent service configuration guide](../../../../docs/AGENTS_SERVICE_CONFIG.md), and
+[agent service configuration guide](../../../../docs/guides/agent-service-configuration.md), and
 `manifest.json` for the recorded metadata and file hashes.

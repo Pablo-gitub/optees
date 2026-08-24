@@ -439,7 +439,7 @@ Il test esiste gia'. Va mantenuto come smoke test opzionale:
 7. Implementare `MILPSolutionView` riusando i componenti LP dove sensato.
 8. Aggiungere pagine `Esempio` e `Descrizione problema` MILP.
 9. Coprire con test utility, application e presentation.
-10. Aggiornare `docs/DATASETS.md` e `docs/TESTING.md` con MILP/MIPLIB.
+10. Aggiornare `docs/reference/datasets.md` e `docs/guides/testing.md` con MILP/MIPLIB.
 
 ## Decisioni aperte
 

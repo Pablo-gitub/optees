@@ -21,9 +21,9 @@
 <p align="center">
   <a href="https://optees.it">Website</a> ·
   <a href="https://github.com/Pablo-gitub/optees/releases">Download desktop builds</a> ·
-  <a href="docs/AGENTS_SERVICE_CONFIG.md">Connect an agent</a> ·
-  <a href="docs/PROJECT_ROADMAP.md">Roadmap</a> ·
-  <a href="docs/ALGORITHMS.md">Algorithms</a>
+  <a href="docs/guides/agent-service-configuration.md">Connect an agent</a> ·
+  <a href="docs/roadmaps/project.md">Roadmap</a> ·
+  <a href="docs/reference/algorithms.md">Algorithms</a>
 </p>
 
 Optees gives the same tested optimization core two interfaces. People can
@@ -80,8 +80,8 @@ chosen by an agent. Users remain responsible for objectives, assumptions,
 data quality, and whether a multi-step workflow represents the real decision.
 
 Claude Desktop/Cowork and the experimental Ollama harness have completed local
-vertical tests. See the [agent service configuration guide](docs/AGENTS_SERVICE_CONFIG.md)
-and the [agent benchmark protocol](docs/AGENT_BENCHMARKS.md). Native release
+vertical tests. See the [agent service configuration guide](docs/guides/agent-service-configuration.md)
+and the [agent benchmark protocol](docs/evidence/agent-benchmarks.md). Native release
 artifacts include a dedicated MCP stdio entry point; clean-machine client
 acceptance remains required before each stable release.
 
@@ -165,7 +165,7 @@ executable rather than the portable ZIP for a normal installation.
 
 On macOS, current packages are ad-hoc signed because the project does not use
 an Apple Developer ID. Gatekeeper may require you to explicitly open the app
-after download. See the [release procedure](docs/RELEASING.md) for the precise
+after download. See the [release procedure](docs/guides/releasing.md) for the precise
 installation, verification, signing, and tag workflow.
 
 ### Run From Source
@@ -183,7 +183,7 @@ python -m optees.main
 The checked-in `environment.yml` reproduces the complete Conda development
 environment on macOS, Windows, and Linux. Platform prerequisites, a standard
 `venv` alternative, and Linux graphics diagnostics are documented in the
-[development setup guide](docs/DEVELOPMENT.md).
+[development setup guide](docs/guides/development.md).
 
 To develop or use the optional local solver API, install the dedicated extra:
 
@@ -192,7 +192,7 @@ python -m pip install -e ".[plot,local-service]"
 ```
 
 To connect a local MCP client such as Claude Desktop or Cowork, install the
-`mcp` extra and follow the [agent service configuration guide](docs/AGENTS_SERVICE_CONFIG.md).
+`mcp` extra and follow the [agent service configuration guide](docs/guides/agent-service-configuration.md).
 The guide also records the experimental Ollama workflow, the future OpenAI GPT
 compatibility test, a discovery check, and reviewed single-solver and
 regression-to-MILP examples.
@@ -211,8 +211,8 @@ Burkardt and OR-Library cases; NLP, regression, classification, and graph
 workflows use documented analytic or deterministic reference cases.
 Forecasting includes analytic baselines, temporal evaluation checks, and
 independent recomputation of forecast metrics. The full
-source and provenance are described in [Datasets](docs/DATASETS.md) and the
-test strategy in [Testing](docs/TESTING.md).
+source and provenance are described in [Datasets](docs/reference/datasets.md) and the
+test strategy in [Testing](docs/guides/testing.md).
 
 Optees is an educational and decision-support tool, not a guarantee that every
 model is suitable for a consequential real-world decision. In particular:
@@ -229,20 +229,20 @@ model is suitable for a consequential real-world decision. In particular:
 ## Documentation
 
 - [Documentation index](docs/README.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Algorithms](docs/ALGORITHMS.md)
-- [Project roadmap](docs/PROJECT_ROADMAP.md)
-- [Documentation, website, release, and demonstration roadmap](docs/DOCUMENTATION_WEBSITE_RELEASE_ROADMAP.md)
-- [Documentation truth audit](docs/DOCUMENTATION_AUDIT.md)
-- [Datasets and formats](docs/DATASETS.md)
-- [Testing strategy](docs/TESTING.md)
-- [Local solver service](docs/local-agent/server-process-and-desktop.md)
-- [Agent service configuration](docs/AGENTS_SERVICE_CONFIG.md)
-- [Local MCP stdio server](docs/local-agent/mcp-stdio.md)
-- [Agent benchmark protocol](docs/AGENT_BENCHMARKS.md)
-- [Experimental Ollama agent harness](docs/local-agent/ollama-d0-harness.md)
-- [Release procedure](docs/RELEASING.md)
-- [Website deployment](docs/WEBSITE_DEPLOYMENT.md)
+- [Architecture](docs/architecture/overview.md)
+- [Algorithms](docs/reference/algorithms.md)
+- [Project roadmap](docs/roadmaps/project.md)
+- [Documentation, website, release, and demonstration roadmap](docs/roadmaps/documentation-website-release.md)
+- [Documentation truth audit](docs/evidence/documentation-audit.md)
+- [Datasets and formats](docs/reference/datasets.md)
+- [Testing strategy](docs/guides/testing.md)
+- [Local solver service](docs/guides/local-agent/server-process-and-desktop.md)
+- [Agent service configuration](docs/guides/agent-service-configuration.md)
+- [Local MCP stdio server](docs/guides/local-agent/mcp-stdio.md)
+- [Agent benchmark protocol](docs/evidence/agent-benchmarks.md)
+- [Experimental Ollama agent harness](docs/archive/local-agent/ollama-d0-harness.md)
+- [Release procedure](docs/guides/releasing.md)
+- [Website deployment](docs/guides/website-deployment.md)
 
 ## License
 

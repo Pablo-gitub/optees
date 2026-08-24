@@ -4,7 +4,7 @@
 
 This document freezes the version 1 design decisions for result artifacts and
 local report composition. Runtime support is delivered incrementally through
-`RESULT_ARTIFACTS_REPORTING_ROADMAP.md`; contracts described here must not be
+`docs/roadmaps/result-artifacts-and-reporting.md`; contracts described here must not be
 advertised by a release until their implementation is available.
 
 ## Boundary And Ownership

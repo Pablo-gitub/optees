@@ -82,7 +82,7 @@ this configuration.
 
 For shared agent setup, tested Claude Desktop and Cowork steps, Ollama launch
 instructions, future OpenAI GPT validation, and example runs, see the
-[agent service configuration guide](../AGENTS_SERVICE_CONFIG.md).
+[agent service configuration guide](../agent-service-configuration.md).
 
 ## Tool Workflow
 

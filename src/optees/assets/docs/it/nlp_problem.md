@@ -56,4 +56,4 @@ seguono la stessa validazione.
 
 Vincoli non lineari generali, ottimizzazione globale, min-max non lineare,
 minimi quadrati e programmazione quadratica restano fuori da questa prima
-versione e sono tracciati in `docs/NLP_FEATURE_PLAN.md`.
+versione e sono tracciati in `docs/roadmaps/nlp.md`.

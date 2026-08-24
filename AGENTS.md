@@ -8,10 +8,10 @@ information belongs in the canonical documents linked below.
 
 Read the relevant source before making changes:
 
-- Architecture and dependency boundaries: `docs/ARCHITECTURE.md`
-- Test strategy, markers, and commands: `docs/TESTING.md`
-- Versioning, packaging, and release procedure: `docs/RELEASING.md`
-- Current implementation priorities: `docs/PROJECT_ROADMAP.md` and any
+- Architecture and dependency boundaries: `docs/architecture/overview.md`
+- Test strategy, markers, and commands: `docs/guides/testing.md`
+- Versioning, packaging, and release procedure: `docs/guides/releasing.md`
+- Current implementation priorities: `docs/roadmaps/project.md` and any
   feature-specific roadmap referenced from it
 
 Do not copy large sections of these documents into agent instruction files.
@@ -23,7 +23,7 @@ planned functionality must remain clearly marked as planned.
 ## Engineering workflow
 
 - Inspect the surrounding code and existing patterns before designing a change.
-- Preserve the dependency direction documented in `docs/ARCHITECTURE.md`.
+- Preserve the dependency direction documented in `docs/architecture/overview.md`.
   Presentation and transport code must not become the owner of domain or solver
   logic. Register public solver capabilities through the existing composition
   and versioned-contract mechanisms.
@@ -34,7 +34,7 @@ planned functionality must remain clearly marked as planned.
   translatable UI text.
 - Add or update focused tests for changed behavior. Run targeted tests while
   iterating, then choose broader gates according to blast radius and
-  `docs/TESTING.md`. Do not claim that tests passed when dependencies, GUI
+  `docs/guides/testing.md`. Do not claim that tests passed when dependencies, GUI
   support, sockets, datasets, or platform access prevented execution.
 - Treat solver correctness, public JSON contracts, independent validation,
   update behavior, and packaging as high-risk surfaces requiring explicit
@@ -63,7 +63,7 @@ planned functionality must remain clearly marked as planned.
   their own terminal.
 - Before recommending a release, verify the working tree, required tests,
   internal version, intended tag, release notes/documentation, and the
-  invariants in `docs/RELEASING.md`.
+  invariants in `docs/guides/releasing.md`.
 - Treat application and website releases as separate publication flows and
   provide commands only for the flow that is actually ready.
 

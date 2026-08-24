@@ -2,7 +2,7 @@
 
 This audit compares public documentation with the implementation on the
 `codex/local-agent-service` branch. It is a working record for Phase 1 of
-`docs/DOCUMENTATION_WEBSITE_RELEASE_ROADMAP.md`, not a replacement for the
+`docs/roadmaps/documentation-website-release.md`, not a replacement for the
 individual technical documents.
 
 ## Verified Baseline
@@ -43,17 +43,17 @@ feature counts.
 
 ### P0 - Must Be Corrected Before The Next Public Release
 
-1. Resolved: `docs/ARCHITECTURE.md` now describes the shared desktop and local
+1. Resolved: `docs/architecture/overview.md` now describes the shared desktop and local
    solver platform, current source ownership, runtime boundaries, and extension
    points.
 2. The landing page omits Packing 3D and does not explain the local solver API,
    MCP integration, independent result validation, or agent workflow.
 3. Agent setup was split by client. This audit resolves the entry-point problem
-   with `docs/AGENTS_SERVICE_CONFIG.md`; protocol-specific implementation
+   with `docs/guides/agent-service-configuration.md`; protocol-specific implementation
    references remain separate intentionally.
 4. The capability inventory was a pre-local-service snapshot whose title
    implied current truth. It is now retained explicitly as
-   `docs/local-agent/pre-service-capability-inventory.md`.
+   `docs/archive/local-agent/pre-service-capability-inventory.md`.
 5. Resolved for MCP: release CI initializes and calls capability discovery on
    the packaged companion for every native platform. Other Python entry points
    still require explicit packaging and artifact-level acceptance.
@@ -62,7 +62,7 @@ feature counts.
 
 1. Resolved: README architecture and agent sections link to the unified setup
    guide and distinguish REST loopback from private MCP stdio.
-2. Resolved: `docs/ARCHITECTURE.md` now documents the current runtime with
+2. Resolved: `docs/architecture/overview.md` now documents the current runtime with
    curated Mermaid context, dependency, class, sequence, state, transport, and
    composed-workflow diagrams.
 3. The website's numeric workflow count is manually maintained and already

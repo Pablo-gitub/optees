@@ -185,7 +185,7 @@ support is represented by `null` or capability metadata, never invented.
 ### Phase 0 - Current Contract Inventory
 
 - [x] Create the historical
-  `docs/local-agent/pre-service-capability-inventory.md` baseline.
+  `docs/archive/local-agent/pre-service-capability-inventory.md` baseline.
 - [x] Record each capability's domain input, JSON importer, use case, port,
   adapter, result type, statuses, diagnostics, dependency requirements, and
   tests.
@@ -245,7 +245,7 @@ interacting with a widget.
 - [x] Add subprocess-level tests.
 
 The `optees-cli` entry point and `python -m optees.cli` module are documented in
-`docs/local-agent/headless-cli.md`. Operational commands emit one compact JSON
+`docs/guides/local-agent/headless-cli.md`. Operational commands emit one compact JSON
 document on stdout. Infeasible, unbounded, and not-solved executions retain
 their mathematical result envelope and use distinct process exit codes.
 
@@ -538,7 +538,7 @@ an integration surface because selecting a tool-capable model there does not
 register Optees tools. This proof validates local orchestration and the Optees
 REST/application contracts; it does not by itself validate MCP or hosted-agent
 connectivity. Setup, security boundaries, and the first frozen prompt are
-documented in `docs/local-agent/ollama-d0-harness.md`.
+documented in `docs/archive/local-agent/ollama-d0-harness.md`.
 
 The first live compatibility probe froze `qwen2.5-coder:7b` at digest
 `dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364`.
@@ -595,7 +595,7 @@ and preserves the D0 requirement to inspect the full capability descriptor and
 validate the exact payload before creating a job. Protocol tests negotiate a
 real MCP session, inspect all seven published schemas, and complete the frozen
 continuous-LP workflow through a subprocess. Setup and current limitations are
-documented in `docs/local-agent/mcp-stdio.md`. Native installer inclusion is
+documented in `docs/guides/local-agent/mcp-stdio.md`. Native installer inclusion is
 now enforced by packaged MCP smoke tests on Windows, macOS, and Linux;
 client-specific guidance and the complete compatibility matrix remain Phase D
 work rather than implicit claims of this proof.
@@ -767,7 +767,7 @@ DMG, Windows installer/ZIP, or Linux package.
 ## Post-MVP Phase E - Agent Effectiveness Benchmarks
 
 The benchmark protocol and repository layout are defined in
-`docs/AGENT_BENCHMARKS.md`. These experiments measure assisted modeling and
+`docs/evidence/agent-benchmarks.md`. These experiments measure assisted modeling and
 tool use; they do not replace scientific solver regressions.
 
 - [x] Define paired unaided and Optees-assisted conditions, with an optional

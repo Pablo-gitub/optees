@@ -4,7 +4,7 @@ This document is the implementation contract for **Phase 1: Nonlinear
 Programming**. It deliberately starts with one complete, continuous,
 single-objective workflow instead of exposing several incomplete NLP methods.
 
-`docs/PROJECT_ROADMAP.md` owns product sequencing; this document owns the
+`docs/roadmaps/project.md` owns product sequencing; this document owns the
 technical checklist for the first NLP vertical slice.
 
 ## Scope And Mathematical Contract
@@ -202,7 +202,7 @@ port and produce honest numerical statuses.
       tests must not assume a unique global point where one does not exist.
 - [x] Add unit and end-to-end regressions that validate finite objective,
       feasibility, expected basin/value tolerance, and result wording.
-- [x] Extend `docs/DATASETS.md` to call these **analytic reference cases**,
+- [x] Extend `docs/reference/datasets.md` to call these **analytic reference cases**,
       not scientific benchmark files, until a redistributable external NLP
       corpus with published results is included.
 
@@ -220,7 +220,7 @@ numerical regression case suitable for normal CI.
       deterministic CI subset. Mark larger performance cases separately.
 
 This work belongs to the cross-family benchmark-hardening phase in
-`docs/PROJECT_ROADMAP.md`; analytic reference cases remain mandatory for this
+`docs/roadmaps/project.md`; analytic reference cases remain mandatory for this
 first vertical slice.
 
 ### 4. JSON Import And Export
@@ -278,14 +278,14 @@ of what the numerical run established.
       consistent with LP/MILP/Knapsack UI.
 - [x] Update the rule-based Modeling Assistant so it labels NLP as available
       after the view ships; structured NLP drafting remains deferred.
-- [x] Update `docs/ALGORITHMS.md`, `docs/DATASETS.md`, and the project roadmap
+- [x] Update `docs/reference/algorithms.md`, `docs/reference/datasets.md`, and the project roadmap
       to reflect only implemented behaviour. Tag-specific release notes remain
       part of the release commit/tag workflow.
 - [x] Run the full test suite, build the desktop bundle, check i18n/docs/icons
       are included, and run an offscreen smoke start before tagging a release.
 
 **Exit criterion:** NLP meets the Product Standard in
-`docs/PROJECT_ROADMAP.md` and no UI element advertises a deferred NLP feature.
+`docs/roadmaps/project.md` and no UI element advertises a deferred NLP feature.
 
 ## Test Matrix
 
