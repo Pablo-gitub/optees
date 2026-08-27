@@ -40,6 +40,21 @@ planned functionality must remain clearly marked as planned.
   update behavior, and packaging as high-risk surfaces requiring explicit
   regression coverage.
 
+## Work-unit discipline
+
+- Treat planning, implementation, and review as distinct task roles even when
+  one agent performs more than one of them.
+- A planning work unit freezes scope, dependencies, stop conditions, required
+  evidence, and its completion gate. It must not describe planned behavior as
+  already shipped.
+- An implementation work unit follows one ready plan, does not silently widen
+  its scope, and does not begin the next roadmap item.
+- A review work unit verifies claims independently, corrects material defects
+  in a separate atomic commit, and reports checks that could not complete.
+- Respect explicit ownership recorded by the user or roadmap. Agents may review
+  work owned by another role but must not take over its implementation without
+  reassignment.
+
 ## Local commits
 
 - Agents may create local commits autonomously when a coherent, reviewed, and
@@ -48,8 +63,9 @@ planned functionality must remain clearly marked as planned.
   repository change.
 - Before committing, inspect the staged diff and exclude unrelated files,
   generated artifacts, secrets, credentials, and local configuration.
-- Do not add AI attribution such as `Co-authored-by`, `Generated-by`, agent
-  names, vendor names, or similar trailers to commit messages.
+- Do not add AI attribution to any commit subject, body, or trailer. This
+  includes `Co-authored-by`, `Generated-by`, agent or model names, vendor names,
+  Anthropic identities, or similar metadata.
 - Use the repository's existing Git identity and signing configuration. Do not
   modify author information, signing keys, hooks, or credential settings.
 
