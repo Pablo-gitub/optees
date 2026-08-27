@@ -17,8 +17,10 @@ Optees currently executes atomic mathematical capabilities. A caller may use a
 Forecasting result to formulate a MILP or follow capacity allocation with 3D
 packing, but the caller owns that composition, its state, and its audit trail.
 
-This roadmap defines the later point at which reviewed compositions may become
-versioned Optees workflows. It does not move experiment scheduling, virtual
+This roadmap defines how a composition created by an agent, user, or program
+can be submitted, validated, promoted, and retained as a versioned Optees
+workflow. The Registry does not invent or preinstall domain orchestrations. It
+does not move experiment scheduling, virtual
 accounts, dataset time, policy competition, or scoring into Optees.
 
 ## Ownership Boundary
@@ -42,6 +44,8 @@ composition semantics.
 
 - A workflow references immutable capability IDs and supported contract
   versions; it never selects a solver from an unversioned display name.
+- Registration follows explicit candidate validation and promotion. A saved
+  version is immutable; changing it creates a new version.
 - Every step validates its exact canonical payload before execution.
 - Input mappings are declarative and allowlisted. Arbitrary Python, shell,
   templates with code execution, and unrestricted expressions are forbidden.
@@ -77,7 +81,12 @@ depending on a transport-specific object.
 
 ## Phase 1 - Application-Owned Workflow Registry
 
-- [ ] Add an immutable registry of reviewed workflow definitions.
+- [ ] Accept externally created candidate definitions without executing
+  arbitrary code.
+- [ ] Validate candidates before registration and require explicit promotion.
+- [ ] Add an immutable registry of promoted workflow definitions.
+- [ ] Define `registered`, `active`, `deprecated`, and `retired` lifecycle
+  states while preserving old versions for audit and replay.
 - [ ] Resolve every referenced capability and contract version at registration.
 - [ ] Reject cycles in the first release; support directed acyclic workflows
   only.
@@ -99,7 +108,7 @@ depending on a transport-specific object.
 - [ ] Add deterministic replay diagnostics that report divergence instead of
   rewriting prior run history.
 
-## Phase 3 - First Reference Workflows
+## Phase 3 - First Acceptance Orchestrations
 
 - [ ] Forecasting to production-planning MILP using a synthetic, versioned
   dataset and explicit transformation rules.
@@ -109,8 +118,9 @@ depending on a transport-specific object.
   capability, one infeasible downstream model, and one cancellation reference.
 - [ ] Produce optional artifacts and a report from retained step provenance.
 
-These examples prove composition mechanics. They do not establish that the
-workflow represents every business context correctly.
+These externally defined examples are acceptance fixtures, not preinstalled
+product workflows. They prove composition mechanics but do not establish that
+the workflow represents every business context correctly.
 
 ## Phase 4 - Delivery Surfaces
 

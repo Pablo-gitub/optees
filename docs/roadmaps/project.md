@@ -42,6 +42,8 @@ Related documents:
 - `docs/reference/algorithms.md` for the concise algorithm catalogue.
 - `docs/roadmaps/optimization-workflows.md` for future composition of atomic
   capabilities and the boundary with Optees Decision Simulator.
+- `docs/roadmaps/case-study/ROADMAP.md` for the bounded, parallel
+  capability expansion driven by Decision Simulator evidence.
 
 ## Product Standard
 
@@ -180,6 +182,16 @@ matrix game is not the same problem as minimax search on a game tree.
 
 General-sum bimatrix games, Nash-equilibrium enumeration, repeated games,
 cooperative games, and game-tree minimax are explicitly deferred.
+
+## Parallel Decision Simulator Evidence Track
+
+The Decision Simulator case study advances in parallel with the product
+sequence above. It does not make trading the product domain or displace
+Scheduling and Game Theory. Its bounded expansion track prioritizes Convex QP,
+linear scenario min-max/max-min, evidence-driven Forecasting depth, Convex
+MIQP, and an externally populated Workflow Registry. Sequencing, cross-repo
+gates, and success criteria are authoritative in
+`docs/roadmaps/case-study/ROADMAP.md`.
 
 ## Current Baseline
 
