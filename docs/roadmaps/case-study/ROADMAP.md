@@ -7,7 +7,7 @@
   Decision Simulator case study
 - **Product relationship:** this is a parallel evidence track; it does not
   replace the general product sequence in `project.md`
-- **First detailed work unit:** `01-qp-contract-decision.md`
+- **Current detailed work unit:** `02-qp-vertical-slice.md`
 - **Consumer roadmap:** the Decision Simulator `docs/ROADMAP.md`
 
 ## Goal
@@ -80,14 +80,23 @@ independently of any GUI, transport, or trading formulation.
 ### OPT-DS-02 — Convex QP Vertical Slice
 
 - Implement domain, port, adapter, use case, codecs, capability registration,
-  independent validation, CLI/REST/MCP delivery, artifacts, desktop workflow,
-  localization, references, benchmarks, and packaging coverage.
+  independent validation, CLI/REST/MCP delivery, references, fixtures, and
+  packaging evidence first. This capability stage is owned by Gemini and stops
+  for review at `QP-I`.
+- After `QP-I`, Claude exclusively owns the desktop workflow, localization,
+  educational graphics, and QP visualizations. UI code consumes the reviewed
+  application layer and never owns solver or validation behavior.
 - Preserve exact distinctions among invalid, non-convex, infeasible,
   unbounded, numerical failure, feasible candidate, and proven optimum where
   the selected backend supports those claims.
 
+Detailed plan: `02-qp-vertical-slice.md`.
+
 **Gate QP-I:** publish frozen problem/result fixtures for simulator parity
 tests; later changes require a new schema version or a compatible extension.
+
+**Gate QP-UI:** the separately committed PySide6 QP workflow is bilingual,
+accessible, visually reviewed, and still passes `QP-I`.
 
 ### OPT-DS-03 — Linear Scenario Min-max And Max-min
 
