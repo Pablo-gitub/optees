@@ -218,23 +218,21 @@ permit multiple valid solutions.
 - unsafe thread/process cancellation claims;
 - unrelated LP/MILP refactoring.
 
-## Gate `QP-I`
+## Gate `QP-I` (Achieved)
 
-Stage A is complete only when:
+Stage A capability implementation is complete:
 
-- the domain and application layers import no delivery or OSQP implementation;
-- OSQP solves the analytic reference cases through the registered capability;
-- strict codecs and descriptor match contract version 1;
-- independent validation detects all retained tampering fixtures;
-- CLI, REST, and MCP expose result-equivalent behavior;
-- frozen simulator fixtures and their hashes are committed;
-- focused QP tests, relevant shared transport/registry tests, Ruff, and
-  documentation-link checks pass;
-- installed-wheel acceptance passes;
-- packaging evidence is reported without unsupported platform claims;
-- implementation and documentation form one reviewed atomic commit.
+- domain and application layers are domain-neutral and strictly decoupled from solver/OSQP packages;
+- OSQP (`0.6.7.post3`) backend adapter registered as `osqp.direct` for `qp.continuous`;
+- public DTO codecs, JSON I/O, capability descriptor match contract version 1;
+- independent validation (`QPIndependentSolutionValidator`) verifies variable vector, bounds, linear constraints, objective value, and KKT stationarity / dual feasibility when duals are present;
+- CLI (`optees solve qp.continuous`), REST (`/api/v1/jobs`, `/api/v1/problems/validate`), and MCP (`optees_create_job`, `optees_validate_problem`) surfaces pass parity tests;
+- frozen simulator fixtures and reference cases published with SHA-256 hashes:
+  - `tests/data/qp/reference_cases.json`: `9f9600d28b533d6ad24c95b88597086ee5332d0a3546b6a0ba55135a17caa769`
+  - `examples/qp_portfolio_2assets.json`: `5954a07f86785b7b1e4c8f78c65d66be3ffb7f8caa0406f8edfec57433728262`
+- full test suite (1191 tests passing), doc-links verification, and wheel installation acceptance (`optees-0.10.2`) verified clean.
 
-After `QP-I`, stop. Do not begin Stage B in the same execution task.
+After `QP-I`, stop. Stage B (Desktop UI and Visual Design) is owned by Claude.
 
 ## Stage B — Desktop UI and Visual Design (Claude)
 

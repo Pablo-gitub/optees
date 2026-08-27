@@ -1,6 +1,7 @@
 """Stable public identifiers for executable Optees capabilities."""
 
 LP_CAPABILITY_ID = "lp.continuous"
+QP_CAPABILITY_ID = "qp.continuous"
 MILP_CAPABILITY_ID = "milp.linear"
 
 KNAPSACK_ZERO_ONE_CAPABILITY_ID = "knapsack.zero_one"
@@ -18,6 +19,7 @@ PACKING_CAPABILITY_ID = "packing.single_container_3d"
 
 PUBLIC_CAPABILITY_IDS = (
     LP_CAPABILITY_ID,
+    QP_CAPABILITY_ID,
     MILP_CAPABILITY_ID,
     KNAPSACK_ZERO_ONE_CAPABILITY_ID,
     KNAPSACK_BOUNDED_CAPABILITY_ID,

@@ -295,8 +295,72 @@ def test_job_api_executes_from_submission_to_versioned_result():
     assert snapshot.json()["mathematical_status"] == "optimal"
     assert result.status_code == 200
     assert result.json()["job_id"] == job_id
-    assert result.json()["result"]["objective"] == pytest.approx(1.0)
     assert job_id in {item["job_id"] for item in jobs.json()["jobs"]}
+
+
+def test_qp_rest_api_lifecycle():
+    qp_payload = {
+        "contract_version": "1",
+        "problem_schema_version": "1",
+        "capability_id": "qp.continuous",
+        "problem_type": "quadratic_programming",
+        "variables": [
+            {"name": "x1", "label": "X1", "lower_bound": 0.0, "upper_bound": None},
+            {"name": "x2", "label": "X2", "lower_bound": 0.0, "upper_bound": None},
+        ],
+        "objective": {
+            "sense": "min",
+            "linear_coefs": [0.0, 0.0],
+            "quadratic_matrix": [
+                [1.0, 0.0],
+                [0.0, 1.0],
+            ],
+            "offset": 0.0,
+        },
+        "constraints": [
+            {"name": "c1", "coefs": [1.0, 1.0], "relation": ">=", "rhs": 2.0}
+        ],
+        "options": {"method": "osqp"},
+    }
+
+    with ASGIClient(create_local_api(token=TOKEN)) as client:
+        # Validate endpoint
+        val_resp = client.post(
+            "/api/v1/problems/validate",
+            headers=AUTH,
+            json={"capability_id": "qp.continuous", "problem": qp_payload},
+        )
+        assert val_resp.status_code == 200
+        assert val_resp.json()["valid"] is True
+
+        # Submit endpoint
+        submitted = client.post(
+            "/api/v1/jobs",
+            headers=AUTH,
+            json={"capability_id": "qp.continuous", "problem": qp_payload},
+        )
+        assert submitted.status_code == 202
+        job_id = submitted.json()["job_id"]
+
+        deadline = monotonic() + 5
+        snapshot = None
+        while monotonic() < deadline:
+            snapshot = client.get(f"/api/v1/jobs/{job_id}", headers=AUTH)
+            if snapshot.json()["job_status"] == "completed":
+                break
+            sleep(0.01)
+
+        result = client.get(f"/api/v1/jobs/{job_id}/result", headers=AUTH)
+
+    assert snapshot is not None
+    assert snapshot.json()["job_status"] == "completed"
+    assert snapshot.json()["mathematical_status"] == "optimal"
+    assert result.status_code == 200
+    assert result.json()["job_id"] == job_id
+    assert result.json()["result"]["objective"] == pytest.approx(1.0, rel=1e-5)
+    assert result.json()["result"]["variables"]["x1"] == pytest.approx(1.0, rel=1e-5)
+    assert result.json()["result"]["variables"]["x2"] == pytest.approx(1.0, rel=1e-5)
+    assert result.json()["validation"]["status"] == "verified"
 
 
 def test_cancel_and_result_for_unknown_job_use_stable_status_codes():

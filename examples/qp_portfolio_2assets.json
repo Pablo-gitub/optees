@@ -1,0 +1,44 @@
+{
+  "contract_version": "1",
+  "problem_schema_version": "1",
+  "capability_id": "qp.continuous",
+  "problem_type": "quadratic_programming",
+  "variables": [
+    {
+      "name": "w_stocks",
+      "label": "Stock ETF allocation weight",
+      "lower_bound": 0.0,
+      "upper_bound": 1.0
+    },
+    {
+      "name": "w_bonds",
+      "label": "Bond ETF allocation weight",
+      "lower_bound": 0.0,
+      "upper_bound": 1.0
+    }
+  ],
+  "objective": {
+    "sense": "min",
+    "linear_coefs": [-0.10, -0.04],
+    "quadratic_matrix": [
+      [0.04, 0.005],
+      [0.005, 0.01]
+    ],
+    "offset": 0.0
+  },
+  "constraints": [
+    {
+      "name": "budget",
+      "coefs": [1.0, 1.0],
+      "relation": "=",
+      "rhs": 1.0
+    }
+  ],
+  "options": {
+    "method": "osqp",
+    "tolerance": 1e-7,
+    "max_iterations": 4000,
+    "time_limit_seconds": 60.0,
+    "warm_start": false
+  }
+}

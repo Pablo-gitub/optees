@@ -62,6 +62,7 @@ def test_list_capabilities_emits_one_versioned_json_document():
     assert payload["contract_version"] == "1"
     assert {item["id"] for item in payload["capabilities"]} == {
         "lp.continuous",
+        "qp.continuous",
         "knapsack.zero_one",
         "knapsack.bounded",
         "knapsack.unbounded",
@@ -330,6 +331,42 @@ def test_solve_local_continuous_nlp_through_cli():
         3.0, abs=1e-5
     )
     assert "local numerical candidate" in output["warnings"][0]
+
+
+def test_solve_convex_qp_through_cli():
+    payload = {
+        "contract_version": "1",
+        "problem_schema_version": "1",
+        "capability_id": "qp.continuous",
+        "problem_type": "quadratic_programming",
+        "variables": [
+            {"name": "x1", "label": "X1", "lower_bound": None, "upper_bound": None},
+            {"name": "x2", "label": "X2", "lower_bound": None, "upper_bound": None},
+        ],
+        "objective": {
+            "sense": "min",
+            "linear_coefs": [-4.0, -6.0],
+            "quadratic_matrix": [
+                [2.0, 1.0],
+                [1.0, 2.0],
+            ],
+            "offset": 0.0,
+        },
+        "constraints": [],
+        "options": {"method": "osqp", "tolerance": 1e-7},
+    }
+
+    result = _run("solve", "qp.continuous", stdin=json.dumps(payload))
+
+    output = _stdout_json(result)
+    assert result.returncode == ExitCode.SUCCESS
+    assert output["capability_id"] == "qp.continuous"
+    assert output["job_status"] == "completed"
+    assert output["mathematical_status"] == "optimal"
+    assert output["result"]["objective"] == pytest.approx(-28.0 / 3.0, rel=1e-5)
+    assert output["result"]["variables"]["x1"] == pytest.approx(2.0 / 3.0, rel=1e-5)
+    assert output["result"]["variables"]["x2"] == pytest.approx(8.0 / 3.0, rel=1e-5)
+    assert output["validation"]["status"] in {"verified", "partial"}
 
 
 def test_train_linear_regression_through_cli():

@@ -40,6 +40,10 @@ _RESULTS = {
         "objective_sense": "max",
         "variables": [{"name": "x, primary", "value": 2.0}],
     },
+    "qp.continuous": {
+        "objective": 1.0,
+        "variables": {"x1": 1.0, "x2": 1.0},
+    },
     "milp.linear": {
         "objective": 7.0,
         "variables": [{"name": "x", "value": 2.0}],

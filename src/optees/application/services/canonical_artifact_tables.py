@@ -25,6 +25,7 @@ from optees.application.contracts.capability_ids import (
     KNAPSACK_UNBOUNDED_CAPABILITY_ID,
     KNAPSACK_ZERO_ONE_CAPABILITY_ID,
     LP_CAPABILITY_ID,
+    QP_CAPABILITY_ID,
     MILP_CAPABILITY_ID,
     NLP_CAPABILITY_ID,
     PACKING_CAPABILITY_ID,
@@ -699,6 +700,8 @@ def _objective_summary(context: ArtifactRenderContext) -> dict[str, JsonValue]:
 
 
 def _object_rows(value: JsonValue | None) -> tuple[dict[str, JsonValue], ...]:
+    if isinstance(value, dict):
+        return tuple({"name": k, "value": v} for k, v in value.items())
     if not isinstance(value, list):
         return ()
     return tuple(item for item in value if isinstance(item, dict))
@@ -751,6 +754,9 @@ def _dataset_value(
 _DEFINITIONS = (
     CanonicalTableDefinition(
         LP_CAPABILITY_ID, "solution_table", "LP solution", _variables
+    ),
+    CanonicalTableDefinition(
+        QP_CAPABILITY_ID, "solution_table", "QP solution", _variables
     ),
     CanonicalTableDefinition(
         MILP_CAPABILITY_ID, "solution_table", "MILP solution", _variables

@@ -46,6 +46,8 @@ from optees.application.codecs.knapsack_zero_one_result_codec import (
 )
 from optees.application.codecs.lp_problem_codec import lp_model_from_public_dict
 from optees.application.codecs.lp_result_codec import LPResultCodec
+from optees.application.codecs.qp_problem_codec import qp_model_from_public_dict
+from optees.application.codecs.qp_result_codec import QPResultCodec
 from optees.application.codecs.milp_problem_codec import milp_model_from_public_dict
 from optees.application.codecs.milp_result_codec import MILPResultCodec
 from optees.application.codecs.nlp_problem_codec import nlp_model_from_public_dict
@@ -79,6 +81,7 @@ from optees.application.contracts.capability_ids import (
     KNAPSACK_UNBOUNDED_CAPABILITY_ID,
     KNAPSACK_ZERO_ONE_CAPABILITY_ID,
     LP_CAPABILITY_ID,
+    QP_CAPABILITY_ID,
     MILP_CAPABILITY_ID,
     NLP_CAPABILITY_ID,
     PACKING_CAPABILITY_ID,
@@ -99,6 +102,7 @@ from optees.application.ports.fractional_knapsack_solver_port import (
 from optees.application.ports.forecasting_solver_port import ForecastingSolverPort
 from optees.application.ports.knapsack_solver_port import KnapsackSolverPort
 from optees.application.ports.lp_solver_port import LPSolverPort
+from optees.application.ports.qp_solver_port import QPSolverPort
 from optees.application.ports.milp_solver_port import MILPSolverPort
 from optees.application.ports.multi_dimensional_knapsack_solver_port import (
     MultiDimensionalKnapsackSolverPort,
@@ -146,6 +150,9 @@ from optees.application.services.report_composition_service import (
 from optees.application.validation.lp_solution_validator import (
     LPIndependentSolutionValidator,
 )
+from optees.application.validation.qp_solution_validator import (
+    QPIndependentSolutionValidator,
+)
 from optees.application.validation.forecasting_solution_validator import (
     ForecastingIndependentSolutionValidator,
 )
@@ -163,6 +170,7 @@ from optees.application.usecases.solve_fractional_knapsack_usecase import (
 )
 from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseCase
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
+from optees.application.usecases.solve_qp_usecase import SolveQPUseCase
 from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
 from optees.application.usecases.solve_multi_dimensional_knapsack_capability_usecase import (
     MultiDimensionalResult,
@@ -213,6 +221,7 @@ from optees.data.adapters.knapsack.multi_dimensional_knapsack_solver_adapter imp
     MultiDimensionalKnapsackSolverAdapter,
 )
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
+from optees.data.adapters.qp.osqp_solver_adapter import OSQPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
 from optees.data.adapters.nlp.nlp_solver_adapter import ScipyNLPSolverAdapter
 from optees.data.adapters.packing.ortools_single_container_packing_adapter import (
@@ -233,6 +242,7 @@ from optees.domain.entities.knapsack.unbounded_solution import (
     UnboundedKnapsackSolution,
 )
 from optees.domain.entities.lp.solution import LPSolution
+from optees.domain.entities.qp.solution import QPSolution
 from optees.domain.entities.milp.solution import MILPSolution
 from optees.domain.entities.nlp.solution import NLPSolution
 from optees.domain.entities.packing.solution import PackingSolveResult
@@ -251,6 +261,7 @@ from optees.domain.models.knapsack.unbounded_knapsack_model import (
     UnboundedKnapsackModel,
 )
 from optees.domain.models.lp.lp_model import LPModel
+from optees.domain.models.qp.qp_model import QPModel
 from optees.domain.models.milp.milp_model import MILPModel
 from optees.domain.models.nlp.nlp_model import NLPModel
 from optees.domain.models.packing.single_container_packing_model import (
@@ -259,6 +270,7 @@ from optees.domain.models.packing.single_container_packing_model import (
 from optees.domain.models.regression.regression_model import RegressionModel
 from optees.domain.value_objects.forecasting import ForecastingMethod
 LP_BACKEND_ID = "scipy.highs"
+QP_BACKEND_ID = "osqp.direct"
 KNAPSACK_ZERO_ONE_BACKEND_ID = "internal.dynamic_programming"
 KNAPSACK_BOUNDED_BACKEND_ID = "internal.bounded_dynamic_programming"
 KNAPSACK_UNBOUNDED_BACKEND_ID = "internal.unbounded_dynamic_programming"
@@ -292,6 +304,12 @@ def create_local_optimization_service() -> OptimizationService:
         create_lp_registration(
             solver_port=LPSolverAdapter(),
             dependency_available=scipy_highs_is_usable(),
+        )
+    )
+    registry.register(
+        create_qp_registration(
+            solver_port=OSQPSolverAdapter(),
+            dependency_available=import_is_usable("osqp"),
         )
     )
     registry.register(
@@ -549,6 +567,38 @@ def create_lp_registration(
         serialize_result=codec.serialize,
         backend_id=LP_BACKEND_ID,
         validate_result=LPIndependentSolutionValidator(),
+    )
+
+
+def create_qp_optimization_service(
+    *,
+    solver_port: QPSolverPort,
+    dependency_available: bool = True,
+) -> OptimizationService:
+    registry = CapabilityRegistry()
+    registry.register(
+        create_qp_registration(
+            solver_port=solver_port,
+            dependency_available=dependency_available,
+        )
+    )
+    return OptimizationService(registry)
+
+
+def create_qp_registration(
+    *,
+    solver_port: QPSolverPort,
+    dependency_available: bool = True,
+) -> RegisteredCapability[QPModel, QPSolution]:
+    use_case = SolveQPUseCase(solver_port)
+    codec = QPResultCodec()
+    return RegisteredCapability(
+        descriptor=_qp_descriptor(dependency_available=dependency_available),
+        parse_problem=qp_model_from_public_dict,
+        execute=use_case.execute,
+        serialize_result=codec.serialize,
+        backend_id=QP_BACKEND_ID,
+        validate_result=QPIndependentSolutionValidator(),
     )
 
 
@@ -912,6 +962,220 @@ def create_packing_registration(
         backend_id=PACKING_ROUTER_ID,
         cancel_execution=use_case.cancel,
     )
+
+
+def _qp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
+    unavailable_reason = (
+        None
+        if dependency_available
+        else "OSQP is required by the continuous convex QP backend."
+    )
+    return CapabilityDescriptor(
+        capability_id=QP_CAPABILITY_ID,
+        title="Continuous convex quadratic programming",
+        problem_type="quadratic_programming",
+        contract_version="1",
+        problem_schema_version="1",
+        result_schema_version="1",
+        input_schema=_qp_input_schema(),
+        result_schema=_qp_result_schema(),
+        default_options={
+            "method": "osqp",
+            "tolerance": 1e-7,
+            "max_iterations": 4000,
+            "time_limit_seconds": 60.0,
+            "warm_start": False,
+        },
+        available=dependency_available,
+        unavailable_reason=unavailable_reason,
+        backend_candidates=(QP_BACKEND_ID,),
+        supports_time_limit=True,
+        supports_cancellation=False,
+        available_artifacts=_available_artifacts(QP_CAPABILITY_ID),
+    )
+
+
+def _qp_input_schema() -> dict:
+    number_or_null = {"type": ["number", "null"]}
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["variables", "objective"],
+        "properties": {
+            "contract_version": {
+                "const": "1",
+                "description": "Continuous convex QP contract version.",
+            },
+            "problem_schema_version": {
+                "const": "1",
+                "description": "Continuous convex QP problem schema version.",
+            },
+            "capability_id": {
+                "const": "qp.continuous",
+                "description": "Public identifier for Continuous Convex QP.",
+            },
+            "problem_type": {
+                "const": "quadratic_programming",
+                "description": "Problem family identifier.",
+            },
+            "variables": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 500,
+                "description": (
+                    "Decision variables in the order used by every coefficient array. "
+                    "Use null for an unbounded lower or upper bound."
+                ),
+                "items": {
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1},
+                        "label": {"type": "string"},
+                        "lower_bound": number_or_null,
+                        "upper_bound": number_or_null,
+                    },
+                },
+            },
+            "objective": {
+                "type": "object",
+                "required": ["sense", "linear_coefs", "quadratic_matrix"],
+                "description": (
+                    "Quadratic objective 1/2 x^T Q x + c^T x + alpha. linear_coefs must contain "
+                    "exactly one finite number per variable, in variables order. quadratic_matrix "
+                    "must be an n x n symmetric matrix."
+                ),
+                "properties": {
+                    "sense": {"enum": ["min", "max"]},
+                    "linear_coefs": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 500,
+                        "items": {"type": "number"},
+                    },
+                    "quadratic_matrix": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 500,
+                        "items": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 500,
+                            "items": {"type": "number"},
+                        },
+                    },
+                    "offset": {"type": "number", "default": 0.0},
+                },
+            },
+            "constraints": {
+                "type": "array",
+                "maxItems": 1000,
+                "description": (
+                    "Linear constraints. Each coefs array must contain exactly "
+                    "one finite number per variable, in variables order."
+                ),
+                "items": {
+                    "type": "object",
+                    "required": ["coefs", "relation", "rhs"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "coefs": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 500,
+                            "items": {"type": "number"},
+                        },
+                        "relation": {"enum": ["<=", "=", ">="]},
+                        "rhs": {"type": "number"},
+                    },
+                },
+            },
+            "options": {
+                "type": "object",
+                "properties": {
+                    "method": {"enum": ["osqp"], "default": "osqp"},
+                    "tolerance": {"type": "number", "exclusiveMinimum": 0, "default": 1e-7},
+                    "max_iterations": {"type": "integer", "minimum": 1, "default": 4000},
+                    "time_limit_seconds": {"type": "number", "exclusiveMinimum": 0, "default": 60.0},
+                    "warm_start": {"type": "boolean", "default": False},
+                    "initial_primal": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                    },
+                    "initial_dual": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                    },
+                },
+            },
+        },
+        "examples": [
+            {
+                "contract_version": "1",
+                "problem_schema_version": "1",
+                "capability_id": "qp.continuous",
+                "problem_type": "quadratic_programming",
+                "variables": [
+                    {"name": "x1", "label": "First asset weight", "lower_bound": 0.0, "upper_bound": 1.0},
+                    {"name": "x2", "label": "Second asset weight", "lower_bound": 0.0, "upper_bound": 1.0},
+                ],
+                "objective": {
+                    "sense": "min",
+                    "linear_coefs": [-4.0, -6.0],
+                    "quadratic_matrix": [
+                        [2.0, 1.0],
+                        [1.0, 2.0],
+                    ],
+                    "offset": 0.0,
+                },
+                "constraints": [
+                    {"name": "c1", "coefs": [1.0, 1.0], "relation": "<=", "rhs": 1.0},
+                ],
+                "options": {
+                    "method": "osqp",
+                    "tolerance": 1e-7,
+                    "max_iterations": 4000,
+                    "time_limit_seconds": 60.0,
+                    "warm_start": False,
+                },
+            }
+        ],
+    }
+
+
+def _qp_result_schema() -> dict:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "required": ["contract_version", "result_schema_version", "capability_id", "objective", "variables"],
+        "properties": {
+            "contract_version": {"const": "1"},
+            "result_schema_version": {"const": "1"},
+            "capability_id": {"const": "qp.continuous"},
+            "objective": {"type": ["number", "null"]},
+            "variables": {
+                "type": "object",
+                "additionalProperties": {"type": "number"},
+            },
+            "dual_values": {
+                "type": ["object", "null"],
+                "properties": {
+                    "constraints": {"type": "array", "items": {"type": "number"}},
+                    "lower_bounds": {"type": "array", "items": {"type": "number"}},
+                    "upper_bounds": {"type": "array", "items": {"type": "number"}},
+                },
+            },
+            "kkt_residuals": {
+                "type": ["object", "null"],
+                "properties": {
+                    "primal_residual": {"type": ["number", "null"]},
+                    "dual_residual": {"type": ["number", "null"]},
+                    "duality_gap": {"type": ["number", "null"]},
+                    "complementarity_residual": {"type": ["number", "null"]},
+                },
+            },
+        },
+    }
 
 
 def _lp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:

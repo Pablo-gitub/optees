@@ -92,8 +92,7 @@ independently of any GUI, transport, or trading formulation.
 
 Detailed plan: `02-qp-vertical-slice.md`.
 
-**Gate QP-I:** publish frozen problem/result fixtures for simulator parity
-tests; later changes require a new schema version or a compatible extension.
+**Gate QP-I:** achieved; frozen problem/result fixtures and capability implementation completed.
 
 **Gate QP-UI:** the separately committed PySide6 QP workflow is bilingual,
 accessible, visually reviewed, and still passes `QP-I`.
