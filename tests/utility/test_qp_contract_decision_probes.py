@@ -9,6 +9,60 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_PATH = REPOSITORY_ROOT / "docs" / "contracts" / "quadratic-programming-contract.md"
 
 
+def _schema_subset_errors(value: object, schema: dict, path: str = "$") -> list[str]:
+    """Validate the JSON Schema vocabulary used by the contract examples."""
+    errors: list[str] = []
+    expected = schema.get("type")
+    expected_types = [expected] if isinstance(expected, str) else expected or []
+    matches_type = not expected_types or any(
+        (
+            (kind == "null" and value is None)
+            or (kind == "object" and isinstance(value, dict))
+            or (kind == "array" and isinstance(value, list))
+            or (kind == "string" and isinstance(value, str))
+            or (kind == "integer" and isinstance(value, int) and not isinstance(value, bool))
+            or (
+                kind == "number"
+                and isinstance(value, (int, float))
+                and not isinstance(value, bool)
+                and math.isfinite(float(value))
+            )
+        )
+        for kind in expected_types
+    )
+    if not matches_type:
+        return [f"{path}: wrong type"]
+    if "const" in schema and value != schema["const"]:
+        errors.append(f"{path}: wrong constant")
+    if "enum" in schema and value not in schema["enum"]:
+        errors.append(f"{path}: outside enum")
+    if isinstance(value, str) and len(value) < schema.get("minLength", 0):
+        errors.append(f"{path}: shorter than minLength")
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if "minimum" in schema and value < schema["minimum"]:
+            errors.append(f"{path}: below minimum")
+        if "maximum" in schema and value > schema["maximum"]:
+            errors.append(f"{path}: above maximum")
+    if isinstance(value, list):
+        if len(value) < schema.get("minItems", 0):
+            errors.append(f"{path}: shorter than minItems")
+        if "maxItems" in schema and len(value) > schema["maxItems"]:
+            errors.append(f"{path}: longer than maxItems")
+        for index, item in enumerate(value):
+            errors.extend(_schema_subset_errors(item, schema.get("items", {}), f"{path}[{index}]"))
+    if isinstance(value, dict):
+        properties = schema.get("properties", {})
+        for required in schema.get("required", []):
+            if required not in value:
+                errors.append(f"{path}: missing {required}")
+        for key, item in value.items():
+            if key in properties:
+                errors.extend(_schema_subset_errors(item, properties[key], f"{path}.{key}"))
+            elif schema.get("additionalProperties") is False:
+                errors.append(f"{path}: unexpected {key}")
+    return errors
+
+
 def test_qp_contract_interior_optimum_analytical_recomputation() -> None:
     """Verify analytical solution for the interior unconstrained QP reference problem."""
     # Problem: min 0.5 * (2*x1^2 + 2*x2^2 + 2*x1*x2) - 4*x1 - 6*x2
@@ -215,6 +269,12 @@ def test_qp_contract_document_json_examples() -> None:
     result_schema = json_blocks[1]
     assert input_schema.get("title") == "ContinuousConvexQPProblem"
     assert result_schema.get("title") == "ContinuousConvexQPResult"
+
+    # Every problem example is a structurally valid v1 document. The examples
+    # labelled invalid violate cross-field mathematical rules that JSON Schema
+    # cannot express (dimensions, symmetry, or convexity).
+    for index in range(2, 10):
+        assert _schema_subset_errors(json_blocks[index], input_schema) == []
 
     # Blocks 2..4: Valid Examples (Interior, Boundary, Concave Max)
     for index in (2, 3, 4):

@@ -29,9 +29,9 @@ public-JSON decisions before domain or solver code is added in `OPT-DS-02`.
 - **Factor $\frac{1}{2}$ convention:** The factor $\frac{1}{2}$ is explicit in front of the quadratic term. The supplied matrix $Q$ directly represents the Hessian $\nabla^2 f(x) = Q$.
 - **Sense:**
   - `sense: "min"`: Solves convex minimization. Requires $Q \succeq 0$.
-  - `sense: "max"`: Represents concave quadratic maximization. Requires $-Q \succeq 0$ ($Q \preceq 0$). If $Q$ has strictly positive eigenvalues, it is rejected during validation with `non_concave_quadratic_matrix`. Solver internally minimizes $\frac{1}{2} x^T (-Q) x - c^T x - \alpha$ and maps the optimal objective value back via $f_{max}^* = -f_{min}^*$.
-- **Symmetry check and tolerance:** $Q$ must be symmetric within $\varepsilon_{sym} = 10^{-8} \max(1, \|Q\|_\infty)$. Asymmetry exceeding tolerance is rejected with `invalid_quadratic_matrix`. Within tolerance, matrix is symmetrized as $Q_{sym} = \frac{1}{2}(Q + Q^T)$.
-- **PSD check and tolerance:** Minimum eigenvalue must satisfy $\lambda_{\min}(Q) \ge -\varepsilon_{psd}$ with $\varepsilon_{psd} = 10^{-8} \max(1, \|Q\|_\infty)$. If $\lambda_{\min} < -\varepsilon_{psd}$, the problem is rejected with `non_convex_quadratic_matrix`. Eigenvalues in $[-\varepsilon_{psd}, 0)$ are clamped to $0$ to prevent backend numerical instability.
+  - `sense: "max"`: Represents concave quadratic maximization. Requires $-Q \succeq 0$ ($Q \preceq 0$). If $Q$ has strictly positive eigenvalues, it is rejected during validation with `qp.non_concave_quadratic_matrix`. Solver internally minimizes $\frac{1}{2} x^T (-Q) x - c^T x - \alpha$ and maps the optimal objective value back via $f_{max}^* = -f_{min}^*$.
+- **Symmetry check and tolerance:** $Q$ must be symmetric within $\varepsilon_{sym} = 10^{-8} \max(1, \max_{i,j}|Q_{ij}|)$. Asymmetry exceeding tolerance is rejected with `qp.asymmetric_quadratic_matrix`. Within tolerance, matrix is symmetrized as $Q_{sym} = \frac{1}{2}(Q + Q^T)$.
+- **PSD check and tolerance:** Minimum eigenvalue must satisfy $\lambda_{\min}(Q) \ge -\varepsilon_{psd}$ with $\varepsilon_{psd} = 10^{-8} \max(1, \max_{i,j}|Q_{ij}|)$. If $\lambda_{\min} < -\varepsilon_{psd}$, the problem is rejected with `qp.non_convex_quadratic_matrix`. A matrix accepted within tolerance is passed to the backend after symmetry canonicalization without silently projecting its eigenvalues.
 - **Variable ordering:** An ordered `variables` array defines indices $0 \dots n-1$. Vectors $c, l, u$ and matrices $Q, A$ bind strictly to this declared order.
 
 ### 2. Public Contract and Schemas
@@ -40,7 +40,7 @@ public-JSON decisions before domain or solver code is added in `OPT-DS-02`.
 - **Title:** `Continuous convex quadratic programming`
 - **Problem Type:** `quadratic_programming`
 - **Contract / Schema versions:** `contract_version: "1"`, `problem_schema_version: "1"`, `result_schema_version: "1"`.
-- **Default options & limits:** `method: "osqp"`, `tolerance: 1e-7`, `max_iterations: 4000`, `time_limit_seconds: 60.0`. Limits: $n \le 500$ variables (dense matrix), $m \le 1000$ constraints, body size $\le 10\text{ MB}$.
+- **Default options & limits:** `method: "osqp"` is the only v1 backend token; `tolerance: 1e-7`, `max_iterations: 4000`, `time_limit_seconds: 60.0`. Limits: $n \le 500$ variables (dense matrix), $m \le 1000$ constraints, body size $\le 10\text{ MB}$.
 - **Public statuses:**
   - `job_status`: `queued`, `running`, `completed`, `cancelled`, `failed`
   - `mathematical_status`: `optimal`, `feasible`, `infeasible`, `unbounded`, `not_solved`
@@ -61,10 +61,11 @@ public-JSON decisions before domain or solver code is added in `OPT-DS-02`.
 ### 4. Backend Evaluation and Evidence
 
 - Evaluated candidates: OSQP, Clarabel, SciPy (SLSQP/trust-constr), HiGHS (`highspy`), CVXOPT, ProxQP.
-- **Primary Recommendation:** `osqp` (Apache 2.0 license, self-contained C/QDLDL wheel on all supported platforms for Python 3.12+, exact ADMM certificates for infeasibility/unboundedness, native sparse CSC and warm-start ready, lightweight PyInstaller bundle overhead < 2 MB).
-- **Secondary Candidate:** `clarabel` (Apache 2.0 license, Rust homogeneous self-dual IPM for high-precision duality gap).
-- **Comparative Baseline:** `scipy_slsqp` (built-in SciPy zero-dependency fallback).
-- **Disqualified:** `cvxopt` due to incompatible copyleft GPLv3 license.
+- **Selected v1 backend direction:** `osqp`, based on its Apache-2.0 license, QP/status API, sparse CSC input, warm starts, runtime limit, and published Python 3.12 wheels for the Optees release targets.
+- **Alternative retained for later evaluation:** `clarabel`; it is not an automatic fallback because its status and numerical semantics differ.
+- **Comparison probe only:** SciPy SLSQP/trust-constr; it is not a production fallback.
+- **Packaging and repeatability boundary:** neither OSQP nor Clarabel was installed or packaged in this work unit. `OPT-DS-02` must pin the dependency, verify status mappings and measure the three release artifacts before the runtime dependency is accepted.
+- **Cancellation:** v1 advertises `supports_cancellation: false` unless the implementation proves a safe interrupt or isolated-worker boundary.
 
 ### 5. Future Compatibility and Educational Slice
 
@@ -82,8 +83,8 @@ All numerical checks and contract invariants are verified by automated tests in 
 - [x] Interior unconstrained optimum analytical recomputation: $x^* = (2/3, 8/3)^T$, $f(x^*) = -28/3$.
 - [x] Boundary constrained optimum analytical recomputation: $x^* = (1, 1)^T$, $f(x^*) = 1.0$.
 - [x] Concave maximization transformation and analytical recomputation: $x^* = (2, 3)^T$, $f(x^*) = 13.0$.
-- [x] Matrix asymmetry rejection: $\|Q - Q^T\|_\infty > 10^{-8}$ rejected with `invalid_quadratic_matrix`.
-- [x] Non-PSD matrix rejection: $\lambda_{\min}(Q) < -10^{-8}$ rejected with `non_convex_quadratic_matrix`.
+- [x] Matrix asymmetry rejection beyond the scaled max-entry tolerance, mapped to `qp.asymmetric_quadratic_matrix`.
+- [x] Non-PSD matrix rejection beyond the scaled max-entry tolerance, mapped to `qp.non_convex_quadratic_matrix`.
 - [x] Infeasible problem detection via Farkas certificate ray.
 - [x] Unbounded problem detection via dual infeasibility recession ray.
 - [x] Independent validation arithmetic checks (vector, bounds, constraints, objective, KKT stationarity).

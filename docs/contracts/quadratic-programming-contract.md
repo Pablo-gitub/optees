@@ -85,7 +85,7 @@ Schema version `1` supports both `"min"` and `"max"` objective senses:
 2. **Maximization (`sense: "max"`)**:
    - Represents the concave maximization problem $\max \frac{1}{2} x^T Q_{user} x + c_{user}^T x + \alpha_{user}$.
    - For this problem to be concave and well-posed, the Hessian $Q_{user}$ must be negative semi-definite ($Q_{user} \preceq 0$, i.e. $-Q_{user} \succeq 0$).
-   - If $Q_{user}$ has any strictly positive eigenvalue ($\lambda_{\max}(Q_{user}) > \varepsilon_{psd}$), the problem is non-concave and is rejected before solve with error `non_concave_quadratic_matrix`.
+     - If $Q_{user}$ has any strictly positive eigenvalue ($\lambda_{\max}(Q_{user}) > \varepsilon_{psd}$), the problem is non-concave and is rejected before solve with validation detail code `qp.non_concave_quadratic_matrix`.
    - The solver adapter transforms the problem into equivalent convex minimization with $Q_{internal} = -Q_{user}$, $c_{internal} = -c_{user}$, $\alpha_{internal} = -\alpha_{user}$.
    - The reported optimal objective value is restored as $f_{max}^* = -f_{internal}^* = \frac{1}{2} (x^*)^T Q_{user} x^* + c_{user}^T x^* + \alpha_{user}$.
 
@@ -97,17 +97,22 @@ Before execution, $Q$ undergoes strict numerical validation:
 
 - **Symmetry check**:
   \[
-  \Delta_{sym} = \max_{i, j} |Q_{ij} - Q_{ji}| \le \varepsilon_{sym} = 10^{-8} \cdot \max(1.0, \|Q\|_\infty)
+  \Delta_{sym} = \max_{i, j} |Q_{ij} - Q_{ji}| \le \varepsilon_{sym} = 10^{-8} \cdot \max(1.0, \max_{i,j}|Q_{ij}|)
   \]
-  If $\Delta_{sym} > \varepsilon_{sym}$, the problem is rejected with error `invalid_quadratic_matrix`.
+  If $\Delta_{sym} > \varepsilon_{sym}$, the problem is rejected with validation detail code `qp.asymmetric_quadratic_matrix`.
   If $\Delta_{sym} \le \varepsilon_{sym}$, the matrix is canonicalized as $Q_{sym} = \frac{1}{2}(Q + Q^T)$.
 - **Positive Semi-Definiteness (PSD) check**:
   The minimum eigenvalue $\lambda_{\min}(Q_{sym})$ is computed via symmetric eigenvalue decomposition.
   \[
-  \lambda_{\min}(Q_{sym}) \ge -\varepsilon_{psd}, \quad \text{where } \varepsilon_{psd} = 10^{-8} \cdot \max(1.0, \|Q_{sym}\|_\infty)
+  \lambda_{\min}(Q_{sym}) \ge -\varepsilon_{psd}, \quad \text{where } \varepsilon_{psd} = 10^{-8} \cdot \max(1.0, \max_{i,j}|Q_{sym,ij}|)
   \]
-  - If $\lambda_{\min}(Q_{sym}) < -\varepsilon_{psd}$, the matrix is non-convex and rejected with error `non_convex_quadratic_matrix`.
-  - If $-\varepsilon_{psd} \le \lambda_{\min}(Q_{sym}) < 0$ (numerical rounding of a semi-definite matrix), the negative eigenvalues are clamped to $0$ ($Q_{psd} = V \max(0, \Lambda) V^T$) to guarantee stability across backends.
+  - If $\lambda_{\min}(Q_{sym}) < -\varepsilon_{psd}$, the matrix is non-convex and rejected with validation detail code `qp.non_convex_quadratic_matrix`.
+  - If $-\varepsilon_{psd} \le \lambda_{\min}(Q_{sym}) < 0$, the model is
+    accepted as convex within the declared numerical tolerance and the
+    symmetrized matrix is passed unchanged to the backend. Optees does not
+    project eigenvalues or otherwise change the caller's objective silently.
+    A backend that cannot factor the accepted matrix returns a numerical
+    failure, with diagnostics, rather than solving a modified problem.
 
 ---
 
@@ -121,16 +126,17 @@ Before execution, $Q$ undergoes strict numerical validation:
 - **Contract Version:** `1`
 - **Problem Schema Version:** `1`
 - **Result Schema Version:** `1`
-- **Primary Backend Candidate:** `osqp`
-- **Secondary Backend Candidates:** `clarabel`, `scipy_slsqp`
+- **Selected Version 1 Backend:** `osqp`
+- **Evaluated Alternatives:** `clarabel`, `scipy_slsqp`
 - **Supports Time Limit:** `true`
-- **Supports Cancellation:** `true`
+- **Supports Cancellation:** `false` for version 1 unless `OPT-DS-02`
+  demonstrates a safe interrupt boundary and updates the descriptor contract.
 
 ### 2.2 Default Options and Resource Limits
 
 | Parameter | Default | Allowed Range / Bound | Description |
 | --- | --- | --- | --- |
-| `method` | `"osqp"` | `["osqp", "clarabel", "scipy_slsqp"]` | Selected solver backend engine |
+| `method` | `"osqp"` | `"osqp"` | Version 1 backend; alternatives are not public fallbacks |
 | `tolerance` | `1e-7` | `[1e-12, 1e-2]` | Primal and dual convergence tolerance |
 | `max_iterations` | `4000` | `[10, 100000]` | Maximum solver iterations |
 | `time_limit_seconds` | `60.0` | `[0.1, 300.0]` | Wall-clock execution timeout |
@@ -145,7 +151,8 @@ Before execution, $Q$ undergoes strict numerical validation:
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "ContinuousConvexQPProblem",
   "type": "object",
-  "required": ["version", "variables", "objective"],
+  "additionalProperties": false,
+  "required": ["version", "problem_type", "variables", "objective", "constraints"],
   "properties": {
     "version": {
       "const": "1",
@@ -163,6 +170,7 @@ Before execution, $Q$ undergoes strict numerical validation:
       "description": "Ordered decision variables defining vector indices 0..n-1.",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["name", "lb", "ub"],
         "properties": {
           "name": {
@@ -187,6 +195,7 @@ Before execution, $Q$ undergoes strict numerical validation:
     },
     "objective": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["sense", "linear_coefficients", "quadratic_matrix"],
       "description": "Quadratic objective: 0.5 * x^T * Q * x + c^T * x + offset.",
       "properties": {
@@ -228,6 +237,7 @@ Before execution, $Q$ undergoes strict numerical validation:
       "description": "Linear equality and inequality constraints.",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["coefficients", "relation", "rhs"],
         "properties": {
           "name": {
@@ -254,14 +264,17 @@ Before execution, $Q$ undergoes strict numerical validation:
     },
     "solver_options": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "method": {
           "type": "string",
-          "enum": ["osqp", "clarabel", "scipy_slsqp"],
+          "const": "osqp",
           "default": "osqp"
         },
         "tolerance": {
           "type": "number",
+          "minimum": 1e-12,
+          "maximum": 1e-2,
           "default": 1e-7
         },
         "max_iterations": {
@@ -289,6 +302,7 @@ Before execution, $Q$ undergoes strict numerical validation:
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "ContinuousConvexQPResult",
   "type": "object",
+  "additionalProperties": false,
   "required": ["objective", "objective_sense", "variables"],
   "properties": {
     "objective": {
@@ -301,9 +315,11 @@ Before execution, $Q$ undergoes strict numerical validation:
     },
     "variables": {
       "type": "array",
-      "description": "Optimal variable values in declared variable order.",
+      "maxItems": 500,
+      "description": "Candidate variable values in declared order; empty when no primal candidate is available.",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": ["name", "value"],
         "properties": {
           "name": {"type": "string"},
@@ -313,6 +329,7 @@ Before execution, $Q$ undergoes strict numerical validation:
     },
     "dual_values": {
       "type": ["object", "null"],
+      "additionalProperties": false,
       "description": "Dual multipliers if available from backend.",
       "properties": {
         "constraints": {
@@ -331,6 +348,7 @@ Before execution, $Q$ undergoes strict numerical validation:
     },
     "kkt_residuals": {
       "type": ["object", "null"],
+      "additionalProperties": false,
       "description": "Primal, dual, and complementarity residuals.",
       "properties": {
         "primal_residual": {"type": "number"},
@@ -349,13 +367,41 @@ Execution adheres to the standard Optees execution envelope:
 
 - **`job_status`**: `completed`, `cancelled`, or `failed`.
 - **`mathematical_status`**:
-  - `optimal`: Global optimum found satisfying KKT optimality conditions within tolerance.
+  - `optimal`: Backend reports solved and the candidate passes the required
+    independent feasibility and objective checks; available KKT residuals are
+    within the declared tolerance. This is a numerical convex-optimization
+    claim, not an exact-arithmetic proof.
   - `feasible`: Feasible candidate produced (e.g. at time limit or iteration limit).
-  - `infeasible`: Mathematically proven infeasible (no candidate satisfies linear constraints and bounds).
-  - `unbounded`: Proven unbounded below for minimization / unbounded above for maximization.
+  - `infeasible`: Backend reports primal infeasibility with its documented
+    numerical certificate/status. Optees preserves certificate diagnostics and
+    does not relabel an ambiguous failure as infeasible.
+  - `unbounded`: Backend reports dual infeasibility, corresponding to primal
+    unboundedness for this convex form, with its documented numerical
+    certificate/status. Ambiguous failures remain `not_solved`.
   - `not_solved`: Solver failed due to numerical instability or divergence.
 - **`termination_reason`**: `completed`, `time_limit`, `iteration_limit`, `cancelled`, `dependency_failure`, `internal_error`.
 - **`validation`**: `verified`, `partial`, `failed`, `not_available`.
+
+Invalid problem documents use the existing public envelope error
+`validation_failed`. The stable QP-specific `details[].code` values are:
+
+| Detail code | Meaning |
+| --- | --- |
+| `qp.invalid_structure` | Missing, unexpected, or incorrectly typed JSON field |
+| `qp.non_finite_value` | A coefficient, bound, option, or result value is not finite |
+| `qp.duplicate_variable_name` | Variable names are not unique |
+| `qp.invalid_bounds` | A finite lower bound exceeds its upper bound |
+| `qp.dimension_mismatch` | A vector, matrix row, or constraint does not bind to all variables |
+| `qp.asymmetric_quadratic_matrix` | $Q$ exceeds the frozen symmetry tolerance |
+| `qp.non_convex_quadratic_matrix` | A minimization Hessian is not PSD within tolerance |
+| `qp.non_concave_quadratic_matrix` | A maximization Hessian is not NSD within tolerance |
+| `qp.invalid_solver_option` | An option is unknown or outside its frozen range |
+| `qp.resource_limit_exceeded` | Variables, constraints, or payload size exceed version 1 limits |
+
+These are validation detail codes, not additions to the top-level `ErrorCode`
+enumeration. Backend absence maps to the existing `dependency_unavailable`
+error and makes the capability descriptor unavailable; Optees must not silently
+fall back to a backend with different status semantics.
 
 ---
 
@@ -453,7 +499,7 @@ Analytical optimum: $x^* = (2.0, 3.0)^T$, $f(x^*) = 13.0$.
 ### 3.4 Invalid Example 1: Dimension Mismatch
 
 $n=2$ variables declared, but `linear_coefficients` has length 3 and $Q$ is $3 \times 3$.
-Rejected with error `dimension_mismatch`.
+Rejected with validation detail code `qp.dimension_mismatch`.
 
 ```json
 {
@@ -480,7 +526,7 @@ Rejected with error `dimension_mismatch`.
 ### 3.5 Invalid Example 2: Asymmetric Quadratic Matrix
 
 $Q_{12} = 3.0 \ne Q_{21} = 1.0$, $|Q_{12} - Q_{21}| = 2.0 > 10^{-8}$.
-Rejected with error `invalid_quadratic_matrix`.
+Rejected with validation detail code `qp.asymmetric_quadratic_matrix`.
 
 ```json
 {
@@ -507,7 +553,7 @@ Rejected with error `invalid_quadratic_matrix`.
 
 $Q = \begin{pmatrix} 1 & 2 \\ 2 & 1 \end{pmatrix}$, eigenvalues $\lambda = \{3, -1\}$.
 $\lambda_{\min} = -1.0 < -10^{-8}$.
-Rejected with error `non_convex_quadratic_matrix`.
+Rejected with validation detail code `qp.non_convex_quadratic_matrix`.
 
 ```json
 {
@@ -634,77 +680,80 @@ The validation report explicitly states:
 
 ## 5. Backend Evaluation and Evidence
 
-### 5.1 Evaluated Candidates
+### 5.1 Evidence Boundary
 
-We evaluated candidate engines using primary documentation, license audits,
-Python 3.12 compatibility, and numerical test probes:
+The decision review used official solver documentation and package metadata,
+plus analytic NumPy/SciPy probes. Neither OSQP nor Clarabel was installed in the
+review environment, and no PyInstaller artifact containing either package was
+built. Consequently, wheel availability and documented APIs are evidence for a
+direction, while runtime status mapping, cancellation, repeatability, binary
+closure, and bundle-size impact remain acceptance tests for `OPT-DS-02`.
 
-1. **OSQP (Operator Splitting Quadratic Program solver)**
-   - *Version evaluated:* 0.6.3+ / 1.0.0b
-   - *Algorithm:* Alternating Direction Method of Multipliers (ADMM).
-   - *License:* Apache 2.0 (fully compatible with Optees).
-   - *Platforms & Wheels:* Pre-built binary wheels on PyPI for Linux (x86_64, aarch64), macOS (Apple Silicon arm64, Intel x86_64), Windows (x86_64, ARM64) on Python 3.8–3.13.
-   - *Native Dependencies & Packaging:* Self-contained C extension with embedded QDLDL sparse solver; zero external dynamic library dependencies (no system BLAS/LAPACK requirement). Bundles cleanly in PyInstaller (<2 MB overhead).
-   - *Determinism & Tolerances:* Fully deterministic arithmetic; configurable `eps_abs`, `eps_rel`, `eps_prim_inf`, `eps_dual_inf`, `max_iter`, `time_limit`.
-   - *Status Fidelity:* Rigorous ADMM certificates for primal infeasibility (`primal infeasible`) and dual infeasibility / unboundedness (`dual infeasible`).
-   - *Dual Variables & KKT:* Provides primal solution $x$ and full constraint dual multipliers $y$.
-   - *Future Extensibility:* Native sparse matrix input (`scipy.sparse.csc_matrix`), warm starting (`warm_start(x, y)`), matrix/vector updates.
-   - *Limitations:* First-order method; achieves medium-to-high precision ($10^{-5}$ to $10^{-7}$) very quickly; polishing mode (`polish=True`) provides high precision ($10^{-9}$).
+### 5.2 Evaluated Candidates
 
-2. **Clarabel (Clarabel.rs / Clarabel-python)**
-   - *Version evaluated:* 0.9.0+
-   - *Algorithm:* Homogeneous self-dual Interior Point Method (IPM) in Rust.
-   - *License:* Apache 2.0.
-   - *Platforms & Wheels:* Pre-built wheels via `maturin`/PyO3 on PyPI for Linux, macOS (Universal), Windows on Python 3.8–3.13.
-   - *Native Dependencies & Packaging:* Self-contained statically compiled cdylib; clean PyInstaller packaging.
-   - *Determinism & Tolerances:* High-precision IPM ($10^{-8}$ to $10^{-12}$ duality gap).
-   - *Status Fidelity:* Homogeneous self-dual embedding provides exact infeasibility and unboundedness rays.
-   - *Dual Variables & KKT:* Complete dual variables, duality gap, and residuals.
-   - *Future Extensibility:* Native sparse matrices, conic cones (SOCP, SDP, Exponential).
+1. **OSQP — selected for version 1**
+   - Uses ADMM for convex QPs and accepts sparse CSC matrices.
+   - Apache-2.0 licensed. Current PyPI metadata provides Python 3.12 wheels for
+     the three Optees release targets: Windows x64, macOS Apple Silicon, and
+     Linux x86_64.
+   - The Python result API documents primal and dual solutions, solver
+     statistics, and primal/dual infeasibility certificate fields. These are
+     numerical solver certificates governed by solver tolerances, not exact
+     mathematical proofs; Optees still performs its independent checks.
+   - Official settings include iteration and runtime limits, and the Python API
+     supports warm starts. No safe in-process cancellation claim is frozen.
+   - Repeatability must be tested with pinned backend version, settings,
+     algebra backend, thread configuration, and platform. The contract does not
+     promise bitwise or cross-platform determinism.
 
-3. **SciPy (`scipy.optimize.minimize` with SLSQP or trust-constr)**
-   - *Version evaluated:* SciPy 1.17.1 (already bundled in Optees).
-   - *Algorithm:* Sequential Least Squares Programming (SLSQP) / SQP Interior Point (`trust-constr`).
-   - *License:* BSD 3-Clause.
-   - *Limitations:* Not a dedicated QP solver. SLSQP uses dense matrices only, lacks formal infeasibility/unboundedness certificate vectors (reports generic line-search failure or singular matrix messages), lacks warm-starting, and dual multipliers for bounds are not uniformly exposed.
-   - *Role:* Zero-dependency comparison baseline and fallback, not recommended as the primary production QP engine.
+2. **Clarabel — retained alternative, not a version 1 public method**
+   - Apache-2.0 licensed interior-point conic solver with direct Python QP
+     support, sparse CSC data, primal/dual values, explicit full- and
+     reduced-accuracy statuses, iteration limits, and time limits.
+   - Its different status taxonomy and numerical behavior must not be hidden
+     behind an automatic fallback. Adopting it later requires an explicit
+     contract/backend revision and the same packaging gates as OSQP.
 
-4. **HiGHS (`highspy`)**
-   - *Algorithm:* Active-set and Interior Point QP solver built into HiGHS C++.
-   - *License:* MIT.
-   - *Limitations:* SciPy bundles HiGHS for `linprog` (LP) and `milp` (MILP), but does *not* expose HiGHS QP in Python. Using HiGHS QP requires the external `highspy` package, which has higher platform build complexity than OSQP.
+3. **SciPy SLSQP/trust-constr — comparison probe only**
+   - Already present in Optees and useful for analytic comparisons.
+   - It is not accepted as a transparent production fallback because its
+     termination and infeasible/unbounded reporting do not satisfy the frozen
+     QP status contract.
 
-5. **CVXOPT (`cvxopt.solvers.qp`)**
-   - *License:* GNU General Public License v3 (GPLv3).
-   - *Disqualification:* Viral copyleft GPLv3 license is incompatible with Optees Apache 2.0 licensing and distribution model.
+4. **HiGHS, CVXOPT, and ProxQP — not selected**
+   - They remain possible future evaluation candidates, but this work unit did
+     not produce sufficient platform and packaging evidence to expose them.
+   - CVXOPT's GPLv3 distribution terms conflict with the current goal of
+     retaining an Apache-2.0 Optees binary distribution. This is a product
+     licensing constraint, not a claim that Apache-2.0 and GPLv3 code can never
+     be combined.
 
-6. **ProxQP (`proxsuite`)**
-   - *Algorithm:* Primal-dual proximal method.
-   - *License:* BSD 2-Clause.
-   - *Limitations:* Primarily targeted at small robotics MPC problems; narrower ecosystem on Windows and ARM.
+### 5.3 Decision and Implementation Acceptance Gates
 
-### 5.2 Comparative Summary Matrix
+- `osqp` is the only public `method` in schema version 1.
+- If the dependency is absent, `qp.continuous` is advertised as unavailable
+  with a reason and execution returns `dependency_unavailable`.
+- `OPT-DS-02` must pin the evaluated OSQP release, solve and independently
+  validate all reference cases, exercise every mapped backend status, and build
+  the actual Windows x64, macOS Apple Silicon, and Linux x86_64 artifacts.
+- Bundle size must be measured from those artifacts; no numeric overhead is
+  claimed before that evidence exists.
+- `supports_cancellation` remains `false` unless a safe interrupt or isolated
+  worker strategy is implemented and tested. A time limit is not cancellation.
 
-| Evaluation Criterion | OSQP | Clarabel | SciPy (SLSQP) | HiGHS (`highspy`) | CVXOPT |
-| --- | --- | --- | --- | --- | --- |
-| **Algorithm** | ADMM (First-order) | IPM (Self-dual) | SQP (General NLP) | Active Set / IPM | IPM |
-| **License** | **Apache 2.0** | **Apache 2.0** | BSD 3-Clause | MIT | GPLv3 *(Rejected)* |
-| **Python 3.12+ Wheels** | Yes (Win/Mac/Linux) | Yes (Win/Mac/Linux) | Already bundled | Yes | Yes |
-| **Self-contained binary** | Yes (C / QDLDL) | Yes (Rust cdylib) | Yes | Yes (C++) | Requires BLAS/LAPACK |
-| **PyInstaller overhead** | ~1.5 MB | ~2.5 MB | 0 MB | ~4 MB | ~15 MB |
-| **Infeasible detection** | Exact certificate | Exact certificate | Heuristic / weak | Exact | Exact |
-| **Unbounded detection** | Exact certificate | Exact certificate | Heuristic / weak | Exact | Exact |
-| **Duals / KKT output** | Complete | Complete | Partial / Incomplete | Complete | Complete |
-| **Sparse Matrix Ready** | Yes (CSC) | Yes (CSC) | No (Dense only) | Yes (CSC) | Yes (Sparse matrix) |
-| **Warm Start Ready** | Yes ($x, y$) | Partial | No | Yes | No |
-| **Determinism** | 100% | 100% | 100% | 100% | 100% |
+### 5.4 Primary Sources Consulted
 
-### 5.3 Motivated Decision
+- [OSQP Python interface](https://osqp.org/docs/interfaces/python.html)
+- [OSQP solver settings](https://osqp.org/docs/interfaces/solver_settings.html)
+- [OSQP status values](https://osqp.org/docs/interfaces/status_values.html)
+- [OSQP package metadata and release wheels](https://pypi.org/project/osqp/)
+- [Clarabel Python problem and result interface](https://clarabel.org/stable/python/getting_started_py/)
+- [Clarabel solver settings](https://clarabel.org/stable/api_settings/)
+- [Clarabel package metadata and release wheels](https://pypi.org/project/clarabel/)
+- [SciPy `minimize` API](https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html)
 
-- **Primary Recommended Backend:** `osqp` (Apache 2.0, robust ADMM with infeasibility/unboundedness detection, sparse CSC ready, warm-start ready, lightweight packaging).
-- **Secondary / High-Precision Candidate:** `clarabel` (Apache 2.0, Rust IPM with high-precision interior-point convergence).
-- **Comparative Baseline:** `scipy_slsqp` (built-in SciPy fallback for zero-dependency sanity checks).
-- **Disqualified:** `cvxopt` due to GPLv3 license incompatibility.
+Sources and package metadata were reviewed on 2026-08-27. Packaging claims
+must be rechecked against the pinned release when `OPT-DS-02` begins.
 
 ---
 
@@ -712,7 +761,7 @@ Python 3.12 compatibility, and numerical test probes:
 
 1. **Sparse Matrix Representation (Future Schema Extension)**:
    Schema version `1` uses dense `quadratic_matrix` for clarity in educational and moderate-size problems ($n \le 500$).
-   Future schema version `2` or compatible extensions will introduce `quadratic_sparse` with COO triplets `[{"row": i, "col": j, "value": v}]` or Compressed Sparse Column (CSC) format. `OSQP` and `Clarabel` consume CSC natively.
+   A future schema version `2` may introduce `quadratic_sparse` with COO triplets `[{"row": i, "col": j, "value": v}]` or Compressed Sparse Column (CSC) format. Because schema v1 is closed to unknown fields, this is an explicit version change rather than a silent extension. `OSQP` and `Clarabel` consume CSC natively.
 2. **Warm Start Capability**:
    The problem schema allows an optional `"initial_primal"` / `"initial_dual"` field in future extensions. OSQP natively supports `solver.warm_start(x=x0, y=y0)`.
 3. **Convex MIQP (Mixed-Integer Quadratic Programming)**:
@@ -749,11 +798,11 @@ The minimum educational vertical slice in Phase `OPT-DS-02` will provide:
 
 - [x] Mathematical convention frozen: $\min \frac{1}{2} x^T Q x + c^T x + \alpha$.
 - [x] Objective sense: convex minimization and concave maximization supported; non-convex models rejected.
-- [x] Symmetry tolerance $\varepsilon_{sym} = 10^{-8}$ and PSD tolerance $\varepsilon_{psd} = 10^{-8} \max(1, \|Q\|_\infty)$ frozen.
+- [x] Symmetry and PSD tolerances use the explicit scale $10^{-8} \max(1, \max_{i,j}|Q_{ij}|)$; accepted matrices are never silently projected.
 - [x] Variable ordering, binding, and dense matrix representation frozen.
 - [x] Public capability ID `qp.continuous` and schema versions (`1`) frozen.
 - [x] Full JSON DTO schemas, options, limits, error codes, and statuses frozen.
 - [x] Complete valid and invalid JSON examples verified.
 - [x] Independent solution validation rules and honest limitations frozen.
-- [x] Backend selection analyzed: `osqp` recommended as primary engine; `clarabel` and `scipy_slsqp` catalogued; `cvxopt` rejected.
+- [x] Backend selection analyzed: `osqp` is the sole version 1 method; alternatives are catalogued without fallback or unverified packaging claims.
 - [x] Gate `QP-C` achieved without blocking ambiguities.
