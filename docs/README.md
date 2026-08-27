@@ -9,6 +9,9 @@ changes.
 
 - [Architecture overview](architecture/overview.md): dependency boundaries,
   runtime surfaces, and Mermaid diagrams.
+- [Quadratic programming contract](contracts/quadratic-programming-contract.md):
+  frozen mathematical formulation, public JSON contract, validation rules, and
+  backend selection for Convex QP.
 - [Forecasting statistical contract](contracts/forecasting-statistical-contract.md):
   frozen statistical terminology and behavior.
 - [Result artifacts contract](contracts/result-artifacts-contract.md): frozen

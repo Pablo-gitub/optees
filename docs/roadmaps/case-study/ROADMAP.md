@@ -72,9 +72,10 @@ terminology, brokerage behavior, or claims of financial performance.
 - Define deterministic references and packaging constraints.
 
 Detailed plan: `01-qp-contract-decision.md`.
+Frozen contract: `../../contracts/quadratic-programming-contract.md`.
 
-**Gate QP-C:** the contract can be reviewed independently of any GUI,
-transport, or trading formulation.
+**Gate QP-C:** achieved; the contract is frozen and can be reviewed
+independently of any GUI, transport, or trading formulation.
 
 ### OPT-DS-02 — Convex QP Vertical Slice
 

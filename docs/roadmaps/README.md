@@ -31,7 +31,7 @@ stable when delivery state changes.
 | [Graph](graph.md) | Maintenance | First vertical slice shipped; deferred algorithms remain |
 | [Composite optimization workflows](optimization-workflows.md) | Planned | Contract decisions before any application-owned workflow executor |
 | [Decision Simulator case-study expansion](case-study/ROADMAP.md) | In progress | Parallel evidence track: QP, robust scenarios, forecasting depth, MIQP, and Registry |
-| [Convex QP contract decision](case-study/01-qp-contract-decision.md) | Ready | First executable work unit of the case-study expansion |
+| [Convex QP contract decision](case-study/01-qp-contract-decision.md) | Completed | Contract decision frozen; gate QP-C achieved |
 | [Documentation, website, and release](documentation-website-release.md) | In progress | Coordinated public documentation and release work |
 
 The register is a navigation summary. When it conflicts with a roadmap's
