@@ -1,11 +1,37 @@
 from __future__ import annotations
 
-import math
 from typing import Any, Dict, List, Optional
 import numpy as np
 import scipy.sparse as sp
 
 from optees.application.ports.qp_solver_port import QPSolverPort
+
+
+def _has_feasible_candidate(
+    candidate: Any,
+    rows: list[list[float]],
+    lower: list[float],
+    upper: list[float],
+    *,
+    tolerance: float,
+) -> bool:
+    """Accept an early-stopped candidate only after a primal-feasibility check."""
+    if candidate is None:
+        return False
+    x = np.asarray(candidate, dtype=float)
+    if x.ndim != 1 or not np.all(np.isfinite(x)):
+        return False
+    if not rows:
+        return True
+    matrix = np.asarray(rows, dtype=float)
+    if matrix.ndim != 2 or matrix.shape[1] != x.shape[0]:
+        return False
+    activity = matrix @ x
+    lower_arr = np.asarray(lower, dtype=float)
+    upper_arr = np.asarray(upper, dtype=float)
+    return bool(
+        np.all(activity >= lower_arr - tolerance) and np.all(activity <= upper_arr + tolerance)
+    )
 
 
 class OSQPSolverAdapter(QPSolverPort):
@@ -109,9 +135,6 @@ class OSQPSolverAdapter(QPSolverPort):
         tol = float(options.get("tolerance", 1e-7))
         max_iter = int(options.get("max_iterations", 4000))
         time_limit = float(options.get("time_limit_seconds", 60.0))
-        warm_start = bool(options.get("warm_start", False))
-        initial_primal = options.get("initial_primal")
-        initial_dual = options.get("initial_dual")
 
         prob = osqp.OSQP()
         setup_kwargs: Dict[str, Any] = {
@@ -133,15 +156,6 @@ class OSQPSolverAdapter(QPSolverPort):
 
         try:
             prob.setup(**setup_kwargs)
-            if warm_start:
-                warm_kwargs: Dict[str, Any] = {}
-                if initial_primal is not None:
-                    warm_kwargs["x"] = np.array(initial_primal, dtype=float)
-                if initial_dual is not None and A_csc is not None:
-                    warm_kwargs["y"] = np.array(initial_dual, dtype=float)
-                if warm_kwargs:
-                    prob.warm_start(**warm_kwargs)
-
             res = prob.solve()
         except Exception as exc:
             return {
@@ -192,13 +206,17 @@ class OSQPSolverAdapter(QPSolverPort):
             # Extract dual values
             y_arr = np.array(res.y, dtype=float) if res.y is not None else None
             dual_dict: Optional[Dict[str, Any]] = None
-            if y_arr is not None and A_csc is not None and len(y_arr) == total_rows and total_rows > 0:
+            if (
+                y_arr is not None
+                and A_csc is not None
+                and len(y_arr) == total_rows
+                and total_rows > 0
+            ):
                 # Multipliers for linear constraints (0 .. m_cons - 1)
                 cons_duals = []
                 for i in range(m_cons):
                     y_i = float(y_arr[i])
-                    # For maximization, sign flip
-                    cons_duals.append(-y_i if is_max else y_i)
+                    cons_duals.append(y_i)
 
                 # Multipliers for bounds (m_cons .. m_cons + n - 1)
                 lb_duals = []
@@ -210,12 +228,8 @@ class OSQPSolverAdapter(QPSolverPort):
                     # y_i >= 0 means upper bound is active (multiplier y_i >= 0).
                     z_lb = max(0.0, -y_i)
                     z_ub = max(0.0, y_i)
-                    if is_max:
-                        lb_duals.append(z_ub)
-                        ub_duals.append(z_lb)
-                    else:
-                        lb_duals.append(z_lb)
-                        ub_duals.append(z_ub)
+                    lb_duals.append(z_lb)
+                    ub_duals.append(z_ub)
 
                 dual_dict = {
                     "constraints": cons_duals,
@@ -224,7 +238,9 @@ class OSQPSolverAdapter(QPSolverPort):
                 }
 
             kkt_dict = {
-                "primal_residual": float(res.info.pri_res) if res.info.pri_res is not None else None,
+                "primal_residual": float(res.info.pri_res)
+                if res.info.pri_res is not None
+                else None,
                 "dual_residual": float(res.info.dua_res) if res.info.dua_res is not None else None,
                 "duality_gap": None,
                 "complementarity_residual": None,
@@ -267,7 +283,9 @@ class OSQPSolverAdapter(QPSolverPort):
 
         elif "iteration" in osqp_status:
             # Check if there is a finite candidate
-            has_candidate = res.x is not None and all(math.isfinite(v) for v in res.x)
+            has_candidate = _has_feasible_candidate(
+                res.x, A_rows, l_bounds, u_bounds, tolerance=tol
+            )
             status = "Feasible" if has_candidate else "NotSolved"
             math_status = "feasible" if has_candidate else "not_solved"
             x_dict = {var_names[i]: float(res.x[i]) for i in range(n)} if has_candidate else {}
@@ -287,7 +305,9 @@ class OSQPSolverAdapter(QPSolverPort):
             }
 
         elif "time limit" in osqp_status or "time" in osqp_status:
-            has_candidate = res.x is not None and all(math.isfinite(v) for v in res.x)
+            has_candidate = _has_feasible_candidate(
+                res.x, A_rows, l_bounds, u_bounds, tolerance=tol
+            )
             status = "Feasible" if has_candidate else "NotSolved"
             math_status = "feasible" if has_candidate else "not_solved"
             x_dict = {var_names[i]: float(res.x[i]) for i in range(n)} if has_candidate else {}

@@ -984,7 +984,6 @@ def _qp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
             "tolerance": 1e-7,
             "max_iterations": 4000,
             "time_limit_seconds": 60.0,
-            "warm_start": False,
         },
         available=dependency_available,
         unavailable_reason=unavailable_reason,
@@ -1000,19 +999,12 @@ def _qp_input_schema() -> dict:
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
-        "required": ["variables", "objective"],
+        "additionalProperties": False,
+        "required": ["version", "problem_type", "variables", "objective", "constraints"],
         "properties": {
-            "contract_version": {
-                "const": "1",
-                "description": "Continuous convex QP contract version.",
-            },
-            "problem_schema_version": {
+            "version": {
                 "const": "1",
                 "description": "Continuous convex QP problem schema version.",
-            },
-            "capability_id": {
-                "const": "qp.continuous",
-                "description": "Public identifier for Continuous Convex QP.",
             },
             "problem_type": {
                 "const": "quadratic_programming",
@@ -1028,26 +1020,28 @@ def _qp_input_schema() -> dict:
                 ),
                 "items": {
                     "type": "object",
-                    "required": ["name"],
+                    "additionalProperties": False,
+                    "required": ["name", "lb", "ub"],
                     "properties": {
                         "name": {"type": "string", "minLength": 1},
                         "label": {"type": "string"},
-                        "lower_bound": number_or_null,
-                        "upper_bound": number_or_null,
+                        "lb": number_or_null,
+                        "ub": number_or_null,
                     },
                 },
             },
             "objective": {
                 "type": "object",
-                "required": ["sense", "linear_coefs", "quadratic_matrix"],
+                "additionalProperties": False,
+                "required": ["sense", "linear_coefficients", "quadratic_matrix"],
                 "description": (
-                    "Quadratic objective 1/2 x^T Q x + c^T x + alpha. linear_coefs must contain "
+                    "Quadratic objective 1/2 x^T Q x + c^T x + alpha. linear_coefficients must contain "
                     "exactly one finite number per variable, in variables order. quadratic_matrix "
                     "must be an n x n symmetric matrix."
                 ),
                 "properties": {
                     "sense": {"enum": ["min", "max"]},
-                    "linear_coefs": {
+                    "linear_coefficients": {
                         "type": "array",
                         "minItems": 1,
                         "maxItems": 500,
@@ -1071,15 +1065,16 @@ def _qp_input_schema() -> dict:
                 "type": "array",
                 "maxItems": 1000,
                 "description": (
-                    "Linear constraints. Each coefs array must contain exactly "
+                    "Linear constraints. Each coefficients array must contain exactly "
                     "one finite number per variable, in variables order."
                 ),
                 "items": {
                     "type": "object",
-                    "required": ["coefs", "relation", "rhs"],
+                    "additionalProperties": False,
+                    "required": ["coefficients", "relation", "rhs"],
                     "properties": {
                         "name": {"type": "string"},
-                        "coefs": {
+                        "coefficients": {
                             "type": "array",
                             "minItems": 1,
                             "maxItems": 500,
@@ -1090,38 +1085,43 @@ def _qp_input_schema() -> dict:
                     },
                 },
             },
-            "options": {
+            "solver_options": {
                 "type": "object",
+                "additionalProperties": False,
                 "properties": {
                     "method": {"enum": ["osqp"], "default": "osqp"},
-                    "tolerance": {"type": "number", "exclusiveMinimum": 0, "default": 1e-7},
-                    "max_iterations": {"type": "integer", "minimum": 1, "default": 4000},
-                    "time_limit_seconds": {"type": "number", "exclusiveMinimum": 0, "default": 60.0},
-                    "warm_start": {"type": "boolean", "default": False},
-                    "initial_primal": {
-                        "type": "array",
-                        "items": {"type": "number"},
+                    "tolerance": {
+                        "type": "number",
+                        "minimum": 1e-12,
+                        "maximum": 1e-2,
+                        "default": 1e-7,
                     },
-                    "initial_dual": {
-                        "type": "array",
-                        "items": {"type": "number"},
+                    "max_iterations": {
+                        "type": "integer",
+                        "minimum": 10,
+                        "maximum": 100000,
+                        "default": 4000,
+                    },
+                    "time_limit_seconds": {
+                        "type": "number",
+                        "minimum": 0.1,
+                        "maximum": 300.0,
+                        "default": 60.0,
                     },
                 },
             },
         },
         "examples": [
             {
-                "contract_version": "1",
-                "problem_schema_version": "1",
-                "capability_id": "qp.continuous",
+                "version": "1",
                 "problem_type": "quadratic_programming",
                 "variables": [
-                    {"name": "x1", "label": "First asset weight", "lower_bound": 0.0, "upper_bound": 1.0},
-                    {"name": "x2", "label": "Second asset weight", "lower_bound": 0.0, "upper_bound": 1.0},
+                    {"name": "x1", "label": "First allocation", "lb": 0.0, "ub": 1.0},
+                    {"name": "x2", "label": "Second allocation", "lb": 0.0, "ub": 1.0},
                 ],
                 "objective": {
                     "sense": "min",
-                    "linear_coefs": [-4.0, -6.0],
+                    "linear_coefficients": [-4.0, -6.0],
                     "quadratic_matrix": [
                         [2.0, 1.0],
                         [1.0, 2.0],
@@ -1129,14 +1129,13 @@ def _qp_input_schema() -> dict:
                     "offset": 0.0,
                 },
                 "constraints": [
-                    {"name": "c1", "coefs": [1.0, 1.0], "relation": "<=", "rhs": 1.0},
+                    {"name": "c1", "coefficients": [1.0, 1.0], "relation": "<=", "rhs": 1.0},
                 ],
-                "options": {
+                "solver_options": {
                     "method": "osqp",
                     "tolerance": 1e-7,
                     "max_iterations": 4000,
                     "time_limit_seconds": 60.0,
-                    "warm_start": False,
                 },
             }
         ],
@@ -1147,18 +1146,27 @@ def _qp_result_schema() -> dict:
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "type": "object",
-        "required": ["contract_version", "result_schema_version", "capability_id", "objective", "variables"],
+        "additionalProperties": False,
+        "required": ["objective", "objective_sense", "variables"],
         "properties": {
-            "contract_version": {"const": "1"},
-            "result_schema_version": {"const": "1"},
-            "capability_id": {"const": "qp.continuous"},
             "objective": {"type": ["number", "null"]},
+            "objective_sense": {"enum": ["min", "max"]},
             "variables": {
-                "type": "object",
-                "additionalProperties": {"type": "number"},
+                "type": "array",
+                "maxItems": 500,
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["name", "value"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "value": {"type": "number"},
+                    },
+                },
             },
             "dual_values": {
                 "type": ["object", "null"],
+                "additionalProperties": False,
                 "properties": {
                     "constraints": {"type": "array", "items": {"type": "number"}},
                     "lower_bounds": {"type": "array", "items": {"type": "number"}},
@@ -1167,6 +1175,7 @@ def _qp_result_schema() -> dict:
             },
             "kkt_residuals": {
                 "type": ["object", "null"],
+                "additionalProperties": False,
                 "properties": {
                     "primal_residual": {"type": ["number", "null"]},
                     "dual_residual": {"type": ["number", "null"]},

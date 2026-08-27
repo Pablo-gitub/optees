@@ -117,8 +117,8 @@ class QPIndependentSolutionValidator:
         model: QPModel,
         result_dict: Mapping[str, Any],
     ) -> Tuple[dict[str, float], list[ValidationViolation]]:
-        values_raw = result_dict.get("variables") or result_dict.get("x") or {}
-        if not isinstance(values_raw, dict):
+        values_raw = result_dict.get("variables")
+        if not isinstance(values_raw, list):
             return {}, [
                 ValidationViolation(
                     code="qp.invalid_candidate_structure",
@@ -132,8 +132,32 @@ class QPIndependentSolutionValidator:
         violations: list[ValidationViolation] = []
         declared_names = set(model.variable_names())
 
+        for index, item in enumerate(values_raw):
+            if not isinstance(item, dict) or set(item) != {"name", "value"}:
+                violations.append(
+                    ValidationViolation(
+                        code="qp.invalid_candidate_structure",
+                        check_code="qp.variable_vector",
+                        path=f"$.result.variables[{index}]",
+                        message="Each candidate entry must contain exactly name and value.",
+                    )
+                )
+                continue
+            name = item["name"]
+            if not isinstance(name, str) or name in values:
+                violations.append(
+                    ValidationViolation(
+                        code="qp.invalid_candidate_structure",
+                        check_code="qp.variable_vector",
+                        path=f"$.result.variables[{index}].name",
+                        message="Candidate variable names must be unique strings.",
+                    )
+                )
+                continue
+            values[name] = item["value"]
+
         for v in model.variables:
-            if v.name not in values_raw:
+            if v.name not in values:
                 violations.append(
                     ValidationViolation(
                         code="qp.missing_variable_value",
@@ -144,7 +168,7 @@ class QPIndependentSolutionValidator:
                 )
                 continue
 
-            raw_val = values_raw[v.name]
+            raw_val = values[v.name]
             if raw_val is None or isinstance(raw_val, bool):
                 violations.append(
                     ValidationViolation(
@@ -182,7 +206,7 @@ class QPIndependentSolutionValidator:
 
             values[v.name] = num
 
-        for key in values_raw:
+        for key in values:
             if key not in declared_names:
                 violations.append(
                     ValidationViolation(
@@ -435,10 +459,45 @@ class QPIndependentSolutionValidator:
         z_lb = np.array(lb_duals, dtype=float)
         z_ub = np.array(ub_duals, dtype=float)
 
-        A_mat = np.array([cons.coefs for cons in model.constraints], dtype=float) if m > 0 else np.zeros((0, n))
+        A_mat = (
+            np.array([cons.coefs for cons in model.constraints], dtype=float)
+            if m > 0
+            else np.zeros((0, n))
+        )
 
         # Check multiplier non-negativity for inequalities and bounds
         violations: list[ValidationViolation] = []
+        complementarity_residual = 0.0
+        for index, cons in enumerate(model.constraints):
+            lhs = float(np.dot(np.asarray(cons.coefs, dtype=float), x_vec))
+            multiplier = float(y_cons[index])
+            if cons.relation == Relation.LE:
+                if multiplier < -self._absolute_tolerance:
+                    violations.append(
+                        ValidationViolation(
+                            code="qp.negative_dual_multiplier",
+                            check_code="qp.kkt_stationarity",
+                            path=f"$.result.dual_values.constraints[{index}]",
+                            message="A <= constraint multiplier must be non-negative.",
+                        )
+                    )
+                complementarity_residual = max(
+                    complementarity_residual, abs(multiplier * (float(cons.rhs) - lhs))
+                )
+            elif cons.relation == Relation.GE:
+                if multiplier > self._absolute_tolerance:
+                    violations.append(
+                        ValidationViolation(
+                            code="qp.negative_dual_multiplier",
+                            check_code="qp.kkt_stationarity",
+                            path=f"$.result.dual_values.constraints[{index}]",
+                            message="A >= constraint uses a non-positive signed multiplier.",
+                        )
+                    )
+                complementarity_residual = max(
+                    complementarity_residual, abs(multiplier * (lhs - float(cons.rhs)))
+                )
+
         for i in range(n):
             if z_lb[i] < -self._absolute_tolerance:
                 violations.append(
@@ -448,6 +507,17 @@ class QPIndependentSolutionValidator:
                         path=f"$.result.dual_values.lower_bounds[{i}]",
                         message=f"Lower bound multiplier {z_lb[i]} is negative.",
                     )
+                )
+            variable = model.variables[i]
+            if variable.bounds.lb is not None:
+                complementarity_residual = max(
+                    complementarity_residual,
+                    abs(z_lb[i] * (x_vec[i] - float(variable.bounds.lb))),
+                )
+            if variable.bounds.ub is not None:
+                complementarity_residual = max(
+                    complementarity_residual,
+                    abs(z_ub[i] * (float(variable.bounds.ub) - x_vec[i])),
                 )
             if z_ub[i] < -self._absolute_tolerance:
                 violations.append(
@@ -466,7 +536,9 @@ class QPIndependentSolutionValidator:
             stat_res = -grad_f + (A_mat.T @ y_cons if m > 0 else 0.0) - z_lb + z_ub
 
         max_stat_res = float(np.max(np.abs(stat_res))) if n > 0 else 0.0
-        allowed_kkt_tol = self._absolute_tolerance * 10.0  # allow slightly relaxed numerical tolerance for KKT residual
+        allowed_kkt_tol = (
+            self._absolute_tolerance * 10.0
+        )  # allow slightly relaxed numerical tolerance for KKT residual
 
         if max_stat_res > allowed_kkt_tol:
             violations.append(
@@ -479,11 +551,29 @@ class QPIndependentSolutionValidator:
                 )
             )
 
+        if complementarity_residual > allowed_kkt_tol:
+            violations.append(
+                ValidationViolation(
+                    code="qp.kkt_complementarity_violation",
+                    check_code="qp.kkt_stationarity",
+                    path="$.result.dual_values",
+                    message=(
+                        "KKT complementary-slackness residual "
+                        f"{complementarity_residual:.2e} exceeds tolerance "
+                        f"{allowed_kkt_tol:.2e}."
+                    ),
+                    measurements={"complementarity_residual": complementarity_residual},
+                )
+            )
+
         check = ValidationCheck(
             code="qp.kkt_stationarity",
             status=_check_status(not violations),
             description="The first-order KKT stationarity and complementary slackness conditions are satisfied within tolerance.",
-            measurements={"stationarity_residual": max_stat_res},
+            measurements={
+                "stationarity_residual": max_stat_res,
+                "complementarity_residual": complementarity_residual,
+            },
         )
         return check, violations, True
 

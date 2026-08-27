@@ -19,6 +19,7 @@ class QPSolution:
     dual_values: Optional[QPDualValues] = None
     kkt_residuals: Optional[QPKKTResiduals] = None
     diagnostics: QPSolverDiagnostics = field(default_factory=QPSolverDiagnostics)
+    termination_reason: str = "completed"
     extras: dict[str, object] = field(default_factory=dict)
 
     @classmethod
@@ -31,9 +32,12 @@ class QPSolution:
         dual_values: Optional[QPDualValues] = None,
         kkt_residuals: Optional[QPKKTResiduals] = None,
         diagnostics: Optional[QPSolverDiagnostics] = None,
+        termination_reason: str = "completed",
         extras: Optional[Mapping[str, Any]] = None,
     ) -> QPSolution:
-        status_enum = status if isinstance(status, QPSolveStatus) else QPSolveStatus.from_str(str(status))
+        status_enum = (
+            status if isinstance(status, QPSolveStatus) else QPSolveStatus.from_str(str(status))
+        )
         extras_dict = dict(extras or {})
         diag = diagnostics or QPSolverDiagnostics.from_extras(extras_dict)
         return cls(
@@ -43,6 +47,7 @@ class QPSolution:
             dual_values=dual_values,
             kkt_residuals=kkt_residuals,
             diagnostics=diag,
+            termination_reason=termination_reason,
             extras=extras_dict,
         )
 

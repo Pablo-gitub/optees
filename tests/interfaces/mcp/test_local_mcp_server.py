@@ -37,6 +37,20 @@ LP_PROBLEM = {
         {"coefficients": [2, 4], "relation": "<=", "rhs": 18},
     ],
 }
+QP_PROBLEM = {
+    "version": "1",
+    "problem_type": "quadratic_programming",
+    "variables": [
+        {"name": "x1", "lb": None, "ub": None},
+        {"name": "x2", "lb": None, "ub": None},
+    ],
+    "objective": {
+        "sense": "min",
+        "linear_coefficients": [-4.0, -6.0],
+        "quadratic_matrix": [[2.0, 1.0], [1.0, 2.0]],
+    },
+    "constraints": [],
+}
 TOOL_NAMES = {
     "optees_list_capabilities",
     "optees_get_capability",
@@ -86,6 +100,32 @@ def test_facade_requires_descriptor_and_exact_validation_before_job():
     assert validation["validation"]["valid"] is True
     assert changed["error"]["code"] == "problem_not_validated"
     assert created["job"]["capability_id"] == "lp.continuous"
+
+
+def test_facade_completes_qp_with_frozen_problem_and_result_shapes():
+    service = create_local_job_service()
+    facade = LocalMcpToolFacade(service)
+    try:
+        descriptor = facade.get_capability("qp.continuous")
+        validation = facade.validate_problem("qp.continuous", QP_PROBLEM)
+        created = facade.create_job("qp.continuous", QP_PROBLEM)
+        job_id = created["job"]["job_id"]
+        _wait_for_job(service, job_id)
+        result = facade.get_job_result(job_id)["result"]
+    finally:
+        service.shutdown(wait=True, cancel_pending=True)
+
+    assert descriptor["capability"]["input_schema"]["required"] == [
+        "version",
+        "problem_type",
+        "variables",
+        "objective",
+        "constraints",
+    ]
+    assert validation["validation"]["valid"] is True
+    assert result["termination_reason"] == "completed"
+    assert result["result"]["objective_sense"] == "min"
+    assert [item["name"] for item in result["result"]["variables"]] == ["x1", "x2"]
 
 
 def test_mcp_tools_publish_expected_names_and_problem_schemas():
@@ -173,9 +213,7 @@ def test_facade_renders_metadata_only_and_requires_explicit_resource_read():
         _wait_for_job(jobs, job_id)
 
         discovery = facade.list_result_artifacts(job_id)
-        artifact_types = {
-            item["artifact_type"] for item in discovery["available_artifacts"]
-        }
+        artifact_types = {item["artifact_type"] for item in discovery["available_artifacts"]}
         assert "solution_table" in artifact_types
         rendered = facade.render_result_artifacts(
             job_id,
@@ -188,9 +226,7 @@ def test_facade_renders_metadata_only_and_requires_explicit_resource_read():
         assert metadata["content_included"] is False
         assert "content" not in metadata
         assert "path" not in str(metadata).lower()
-        assert metadata["resource_uri"] == (
-            f"optees-artifact://{entry['artifact_id']}"
-        )
+        assert metadata["resource_uri"] == (f"optees-artifact://{entry['artifact_id']}")
         content = facade.read_artifact_resource(entry["artifact_id"])
         assert json.loads(content)["artifact_type"] == "solution_table"
 
@@ -401,9 +437,7 @@ async def _run_stdio_lp_workflow() -> None:
                 read_timeout_seconds=timeout,
             )
             available = _structured(discovered)["available_artifacts"]
-            assert any(
-                item["artifact_type"] == "solution_table" for item in available
-            )
+            assert any(item["artifact_type"] == "solution_table" for item in available)
             requested = await session.call_tool(
                 "optees_render_result_artifacts",
                 {
@@ -417,9 +451,7 @@ async def _run_stdio_lp_workflow() -> None:
                 },
                 read_timeout_seconds=timeout,
             )
-            assert _structured(requested)["content_policy"][
-                "embedded_by_default"
-            ] is False
+            assert _structured(requested)["content_policy"]["embedded_by_default"] is False
 
             artifact_entry = None
             for _ in range(100):
@@ -445,9 +477,7 @@ async def _run_stdio_lp_workflow() -> None:
             assert artifact_metadata["content_included"] is False
             assert "content" not in artifact_metadata
 
-            resource = await session.read_resource(
-                artifact_metadata["resource_uri"]
-            )
+            resource = await session.read_resource(artifact_metadata["resource_uri"])
             assert len(resource.contents) == 1
             assert resource.contents[0].blob is not None
             assert resource.contents[0].mimeType == "image/svg+xml"

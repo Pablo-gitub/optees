@@ -15,7 +15,6 @@ from optees.application.contracts.execution import (
     ExecutionEnvelope,
     ExecutionMetadata,
     JobStatus,
-    TerminationReason,
 )
 from optees.application.contracts.json_value import JsonValue, require_json_value
 from optees.application.contracts.solution_validation import SolutionValidation
@@ -208,7 +207,13 @@ class OptimizationService:
             code=ErrorCode.VALIDATION_FAILED,
             message="The problem payload is invalid.",
             request_id=request_id,
-            details=(ErrorDetail(path="$", message=str(error)),),
+            details=(
+                ErrorDetail(
+                    path=str(getattr(error, "path", "$")),
+                    message=str(error),
+                    code=str(getattr(error, "detail_code", "invalid_value")),
+                ),
+            ),
             context={"capability_id": capability_id},
         )
 

@@ -30,7 +30,8 @@ contract or execution logic.
 - **Local-first security:** REST binds to loopback and requires a per-session
   bearer token; MCP communicates over a private stdio subprocess.
 - **Honest guarantees:** independent post-solve validation is reported only
-  when a validator is registered. It is currently implemented for LP and MILP.
+  when a validator is registered. Implemented validators are listed in the
+  validation section below.
 
 ## System Context
 
@@ -379,9 +380,10 @@ validators are supplied as callables on the registration object.
 
 ## Capability Inventory
 
-The production composition currently registers 13 capability IDs:
+The production composition currently registers 14 capability IDs:
 
 - `lp.continuous`
+- `qp.continuous`
 - `milp.linear`
 - `knapsack.zero_one`
 - `knapsack.bounded`
@@ -565,7 +567,10 @@ Current production registrations provide independent validators for:
 
 - `lp.continuous`: candidate vector, bounds, linear constraints, and objective
   consistency;
-- `milp.linear`: the corresponding checks plus integrality where applicable.
+- `milp.linear`: the corresponding checks plus integrality where applicable;
+- `qp.continuous`: ordered candidate values, bounds, linear constraints,
+  original-sense objective, and KKT stationarity, multiplier signs, and
+  complementary slackness when complete dual values are available;
 - `ml.regression.linear`: finite public parameters, complete prediction rows,
   prediction and residual arithmetic, train/test split accounting, and
   recomputed metrics.

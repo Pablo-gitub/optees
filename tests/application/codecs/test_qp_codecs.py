@@ -16,33 +16,27 @@ from optees.utility.qp_json_io import qp_model_to_dict
 
 def test_qp_problem_codec_roundtrip() -> None:
     payload = {
-        "contract_version": "1",
-        "problem_schema_version": "1",
-        "capability_id": "qp.continuous",
+        "version": "1",
         "problem_type": "quadratic_programming",
         "variables": [
-            {"name": "x1", "label": "X1", "lower_bound": 0.0, "upper_bound": 5.0},
-            {"name": "x2", "label": "X2", "lower_bound": None, "upper_bound": None},
+            {"name": "x1", "label": "X1", "lb": 0.0, "ub": 5.0},
+            {"name": "x2", "label": "X2", "lb": None, "ub": None},
         ],
         "objective": {
             "sense": "min",
-            "linear_coefs": [-4.0, -6.0],
+            "linear_coefficients": [-4.0, -6.0],
             "quadratic_matrix": [
                 [2.0, 1.0],
                 [1.0, 2.0],
             ],
             "offset": 1.5,
         },
-        "constraints": [
-            {"name": "c1", "coefs": [1.0, 1.0], "relation": "<=", "rhs": 10.0}
-        ],
-        "options": {
+        "constraints": [{"name": "c1", "coefficients": [1.0, 1.0], "relation": "<=", "rhs": 10.0}],
+        "solver_options": {
             "method": "osqp",
             "tolerance": 1e-6,
             "max_iterations": 2000,
             "time_limit_seconds": 30.0,
-            "warm_start": True,
-            "initial_primal": [1.0, 2.0],
         },
     }
 
@@ -50,18 +44,17 @@ def test_qp_problem_codec_roundtrip() -> None:
     assert model.n_vars() == 2
     assert model.objective.sense == ObjectiveSense.MIN
     assert model.objective.offset == 1.5
-    assert model.options.warm_start is True
 
     serialized = qp_model_to_dict(model)
-    assert serialized["capability_id"] == "qp.continuous"
+    assert serialized["version"] == "1"
     assert serialized["variables"][0]["name"] == "x1"
-    assert serialized["objective"]["linear_coefs"] == [-4.0, -6.0]
+    assert serialized["objective"]["linear_coefficients"] == [-4.0, -6.0]
     assert serialized["constraints"][0]["rhs"] == 10.0
 
 
 def test_qp_problem_codec_rejects_missing_required() -> None:
     with pytest.raises(ValueError, match="missing required fields"):
-        qp_model_from_public_dict({"contract_version": "1"})
+        qp_model_from_public_dict({"version": "1"})
 
 
 def test_qp_result_codec_optimal() -> None:
@@ -99,10 +92,14 @@ def test_qp_result_codec_optimal() -> None:
 
     assert serialized.mathematical_status == MathematicalStatus.OPTIMAL
     assert serialized.result["objective"] == -9.333333333333334
-    assert serialized.result["variables"]["x1"] == 0.6666666666666666
+    assert serialized.result["variables"][0] == {
+        "name": "x1",
+        "value": 0.6666666666666666,
+    }
     assert serialized.result["dual_values"]["constraints"] == [-1.0]
     assert serialized.diagnostics["backend"] == "osqp"
     assert serialized.diagnostics["iterations"] == 25
+    assert serialized.termination_reason.value == "completed"
 
 
 def test_qp_result_codec_infeasible() -> None:
@@ -123,4 +120,33 @@ def test_qp_result_codec_infeasible() -> None:
     serialized = codec.serialize(solution)
     assert serialized.mathematical_status == MathematicalStatus.INFEASIBLE
     assert serialized.result["objective"] is None
-    assert serialized.result["variables"] == {}
+    assert serialized.result["variables"] == []
+
+
+def test_qp_problem_codec_rejects_unfrozen_solver_option() -> None:
+    payload = {
+        "version": "1",
+        "problem_type": "quadratic_programming",
+        "variables": [{"name": "x", "lb": None, "ub": None}],
+        "objective": {
+            "sense": "min",
+            "linear_coefficients": [0.0],
+            "quadratic_matrix": [[1.0]],
+        },
+        "constraints": [],
+        "solver_options": {"warm_start": True},
+    }
+    with pytest.raises(ValueError, match="unsupported fields: warm_start"):
+        qp_model_from_public_dict(payload)
+
+
+def test_qp_result_codec_preserves_non_default_termination_reason() -> None:
+    serialized = QPResultCodec().serialize(
+        QPSolution(
+            status=QPSolveStatus.NOT_SOLVED,
+            objective=None,
+            values={},
+            termination_reason="iteration_limit",
+        )
+    )
+    assert serialized.termination_reason.value == "iteration_limit"

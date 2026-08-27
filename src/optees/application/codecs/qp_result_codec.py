@@ -3,7 +3,11 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from optees.application.contracts.capability_ids import QP_CAPABILITY_ID
-from optees.application.contracts.execution import MathematicalStatus, SerializedResult
+from optees.application.contracts.execution import (
+    MathematicalStatus,
+    SerializedResult,
+    TerminationReason,
+)
 from optees.application.contracts.json_value import require_json_value
 from optees.domain.entities.qp.solution import QPSolution
 from optees.domain.value_objects.qp.qp_solve_status import QPSolveStatus
@@ -25,11 +29,11 @@ class QPResultCodec:
         math_status = _STATUS_MAP.get(solution.status, MathematicalStatus.NOT_SOLVED)
 
         result_dict: Dict[str, Any] = {
-            "contract_version": "1",
-            "result_schema_version": "1",
-            "capability_id": QP_CAPABILITY_ID,
             "objective": solution.objective,
-            "variables": solution.values,
+            "objective_sense": str(solution.extras.get("objective_sense", "min")),
+            "variables": [
+                {"name": name, "value": value} for name, value in solution.values.items()
+            ],
         }
 
         if solution.dual_values is not None:
@@ -41,10 +45,14 @@ class QPResultCodec:
 
         if solution.kkt_residuals is not None:
             result_dict["kkt_residuals"] = {
-                "primal_residual": solution.kkt_residuals.primal_residual,
-                "dual_residual": solution.kkt_residuals.dual_residual,
-                "duality_gap": solution.kkt_residuals.duality_gap,
-                "complementarity_residual": solution.kkt_residuals.complementarity_residual,
+                key: value
+                for key, value in {
+                    "primal_residual": solution.kkt_residuals.primal_residual,
+                    "dual_residual": solution.kkt_residuals.dual_residual,
+                    "duality_gap": solution.kkt_residuals.duality_gap,
+                    "complementarity_residual": solution.kkt_residuals.complementarity_residual,
+                }.items()
+                if value is not None
             }
 
         diag = solution.diagnostics
@@ -73,9 +81,15 @@ class QPResultCodec:
         assert isinstance(normalized_result, dict)
         assert isinstance(normalized_diag, dict)
 
+        try:
+            termination_reason = TerminationReason(solution.termination_reason)
+        except ValueError:
+            termination_reason = TerminationReason.INTERNAL_ERROR
+
         return SerializedResult(
             mathematical_status=math_status,
             result=normalized_result,
             diagnostics=normalized_diag,
             warnings=tuple(warnings),
+            termination_reason=termination_reason,
         )

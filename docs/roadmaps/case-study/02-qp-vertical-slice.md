@@ -228,9 +228,15 @@ Stage A capability implementation is complete:
 - independent validation (`QPIndependentSolutionValidator`) verifies variable vector, bounds, linear constraints, objective value, and KKT stationarity / dual feasibility when duals are present;
 - CLI (`optees solve qp.continuous`), REST (`/api/v1/jobs`, `/api/v1/problems/validate`), and MCP (`optees_create_job`, `optees_validate_problem`) surfaces pass parity tests;
 - frozen simulator fixtures and reference cases published with SHA-256 hashes:
-  - `tests/data/qp/reference_cases.json`: `9f9600d28b533d6ad24c95b88597086ee5332d0a3546b6a0ba55135a17caa769`
-  - `examples/qp_portfolio_2assets.json`: `5954a07f86785b7b1e4c8f78c65d66be3ffb7f8caa0406f8edfec57433728262`
-- full test suite (1191 tests passing), doc-links verification, and wheel installation acceptance (`optees-0.10.2`) verified clean.
+  - `tests/data/qp/reference_cases.json`:
+    `a9e133c0064feb7ebf266ff019909bd8dde850a01a1f7612aa0eb123c6cdf805`;
+  - `examples/qp_resource_allocation_2variables.json`: domain-neutral v1
+    example, SHA-256
+    `52f649d98aa5d60071c6d9c578b97c7dd597cc89065fa74b3392fcc2b6a3b476`;
+- non-GUI regression, focused GUI regression, documentation links, editable
+  installation, and the checks recorded below passed. Native release artifacts
+  remain subject to the repository release gate; an editable install is not a
+  wheel-installation acceptance test.
 
 After `QP-I`, stop. Stage B (Desktop UI and Visual Design) is owned by Claude.
 
@@ -304,17 +310,18 @@ Stage B desktop implementation is complete:
   and obtains validation only from the registered `QPResultCodec` and
   `QPIndependentSolutionValidator`.
 
-### Known gap referred to the Stage A owner
+### Review correction
 
-`SolveQPUseCase` drops the `termination_reason` that
-`OSQPSolverAdapter` already returns (`completed`, `iteration_limit`,
-`time_limit`, `dependency_failure`, `internal_error`), and `QPResultCodec`
-leaves `SerializedResult.termination_reason` at its `completed` default. The
-desktop result view therefore reports the raw backend status string, labelled
-as such, instead of the contract's termination reason. The smallest correction
-is to carry `raw["termination_reason"]` from the adapter through the use case
-onto `QPSolution` and to set it on the serialized result. That is application
-and domain code, so it was not implemented in this UI stage.
+Review found that the initial Stage A implementation used an unfrozen public
+shape (`lower_bound`, `linear_coefs`, `options`, and a variable-value object)
+instead of the contract's `lb`, `linear_coefficients`, `solver_options`, and
+ordered result array. It also dropped `termination_reason`, treated any finite
+early-stopped vector as feasible, and did not fully verify dual signs and
+complementary slackness. A separate correction commit restores the frozen v1
+schema, strict unknown-field rejection and option ranges, termination
+propagation, primal checks for early-stopped candidates, and complete claimed
+KKT checks. QP gates are accepted only after that correction passes both core
+and UI regressions.
 
 ## General Stop Conditions
 

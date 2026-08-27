@@ -22,9 +22,7 @@ def test_qp_model_valid_construction() -> None:
         quadratic_matrix=((2.0, 1.0), (1.0, 2.0)),
         offset=1.5,
     )
-    cons = (
-        QPConstraint(name="c1", coefs=(1.0, 1.0), relation=Relation.LE, rhs=5.0),
-    )
+    cons = (QPConstraint(name="c1", coefs=(1.0, 1.0), relation=Relation.LE, rhs=5.0),)
     options = QPOptions(method="osqp", tolerance=1e-6, max_iterations=2000, time_limit_seconds=30.0)
 
     model = QPModel(variables=vars_, objective=obj, constraints=cons, options=options)

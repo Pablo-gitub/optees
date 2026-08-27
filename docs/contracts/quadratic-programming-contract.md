@@ -9,7 +9,8 @@
 - **Contract Version:** `1`
 - **Problem Schema Version:** `1`
 - **Result Schema Version:** `1`
-- **Implementation Status:** planned for `OPT-DS-02`; no production solver code in this work unit.
+- **Implementation Status:** shipped by `OPT-DS-02`; capability gate `QP-I`
+  and desktop gate `QP-UI` reached after review correction.
 
 This contract freezes the mathematical formulation, public JSON DTOs,
 validation guarantees, status semantics, and backend selection for the general

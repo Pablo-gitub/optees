@@ -3,11 +3,14 @@ from __future__ import annotations
 import pytest
 
 from optees.application.usecases.solve_qp_usecase import SolveQPUseCase
-from optees.data.adapters.qp.osqp_solver_adapter import OSQPSolverAdapter
+from optees.data.adapters.qp.osqp_solver_adapter import (
+    OSQPSolverAdapter,
+    _has_feasible_candidate,
+)
 from optees.domain.entities.qp.constraint import QPConstraint
 from optees.domain.entities.qp.objective import QPObjective
 from optees.domain.entities.qp.variable import QPVariable
-from optees.domain.models.qp.qp_model import QPModel, QPOptions
+from optees.domain.models.qp.qp_model import QPModel
 from optees.domain.value_objects.lp.bounds import Bounds
 from optees.domain.value_objects.lp.objective_sense import ObjectiveSense
 from optees.domain.value_objects.lp.relation import Relation
@@ -135,15 +138,10 @@ def test_osqp_solve_unbounded() -> None:
     assert solution.values == {}
 
 
-def test_osqp_warm_start() -> None:
-    vars_ = (QPVariable(name="x1"), QPVariable(name="x2"))
-    obj = QPObjective(
-        sense=ObjectiveSense.MIN,
-        linear_coefs=(-4.0, -6.0),
-        quadratic_matrix=((2.0, 1.0), (1.0, 2.0)),
-    )
-    options = QPOptions(warm_start=True, initial_primal=(0.66, 2.66))
-    model = QPModel(variables=vars_, objective=obj, options=options)
-    adapter = OSQPSolverAdapter()
-    solution = SolveQPUseCase(adapter).execute(model)
-    assert solution.status == QPSolveStatus.OPTIMAL
+def test_early_stopped_candidate_requires_primal_feasibility() -> None:
+    rows = [[1.0, 1.0], [1.0, 0.0], [0.0, 1.0]]
+    lower = [2.0, 0.0, 0.0]
+    upper = [float("inf"), float("inf"), float("inf")]
+
+    assert _has_feasible_candidate([1.0, 1.0], rows, lower, upper, tolerance=1e-7)
+    assert not _has_feasible_candidate([0.25, 0.25], rows, lower, upper, tolerance=1e-7)

@@ -40,6 +40,15 @@ class ErrorCode(str, Enum):
     INTERNAL_ERROR = "internal_error"
 
 
+class CodedValidationError(ValueError):
+    """Validation failure carrying a stable public detail code and JSON path."""
+
+    def __init__(self, message: str, *, detail_code: str, path: str = "$") -> None:
+        super().__init__(message)
+        self.detail_code = detail_code
+        self.path = path
+
+
 @dataclass(frozen=True)
 class ErrorDetail:
     path: str

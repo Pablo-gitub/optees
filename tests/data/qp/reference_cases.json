@@ -7,27 +7,25 @@
       "kind": "analytic_reference_case",
       "source": "Unconstrained 2D strictly convex quadratic function min 1/2 x^T Q x + c^T x.",
       "problem": {
-        "contract_version": "1",
-        "problem_schema_version": "1",
-        "capability_id": "qp.continuous",
+        "version": "1",
         "problem_type": "quadratic_programming",
         "variables": [
           {
             "name": "x1",
-            "label": "X1",
-            "lower_bound": null,
-            "upper_bound": null
+            "lb": null,
+            "ub": null,
+            "label": "X1"
           },
           {
             "name": "x2",
-            "label": "X2",
-            "lower_bound": null,
-            "upper_bound": null
+            "lb": null,
+            "ub": null,
+            "label": "X2"
           }
         ],
         "objective": {
           "sense": "min",
-          "linear_coefs": [
+          "linear_coefficients": [
             -4.0,
             -6.0
           ],
@@ -44,9 +42,9 @@
           "offset": 0.0
         },
         "constraints": [],
-        "options": {
+        "solver_options": {
           "method": "osqp",
-          "tolerance": 1e-07
+          "tolerance": 1E-7
         }
       },
       "expected": {
@@ -64,27 +62,25 @@
       "kind": "analytic_reference_case",
       "source": "Convex quadratic subject to active lower bound inequality constraint x1 + x2 >= 2.",
       "problem": {
-        "contract_version": "1",
-        "problem_schema_version": "1",
-        "capability_id": "qp.continuous",
+        "version": "1",
         "problem_type": "quadratic_programming",
         "variables": [
           {
             "name": "x1",
-            "label": "X1",
-            "lower_bound": 0.0,
-            "upper_bound": null
+            "lb": 0.0,
+            "ub": null,
+            "label": "X1"
           },
           {
             "name": "x2",
-            "label": "X2",
-            "lower_bound": 0.0,
-            "upper_bound": null
+            "lb": 0.0,
+            "ub": null,
+            "label": "X2"
           }
         ],
         "objective": {
           "sense": "min",
-          "linear_coefs": [
+          "linear_coefficients": [
             0.0,
             0.0
           ],
@@ -102,18 +98,18 @@
         },
         "constraints": [
           {
-            "name": "c1",
-            "coefs": [
+            "coefficients": [
               1.0,
               1.0
             ],
             "relation": ">=",
-            "rhs": 2.0
+            "rhs": 2.0,
+            "name": "c1"
           }
         ],
-        "options": {
+        "solver_options": {
           "method": "osqp",
-          "tolerance": 1e-07
+          "tolerance": 1E-7
         }
       },
       "expected": {
@@ -131,27 +127,25 @@
       "kind": "analytic_reference_case",
       "source": "Concave quadratic maximization max -x1^2 - x2^2 + 4 x1 + 6 x2.",
       "problem": {
-        "contract_version": "1",
-        "problem_schema_version": "1",
-        "capability_id": "qp.continuous",
+        "version": "1",
         "problem_type": "quadratic_programming",
         "variables": [
           {
             "name": "x1",
-            "label": "X1",
-            "lower_bound": null,
-            "upper_bound": null
+            "lb": null,
+            "ub": null,
+            "label": "X1"
           },
           {
             "name": "x2",
-            "label": "X2",
-            "lower_bound": null,
-            "upper_bound": null
+            "lb": null,
+            "ub": null,
+            "label": "X2"
           }
         ],
         "objective": {
           "sense": "max",
-          "linear_coefs": [
+          "linear_coefficients": [
             4.0,
             6.0
           ],
@@ -168,9 +162,9 @@
           "offset": 0.0
         },
         "constraints": [],
-        "options": {
+        "solver_options": {
           "method": "osqp",
-          "tolerance": 1e-07
+          "tolerance": 1E-7
         }
       },
       "expected": {
@@ -188,27 +182,25 @@
       "kind": "analytic_reference_case",
       "source": "Convex quadratic with equality constraint, inequality budget, and unit box bounds.",
       "problem": {
-        "contract_version": "1",
-        "problem_schema_version": "1",
-        "capability_id": "qp.continuous",
+        "version": "1",
         "problem_type": "quadratic_programming",
         "variables": [
           {
             "name": "x1",
-            "label": "X1",
-            "lower_bound": 0.0,
-            "upper_bound": 1.0
+            "lb": 0.0,
+            "ub": 1.0,
+            "label": "X1"
           },
           {
             "name": "x2",
-            "label": "X2",
-            "lower_bound": 0.0,
-            "upper_bound": 1.0
+            "lb": 0.0,
+            "ub": 1.0,
+            "label": "X2"
           }
         ],
         "objective": {
           "sense": "min",
-          "linear_coefs": [
+          "linear_coefficients": [
             -1.0,
             -2.0
           ],
@@ -226,27 +218,27 @@
         },
         "constraints": [
           {
-            "name": "sum_eq",
-            "coefs": [
+            "coefficients": [
               1.0,
               1.0
             ],
             "relation": "=",
-            "rhs": 1.0
+            "rhs": 1.0,
+            "name": "sum_eq"
           },
           {
-            "name": "budget_le",
-            "coefs": [
+            "coefficients": [
               1.0,
               2.0
             ],
             "relation": "<=",
-            "rhs": 1.5
+            "rhs": 1.5,
+            "name": "budget_le"
           }
         ],
-        "options": {
+        "solver_options": {
           "method": "osqp",
-          "tolerance": 1e-07
+          "tolerance": 1E-7
         }
       },
       "expected": {
@@ -264,25 +256,23 @@
       "kind": "analytic_reference_case",
       "source": "Infeasible problem with contradictory linear constraints x1 + x2 <= 1 and x1 + x2 >= 3.",
       "problem": {
-        "contract_version": "1",
-        "problem_schema_version": "1",
-        "capability_id": "qp.continuous",
+        "version": "1",
         "problem_type": "quadratic_programming",
         "variables": [
           {
             "name": "x1",
-            "lower_bound": 0.0,
-            "upper_bound": null
+            "lb": 0.0,
+            "ub": null
           },
           {
             "name": "x2",
-            "lower_bound": 0.0,
-            "upper_bound": null
+            "lb": 0.0,
+            "ub": null
           }
         ],
         "objective": {
           "sense": "min",
-          "linear_coefs": [
+          "linear_coefficients": [
             0.0,
             0.0
           ],
@@ -300,25 +290,25 @@
         },
         "constraints": [
           {
-            "name": "c1",
-            "coefs": [
+            "coefficients": [
               1.0,
               1.0
             ],
             "relation": "<=",
-            "rhs": 1.0
+            "rhs": 1.0,
+            "name": "c1"
           },
           {
-            "name": "c2",
-            "coefs": [
+            "coefficients": [
               1.0,
               1.0
             ],
             "relation": ">=",
-            "rhs": 3.0
+            "rhs": 3.0,
+            "name": "c2"
           }
         ],
-        "options": {
+        "solver_options": {
           "method": "osqp"
         }
       },
@@ -334,25 +324,23 @@
       "kind": "analytic_reference_case",
       "source": "Unbounded problem min -2 x2 with zero quadratic curvature in x2 and no upper bound.",
       "problem": {
-        "contract_version": "1",
-        "problem_schema_version": "1",
-        "capability_id": "qp.continuous",
+        "version": "1",
         "problem_type": "quadratic_programming",
         "variables": [
           {
             "name": "x1",
-            "lower_bound": 0.0,
-            "upper_bound": null
+            "lb": 0.0,
+            "ub": null
           },
           {
             "name": "x2",
-            "lower_bound": 0.0,
-            "upper_bound": null
+            "lb": 0.0,
+            "ub": null
           }
         ],
         "objective": {
           "sense": "min",
-          "linear_coefs": [
+          "linear_coefficients": [
             0.0,
             -2.0
           ],
@@ -369,7 +357,7 @@
           "offset": 0.0
         },
         "constraints": [],
-        "options": {
+        "solver_options": {
           "method": "osqp"
         }
       },

@@ -27,6 +27,7 @@ class SolveQPUseCase:
         objective = raw.get("objective")
         values = raw.get("x", {})
         extras = dict(raw.get("extras", {}))
+        extras["objective_sense"] = "min" if model.objective.sense == ObjectiveSense.MIN else "max"
 
         dual_data = raw.get("dual_values")
         dual_values = QPDualValues.from_dict(dual_data) if dual_data is not None else None
@@ -43,6 +44,7 @@ class SolveQPUseCase:
             dual_values=dual_values,
             kkt_residuals=kkt_residuals,
             diagnostics=diagnostics,
+            termination_reason=str(raw.get("termination_reason", "completed")),
             extras=extras,
         )
 
@@ -60,7 +62,9 @@ class SolveQPUseCase:
             {
                 "name": cons.name,
                 "coefs": list(cons.coefs),
-                "relation": cons.relation.symbol() if hasattr(cons.relation, "symbol") else str(cons.relation),
+                "relation": cons.relation.symbol()
+                if hasattr(cons.relation, "symbol")
+                else str(cons.relation),
                 "rhs": float(cons.rhs),
             }
             for cons in model.constraints
@@ -71,9 +75,6 @@ class SolveQPUseCase:
             "tolerance": model.options.tolerance,
             "max_iterations": model.options.max_iterations,
             "time_limit_seconds": model.options.time_limit_seconds,
-            "warm_start": model.options.warm_start,
-            "initial_primal": list(model.options.initial_primal) if model.options.initial_primal else None,
-            "initial_dual": list(model.options.initial_dual) if model.options.initial_dual else None,
         }
 
         return {

@@ -42,7 +42,8 @@ _RESULTS = {
     },
     "qp.continuous": {
         "objective": 1.0,
-        "variables": {"x1": 1.0, "x2": 1.0},
+        "objective_sense": "min",
+        "variables": [{"name": "x1", "value": 1.0}, {"name": "x2", "value": 1.0}],
     },
     "milp.linear": {
         "objective": 7.0,
@@ -438,9 +439,7 @@ def test_milp_validation_and_diagnostics_preserve_machine_readable_semantics():
         if item.artifact_type == "diagnostics_table"
     )
     validation_payload = json.loads(
-        CanonicalTableRenderer(validation_definition.builder)
-        .render(context)
-        .content
+        CanonicalTableRenderer(validation_definition.builder).render(context).content
     )
     diagnostics_payload = json.loads(
         CanonicalTableRenderer(diagnostics_definition.builder)

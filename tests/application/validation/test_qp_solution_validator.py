@@ -31,9 +31,7 @@ def sample_qp_model() -> QPModel:
         quadratic_matrix=((1.0, 0.0), (0.0, 1.0)),
         offset=0.0,
     )
-    cons = (
-        QPConstraint(name="c1", coefs=(1.0, 1.0), relation=Relation.GE, rhs=2.0),
-    )
+    cons = (QPConstraint(name="c1", coefs=(1.0, 1.0), relation=Relation.GE, rhs=2.0),)
     return QPModel(variables=vars_, objective=obj, constraints=cons)
 
 
@@ -43,7 +41,7 @@ def test_validator_verified_with_duals(sample_qp_model: QPModel) -> None:
     serialized = SerializedResult(
         mathematical_status=MathematicalStatus.OPTIMAL,
         result={
-            "variables": {"x1": 1.0, "x2": 1.0},
+            "variables": [{"name": "x1", "value": 1.0}, {"name": "x2", "value": 1.0}],
             "objective": 1.0,
             "dual_values": {
                 "constraints": [-1.0],
@@ -64,7 +62,7 @@ def test_validator_partial_without_duals(sample_qp_model: QPModel) -> None:
     serialized = SerializedResult(
         mathematical_status=MathematicalStatus.OPTIMAL,
         result={
-            "variables": {"x1": 1.0, "x2": 1.0},
+            "variables": [{"name": "x1", "value": 1.0}, {"name": "x2", "value": 1.0}],
             "objective": 1.0,
         },
     )
@@ -90,7 +88,7 @@ def test_validator_detects_tampered_variable_vector(sample_qp_model: QPModel) ->
     # Missing variable x2
     serialized = SerializedResult(
         mathematical_status=MathematicalStatus.OPTIMAL,
-        result={"variables": {"x1": 1.0}, "objective": 1.0},
+        result={"variables": [{"name": "x1", "value": 1.0}], "objective": 1.0},
     )
     report = validator(sample_qp_model, serialized)
     assert report.status == SolutionValidationStatus.FAILED
@@ -103,7 +101,7 @@ def test_validator_detects_tampered_bounds(sample_qp_model: QPModel) -> None:
     serialized = SerializedResult(
         mathematical_status=MathematicalStatus.OPTIMAL,
         result={
-            "variables": {"x1": -1.0, "x2": 3.0},
+            "variables": [{"name": "x1", "value": -1.0}, {"name": "x2", "value": 3.0}],
             "objective": 5.0,
         },
     )
@@ -118,7 +116,7 @@ def test_validator_detects_tampered_constraints(sample_qp_model: QPModel) -> Non
     serialized = SerializedResult(
         mathematical_status=MathematicalStatus.OPTIMAL,
         result={
-            "variables": {"x1": 0.25, "x2": 0.25},
+            "variables": [{"name": "x1", "value": 0.25}, {"name": "x2", "value": 0.25}],
             "objective": 0.0625,
         },
     )
@@ -133,7 +131,7 @@ def test_validator_detects_tampered_objective(sample_qp_model: QPModel) -> None:
     serialized = SerializedResult(
         mathematical_status=MathematicalStatus.OPTIMAL,
         result={
-            "variables": {"x1": 1.0, "x2": 1.0},
+            "variables": [{"name": "x1", "value": 1.0}, {"name": "x2", "value": 1.0}],
             "objective": 99.0,
         },
     )
@@ -148,7 +146,7 @@ def test_validator_detects_tampered_kkt_stationarity(sample_qp_model: QPModel) -
     serialized = SerializedResult(
         mathematical_status=MathematicalStatus.OPTIMAL,
         result={
-            "variables": {"x1": 1.0, "x2": 1.0},
+            "variables": [{"name": "x1", "value": 1.0}, {"name": "x2", "value": 1.0}],
             "objective": 1.0,
             "dual_values": {
                 "constraints": [50.0],
@@ -160,3 +158,23 @@ def test_validator_detects_tampered_kkt_stationarity(sample_qp_model: QPModel) -
     report = validator(sample_qp_model, serialized)
     assert report.status == SolutionValidationStatus.FAILED
     assert any(v.check_code == "qp.kkt_stationarity" for v in report.violations)
+
+
+def test_validator_detects_complementary_slackness_failure(
+    sample_qp_model: QPModel,
+) -> None:
+    serialized = SerializedResult(
+        mathematical_status=MathematicalStatus.OPTIMAL,
+        result={
+            "variables": [{"name": "x1", "value": 2.0}, {"name": "x2", "value": 2.0}],
+            "objective": 4.0,
+            "dual_values": {
+                "constraints": [-2.0],
+                "lower_bounds": [0.0, 0.0],
+                "upper_bounds": [0.0, 0.0],
+            },
+        },
+    )
+    report = QPIndependentSolutionValidator()(sample_qp_model, serialized)
+    assert report.status == SolutionValidationStatus.FAILED
+    assert any(v.code == "qp.kkt_complementarity_violation" for v in report.violations)

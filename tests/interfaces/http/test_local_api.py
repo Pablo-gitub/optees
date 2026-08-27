@@ -37,9 +37,7 @@ class ASGIClient:
 
     def __exit__(self, exc_type, exc, traceback):
         self._loop.run_until_complete(self._client.__aexit__(exc_type, exc, traceback))
-        self._loop.run_until_complete(
-            self._lifespan.__aexit__(exc_type, exc, traceback)
-        )
+        self._loop.run_until_complete(self._lifespan.__aexit__(exc_type, exc, traceback))
         self._loop.close()
 
     def get(self, path: str, **kwargs):
@@ -249,9 +247,7 @@ def test_http_contract_validation_does_not_echo_rejected_payload_values():
 
 
 def test_mutation_endpoints_enforce_json_content_type_and_body_size():
-    with ASGIClient(
-        create_local_api(token=TOKEN, max_request_bytes=100)
-    ) as client:
+    with ASGIClient(create_local_api(token=TOKEN, max_request_bytes=100)) as client:
         wrong_type = client.post(
             "/api/v1/jobs",
             headers=AUTH,
@@ -300,27 +296,23 @@ def test_job_api_executes_from_submission_to_versioned_result():
 
 def test_qp_rest_api_lifecycle():
     qp_payload = {
-        "contract_version": "1",
-        "problem_schema_version": "1",
-        "capability_id": "qp.continuous",
+        "version": "1",
         "problem_type": "quadratic_programming",
         "variables": [
-            {"name": "x1", "label": "X1", "lower_bound": 0.0, "upper_bound": None},
-            {"name": "x2", "label": "X2", "lower_bound": 0.0, "upper_bound": None},
+            {"name": "x1", "label": "X1", "lb": 0.0, "ub": None},
+            {"name": "x2", "label": "X2", "lb": 0.0, "ub": None},
         ],
         "objective": {
             "sense": "min",
-            "linear_coefs": [0.0, 0.0],
+            "linear_coefficients": [0.0, 0.0],
             "quadratic_matrix": [
                 [1.0, 0.0],
                 [0.0, 1.0],
             ],
             "offset": 0.0,
         },
-        "constraints": [
-            {"name": "c1", "coefs": [1.0, 1.0], "relation": ">=", "rhs": 2.0}
-        ],
-        "options": {"method": "osqp"},
+        "constraints": [{"name": "c1", "coefficients": [1.0, 1.0], "relation": ">=", "rhs": 2.0}],
+        "solver_options": {"method": "osqp"},
     }
 
     with ASGIClient(create_local_api(token=TOKEN)) as client:
@@ -358,8 +350,9 @@ def test_qp_rest_api_lifecycle():
     assert result.status_code == 200
     assert result.json()["job_id"] == job_id
     assert result.json()["result"]["objective"] == pytest.approx(1.0, rel=1e-5)
-    assert result.json()["result"]["variables"]["x1"] == pytest.approx(1.0, rel=1e-5)
-    assert result.json()["result"]["variables"]["x2"] == pytest.approx(1.0, rel=1e-5)
+    values = {item["name"]: item["value"] for item in result.json()["result"]["variables"]}
+    assert values["x1"] == pytest.approx(1.0, rel=1e-5)
+    assert values["x2"] == pytest.approx(1.0, rel=1e-5)
     assert result.json()["validation"]["status"] == "verified"
 
 
@@ -410,12 +403,8 @@ def test_batch_api_validates_submits_and_aggregates_individual_results():
     assert snapshot is not None
     assert snapshot.json()["counts"] == {"completed": 2}
     assert result.status_code == 200
-    assert result.json()["summary"]["mathematical_status_counts"] == {
-        "optimal": 2
-    }
-    assert result.json()["summary"]["validation_status_counts"] == {
-        "verified": 2
-    }
+    assert result.json()["summary"]["mathematical_status_counts"] == {"optimal": 2}
+    assert result.json()["summary"]["validation_status_counts"] == {"verified": 2}
 
 
 def test_forecasting_api_executes_descriptor_example_as_job_and_batch():
@@ -472,12 +461,8 @@ def test_forecasting_api_executes_descriptor_example_as_job_and_batch():
     assert result.json()["mathematical_status"] == "feasible"
     assert result.json()["validation"]["status"] == "verified"
     assert batch.status_code == 202
-    assert batch_result.json()["summary"]["mathematical_status_counts"] == {
-        "feasible": 2
-    }
-    assert batch_result.json()["summary"]["validation_status_counts"] == {
-        "verified": 2
-    }
+    assert batch_result.json()["summary"]["mathematical_status_counts"] == {"feasible": 2}
+    assert batch_result.json()["summary"]["validation_status_counts"] == {"verified": 2}
 
 
 def test_batch_api_rejects_duplicate_client_ids_as_invalid_request():
@@ -509,14 +494,14 @@ def test_authenticated_openapi_matches_routes_and_bearer_security():
         "/api/v1/jobs/{job_id}",
         "/api/v1/jobs/{job_id}/result",
         "/api/v1/jobs/{job_id}/cancel",
-            "/api/v1/jobs/{job_id}/artifacts",
-            "/api/v1/artifacts/{artifact_id}",
-            "/api/v1/artifacts/{artifact_id}/cancel",
-            "/api/v1/reports",
-            "/api/v1/reports/backends",
-            "/api/v1/reports/{report_id}",
-            "/api/v1/reports/{report_id}/cancel",
-            "/api/v1/reports/{report_id}/download",
+        "/api/v1/jobs/{job_id}/artifacts",
+        "/api/v1/artifacts/{artifact_id}",
+        "/api/v1/artifacts/{artifact_id}/cancel",
+        "/api/v1/reports",
+        "/api/v1/reports/backends",
+        "/api/v1/reports/{report_id}",
+        "/api/v1/reports/{report_id}/cancel",
+        "/api/v1/reports/{report_id}/download",
         "/api/v1/batches/validate",
         "/api/v1/batches",
         "/api/v1/batches/{batch_id}",
@@ -528,6 +513,4 @@ def test_authenticated_openapi_matches_routes_and_bearer_security():
     assert set(document["paths"]) == expected_paths
     assert "HTTPBearer" in document["components"]["securitySchemes"]
     assert "security" not in document["paths"]["/health"]["get"]
-    assert document["paths"]["/api/v1/info"]["get"]["security"] == [
-        {"HTTPBearer": []}
-    ]
+    assert document["paths"]["/api/v1/info"]["get"]["security"] == [{"HTTPBearer": []}]

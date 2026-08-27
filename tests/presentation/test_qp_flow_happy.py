@@ -161,7 +161,9 @@ def test_adding_and_removing_constraints(window, qtbot) -> None:
     assert window.qp_page.constraints_table.rowCount() == 2
     assert len(window.qp_page.current_model().constraints) == 2
 
-    qtbot.mouseClick(window.qp_page.findChild(QPushButton, "qpRemoveConstraintButton"), Qt.LeftButton)
+    qtbot.mouseClick(
+        window.qp_page.findChild(QPushButton, "qpRemoveConstraintButton"), Qt.LeftButton
+    )
 
     assert window.qp_page.constraints_table.rowCount() == 1
 
@@ -191,22 +193,22 @@ def test_non_convex_matrix_is_refused_with_a_localized_message(window, monkeypat
 
 def test_json_import_populates_the_form(window, qtbot, monkeypatch, tmp_path) -> None:
     data = {
-        "capability_id": "qp.continuous",
+        "version": "1",
         "problem_type": "quadratic_programming",
         "variables": [
-            {"name": "a", "label": "Asset A", "lower_bound": 0.0, "upper_bound": 1.0},
-            {"name": "b", "label": "Asset B", "lower_bound": 0.0, "upper_bound": None},
+            {"name": "a", "label": "Resource A", "lb": 0.0, "ub": 1.0},
+            {"name": "b", "label": "Resource B", "lb": 0.0, "ub": None},
         ],
         "objective": {
             "sense": "min",
-            "linear_coefs": [-4.0, -6.0],
+            "linear_coefficients": [-4.0, -6.0],
             "quadratic_matrix": [[2.0, 1.0], [1.0, 2.0]],
             "offset": 1.5,
         },
         "constraints": [
-            {"name": "budget", "coefs": [1.0, 1.0], "relation": "<=", "rhs": 1.0}
+            {"name": "budget", "coefficients": [1.0, 1.0], "relation": "<=", "rhs": 1.0}
         ],
-        "options": {"method": "osqp", "tolerance": 1e-6, "max_iterations": 500},
+        "solver_options": {"method": "osqp", "tolerance": 1e-6, "max_iterations": 500},
     }
     path = tmp_path / "qp.json"
     path.write_text(json.dumps(data), encoding="utf-8")
@@ -265,7 +267,7 @@ def test_export_writes_an_importable_document(window, qtbot, monkeypatch, tmp_pa
     qtbot.mouseClick(window.qp_page.btn_export_json, Qt.LeftButton)
 
     payload = json.loads(path.read_text(encoding="utf-8"))
-    assert payload["capability_id"] == "qp.continuous"
+    assert payload["version"] == "1"
     assert payload["objective"]["quadratic_matrix"] == [[1.0, 0.0], [0.0, 1.0]]
 
     from optees.utility.qp_json_io import qp_model_from_dict

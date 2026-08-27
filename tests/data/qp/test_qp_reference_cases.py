@@ -40,10 +40,9 @@ def test_qp_reference_case(case: dict) -> None:
         assert envelope.result["objective"] == pytest.approx(
             expected["objective"], rel=1e-4, abs=1e-4
         )
+        values = {item["name"]: item["value"] for item in envelope.result["variables"]}
         for var_name, exp_val in expected["variables"].items():
-            assert envelope.result["variables"][var_name] == pytest.approx(
-                exp_val, rel=1e-4, abs=1e-4
-            )
+            assert values[var_name] == pytest.approx(exp_val, rel=1e-4, abs=1e-4)
 
     if "validation_status" in expected and envelope.validation is not None:
         assert envelope.validation.status.value == expected["validation_status"]

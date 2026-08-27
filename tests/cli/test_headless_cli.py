@@ -81,9 +81,7 @@ def test_list_capabilities_emits_one_versioned_json_document():
 def test_solve_forecasting_descriptor_example_through_cli():
     listed = _stdout_json(_run("list-capabilities"))
     descriptor = next(
-        item
-        for item in listed["capabilities"]
-        if item["id"] == "ml.forecasting.univariate"
+        item for item in listed["capabilities"] if item["id"] == "ml.forecasting.univariate"
     )
 
     result = _run(
@@ -308,9 +306,7 @@ def test_solve_local_continuous_nlp_through_cli():
     payload = {
         "version": "1",
         "problem_type": "nonlinear_programming",
-        "variables": [
-            {"name": "x", "lb": None, "ub": None, "initial": 0}
-        ],
+        "variables": [{"name": "x", "lb": None, "ub": None, "initial": 0}],
         "objective": {"sense": "max", "expression": "10 - (x - 3)**2"},
         "solver_options": {
             "method": "BFGS",
@@ -327,25 +323,21 @@ def test_solve_local_continuous_nlp_through_cli():
     assert output["result"]["local_candidate"] is True
     assert output["result"]["objective"] == pytest.approx(10.0, abs=1e-6)
     assert output["result"]["variables"][0]["name"] == "x"
-    assert output["result"]["variables"][0]["value"] == pytest.approx(
-        3.0, abs=1e-5
-    )
+    assert output["result"]["variables"][0]["value"] == pytest.approx(3.0, abs=1e-5)
     assert "local numerical candidate" in output["warnings"][0]
 
 
 def test_solve_convex_qp_through_cli():
     payload = {
-        "contract_version": "1",
-        "problem_schema_version": "1",
-        "capability_id": "qp.continuous",
+        "version": "1",
         "problem_type": "quadratic_programming",
         "variables": [
-            {"name": "x1", "label": "X1", "lower_bound": None, "upper_bound": None},
-            {"name": "x2", "label": "X2", "lower_bound": None, "upper_bound": None},
+            {"name": "x1", "label": "X1", "lb": None, "ub": None},
+            {"name": "x2", "label": "X2", "lb": None, "ub": None},
         ],
         "objective": {
             "sense": "min",
-            "linear_coefs": [-4.0, -6.0],
+            "linear_coefficients": [-4.0, -6.0],
             "quadratic_matrix": [
                 [2.0, 1.0],
                 [1.0, 2.0],
@@ -353,7 +345,7 @@ def test_solve_convex_qp_through_cli():
             "offset": 0.0,
         },
         "constraints": [],
-        "options": {"method": "osqp", "tolerance": 1e-7},
+        "solver_options": {"method": "osqp", "tolerance": 1e-7},
     }
 
     result = _run("solve", "qp.continuous", stdin=json.dumps(payload))
@@ -364,8 +356,9 @@ def test_solve_convex_qp_through_cli():
     assert output["job_status"] == "completed"
     assert output["mathematical_status"] == "optimal"
     assert output["result"]["objective"] == pytest.approx(-28.0 / 3.0, rel=1e-5)
-    assert output["result"]["variables"]["x1"] == pytest.approx(2.0 / 3.0, rel=1e-5)
-    assert output["result"]["variables"]["x2"] == pytest.approx(8.0 / 3.0, rel=1e-5)
+    values = {item["name"]: item["value"] for item in output["result"]["variables"]}
+    assert values["x1"] == pytest.approx(2.0 / 3.0, rel=1e-5)
+    assert values["x2"] == pytest.approx(8.0 / 3.0, rel=1e-5)
     assert output["validation"]["status"] in {"verified", "partial"}
 
 
@@ -376,10 +369,7 @@ def test_train_linear_regression_through_cli():
         "dataset": {
             "feature_names": ["size"],
             "target_name": "price",
-            "rows": [
-                {"features": [value], "target": 2 + 3 * value}
-                for value in range(1, 9)
-            ],
+            "rows": [{"features": [value], "target": 2 + 3 * value} for value in range(1, 9)],
         },
         "training_options": {
             "method": "OLS",

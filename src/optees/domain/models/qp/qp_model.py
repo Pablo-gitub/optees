@@ -31,20 +31,31 @@ class QPOptions:
     tolerance: float = 1e-7
     max_iterations: int = 4000
     time_limit_seconds: float = 60.0
-    warm_start: bool = False
-    initial_primal: Optional[Tuple[float, ...]] = None
-    initial_dual: Optional[Tuple[float, ...]] = None
 
     def __post_init__(self) -> None:
         method = str(self.method).strip().lower()
         if method != "osqp":
-            raise ValueError(f"unsupported QP method {self.method!r}; version 1 supports 'osqp' only")
-        if isinstance(self.tolerance, bool) or not math.isfinite(self.tolerance) or self.tolerance <= 0:
-            raise ValueError("QP tolerance must be a positive finite number")
-        if isinstance(self.max_iterations, bool) or not isinstance(self.max_iterations, int) or self.max_iterations <= 0:
-            raise ValueError("QP max_iterations must be a positive integer")
-        if isinstance(self.time_limit_seconds, bool) or not math.isfinite(self.time_limit_seconds) or self.time_limit_seconds <= 0:
-            raise ValueError("QP time_limit_seconds must be a positive finite number")
+            raise ValueError(
+                f"unsupported QP method {self.method!r}; version 1 supports 'osqp' only"
+            )
+        if (
+            isinstance(self.tolerance, bool)
+            or not math.isfinite(self.tolerance)
+            or not 1e-12 <= self.tolerance <= 1e-2
+        ):
+            raise ValueError("QP tolerance must be between 1e-12 and 1e-2")
+        if (
+            isinstance(self.max_iterations, bool)
+            or not isinstance(self.max_iterations, int)
+            or not 10 <= self.max_iterations <= 100_000
+        ):
+            raise ValueError("QP max_iterations must be between 10 and 100000")
+        if (
+            isinstance(self.time_limit_seconds, bool)
+            or not math.isfinite(self.time_limit_seconds)
+            or not 0.1 <= self.time_limit_seconds <= 300.0
+        ):
+            raise ValueError("QP time_limit_seconds must be between 0.1 and 300")
 
         object.__setattr__(self, "method", method)
 
@@ -80,7 +91,9 @@ class QPModel:
             if ub is not None:
                 _validate_finite_number(ub, f"variable '{v.name}' upper bound")
             if lb is not None and ub is not None and lb > ub:
-                raise ValueError(f"variable '{v.name}' lower bound ({lb}) exceeds upper bound ({ub})")
+                raise ValueError(
+                    f"variable '{v.name}' lower bound ({lb}) exceeds upper bound ({ub})"
+                )
 
         # Validate linear coefficients
         linear_coefs = tuple(
@@ -107,10 +120,12 @@ class QPModel:
                 raise ValueError(
                     f"objective quadratic matrix row {r_idx} length ({len(row)}) does not match variable count ({n})"
                 )
-            matrix_rows.append([
-                _validate_finite_number(val, f"quadratic matrix entry [{r_idx}][{c_idx}]")
-                for c_idx, val in enumerate(row)
-            ])
+            matrix_rows.append(
+                [
+                    _validate_finite_number(val, f"quadratic matrix entry [{r_idx}][{c_idx}]")
+                    for c_idx, val in enumerate(row)
+                ]
+            )
 
         Q_arr = np.array(matrix_rows, dtype=float)
         max_q = float(np.max(np.abs(Q_arr))) if n > 0 else 1.0
@@ -159,30 +174,28 @@ class QPModel:
                 for i, val in enumerate(cons.coefs)
             )
             c_rhs = _validate_finite_number(cons.rhs, f"constraint {c_idx} rhs")
-            canonical_constraints.append(QPConstraint(
-                name=cons.name,
-                coefs=c_coefs,
-                relation=cons.relation,
-                rhs=c_rhs,
-            ))
+            canonical_constraints.append(
+                QPConstraint(
+                    name=cons.name,
+                    coefs=c_coefs,
+                    relation=cons.relation,
+                    rhs=c_rhs,
+                )
+            )
 
         # Validate options
         options = self.options if isinstance(self.options, QPOptions) else QPOptions(**self.options)
-        if options.warm_start and options.initial_primal is not None:
-            if len(options.initial_primal) != n:
-                raise ValueError(
-                    f"warm start initial_primal length ({len(options.initial_primal)}) does not match variable count ({n})"
-                )
-            for i, val in enumerate(options.initial_primal):
-                _validate_finite_number(val, f"initial_primal[{i}]")
-
         object.__setattr__(self, "variables", variables)
-        object.__setattr__(self, "objective", QPObjective(
-            sense=self.objective.sense,
-            linear_coefs=linear_coefs,
-            quadratic_matrix=canonical_matrix,
-            offset=offset,
-        ))
+        object.__setattr__(
+            self,
+            "objective",
+            QPObjective(
+                sense=self.objective.sense,
+                linear_coefs=linear_coefs,
+                quadratic_matrix=canonical_matrix,
+                offset=offset,
+            ),
+        )
         object.__setattr__(self, "constraints", tuple(canonical_constraints))
         object.__setattr__(self, "options", options)
 
