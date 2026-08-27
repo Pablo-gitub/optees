@@ -20,6 +20,8 @@ from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.knapsack_solution_view import KnapsackSolutionView
 from optees.presentation.views.nlp_view import NLPView
 from optees.presentation.views.nlp_solution_view import NLPSolutionView
+from optees.presentation.views.qp_view import QPView
+from optees.presentation.views.qp_solution_view import QPSolutionView
 from optees.presentation.views.graph_view import GraphView
 from optees.presentation.views.graph_solution_view import GraphSolutionView
 from optees.presentation.views.packing_view import PackingView
@@ -44,6 +46,8 @@ from optees.presentation.views.lp_info_view import (
     KnapsackProblemDescriptionView,
     NLPExampleView,
     NLPProblemDescriptionView,
+    QPExampleView,
+    QPProblemDescriptionView,
     GraphExampleView,
     GraphProblemDescriptionView,
     RegressionExampleView,
@@ -61,6 +65,9 @@ from optees.presentation.controllers.knapsack_controller import KnapsackControll
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
 from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
 from optees.application.usecases.solve_nlp_usecase import SolveNLPUseCase
+from optees.application.usecases.solve_qp_usecase import SolveQPUseCase
+from optees.application.codecs.qp_result_codec import QPResultCodec
+from optees.application.validation.qp_solution_validator import QPIndependentSolutionValidator
 from optees.application.usecases.solve_shortest_path_usecase import SolveShortestPathUseCase
 from optees.application.usecases.train_regression_usecase import TrainRegressionUseCase
 from optees.application.usecases.forecast_time_series_usecase import ForecastTimeSeriesUseCase
@@ -86,6 +93,8 @@ from optees.application.usecases.analyze_problem_description_usecase import (
 from optees.data.adapters.lp.lp_solver_adapter import LPSolverAdapter
 from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
 from optees.data.adapters.nlp.nlp_solver_adapter import ScipyNLPSolverAdapter
+from optees.data.adapters.qp.osqp_solver_adapter import OSQPSolverAdapter
+from optees.composition.backend_health import import_is_usable
 from optees.data.adapters.graph.dijkstra_solver_adapter import DijkstraSolverAdapter
 from optees.data.adapters.regression.numpy_regression_adapter import NumpyRegressionAdapter
 from optees.data.adapters.forecasting import (
@@ -157,6 +166,16 @@ class MainWindow(QMainWindow):
         self.nlp_solver_port = ScipyNLPSolverAdapter()
         self.solve_nlp_uc = SolveNLPUseCase(self.nlp_solver_port)
         self.nlp_page.set_solve_usecase(self.solve_nlp_uc)
+
+        self.qp_page = QPView()
+        self.qp_solver_port = OSQPSolverAdapter()
+        self.solve_qp_uc = SolveQPUseCase(self.qp_solver_port)
+        self.qp_page.set_solve_usecase(self.solve_qp_uc)
+        self.qp_page.set_backend_available(import_is_usable("osqp"))
+        # Serialization and independent validation stay with the registered
+        # Stage A codec and validator; the result view only renders them.
+        self.qp_result_codec = QPResultCodec()
+        self.qp_solution_validator = QPIndependentSolutionValidator()
 
         self.graph_page = GraphView()
         self.graph_solver_port = DijkstraSolverAdapter()
@@ -240,6 +259,8 @@ class MainWindow(QMainWindow):
         self.knapsack_problem_page = KnapsackProblemDescriptionView()
         self.nlp_example_page = NLPExampleView()
         self.nlp_problem_page = NLPProblemDescriptionView()
+        self.qp_example_page = QPExampleView()
+        self.qp_problem_page = QPProblemDescriptionView()
         self.graph_example_page = GraphExampleView()
         self.graph_problem_page = GraphProblemDescriptionView()
         self.packing_example_page = PackingExampleView()
@@ -256,6 +277,7 @@ class MainWindow(QMainWindow):
         self.milp_solution_page = LPSolutionView()
         self.knapsack_solution_page = KnapsackSolutionView()
         self.nlp_solution_page = NLPSolutionView()
+        self.qp_solution_page = QPSolutionView()
         self.graph_solution_page = GraphSolutionView()
         self.packing_solution_page = PackingSolutionView()
         self.regression_solution_page = RegressionSolutionView()
@@ -276,6 +298,10 @@ class MainWindow(QMainWindow):
         self.register_page("nlp_example", self.nlp_example_page)
         self.register_page("nlp_problem", self.nlp_problem_page)
         self.register_page("nlp_solution", self.nlp_solution_page)
+        self.register_page("qp", self.qp_page)
+        self.register_page("qp_example", self.qp_example_page)
+        self.register_page("qp_problem", self.qp_problem_page)
+        self.register_page("qp_solution", self.qp_solution_page)
         self.register_page("graph", self.graph_page)
         self.register_page("graph_example", self.graph_example_page)
         self.register_page("graph_problem", self.graph_problem_page)
@@ -428,9 +454,22 @@ class MainWindow(QMainWindow):
         self.drop.setMenu(menu)
         self.toolbar.addWidget(self.drop)
 
+        # Dropdown: Nonlinear Optimization (continuous nonlinear and convex QP)
+        self.drop_nonlinear = QToolButton(self)
+        self.drop_nonlinear.setText(S.t("nav.nonlinear_optimization"))
+        self.drop_nonlinear.setPopupMode(QToolButton.InstantPopup)
+        nonlinear_menu = QMenu(self.drop_nonlinear)
+
         self.act_nlp = QAction(S.t("alg.nlp"), self)
         self.act_nlp.triggered.connect(lambda: self.goto("nlp"))
-        self.toolbar.addAction(self.act_nlp)
+        nonlinear_menu.addAction(self.act_nlp)
+
+        self.act_qp = QAction(S.t("alg.qp"), self)
+        self.act_qp.triggered.connect(lambda: self.goto("qp"))
+        nonlinear_menu.addAction(self.act_qp)
+
+        self.drop_nonlinear.setMenu(nonlinear_menu)
+        self.toolbar.addWidget(self.drop_nonlinear)
 
         self.act_graph = QAction(S.t("alg.graph"), self)
         self.act_graph.triggered.connect(lambda: self.goto("graph"))
@@ -481,7 +520,9 @@ class MainWindow(QMainWindow):
                     self.knapsack_example_page, self.knapsack_problem_page,
                     self.lp_solution_page, self.milp_solution_page, self.knapsack_solution_page,
                     self.milp_page, self.knap_page, self.nlp_page, self.nlp_example_page,
-                    self.nlp_problem_page, self.nlp_solution_page, self.graph_page,
+                    self.nlp_problem_page, self.nlp_solution_page,
+                    self.qp_page, self.qp_example_page, self.qp_problem_page,
+                    self.qp_solution_page, self.graph_page,
                     self.graph_example_page, self.graph_problem_page, self.graph_solution_page,
                     self.packing_page, self.packing_example_page, self.packing_problem_page,
                     self.packing_solution_page,
@@ -505,7 +546,9 @@ class MainWindow(QMainWindow):
         self.act_lp.setText(S.t("alg.lp"))
         self.act_milp.setText(S.t("alg.milp"))
         self.act_knap.setText(S.t("alg.knap"))
+        self.drop_nonlinear.setText(S.t("nav.nonlinear_optimization"))
         self.act_nlp.setText(S.t("alg.nlp"))
+        self.act_qp.setText(S.t("alg.qp"))
         self.act_graph.setText(S.t("alg.graph"))
         self.act_packing.setText(S.t("alg.packing"))
         self.drop_ml.setText(S.t("nav.machine_learning").replace("&", "&&"))
@@ -523,7 +566,9 @@ class MainWindow(QMainWindow):
                  self.knapsack_example_page, self.knapsack_problem_page,
                  self.lp_solution_page, self.milp_solution_page, self.knapsack_solution_page,
                  self.milp_page, self.knap_page, self.nlp_page, self.nlp_example_page,
-                 self.nlp_problem_page, self.nlp_solution_page, self.graph_page,
+                 self.nlp_problem_page, self.nlp_solution_page,
+                 self.qp_page, self.qp_example_page, self.qp_problem_page,
+                 self.qp_solution_page, self.graph_page,
                  self.graph_example_page, self.graph_problem_page, self.graph_solution_page,
                  self.packing_page, self.packing_example_page, self.packing_problem_page,
                  self.packing_solution_page,

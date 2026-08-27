@@ -284,6 +284,16 @@ class NLPProblemDescriptionView(LPInfoView):
         super().__init__("nlp_problem", parent=parent)
 
 
+class QPExampleView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("qp_example", parent=parent)
+
+
+class QPProblemDescriptionView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("qp_problem", parent=parent)
+
+
 class GraphExampleView(LPInfoView):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__("graph_example", parent=parent)

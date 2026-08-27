@@ -275,12 +275,46 @@ stop rather than implement solver/application logic.
   environments reported honestly;
 - regression run for existing LP/MILP/NLP navigation and shared widgets.
 
-## Gate `QP-UI`
+## Gate `QP-UI` (Implemented, pending review)
 
-The full work unit is complete when `QP-I` remains green and the QP desktop
-workflow is usable, bilingual, accessible, visually reviewed, architecture
-compliant, documented as shipped, and committed as a separate reviewed atomic
-UI change.
+Stage B desktop implementation is complete:
+
+- Home card in the Nonlinear Programming category and a toolbar
+  "Nonlinear Optimization" group holding NLP and QP; `qp`, `qp_example`,
+  `qp_problem`, and `qp_solution` pages registered in `MainWindow`;
+- `QPView` formulates ordered variables and bounds, the objective sense,
+  offset, a symmetry-preserving `Q` editor, the linear vector `c`, linear
+  constraints, and solver options, and switches to a compact non-editing mode
+  above 12 variables so an imported large model stays solvable and exportable;
+- import and export both go through the existing `qp_json_io` codec, and a
+  focused test asserts that an imported model reaches the use case with the
+  same problem payload as the manually entered one;
+- `QPSolutionView` reports mathematical status, an explanation per outcome,
+  dependency failure, objective value and sense, the candidate vector,
+  constraint activity, dual multipliers or their explicit absence, KKT
+  residuals, backend execution diagnostics, and the independent validation
+  report with its localized limitations;
+- `QPContourPlotWidget` draws objective contours, the feasible set, and the
+  candidate for exactly two variables, and names the reason when it cannot
+  (`unsupported_dimension`, `no_window`, `matplotlib_unavailable`), with the
+  exact tables remaining the complete answer in every dimension;
+- English and Italian strings are at full key parity, and both educational
+  pages (`qp_problem`, `qp_example`) ship in both languages;
+- the presentation layer imports no OSQP, recomputes no authoritative result,
+  and obtains validation only from the registered `QPResultCodec` and
+  `QPIndependentSolutionValidator`.
+
+### Known gap referred to the Stage A owner
+
+`SolveQPUseCase` drops the `termination_reason` that
+`OSQPSolverAdapter` already returns (`completed`, `iteration_limit`,
+`time_limit`, `dependency_failure`, `internal_error`), and `QPResultCodec`
+leaves `SerializedResult.termination_reason` at its `completed` default. The
+desktop result view therefore reports the raw backend status string, labelled
+as such, instead of the contract's termination reason. The smallest correction
+is to carry `raw["termination_reason"]` from the adapter through the use case
+onto `QPSolution` and to set it on the serialized result. That is application
+and domain code, so it was not implemented in this UI stage.
 
 ## General Stop Conditions
 

@@ -60,6 +60,7 @@ class HomePage(QWidget):
     go_milp = Signal()
     go_knap = Signal()
     go_nlp = Signal()
+    go_qp = Signal()
     go_graph = Signal()
     go_packing = Signal()
     go_regression = Signal()
@@ -126,6 +127,11 @@ class HomePage(QWidget):
             S.t("cards.nlp.subtitle"),
             icon_path=str(asset("icons/nlp.svg")),
         )
+        self.card_qp = CardButton(
+            S.t("cards.qp.title"),
+            S.t("cards.qp.subtitle"),
+            icon_path=str(asset("icons/qp.svg")),
+        )
         self.card_graph = CardButton(
             S.t("cards.graph.title"),
             S.t("cards.graph.subtitle"),
@@ -157,6 +163,7 @@ class HomePage(QWidget):
         self.card_milp.clicked.connect(self.go_milp.emit)
         self.card_knap.clicked.connect(self.go_knap.emit)
         self.card_nlp.clicked.connect(self.go_nlp.emit)
+        self.card_qp.clicked.connect(self.go_qp.emit)
         self.card_graph.clicked.connect(self.go_graph.emit)
         self.card_packing.clicked.connect(self.go_packing.emit)
         self.card_regression.clicked.connect(self.go_regression.emit)
@@ -168,6 +175,7 @@ class HomePage(QWidget):
             self.cat_lin.add_card(card)
 
         self.cat_nlp.add_card(self.card_nlp)
+        self.cat_nlp.add_card(self.card_qp)
         root.addWidget(self.cat_nlp)
 
         self.cat_graph.add_card(self.card_graph)
@@ -213,6 +221,9 @@ class HomePage(QWidget):
         self.card_nlp._title.setText(f"<span style='font-weight:700'>{S.t('cards.nlp.title')}</span>")
         self.card_nlp._sub.setText(S.t("cards.nlp.subtitle"))
 
+        self.card_qp._title.setText(f"<span style='font-weight:700'>{S.t('cards.qp.title')}</span>")
+        self.card_qp._sub.setText(S.t("cards.qp.subtitle"))
+
         self.card_graph._title.setText(f"<span style='font-weight:700'>{S.t('cards.graph.title')}</span>")
         self.card_graph._sub.setText(S.t("cards.graph.subtitle"))
 
@@ -251,6 +262,7 @@ class HomePage(QWidget):
             self.card_milp,
             self.card_knap,
             self.card_nlp,
+            self.card_qp,
             self.card_graph,
             self.card_packing,
             self.card_regression,

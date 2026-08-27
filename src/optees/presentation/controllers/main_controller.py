@@ -11,6 +11,7 @@ from optees.presentation.error_feedback import localized_error_detail
 from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.nlp_view import NLPView
+from optees.presentation.views.qp_view import QPView
 from optees.presentation.views.graph_view import GraphView
 from optees.presentation.views.packing_view import PackingView
 from optees.presentation.views.regression_view import RegressionView
@@ -43,6 +44,8 @@ class MainController(QObject):
             home.go_knap.connect(lambda: self.window.goto("knapsack"))
         if hasattr(home, "go_nlp"):
             home.go_nlp.connect(lambda: self.window.goto("nlp"))
+        if hasattr(home, "go_qp"):
+            home.go_qp.connect(lambda: self.window.goto("qp"))
         if hasattr(home, "go_graph"):
             home.go_graph.connect(lambda: self.window.goto("graph"))
         if hasattr(home, "go_packing"):
@@ -120,6 +123,19 @@ class MainController(QObject):
         nlp_solution = self.window.page("nlp_solution")
         if hasattr(nlp_solution, "back_requested"):
             nlp_solution.back_requested.connect(lambda: self.window.goto("nlp"))
+
+        # Convex QP -> local numerical result with independent validation
+        qp: QPView = self.window.page("qp")  # type: ignore[assignment]
+        qp.solve_completed.connect(self._on_qp_solved)
+        qp.example_requested.connect(lambda: self.window.goto("qp_example"))
+        qp.problem_description_requested.connect(lambda: self.window.goto("qp_problem"))
+        for name in ("qp_example", "qp_problem"):
+            info_view = self.window.page(name)
+            if hasattr(info_view, "back_requested"):
+                info_view.back_requested.connect(lambda _=False: self.window.goto("qp"))
+        qp_solution = self.window.page("qp_solution")
+        if hasattr(qp_solution, "back_requested"):
+            qp_solution.back_requested.connect(lambda: self.window.goto("qp"))
 
         # Graph Theory -> Dijkstra result
         graph: GraphView = self.window.page("graph")  # type: ignore[assignment]
@@ -306,6 +322,37 @@ class MainController(QObject):
         except Exception:
             pass
         self.window.goto("nlp_solution")
+
+    def _on_qp_solved(self, solution) -> None:
+        sol_view = self.window.page("qp_solution")
+        model = None
+        try:
+            model = self.window.qp_page.current_model()
+            if hasattr(sol_view, "set_problem"):
+                sol_view.set_problem(model)  # type: ignore[attr-defined]
+        except Exception:
+            pass
+        if hasattr(sol_view, "set_solution"):
+            sol_view.set_solution(solution)  # type: ignore[attr-defined]
+        if hasattr(sol_view, "set_validation"):
+            sol_view.set_validation(self._qp_validation(model, solution))  # type: ignore[attr-defined]
+        self.window.goto("qp_solution")
+
+    def _qp_validation(self, model, solution):
+        """Run the registered Stage A validator over the serialized result.
+
+        Serialization and validation both stay in the application layer; this
+        controller only forwards the report to the view.
+        """
+        codec = getattr(self.window, "qp_result_codec", None)
+        validator = getattr(self.window, "qp_solution_validator", None)
+        if model is None or codec is None or validator is None:
+            return None
+        try:
+            return validator(model, codec.serialize(solution))
+        except Exception:
+            log.debug("QP independent validation could not be produced", exc_info=True)
+            return None
 
     def _on_graph_solved(self, solution) -> None:
         sol_view = self.window.page("graph_solution")

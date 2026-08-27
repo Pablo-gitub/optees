@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Optees — Convex Quadratic Programming</title>
+  <desc>Axes with nested elliptical level curves of a convex quadratic objective and its optimum at the centre.</desc>
+  <g fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M56 200 H206"/>
+    <path d="M56 200 V66"/>
+    <ellipse cx="136" cy="136" rx="58" ry="38" transform="rotate(-30 136 136)"/>
+    <ellipse cx="136" cy="136" rx="30" ry="19" transform="rotate(-30 136 136)"/>
+  </g>
+  <circle cx="136" cy="136" r="12" fill="currentColor"/>
+</svg>

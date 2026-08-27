@@ -31,6 +31,22 @@ def localized_error_detail(scope: str, error: Exception | str) -> str:
             return S.t("error_feedback.nlp.bounds")
         return S.t("error_feedback.nlp.model")
 
+    if scope.endswith("_export"):
+        return S.t("error_feedback.export.write")
+
+    if scope == "qp_validation":
+        if _contains(detail, "semi-definite", "concave", "convex", "eigenvalue"):
+            return S.t("error_feedback.qp.curvature")
+        if _contains(detail, "quadratic matrix", "asymmetric", "symmetr"):
+            return S.t("error_feedback.qp.matrix")
+        if _contains(detail, "bound"):
+            return S.t("error_feedback.qp.bounds")
+        if _contains(detail, "constraint"):
+            return S.t("error_feedback.qp.constraints")
+        if _contains(detail, "tolerance", "iterations", "time_limit", "time limit", "method"):
+            return S.t("error_feedback.qp.options")
+        return S.t("error_feedback.qp.model")
+
     if scope == "regression_validation":
         if _contains(detail, "test_fraction", "ridge_alpha", "seed", "method"):
             return S.t("error_feedback.regression.options")

@@ -46,6 +46,10 @@
     "forecasting": {
       "title": "Time-series Forecasting",
       "subtitle": "Use this method to estimate future values from one ordered historical series, keeping trend, seasonality, and evaluation visible."
+    },
+    "qp": {
+      "title": "Convex Quadratic Programming (QP)",
+      "subtitle": "Use this method when the objective is quadratic and convex, such as minimizing risk, squared error, or deviation from a target, under linear constraints."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -63,6 +67,7 @@
     "milp": "Mixed-Integer (MILP)",
     "knap": "0/1 Knapsack",
     "nlp": "Nonlinear Programming (NLP)",
+    "qp": "Convex Quadratic (QP)",
     "graph": "Shortest Path (Dijkstra)",
     "packing": "3D Packing & Loading",
     "regression": "Linear Regression",
@@ -212,6 +217,9 @@
       "read": "The file could not be read as JSON. Check that it exists, is readable, and contains valid JSON.",
       "schema": "This JSON file does not match the format required by this algorithm. Check its version, problem type, required fields, and numeric values."
     },
+    "export": {
+      "write": "The file could not be written. Check that the destination folder exists and that you have permission to write there."
+    },
     "nlp": {
       "expression": "Check the objective expression: use declared variable names and only the supported mathematical operators and functions.",
       "bounds": "Check each lower/upper bound and the initial point. The initial point must be finite and lie within its declared bounds.",
@@ -242,6 +250,14 @@
       "model": "Enter positive finite container and item dimensions, unique non-empty item IDs and names, positive integer quantities, and finite non-negative values.",
       "rotations": "Choose a supported rotation policy. For Custom, enter valid XYZ permutation codes separated by commas.",
       "resources": "Use unique non-empty resource names, finite non-negative capacity limits, and finite non-negative consumption values."
+    },
+    "qp": {
+      "matrix": "Check the quadratic matrix Q. It must be square, complete, finite, and symmetric within the declared tolerance.",
+      "curvature": "The quadratic matrix does not have the curvature this objective sense requires: minimization needs a positive semi-definite Q, maximization a negative semi-definite Q.",
+      "bounds": "Check each lower and upper bound. A bound must be finite or left blank, and a lower bound may not exceed its upper bound.",
+      "constraints": "Check the linear constraints. Every row needs one finite coefficient per declared variable, a relation, and a finite right-hand side.",
+      "options": "Check the solver options: tolerance, iteration limit, and time limit must be finite numbers inside their allowed range.",
+      "model": "Check variable names, the objective, the constraints, and the solver options before solving."
     },
     "assistant": {
       "generated_model": "The generated draft is not valid for the selected formulation. Review the recommendation and enter or import the model manually."
@@ -1113,6 +1129,269 @@
         "interval": "{coverage} prediction interval",
         "origin": "Forecast origin",
         "time": "Time"
+      }
+    }
+  },
+  "qp": {
+    "header": {
+      "title": "Convex Quadratic Programming (QP)",
+      "section": "Problem setup",
+      "description": "Minimize a convex quadratic objective, or maximize a concave one, subject to linear constraints and variable bounds. Optees uses the convention f(x) = ½ xᵀ Q x + cᵀ x + α, so Q is the Hessian of the objective.",
+      "buttons": {
+        "example": "Example",
+        "problem": "Problem description"
+      }
+    },
+    "dependency": {
+      "unavailable": "The OSQP backend is not available in this installation, so quadratic problems cannot be solved here. The formulation, import, and export tools below still work."
+    },
+    "import": {
+      "button": "Import JSON",
+      "dialog_title": "Open QP problem",
+      "error_title": "Import error",
+      "error_body": "Could not load the file:\n{detail}",
+      "info_tooltip": "QP JSON format",
+      "info_title": "QP JSON format",
+      "info_body": "The desktop workflow reads and writes the same problem document that the command line and the local API accept. Variables are ordered: index 0 of every vector and matrix row binds to the first declared variable.",
+      "info_html": "<h3>Core fields</h3><p>A problem document declares <code>variables</code>, an <code>objective</code>, optional <code>constraints</code>, and optional <code>options</code>. The objective is read as <code>0.5 · xᵀ Q x + cᵀ x + offset</code>.</p><pre>{\n  \"capability_id\": \"qp.continuous\",\n  \"problem_type\": \"quadratic_programming\",\n  \"variables\": [\n    {\"name\": \"x1\", \"label\": \"X1\", \"lower_bound\": 0, \"upper_bound\": null}\n  ],\n  \"objective\": {\n    \"sense\": \"min\",\n    \"linear_coefs\": [-4.0],\n    \"quadratic_matrix\": [[2.0]],\n    \"offset\": 0.0\n  },\n  \"constraints\": [\n    {\"name\": \"budget\", \"coefs\": [1.0], \"relation\": \"&lt;=\", \"rhs\": 10.0}\n  ]\n}</pre><h3>Bounds</h3><p>A missing or <code>null</code> bound means unbounded in that direction.</p>"
+    },
+    "export": {
+      "button": "Export JSON",
+      "dialog_title": "Save QP problem",
+      "default_name": "qp_problem.json",
+      "error_title": "Export error",
+      "error_body": "Could not save the file:\n{detail}"
+    },
+    "variables": {
+      "section": "Decision variables and bounds",
+      "hint": "Variables are continuous and ordered. Their position defines the index used by the linear vector c, the quadratic matrix Q, and every constraint row. Leave a bound blank for no limit.",
+      "columns": {
+        "index": "#",
+        "name": "Variable",
+        "label": "Description",
+        "lower": "Lower bound",
+        "upper": "Upper bound"
+      },
+      "name_placeholder": "e.g. x1",
+      "label_placeholder": "Short meaning",
+      "bound_placeholder": "blank = none",
+      "add": "Add variable",
+      "remove": "Remove variable",
+      "limit_reached": "Schema version 1 accepts at most {limit} variables."
+    },
+    "objective": {
+      "section": "Quadratic objective",
+      "hint": "Choose the sense, then enter the quadratic matrix Q, the linear vector c, and the constant offset α.",
+      "sense": "Sense",
+      "min": "Minimize (convex)",
+      "max": "Maximize (concave)",
+      "offset": "Offset α",
+      "offset_placeholder": "e.g. 0",
+      "formula": "Objective: {sense} f(x) = ½ xᵀ Q x + cᵀ x + α",
+      "matrix_label": "Quadratic matrix Q (Hessian)",
+      "matrix_hint": "Q must be symmetric. Editing a cell mirrors its transposed cell automatically, so the matrix you submit is always symmetric.",
+      "linear_label": "Linear coefficients c",
+      "large_matrix": "This problem has {count} variables. The matrix editor is hidden above {limit} variables to keep the page responsive; import a JSON document to formulate problems of this size.",
+      "info_tooltip": "The ½ convention and convexity",
+      "info_title": "Quadratic objective, the ½ factor, and convexity",
+      "info_body": "Optees reads Q as the Hessian of the objective, which is why the formula carries an explicit ½. Under this convention the gradient is Qx + c and the curvature of the objective is exactly Q.",
+      "info_html": "<h3>Why the ½</h3><p>With <code>f(x) = ½ xᵀ Q x + cᵀ x + α</code> the gradient is <code>∇f(x) = Q x + c</code> and the Hessian is <code>∇²f(x) = Q</code>. The diagonal entry <code>Q<sub>ii</sub></code> therefore contributes <code>½ Q<sub>ii</sub> x<sub>i</sub>²</code>, while a symmetric off-diagonal pair contributes <code>Q<sub>ij</sub> x<sub>i</sub> x<sub>j</sub></code> in total.</p><h3>Convex or concave</h3><p>Minimization requires a positive semi-definite Q, meaning every eigenvalue is at least zero: the surface is a bowl and any local minimum is global. Maximization requires a negative semi-definite Q, the mirrored dome case.</p><p>An indefinite Q — some eigenvalues positive, some negative — is a saddle. It is rejected before solving, because this capability makes no claim about non-convex problems rather than returning an unverifiable answer.</p><h3>Symmetry</h3><p>Only the symmetric part of Q affects the objective value, so Optees requires Q to be symmetric within a tight tolerance and never silently reshapes a matrix you supplied.</p>"
+    },
+    "constraints": {
+      "section": "Linear constraints",
+      "hint": "Each row reads Σⱼ aⱼ xⱼ (relation) b. A problem with no rows is still valid: the variable bounds alone define the feasible set.",
+      "columns": {
+        "name": "Name",
+        "relation": "Relation",
+        "rhs": "Right-hand side"
+      },
+      "name_placeholder": "e.g. budget",
+      "coefficient_placeholder": "0",
+      "rhs_placeholder": "e.g. 10",
+      "add": "Add constraint",
+      "remove": "Remove constraint",
+      "empty": "No linear constraints yet. Add one, or solve with variable bounds only.",
+      "limit_reached": "Schema version 1 accepts at most {limit} constraints."
+    },
+    "solver": {
+      "section": "Solver options",
+      "hint": "Version 1 of this capability exposes the OSQP backend only. Limits are advertised by the public contract and stop a run without inventing a result.",
+      "method": "Method",
+      "tolerance": "Tolerance",
+      "tolerance_placeholder": "1e-7",
+      "max_iterations": "Iteration limit",
+      "max_iterations_placeholder": "4000",
+      "time_limit": "Time limit (s)",
+      "time_limit_placeholder": "60",
+      "info_tooltip": "Solver limits",
+      "info_title": "Solver options and limits",
+      "info_body": "Tolerance drives the primal and dual convergence test. The iteration and time limits bound the run: reaching one returns the current candidate as feasible rather than optimal, or no candidate at all.",
+      "info_html": "<h3>Accepted ranges</h3><ul><li>Tolerance: 1e-12 to 1e-2, default 1e-7</li><li>Iteration limit: 10 to 100000, default 4000</li><li>Time limit: 0.1 s to 300 s, default 60 s</li><li>Variables: up to 500; constraints: up to 1000</li></ul><h3>What a limit means</h3><p>A run stopped by a limit is reported honestly. If the backend held a finite candidate it is shown as feasible, never as proven optimal; otherwise the result stays unsolved.</p>"
+    },
+    "actions": {
+      "solve": "Solve"
+    },
+    "validation": {
+      "title": "Check the problem",
+      "body": "The problem cannot be solved yet:\n{detail}"
+    },
+    "solution": {
+      "title": "Quadratic programming result",
+      "back": "Back to the formulation",
+      "empty": "No result yet. Formulate a problem and solve it to see the outcome here.",
+      "summary": {
+        "section": "Outcome"
+      },
+      "status_line": "Mathematical status: {status}",
+      "status": {
+        "optimal": "Optimal",
+        "feasible": "Feasible candidate",
+        "infeasible": "Infeasible",
+        "unbounded": "Unbounded",
+        "not_solved": "Not solved"
+      },
+      "explanation": {
+        "optimal": "The backend converged and the candidate below satisfies the optimality criteria for this convex problem within the requested tolerance. This is a numerical claim, not an exact-arithmetic proof.",
+        "feasible": "A candidate that satisfies the constraints was returned, but the full optimality criteria were not met — usually because a limit stopped the run. Treat it as a usable point, not as the optimum.",
+        "infeasible": "No point satisfies all constraints and bounds at once. Relax a constraint, widen a bound, or re-check a right-hand side.",
+        "unbounded": "The objective improves without limit inside the feasible set, so no finite optimum exists. Add the bound or constraint that is missing from the formulation.",
+        "not_solved": "The run produced no mathematical conclusion. The diagnostics below report what the backend returned."
+      },
+      "dependency_failure": "The OSQP backend is not available, so nothing was solved. This is a missing dependency, not a statement about your problem.",
+      "local_notice": "Solved locally on this computer. No problem data leaves the application.",
+      "objective": {
+        "section": "Objective value",
+        "sense_min": "Minimized",
+        "sense_max": "Maximized",
+        "unavailable": "No objective value is available for this outcome.",
+        "recomputed": "f(x*) = ½ x*ᵀ Q x* + cᵀ x* + α"
+      },
+      "variables": {
+        "section": "Variable values",
+        "hint": "The candidate vector x*, in the order the variables were declared.",
+        "columns": {
+          "variable": "Variable",
+          "description": "Description",
+          "value": "Value",
+          "lower": "Lower bound",
+          "upper": "Upper bound",
+          "status": "Position"
+        },
+        "at_lower": "At lower bound",
+        "at_upper": "At upper bound",
+        "interior": "Interior",
+        "empty": "This outcome returned no candidate vector."
+      },
+      "constraints": {
+        "section": "Constraint activity",
+        "hint": "The left-hand side is evaluated at the candidate so you can see which constraints are binding.",
+        "columns": {
+          "name": "Constraint",
+          "relation": "Relation",
+          "lhs": "Left-hand side",
+          "rhs": "Right-hand side",
+          "slack": "Slack",
+          "status": "State"
+        },
+        "binding": "Binding",
+        "slack_state": "Slack",
+        "violated": "Violated",
+        "empty": "This problem declares no linear constraints."
+      },
+      "duals": {
+        "section": "Dual multipliers",
+        "hint": "A multiplier estimates how much the objective would change per unit change of its right-hand side or bound.",
+        "columns": {
+          "item": "Item",
+          "kind": "Kind",
+          "value": "Multiplier"
+        },
+        "kind_constraint": "Constraint",
+        "kind_lower": "Lower bound",
+        "kind_upper": "Upper bound",
+        "unavailable": "The backend returned no dual multipliers for this outcome, so sensitivity information and the full KKT check are not available."
+      },
+      "residuals": {
+        "section": "Numerical residuals",
+        "hint": "Residuals measure how far the returned point is from satisfying the optimality conditions exactly.",
+        "primal": "Primal residual",
+        "dual": "Dual residual",
+        "gap": "Duality gap",
+        "complementarity": "Complementarity residual",
+        "unavailable": "Not reported"
+      },
+      "diagnostics": {
+        "section": "Execution diagnostics",
+        "backend": "Backend",
+        "backend_version": "Backend version",
+        "backend_status": "Backend status",
+        "iterations": "Iterations",
+        "solve_time": "Solve time (s)",
+        "setup_time": "Setup time (s)",
+        "message": "Message",
+        "backend_status_hint": "This is the raw status reported by the solver, kept as-is rather than being reinterpreted by this screen."
+      },
+      "validation_report": {
+        "section": "Independent validation",
+        "hint": "Optees re-checks the returned candidate against the original problem instead of trusting the backend's success flag.",
+        "status": "Status",
+        "status_verified": "Verified",
+        "status_partial": "Partial",
+        "status_failed": "Failed",
+        "status_not_available": "Not available",
+        "columns": {
+          "check": "Check",
+          "result": "Result",
+          "detail": "Description"
+        },
+        "check_passed": "Passed",
+        "check_failed": "Failed",
+        "violations": "Violations",
+        "limitations": "What this does not prove",
+        "empty": "No independent validation was performed for this outcome.",
+        "checks": {
+          "variable_vector": {
+            "name": "Candidate vector",
+            "detail": "The result carries exactly one finite value for every declared variable, in the declared order."
+          },
+          "bounds": {
+            "name": "Variable bounds",
+            "detail": "Every value lies inside its declared lower and upper bound, within the feasibility tolerance."
+          },
+          "constraints": {
+            "name": "Linear constraints",
+            "detail": "Each constraint row is re-evaluated at the candidate and compared against its relation and right-hand side."
+          },
+          "objective": {
+            "name": "Objective value",
+            "detail": "The objective is recomputed from Q, c, and the offset and compared with the value the backend reported."
+          },
+          "kkt_stationarity": {
+            "name": "KKT conditions",
+            "detail": "Stationarity, complementary slackness, and dual sign conditions are checked from the reported multipliers."
+          }
+        },
+        "limitation": {
+          "1": "Independent validation checks primal feasibility and recomputes the objective from the original model; it confirms those properties only.",
+          "2": "It does not prove global optimality if the submitted problem is not genuinely convex.",
+          "3": "The dual KKT conditions are checked only when the backend returned complete multipliers."
+        }
+      },
+      "visualization": {
+        "section": "Two-variable view",
+        "hint": "Contours of the objective with the feasible set shaded and the candidate marked.",
+        "title": "Objective contours and feasible region",
+        "candidate": "Candidate x*",
+        "feasible_legend": "Feasible set",
+        "no_model": "Formulate and solve a problem to see this view.",
+        "unsupported_dimension": "This chart is drawn only for problems with exactly two decision variables. This problem has {count}; use the variable, constraint, and dual tables above, which stay exact in every dimension.",
+        "no_window": "A finite plotting window could not be derived from the bounds and constraints of this problem. Add a finite bound to either variable to enable the chart.",
+        "matplotlib_unavailable": "Charting support is not installed in this application session, so the numeric tables above are the complete result."
+      },
+      "export": {
+        "button": "Export problem JSON",
+        "dialog_title": "Save QP problem",
+        "default_name": "qp_problem.json"
       }
     }
   }

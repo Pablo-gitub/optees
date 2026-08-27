@@ -607,6 +607,17 @@ flowchart LR
 Each capability validates only its own contract and result. Optees does not
 currently certify the semantic correctness of the complete composed workflow.
 
+The continuous convex QP desktop workflow follows the direct-invocation
+boundary. `QPView` builds a `QPModel` and calls `SolveQPUseCase`; the
+presentation controller then serializes that solution with the registered
+`QPResultCodec` and passes it to `QPIndependentSolutionValidator`, rendering the
+resulting report verbatim. The views never import OSQP, never recompute the
+authoritative solution, and never invent a status. The two-variable contour
+chart and the bound/slack labels in the result tables are display derivations
+over the declared problem, in the same way the LP feasible-region widget shades
+half-spaces; they cannot change the retained problem, the returned candidate, or
+the reported mathematical status.
+
 Forecasting preserves the same dependency direction as other capabilities.
 Immutable chronological domain objects and the application use case know
 nothing about statsmodels. Deterministic baselines and the concrete

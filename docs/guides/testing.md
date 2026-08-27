@@ -73,6 +73,15 @@ metadata-only MCP retrieval.
   `tests/application/usecases/test_solve_shortest_path_usecase.py`: Dijkstra
   model validation, directed/undirected path finding, unreachable terminals,
   non-negative weight checks, JSON, and canonical mapping.
+- `tests/presentation/test_qp_flow_happy.py` and
+  `tests/presentation/test_qp_info_navigation.py`: convex QP Home and toolbar
+  navigation, symmetric Hessian entry, variable/constraint rebinding, JSON
+  import/export parity against the manually entered model, refusal of a
+  non-convex matrix, result presentation for optimal, feasible, infeasible,
+  unbounded, not-solved and dependency-failure outcomes, the rendered
+  independent-validation report, the two-variable contour view and its
+  higher-dimensional alternative, accessible names, backend availability, the
+  large-model compact editor, and bilingual retranslation.
 - `tests/presentation/test_graph_flow_happy.py`: graph Home navigation, manual
   solve flow, imported graph form, highlighted route result, and unreachable
   explanation.

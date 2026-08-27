@@ -46,6 +46,10 @@
     "forecasting": {
       "title": "Previsione di serie storiche",
       "subtitle": "Usa questo metodo per stimare valori futuri da una singola serie storica ordinata, tenendo visibili trend, stagionalita' e valutazione."
+    },
+    "qp": {
+      "title": "Programmazione Quadratica Convessa (QP)",
+      "subtitle": "Usa questo metodo quando l'obiettivo e' quadratico e convesso, come minimizzare rischio, errore quadratico o scostamento da un target, con vincoli lineari."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -63,6 +67,7 @@
     "milp": "Mixed-Integer (MILP)",
     "knap": "Zaino 0/1",
     "nlp": "Programmazione Nonlineare (NLP)",
+    "qp": "Quadratica Convessa (QP)",
     "graph": "Cammino minimo (Dijkstra)",
     "packing": "Packing e caricamento 3D",
     "regression": "Regressione lineare",
@@ -212,6 +217,9 @@
       "read": "Non e' stato possibile leggere il file come JSON. Controlla che esista, sia leggibile e contenga JSON valido.",
       "schema": "Questo file JSON non rispetta il formato richiesto da questo algoritmo. Controlla versione, tipo di problema, campi obbligatori e valori numerici."
     },
+    "export": {
+      "write": "Non e' stato possibile scrivere il file. Verifica che la cartella di destinazione esista e di avere i permessi di scrittura."
+    },
     "nlp": {
       "expression": "Controlla l'espressione obiettivo: usa nomi di variabili dichiarati e solo operatori e funzioni matematiche supportati.",
       "bounds": "Controlla ogni bound inferiore/superiore e il punto iniziale. Il punto iniziale deve essere finito e rispettare i bounds dichiarati.",
@@ -242,6 +250,14 @@
       "model": "Inserisci dimensioni positive e finite per container e colli, ID e nomi univoci non vuoti, quantita' intere positive e valori finiti non negativi.",
       "rotations": "Scegli una politica di rotazione supportata. Per Personalizzata, inserisci codici di permutazione XYZ validi separati da virgole.",
       "resources": "Usa nomi risorsa univoci non vuoti, limiti di capacita' finiti non negativi e consumi finiti non negativi."
+    },
+    "qp": {
+      "matrix": "Controlla la matrice quadratica Q: deve essere quadrata, completa, finita e simmetrica entro la tolleranza dichiarata.",
+      "curvature": "La matrice quadratica non ha la curvatura richiesta dal verso dell'obiettivo: la minimizzazione richiede una Q semidefinita positiva, la massimizzazione una Q semidefinita negativa.",
+      "bounds": "Controlla i limiti inferiori e superiori: ogni limite deve essere finito oppure lasciato vuoto, e un limite inferiore non puo' superare il proprio limite superiore.",
+      "constraints": "Controlla i vincoli lineari: ogni riga richiede un coefficiente finito per ciascuna variabile dichiarata, una relazione e un termine noto finito.",
+      "options": "Controlla le opzioni del solver: tolleranza, limite di iterazioni e limite di tempo devono essere numeri finiti entro l'intervallo ammesso.",
+      "model": "Controlla i nomi delle variabili, l'obiettivo, i vincoli e le opzioni del solver prima di risolvere."
     },
     "assistant": {
       "generated_model": "La bozza generata non e' valida per la formulazione selezionata. Controlla il suggerimento e inserisci o importa il modello manualmente."
@@ -1111,6 +1127,269 @@
         "interval": "Intervallo di previsione {coverage}",
         "origin": "Origine previsione",
         "time": "Tempo"
+      }
+    }
+  },
+  "qp": {
+    "header": {
+      "title": "Programmazione Quadratica Convessa (QP)",
+      "section": "Formulazione del problema",
+      "description": "Minimizza un obiettivo quadratico convesso, oppure massimizzane uno concavo, con vincoli lineari e limiti sulle variabili. Optees adotta la convenzione f(x) = ½ xᵀ Q x + cᵀ x + α, quindi Q e' l'Hessiana dell'obiettivo.",
+      "buttons": {
+        "example": "Esempio",
+        "problem": "Descrizione del problema"
+      }
+    },
+    "dependency": {
+      "unavailable": "Il backend OSQP non e' disponibile in questa installazione, quindi i problemi quadratici non possono essere risolti qui. Formulazione, importazione ed esportazione restano utilizzabili."
+    },
+    "import": {
+      "button": "Importa JSON",
+      "dialog_title": "Apri problema QP",
+      "error_title": "Errore di importazione",
+      "error_body": "Non e' stato possibile caricare il file:\n{detail}",
+      "info_tooltip": "Formato JSON QP",
+      "info_title": "Formato JSON QP",
+      "info_body": "L'applicazione desktop legge e scrive lo stesso documento accettato dalla riga di comando e dall'API locale. Le variabili sono ordinate: l'indice 0 di ogni vettore e di ogni riga della matrice corrisponde alla prima variabile dichiarata.",
+      "info_html": "<h3>Campi principali</h3><p>Un documento dichiara <code>variables</code>, un <code>objective</code>, i <code>constraints</code> opzionali e le <code>options</code> opzionali. L'obiettivo viene letto come <code>0.5 · xᵀ Q x + cᵀ x + offset</code>.</p><pre>{\n  \"capability_id\": \"qp.continuous\",\n  \"problem_type\": \"quadratic_programming\",\n  \"variables\": [\n    {\"name\": \"x1\", \"label\": \"X1\", \"lower_bound\": 0, \"upper_bound\": null}\n  ],\n  \"objective\": {\n    \"sense\": \"min\",\n    \"linear_coefs\": [-4.0],\n    \"quadratic_matrix\": [[2.0]],\n    \"offset\": 0.0\n  },\n  \"constraints\": [\n    {\"name\": \"budget\", \"coefs\": [1.0], \"relation\": \"&lt;=\", \"rhs\": 10.0}\n  ]\n}</pre><h3>Limiti</h3><p>Un limite assente o <code>null</code> significa illimitato in quella direzione.</p>"
+    },
+    "export": {
+      "button": "Esporta JSON",
+      "dialog_title": "Salva problema QP",
+      "default_name": "problema_qp.json",
+      "error_title": "Errore di esportazione",
+      "error_body": "Non e' stato possibile salvare il file:\n{detail}"
+    },
+    "variables": {
+      "section": "Variabili decisionali e limiti",
+      "hint": "Le variabili sono continue e ordinate. La loro posizione definisce l'indice usato dal vettore lineare c, dalla matrice quadratica Q e da ogni riga di vincolo. Lascia vuoto un limite per non imporlo.",
+      "columns": {
+        "index": "#",
+        "name": "Variabile",
+        "label": "Descrizione",
+        "lower": "Limite inferiore",
+        "upper": "Limite superiore"
+      },
+      "name_placeholder": "es. x1",
+      "label_placeholder": "Significato breve",
+      "bound_placeholder": "vuoto = nessuno",
+      "add": "Aggiungi variabile",
+      "remove": "Rimuovi variabile",
+      "limit_reached": "La versione 1 dello schema accetta al massimo {limit} variabili."
+    },
+    "objective": {
+      "section": "Obiettivo quadratico",
+      "hint": "Scegli il verso, poi inserisci la matrice quadratica Q, il vettore lineare c e la costante α.",
+      "sense": "Verso",
+      "min": "Minimizza (convesso)",
+      "max": "Massimizza (concavo)",
+      "offset": "Costante α",
+      "offset_placeholder": "es. 0",
+      "formula": "Obiettivo: {sense} f(x) = ½ xᵀ Q x + cᵀ x + α",
+      "matrix_label": "Matrice quadratica Q (Hessiana)",
+      "matrix_hint": "Q deve essere simmetrica. Modificando una cella viene aggiornata automaticamente anche la cella trasposta, quindi la matrice inviata e' sempre simmetrica.",
+      "linear_label": "Coefficienti lineari c",
+      "large_matrix": "Questo problema ha {count} variabili. L'editor della matrice viene nascosto oltre {limit} variabili per mantenere la pagina reattiva; importa un documento JSON per formulare problemi di questa dimensione.",
+      "info_tooltip": "La convenzione ½ e la convessita'",
+      "info_title": "Obiettivo quadratico, fattore ½ e convessita'",
+      "info_body": "Optees legge Q come Hessiana dell'obiettivo: per questo la formula riporta un ½ esplicito. Con questa convenzione il gradiente e' Qx + c e la curvatura dell'obiettivo e' esattamente Q.",
+      "info_html": "<h3>Perche' il ½</h3><p>Con <code>f(x) = ½ xᵀ Q x + cᵀ x + α</code> il gradiente e' <code>∇f(x) = Q x + c</code> e l'Hessiana e' <code>∇²f(x) = Q</code>. L'elemento diagonale <code>Q<sub>ii</sub></code> contribuisce quindi con <code>½ Q<sub>ii</sub> x<sub>i</sub>²</code>, mentre una coppia simmetrica fuori diagonale contribuisce complessivamente con <code>Q<sub>ij</sub> x<sub>i</sub> x<sub>j</sub></code>.</p><h3>Convesso o concavo</h3><p>La minimizzazione richiede una Q semidefinita positiva, cioe' con tutti gli autovalori non negativi: la superficie e' una conca e ogni minimo locale e' globale. La massimizzazione richiede una Q semidefinita negativa, il caso speculare a cupola.</p><p>Una Q indefinita — con autovalori sia positivi sia negativi — e' una sella. Viene rifiutata prima di risolvere, perche' questa capability preferisce non pronunciarsi sui problemi non convessi anziche' restituire una risposta non verificabile.</p><h3>Simmetria</h3><p>Solo la parte simmetrica di Q influenza il valore dell'obiettivo: Optees richiede quindi che Q sia simmetrica entro una tolleranza stretta e non modifica mai in silenzio la matrice fornita.</p>"
+    },
+    "constraints": {
+      "section": "Vincoli lineari",
+      "hint": "Ogni riga si legge Σⱼ aⱼ xⱼ (relazione) b. Un problema senza righe resta valido: in tal caso l'insieme ammissibile e' definito solo dai limiti delle variabili.",
+      "columns": {
+        "name": "Nome",
+        "relation": "Relazione",
+        "rhs": "Termine noto"
+      },
+      "name_placeholder": "es. budget",
+      "coefficient_placeholder": "0",
+      "rhs_placeholder": "es. 10",
+      "add": "Aggiungi vincolo",
+      "remove": "Rimuovi vincolo",
+      "empty": "Nessun vincolo lineare. Aggiungine uno oppure risolvi usando solo i limiti delle variabili.",
+      "limit_reached": "La versione 1 dello schema accetta al massimo {limit} vincoli."
+    },
+    "solver": {
+      "section": "Opzioni del solver",
+      "hint": "La versione 1 di questa capability espone solo il backend OSQP. I limiti sono dichiarati dal contratto pubblico e interrompono l'esecuzione senza inventare un risultato.",
+      "method": "Metodo",
+      "tolerance": "Tolleranza",
+      "tolerance_placeholder": "1e-7",
+      "max_iterations": "Limite di iterazioni",
+      "max_iterations_placeholder": "4000",
+      "time_limit": "Limite di tempo (s)",
+      "time_limit_placeholder": "60",
+      "info_tooltip": "Limiti del solver",
+      "info_title": "Opzioni e limiti del solver",
+      "info_body": "La tolleranza governa il test di convergenza primale e duale. I limiti di iterazioni e di tempo delimitano l'esecuzione: raggiungerne uno restituisce il candidato corrente come ammissibile anziche' ottimo, oppure nessun candidato.",
+      "info_html": "<h3>Intervalli ammessi</h3><ul><li>Tolleranza: da 1e-12 a 1e-2, predefinita 1e-7</li><li>Limite di iterazioni: da 10 a 100000, predefinito 4000</li><li>Limite di tempo: da 0.1 s a 300 s, predefinito 60 s</li><li>Variabili: fino a 500; vincoli: fino a 1000</li></ul><h3>Cosa significa un limite</h3><p>Un'esecuzione fermata da un limite viene riportata onestamente. Se il backend disponeva di un candidato finito, questo viene mostrato come ammissibile e mai come ottimo dimostrato; altrimenti il risultato resta non risolto.</p>"
+    },
+    "actions": {
+      "solve": "Risolvi"
+    },
+    "validation": {
+      "title": "Controlla il problema",
+      "body": "Il problema non puo' ancora essere risolto:\n{detail}"
+    },
+    "solution": {
+      "title": "Risultato della programmazione quadratica",
+      "back": "Torna alla formulazione",
+      "empty": "Nessun risultato. Formula un problema e risolvilo per vederne qui l'esito.",
+      "summary": {
+        "section": "Esito"
+      },
+      "status_line": "Stato matematico: {status}",
+      "status": {
+        "optimal": "Ottimo",
+        "feasible": "Candidato ammissibile",
+        "infeasible": "Non ammissibile",
+        "unbounded": "Illimitato",
+        "not_solved": "Non risolto"
+      },
+      "explanation": {
+        "optimal": "Il backend ha raggiunto la convergenza e il candidato qui sotto soddisfa i criteri di ottimalita' di questo problema convesso entro la tolleranza richiesta. E' un'affermazione numerica, non una dimostrazione in aritmetica esatta.",
+        "feasible": "E' stato restituito un candidato che soddisfa i vincoli, ma i criteri completi di ottimalita' non sono stati raggiunti, di norma perche' un limite ha interrotto l'esecuzione. Consideralo un punto utilizzabile, non l'ottimo.",
+        "infeasible": "Nessun punto soddisfa contemporaneamente tutti i vincoli e i limiti. Rilassa un vincolo, allarga un limite oppure ricontrolla un termine noto.",
+        "unbounded": "L'obiettivo migliora senza limite all'interno dell'insieme ammissibile, quindi non esiste un ottimo finito. Aggiungi il limite o il vincolo che manca alla formulazione.",
+        "not_solved": "L'esecuzione non ha prodotto alcuna conclusione matematica. La diagnostica qui sotto riporta quanto restituito dal backend."
+      },
+      "dependency_failure": "Il backend OSQP non e' disponibile, quindi non e' stato risolto nulla. Si tratta di una dipendenza mancante, non di un'affermazione sul tuo problema.",
+      "local_notice": "Risolto localmente su questo computer. Nessun dato del problema esce dall'applicazione.",
+      "objective": {
+        "section": "Valore dell'obiettivo",
+        "sense_min": "Minimizzato",
+        "sense_max": "Massimizzato",
+        "unavailable": "Per questo esito non e' disponibile alcun valore dell'obiettivo.",
+        "recomputed": "f(x*) = ½ x*ᵀ Q x* + cᵀ x* + α"
+      },
+      "variables": {
+        "section": "Valori delle variabili",
+        "hint": "Il vettore candidato x*, nell'ordine in cui le variabili sono state dichiarate.",
+        "columns": {
+          "variable": "Variabile",
+          "description": "Descrizione",
+          "value": "Valore",
+          "lower": "Limite inferiore",
+          "upper": "Limite superiore",
+          "status": "Posizione"
+        },
+        "at_lower": "Sul limite inferiore",
+        "at_upper": "Sul limite superiore",
+        "interior": "Interna",
+        "empty": "Questo esito non ha restituito alcun vettore candidato."
+      },
+      "constraints": {
+        "section": "Attivita' dei vincoli",
+        "hint": "Il membro sinistro e' valutato nel candidato, cosi' da vedere quali vincoli sono attivi.",
+        "columns": {
+          "name": "Vincolo",
+          "relation": "Relazione",
+          "lhs": "Membro sinistro",
+          "rhs": "Termine noto",
+          "slack": "Scarto",
+          "status": "Stato"
+        },
+        "binding": "Attivo",
+        "slack_state": "Con scarto",
+        "violated": "Violato",
+        "empty": "Questo problema non dichiara vincoli lineari."
+      },
+      "duals": {
+        "section": "Moltiplicatori duali",
+        "hint": "Un moltiplicatore stima di quanto cambierebbe l'obiettivo per una variazione unitaria del relativo termine noto o limite.",
+        "columns": {
+          "item": "Elemento",
+          "kind": "Tipo",
+          "value": "Moltiplicatore"
+        },
+        "kind_constraint": "Vincolo",
+        "kind_lower": "Limite inferiore",
+        "kind_upper": "Limite superiore",
+        "unavailable": "Il backend non ha restituito moltiplicatori duali per questo esito: le informazioni di sensitivita' e la verifica KKT completa non sono disponibili."
+      },
+      "residuals": {
+        "section": "Residui numerici",
+        "hint": "I residui misurano quanto il punto restituito si discosta dal soddisfare esattamente le condizioni di ottimalita'.",
+        "primal": "Residuo primale",
+        "dual": "Residuo duale",
+        "gap": "Gap di dualita'",
+        "complementarity": "Residuo di complementarita'",
+        "unavailable": "Non riportato"
+      },
+      "diagnostics": {
+        "section": "Diagnostica di esecuzione",
+        "backend": "Backend",
+        "backend_version": "Versione del backend",
+        "backend_status": "Stato del backend",
+        "iterations": "Iterazioni",
+        "solve_time": "Tempo di risoluzione (s)",
+        "setup_time": "Tempo di preparazione (s)",
+        "message": "Messaggio",
+        "backend_status_hint": "Questo e' lo stato grezzo riportato dal solver, mantenuto tale e non reinterpretato da questa schermata."
+      },
+      "validation_report": {
+        "section": "Validazione indipendente",
+        "hint": "Optees ricontrolla il candidato restituito rispetto al problema originale, senza fidarsi del flag di successo del backend.",
+        "status": "Stato",
+        "status_verified": "Verificata",
+        "status_partial": "Parziale",
+        "status_failed": "Fallita",
+        "status_not_available": "Non disponibile",
+        "columns": {
+          "check": "Controllo",
+          "result": "Esito",
+          "detail": "Descrizione"
+        },
+        "check_passed": "Superato",
+        "check_failed": "Fallito",
+        "violations": "Violazioni",
+        "limitations": "Cosa questo non dimostra",
+        "empty": "Per questo esito non e' stata eseguita alcuna validazione indipendente.",
+        "checks": {
+          "variable_vector": {
+            "name": "Vettore candidato",
+            "detail": "Il risultato riporta esattamente un valore finito per ogni variabile dichiarata, nell'ordine dichiarato."
+          },
+          "bounds": {
+            "name": "Limiti delle variabili",
+            "detail": "Ogni valore ricade entro il proprio limite inferiore e superiore, nei margini della tolleranza di ammissibilita'."
+          },
+          "constraints": {
+            "name": "Vincoli lineari",
+            "detail": "Ogni riga di vincolo viene rivalutata nel candidato e confrontata con la propria relazione e il proprio termine noto."
+          },
+          "objective": {
+            "name": "Valore dell'obiettivo",
+            "detail": "L'obiettivo viene ricalcolato da Q, c e dalla costante, poi confrontato con il valore riportato dal backend."
+          },
+          "kkt_stationarity": {
+            "name": "Condizioni KKT",
+            "detail": "Stazionarieta', complementarita' e segno dei duali sono verificati a partire dai moltiplicatori riportati."
+          }
+        },
+        "limitation": {
+          "1": "La validazione indipendente verifica l'ammissibilita' primale e ricalcola l'obiettivo dal modello originale: conferma soltanto queste proprieta'.",
+          "2": "Non dimostra l'ottimalita' globale se il problema inviato non e' effettivamente convesso.",
+          "3": "Le condizioni KKT duali sono verificate solo quando il backend ha restituito moltiplicatori completi."
+        }
+      },
+      "visualization": {
+        "section": "Vista a due variabili",
+        "hint": "Curve di livello dell'obiettivo con l'insieme ammissibile ombreggiato e il candidato evidenziato.",
+        "title": "Curve di livello dell'obiettivo e regione ammissibile",
+        "candidate": "Candidato x*",
+        "feasible_legend": "Insieme ammissibile",
+        "no_model": "Formula e risolvi un problema per vedere questa rappresentazione.",
+        "unsupported_dimension": "Questo grafico viene disegnato solo per problemi con esattamente due variabili decisionali. Questo problema ne ha {count}: usa le tabelle di variabili, vincoli e duali qui sopra, che restano esatte in qualsiasi dimensione.",
+        "no_window": "Non e' stato possibile ricavare una finestra di rappresentazione finita dai limiti e dai vincoli di questo problema. Aggiungi un limite finito a una delle due variabili per abilitare il grafico.",
+        "matplotlib_unavailable": "Il supporto grafico non e' installato in questa sessione dell'applicazione: le tabelle numeriche qui sopra costituiscono quindi il risultato completo."
+      },
+      "export": {
+        "button": "Esporta il problema in JSON",
+        "dialog_title": "Salva problema QP",
+        "default_name": "problema_qp.json"
       }
     }
   }
