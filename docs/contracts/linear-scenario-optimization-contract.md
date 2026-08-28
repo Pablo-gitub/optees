@@ -201,7 +201,8 @@ The reduction inspects the integrality of all decision variables:
 1. **Continuous Problem**:
    If $D_j = \text{CONTINUOUS}$ for all $j \in \{1, \dots, n\}$, the reduced problem has $n+1$ continuous variables.
    - Delegated to LP solver port (`LPSolverPort`, e.g. HiGHS backend).
-   - Solver executes in polynomial time with exact simplex/interior-point guarantees.
+   - Delegated to the existing numerical LP capability. Correctness claims remain
+     tolerance-based; no exact-arithmetic or blanket complexity guarantee is made.
 
 2. **Mixed-Integer / Discrete Problem**:
    If any $D_j \in \{\text{INTEGER}, \text{BINARY}\}$, the reduced problem is a Mixed-Integer Linear Program (MILP).
@@ -370,22 +371,29 @@ The robust capability maps delegated LP/MILP outcomes to public Optees statuses:
 - `FEASIBLE` (`"feasible"`): A feasible candidate solution was found (e.g. MILP incumbent when time limit was reached), but optimality is unproven.
 - `INFEASIBLE` (`"infeasible"`): Shared constraints or scenario epigraph constraints are mutually contradictory; no candidate exists.
 - `UNBOUNDED` (`"unbounded"`): The robust objective can be improved indefinitely ($\theta \to -\infty$ or $\tau \to +\infty$) along a feasible ray.
-- `NOT_SOLVED` (`"not_solved"`): Numerical breakdown or missing dependencies prevented resolution.
+- `NOT_SOLVED` (`"not_solved"`): The delegated solver produced no usable mathematical result.
 
 ### 7.2 Termination Reason (`termination_reason`)
 
 - `COMPLETED` (`"completed"`): Normal successful termination.
 - `TIME_LIMIT` (`"time_limit"`): Solver halted because the time limit expired.
 - `ITERATION_LIMIT` (`"iteration_limit"`): Solver halted because iteration count expired.
-- `INFEASIBLE` (`"infeasible"`): Proven infeasible.
-- `UNBOUNDED` (`"unbounded"`): Proven unbounded.
-- `NUMERICAL_ERROR` (`"numerical_error"`): Solver numerical failure.
-- `DEPENDENCY_MISSING` (`"dependency_missing"`): Required solver library missing.
+- `CANCELLED` (`"cancelled"`): Execution was cancelled.
+- `DEPENDENCY_FAILURE` (`"dependency_failure"`): A required solver dependency failed or was unavailable.
+- `INTERNAL_ERROR` (`"internal_error"`): Execution failed internally, including an
+  unrecoverable numerical failure.
+
+`infeasible` and `unbounded` are mathematical statuses, never termination reasons.
+This vocabulary is the closed `TerminationReason` enum in
+`optees.application.contracts.execution`.
 
 ### 7.3 Validation Status (`validation.status`)
 
 - `VERIFIED` (`"verified"`): Candidate satisfies all variable domains, bounds, shared constraints, every $v_k(x^*)$ matches, and guarantee $L_{\max}^*$ or $R_{\min}^*$ matches the reported objective.
-- `PARTIAL` (`"partial"`): Feasibility and scenario recomputation passed, but dual/stationarity verification was unavailable (e.g. for discrete MILP).
+- `PARTIAL` (`"partial"`): Only a strict subset of the checks promised by this
+  validator could be performed. Absence of a proof of optimality alone does not
+  downgrade independently verified primal feasibility and robust-value semantics;
+  optimality is reported separately by `mathematical_status`.
 - `FAILED` (`"failed"`): Any constraint, bound, scenario calculation, or guarantee value was violated.
 - `NOT_AVAILABLE` (`"not_available"`): Validation is not applicable (e.g. for infeasible or unbounded results without candidate).
 
@@ -396,7 +404,8 @@ The robust capability maps delegated LP/MILP outcomes to public Optees statuses:
 The validator `ScenarioIndependentSolutionValidator` executes strictly outside the solver:
 
 1. **`scenario.variable_vector`**:
-   Verifies that the returned `variables` mapping contains exactly the declared $n$ variable names and that all values are finite numbers.
+   Verifies that the returned ordered `variables` array contains exactly the
+   declared $n$ variable names, without duplicates, and that all values are finite numbers.
 2. **`scenario.bounds`**:
    Verifies that $l_j - \varepsilon \le x_j^* \le u_j + \varepsilon$ for all $j$. For integer/binary variables, verifies integrality $|x_j^* - \text{round}(x_j^*)| \le \varepsilon_{int}$.
 3. **`scenario.constraints`**:
@@ -414,28 +423,25 @@ The validator `ScenarioIndependentSolutionValidator` executes strictly outside t
 
 ### 9.1 Problem Schema (`problem_schema_version: "1"`)
 
+As with every existing public problem codec, the capability is selected by the
+`capability_id` argument/envelope and schema versions are supplied by execution
+metadata. They are not duplicated inside the problem DTO. Each registered
+descriptor fixes the expected orientation; its decoder rejects a payload whose
+`orientation` belongs to the other capability.
+
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "required": [
-    "contract_version",
-    "problem_schema_version",
-    "capability_id",
+    "version",
     "problem_type",
     "orientation",
     "variables",
     "scenarios"
   ],
   "properties": {
-    "contract_version": { "const": "1" },
-    "problem_schema_version": { "const": "1" },
-    "capability_id": {
-      "enum": [
-        "scenario.linear.min_max_loss",
-        "scenario.linear.max_min_reward"
-      ]
-    },
+    "version": { "const": "1" },
     "problem_type": { "const": "linear_scenario" },
     "orientation": {
       "enum": [
@@ -529,30 +535,23 @@ The validator `ScenarioIndependentSolutionValidator` executes strictly outside t
 
 ### 9.2 Result Schema (`result_schema_version: "1"`)
 
+This is the inner `result` object of the standard `ExecutionEnvelope`. Contract
+version, capability ID, mathematical status, termination reason, diagnostics,
+validation, warnings, and schema versions remain owned by that envelope. Backend
+details remain in envelope `diagnostics`, not in this mathematical result DTO.
+
 ```json
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "required": [
-    "contract_version",
-    "result_schema_version",
-    "capability_id",
     "orientation",
     "guaranteed_value",
     "variables",
     "scenario_values",
-    "binding_scenario_ids",
-    "delegated_backend"
+    "binding_scenario_ids"
   ],
   "properties": {
-    "contract_version": { "const": "1" },
-    "result_schema_version": { "const": "1" },
-    "capability_id": {
-      "enum": [
-        "scenario.linear.min_max_loss",
-        "scenario.linear.max_min_reward"
-      ]
-    },
     "orientation": {
       "enum": [
         "minimize_maximum_loss",
@@ -561,8 +560,16 @@ The validator `ScenarioIndependentSolutionValidator` executes strictly outside t
     },
     "guaranteed_value": { "type": ["number", "null"] },
     "variables": {
-      "type": "object",
-      "additionalProperties": { "type": "number" }
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "value"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "value": { "type": "number" }
+        },
+        "additionalProperties": false
+      }
     },
     "scenario_values": {
       "type": "array",
@@ -580,18 +587,6 @@ The validator `ScenarioIndependentSolutionValidator` executes strictly outside t
     "binding_scenario_ids": {
       "type": "array",
       "items": { "type": "string" }
-    },
-    "delegated_backend": {
-      "type": "object",
-      "required": ["problem_type", "backend_id", "solver_status"],
-      "properties": {
-        "problem_type": { "enum": ["linear_programming", "mixed_integer_linear_programming"] },
-        "backend_id": { "type": "string" },
-        "solver_status": { "type": "string" },
-        "iterations": { "type": ["integer", "null"] },
-        "solve_time_seconds": { "type": ["number", "null"] }
-      },
-      "additionalProperties": false
     }
   },
   "additionalProperties": false
@@ -606,9 +601,7 @@ The validator `ScenarioIndependentSolutionValidator` executes strictly outside t
 
 ```json
 {
-  "contract_version": "1",
-  "problem_schema_version": "1",
-  "capability_id": "scenario.linear.min_max_loss",
+  "version": "1",
   "problem_type": "linear_scenario",
   "orientation": "minimize_maximum_loss",
   "variables": [
@@ -634,28 +627,18 @@ The validator `ScenarioIndependentSolutionValidator` executes strictly outside t
 
 ```json
 {
-  "contract_version": "1",
-  "result_schema_version": "1",
-  "capability_id": "scenario.linear.min_max_loss",
   "orientation": "minimize_maximum_loss",
   "guaranteed_value": 10.857142857142858,
-  "variables": {
-    "x1": 5.285714285714286,
-    "x2": 4.714285714285714
-  },
+  "variables": [
+    { "name": "x1", "value": 5.285714285714286 },
+    { "name": "x2", "value": 4.714285714285714 }
+  ],
   "scenario_values": [
     { "scenario_id": "s1", "value": 10.857142857142858, "is_binding": true },
     { "scenario_id": "s2", "value": 10.857142857142858, "is_binding": true },
     { "scenario_id": "s3", "value": 6.0, "is_binding": false }
   ],
-  "binding_scenario_ids": ["s1", "s2"],
-  "delegated_backend": {
-    "problem_type": "linear_programming",
-    "backend_id": "scipy.highs",
-    "solver_status": "optimal",
-    "iterations": 2,
-    "solve_time_seconds": 0.0004
-  }
+  "binding_scenario_ids": ["s1", "s2"]
 }
 ```
 

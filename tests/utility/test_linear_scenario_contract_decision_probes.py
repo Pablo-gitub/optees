@@ -6,13 +6,10 @@ from pathlib import Path
 import pytest
 from scipy.optimize import linprog
 
+from optees.application.contracts.execution import TerminationReason
+
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-CONTRACT_PATH = (
-    REPOSITORY_ROOT
-    / "docs"
-    / "contracts"
-    / "linear-scenario-optimization-contract.md"
-)
+CONTRACT_PATH = REPOSITORY_ROOT / "docs" / "contracts" / "linear-scenario-optimization-contract.md"
 
 
 def _schema_subset_errors(value: object, schema: dict, path: str = "$") -> list[str]:
@@ -26,11 +23,7 @@ def _schema_subset_errors(value: object, schema: dict, path: str = "$") -> list[
             or (kind == "object" and isinstance(value, dict))
             or (kind == "array" and isinstance(value, list))
             or (kind == "string" and isinstance(value, str))
-            or (
-                kind == "integer"
-                and isinstance(value, int)
-                and not isinstance(value, bool)
-            )
+            or (kind == "integer" and isinstance(value, int) and not isinstance(value, bool))
             or (
                 kind == "number"
                 and isinstance(value, (int, float))
@@ -62,11 +55,7 @@ def _schema_subset_errors(value: object, schema: dict, path: str = "$") -> list[
         if "maxItems" in schema and len(value) > schema["maxItems"]:
             errors.append(f"{path}: longer than maxItems")
         for index, item in enumerate(value):
-            errors.extend(
-                _schema_subset_errors(
-                    item, schema.get("items", {}), f"{path}[{index}]"
-                )
-            )
+            errors.extend(_schema_subset_errors(item, schema.get("items", {}), f"{path}[{index}]"))
     if isinstance(value, dict):
         properties = schema.get("properties", {})
         for required in schema.get("required", []):
@@ -74,11 +63,7 @@ def _schema_subset_errors(value: object, schema: dict, path: str = "$") -> list[
                 errors.append(f"{path}: missing {required}")
         for key, item in value.items():
             if key in properties:
-                errors.extend(
-                    _schema_subset_errors(
-                        item, properties[key], f"{path}.{key}"
-                    )
-                )
+                errors.extend(_schema_subset_errors(item, properties[key], f"{path}.{key}"))
             elif schema.get("additionalProperties") is False:
                 errors.append(f"{path}: unexpected property {key}")
     return errors
@@ -86,6 +71,23 @@ def _schema_subset_errors(value: object, schema: dict, path: str = "$") -> list[
 
 def test_contract_markdown_file_exists() -> None:
     assert CONTRACT_PATH.is_file(), f"Contract file missing at {CONTRACT_PATH}"
+
+
+def test_contract_uses_existing_execution_envelope_vocabulary() -> None:
+    contract = CONTRACT_PATH.read_text(encoding="utf-8")
+    assert {reason.value for reason in TerminationReason} == {
+        "completed",
+        "time_limit",
+        "iteration_limit",
+        "cancelled",
+        "dependency_failure",
+        "internal_error",
+    }
+    assert '"version": { "const": "1" }' in contract
+    assert '"variables": {\n      "type": "array"' in contract
+    assert '"delegated_backend"' not in contract
+    assert '"numerical_error"' not in contract
+    assert '"dependency_missing"' not in contract
 
 
 def test_example1_min_max_loss_analytical_recomputation() -> None:
@@ -213,23 +215,14 @@ def test_canonical_problem_json_schema_validation() -> None:
     problem_schema = {
         "type": "object",
         "required": [
-            "contract_version",
-            "problem_schema_version",
-            "capability_id",
+            "version",
             "problem_type",
             "orientation",
             "variables",
             "scenarios",
         ],
         "properties": {
-            "contract_version": {"const": "1"},
-            "problem_schema_version": {"const": "1"},
-            "capability_id": {
-                "enum": [
-                    "scenario.linear.min_max_loss",
-                    "scenario.linear.max_min_reward",
-                ]
-            },
+            "version": {"const": "1"},
             "problem_type": {"const": "linear_scenario"},
             "orientation": {
                 "enum": [
@@ -309,14 +302,24 @@ def test_canonical_problem_json_schema_validation() -> None:
     }
 
     example_min_max = {
-        "contract_version": "1",
-        "problem_schema_version": "1",
-        "capability_id": "scenario.linear.min_max_loss",
+        "version": "1",
         "problem_type": "linear_scenario",
         "orientation": "minimize_maximum_loss",
         "variables": [
-            {"name": "x1", "label": "Resource allocation 1", "lower_bound": 0.0, "upper_bound": None, "integrality": "C"},
-            {"name": "x2", "label": "Resource allocation 2", "lower_bound": 0.0, "upper_bound": None, "integrality": "C"},
+            {
+                "name": "x1",
+                "label": "Resource allocation 1",
+                "lower_bound": 0.0,
+                "upper_bound": None,
+                "integrality": "C",
+            },
+            {
+                "name": "x2",
+                "label": "Resource allocation 2",
+                "lower_bound": 0.0,
+                "upper_bound": None,
+                "integrality": "C",
+            },
         ],
         "scenarios": [
             {"id": "s1", "label": "High-demand regime", "coefficients": [2.0, -1.0], "offset": 5.0},
@@ -341,25 +344,13 @@ def test_canonical_result_json_schema_validation() -> None:
     result_schema = {
         "type": "object",
         "required": [
-            "contract_version",
-            "result_schema_version",
-            "capability_id",
             "orientation",
             "guaranteed_value",
             "variables",
             "scenario_values",
             "binding_scenario_ids",
-            "delegated_backend",
         ],
         "properties": {
-            "contract_version": {"const": "1"},
-            "result_schema_version": {"const": "1"},
-            "capability_id": {
-                "enum": [
-                    "scenario.linear.min_max_loss",
-                    "scenario.linear.max_min_reward",
-                ]
-            },
             "orientation": {
                 "enum": [
                     "minimize_maximum_loss",
@@ -368,8 +359,16 @@ def test_canonical_result_json_schema_validation() -> None:
             },
             "guaranteed_value": {"type": ["number", "null"]},
             "variables": {
-                "type": "object",
-                "additionalProperties": {"type": "number"},
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": ["name", "value"],
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1},
+                        "value": {"type": "number"},
+                    },
+                    "additionalProperties": False,
+                },
             },
             "scenario_values": {
                 "type": "array",
@@ -388,45 +387,23 @@ def test_canonical_result_json_schema_validation() -> None:
                 "type": "array",
                 "items": {"type": "string"},
             },
-            "delegated_backend": {
-                "type": "object",
-                "required": ["problem_type", "backend_id", "solver_status"],
-                "properties": {
-                    "problem_type": {"enum": ["linear_programming", "mixed_integer_linear_programming"]},
-                    "backend_id": {"type": "string"},
-                    "solver_status": {"type": "string"},
-                    "iterations": {"type": ["integer", "null"]},
-                    "solve_time_seconds": {"type": ["number", "null"]},
-                },
-                "additionalProperties": False,
-            },
         },
         "additionalProperties": False,
     }
 
     example_result = {
-        "contract_version": "1",
-        "result_schema_version": "1",
-        "capability_id": "scenario.linear.min_max_loss",
         "orientation": "minimize_maximum_loss",
         "guaranteed_value": 10.857142857142858,
-        "variables": {
-            "x1": 5.285714285714286,
-            "x2": 4.714285714285714,
-        },
+        "variables": [
+            {"name": "x1", "value": 5.285714285714286},
+            {"name": "x2", "value": 4.714285714285714},
+        ],
         "scenario_values": [
             {"scenario_id": "s1", "value": 10.857142857142858, "is_binding": True},
             {"scenario_id": "s2", "value": 10.857142857142858, "is_binding": True},
             {"scenario_id": "s3", "value": 6.0, "is_binding": False},
         ],
         "binding_scenario_ids": ["s1", "s2"],
-        "delegated_backend": {
-            "problem_type": "linear_programming",
-            "backend_id": "scipy.highs",
-            "solver_status": "optimal",
-            "iterations": 2,
-            "solve_time_seconds": 0.0004,
-        },
     }
 
     errors = _schema_subset_errors(example_result, result_schema)

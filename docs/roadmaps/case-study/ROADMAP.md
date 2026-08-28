@@ -70,7 +70,7 @@ terminology, brokerage behavior, or claims of financial performance.
 | --- | --- | --- |
 | [x] | `OPT-DS-01` — Convex QP Contract Decision | `QP-C` achieved |
 | [x] | `OPT-DS-02` — Convex QP Vertical Slice | `QP-I` and `QP-UI` achieved |
-| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `OPT-DS-03A` ready |
+| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `OPT-DS-03A` complete after review; `OPT-DS-03B` next |
 | [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Awaiting Simulator evidence |
 | [ ] | `OPT-DS-05` — Convex MIQP | Not started |
 | [ ] | `OPT-DS-06` — Workflow Registry MVP | Not started |
@@ -125,7 +125,9 @@ bilingual, accessible, reviewed, and still passes `QP-I`.
 Detailed plan: `03-linear-scenario-minmax-maxmin.md`.
 Frozen contract: `../../contracts/linear-scenario-optimization-contract.md`.
 
-**Gate ROBUST-D:** achieved; mathematical formulation, epigraph/hypograph reductions, JSON schemas, non-aliasing proof, and analytical probes are frozen.
+**Gate ROBUST-D:** achieved after review correction; mathematical formulation,
+epigraph/hypograph reductions, envelope-compatible JSON schemas, non-aliasing
+semantics, and analytical probes are frozen.
 
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
 against the identical frozen scenario package.

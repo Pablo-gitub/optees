@@ -33,7 +33,7 @@ stable when delivery state changes.
 | [Decision Simulator case-study expansion](case-study/ROADMAP.md) | In progress | Parallel evidence track: QP, robust scenarios, forecasting depth, MIQP, and Registry |
 | [Convex QP contract decision](case-study/01-qp-contract-decision.md) | Completed | Contract decision frozen; gate QP-C achieved |
 | [Convex QP vertical slice](case-study/02-qp-vertical-slice.md) | Completed | Capability and desktop gates QP-I and QP-UI achieved |
-| [Linear scenario min-max/max-min](case-study/03-linear-scenario-minmax-maxmin.md) | Planned | Micro-gate OPT-DS-03A contract decision is ready |
+| [Linear scenario min-max/max-min](case-study/03-linear-scenario-minmax-maxmin.md) | In progress | ROBUST-D accepted after review; OPT-DS-03B is next |
 | [Documentation, website, and release](documentation-website-release.md) | In progress | Coordinated public documentation and release work |
 
 The register is a navigation summary. When it conflicts with a roadmap's

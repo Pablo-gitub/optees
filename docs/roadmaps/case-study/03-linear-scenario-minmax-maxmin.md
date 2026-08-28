@@ -3,7 +3,7 @@
 ## Work Unit
 
 - **ID:** `OPT-DS-03`
-- **State:** ready for `OPT-DS-03A` only
+- **State:** `OPT-DS-03A` complete after review; ready to plan `OPT-DS-03B`
 - **Type:** domain-neutral robust-scenario capability delivered through bounded micro-gates
 - **Parent roadmap:** `ROADMAP.md`
 - **Prerequisite:** `QP-I` and `QP-UI` satisfied by `OPT-DS-02`
@@ -104,7 +104,7 @@ Stop and request review if LP/MILP status semantics cannot represent the
 robust claim honestly, if scenario probabilities become necessary, or if one
 public shape cannot preserve both orientations without ambiguous fields.
 
-**Gate `ROBUST-D` (Achieved):** contract decisions, mathematical formulations,
+**Gate `ROBUST-D` (Achieved after review correction):** contract decisions, mathematical formulations,
 non-aliasing proof, analytical examples, epigraph/hypograph reductions, JSON
 schemas, and analytical probes are frozen in
 `docs/contracts/linear-scenario-optimization-contract.md` and
@@ -178,7 +178,7 @@ statuses visibly.
 **Gate `ROBUST-UI`:** focused GUI and regression tests pass and Codex accepts
 the separately committed UI work.
 
-## First Authorized Implementation
+## Next implementation boundary
 
-Only `OPT-DS-03A` is currently authorized. Sections B–F are sequencing
-constraints, not permission to implement them.
+`OPT-DS-03A` is complete. Sections B–F remain sequencing constraints and require
+their own detailed work units; this roadmap does not authorize combining them.
