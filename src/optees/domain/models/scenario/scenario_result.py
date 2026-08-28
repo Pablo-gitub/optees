@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
-from typing import Dict, Optional, Tuple, Union
+from enum import Enum
+from types import MappingProxyType
+from typing import Mapping, Optional, Tuple, Union
 
-from optees.application.contracts.execution import MathematicalStatus
 from optees.domain.entities.lp.solution import LPSolution
 from optees.domain.entities.milp.solution import MILPSolution
 from optees.domain.entities.scenario.scenario_value import ScenarioValue
@@ -13,14 +14,24 @@ from optees.domain.value_objects.scenario.scenario_orientation import (
 )
 
 
+class ScenarioSolveStatus(str, Enum):
+    OPTIMAL = "optimal"
+    FEASIBLE = "feasible"
+    INFEASIBLE = "infeasible"
+    UNBOUNDED = "unbounded"
+    NOT_SOLVED = "not_solved"
+
+
 @dataclass(frozen=True)
 class ScenarioResult:
     """Immutable domain result for robust scenario optimization."""
 
-    status: MathematicalStatus
+    status: ScenarioSolveStatus
     orientation: ScenarioOrientation
+    original_variable_order: Tuple[str, ...]
+    scenario_order: Tuple[str, ...]
     guaranteed_value: Optional[float]
-    variables: Optional[Dict[str, float]]
+    variables: Optional[Mapping[str, float]]
     scenario_values: Tuple[ScenarioValue, ...]
     binding_scenario_ids: Tuple[str, ...]
     delegated_solution: Union[LPSolution, MILPSolution]
@@ -28,8 +39,8 @@ class ScenarioResult:
     auxiliary_value: Optional[float]
 
     def __post_init__(self) -> None:
-        if not isinstance(self.status, MathematicalStatus):
-            raise ValueError(f"status must be a MathematicalStatus, got {self.status!r}")
+        if not isinstance(self.status, ScenarioSolveStatus):
+            raise ValueError(f"status must be a ScenarioSolveStatus, got {self.status!r}")
         if not isinstance(self.orientation, ScenarioOrientation):
             raise ValueError(f"orientation must be a ScenarioOrientation, got {self.orientation!r}")
         if not isinstance(self.delegated_solution, (LPSolution, MILPSolution)):
@@ -45,8 +56,8 @@ class ScenarioResult:
             )
 
         has_candidate = self.status in (
-            MathematicalStatus.OPTIMAL,
-            MathematicalStatus.FEASIBLE,
+            ScenarioSolveStatus.OPTIMAL,
+            ScenarioSolveStatus.FEASIBLE,
         )
         if has_candidate:
             if (
@@ -60,7 +71,7 @@ class ScenarioResult:
                 )
             object.__setattr__(self, "guaranteed_value", float(self.guaranteed_value))
 
-            if not isinstance(self.variables, dict):
+            if not isinstance(self.variables, Mapping):
                 raise ValueError(
                     f"variables mapping must be provided for status {self.status.value}"
                 )
@@ -72,6 +83,15 @@ class ScenarioResult:
                     or not math.isfinite(float(v))
                 ):
                     raise ValueError(f"Variable {k!r} has non-finite value {v!r}")
+            if tuple(self.variables) != self.original_variable_order:
+                raise ValueError("variables must follow original_variable_order exactly")
+            object.__setattr__(
+                self,
+                "variables",
+                MappingProxyType(
+                    {name: float(self.variables[name]) for name in self.original_variable_order}
+                ),
+            )
 
             if (
                 self.auxiliary_value is None
@@ -86,6 +106,8 @@ class ScenarioResult:
 
             if not isinstance(self.scenario_values, tuple):
                 object.__setattr__(self, "scenario_values", tuple(self.scenario_values or ()))
+            if tuple(item.scenario_id for item in self.scenario_values) != self.scenario_order:
+                raise ValueError("scenario_values must follow scenario_order exactly")
             if not isinstance(self.binding_scenario_ids, tuple):
                 object.__setattr__(
                     self, "binding_scenario_ids", tuple(self.binding_scenario_ids or ())
@@ -107,10 +129,10 @@ class ScenarioResult:
             object.__setattr__(self, "binding_scenario_ids", ())
 
     def is_optimal(self) -> bool:
-        return self.status is MathematicalStatus.OPTIMAL
+        return self.status is ScenarioSolveStatus.OPTIMAL
 
     def has_candidate(self) -> bool:
         return (
-            self.status in (MathematicalStatus.OPTIMAL, MathematicalStatus.FEASIBLE)
+            self.status in (ScenarioSolveStatus.OPTIMAL, ScenarioSolveStatus.FEASIBLE)
             and self.variables is not None
         )

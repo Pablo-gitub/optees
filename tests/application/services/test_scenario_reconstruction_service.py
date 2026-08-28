@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 import pytest
 
-from optees.application.contracts.execution import MathematicalStatus
 from optees.application.services.scenario_reconstruction_service import (
     ScenarioReconstructionError,
     ScenarioReconstructionService,
@@ -20,6 +20,7 @@ from optees.domain.entities.scenario.shared_objective import (
 )
 from optees.domain.entities.scenario.variable import ScenarioVariable
 from optees.domain.models.scenario.scenario_model import ScenarioModel
+from optees.domain.models.scenario.scenario_result import ScenarioSolveStatus
 from optees.domain.value_objects.lp.bounds import Bounds
 from optees.domain.value_objects.lp.relation import Relation
 from optees.domain.value_objects.lp.solve_status import SolveStatus
@@ -142,7 +143,7 @@ def test_reconstruct_example1_min_max_loss_optimal() -> None:
 
     result = ScenarioReconstructionService.reconstruct(model, reduction, lp_solution)
 
-    assert result.status == MathematicalStatus.OPTIMAL
+    assert result.status == ScenarioSolveStatus.OPTIMAL
     assert result.is_optimal()
     assert result.has_candidate()
     assert result.orientation == ScenarioOrientation.MIN_MAX_LOSS
@@ -192,7 +193,7 @@ def test_reconstruct_example2_max_min_reward_negative_guarantee() -> None:
 
     result = ScenarioReconstructionService.reconstruct(model, reduction, lp_solution)
 
-    assert result.status == MathematicalStatus.OPTIMAL
+    assert result.status == ScenarioSolveStatus.OPTIMAL
     assert result.orientation == ScenarioOrientation.MAX_MIN_REWARD
     assert math.isclose(result.guaranteed_value, guaranteed, abs_tol=1e-12)
     assert result.guaranteed_value < 0.0
@@ -216,7 +217,7 @@ def test_reconstruct_example3_discrete_binary_optimal_and_feasible() -> None:
     )
 
     result = ScenarioReconstructionService.reconstruct(model, reduction, milp_solution)
-    assert result.status == MathematicalStatus.OPTIMAL
+    assert result.status == ScenarioSolveStatus.OPTIMAL
     assert result.guaranteed_value == 15.0
     assert result.variables == {"x1": 1.0, "x2": 1.0, "x3": 0.0}
     assert result.binding_scenario_ids == ("s2",)
@@ -231,7 +232,7 @@ def test_reconstruct_example3_discrete_binary_optimal_and_feasible() -> None:
     )
 
     result_feas = ScenarioReconstructionService.reconstruct(model, reduction, milp_feasible)
-    assert result_feas.status == MathematicalStatus.FEASIBLE
+    assert result_feas.status == ScenarioSolveStatus.FEASIBLE
     assert result_feas.has_candidate() is True
     assert result_feas.is_optimal() is False
     assert result_feas.guaranteed_value == 15.0
@@ -466,7 +467,7 @@ def test_reconstruct_no_candidate_statuses() -> None:
         extras={},
     )
     res_inf = ScenarioReconstructionService.reconstruct(model, reduction, lp_inf)
-    assert res_inf.status == MathematicalStatus.INFEASIBLE
+    assert res_inf.status == ScenarioSolveStatus.INFEASIBLE
     assert res_inf.has_candidate() is False
     assert res_inf.guaranteed_value is None
     assert res_inf.variables is None
@@ -474,16 +475,16 @@ def test_reconstruct_no_candidate_statuses() -> None:
     assert res_inf.binding_scenario_ids == ()
     assert res_inf.auxiliary_value is None
 
-    # 2. Unbounded MILP
-    milp_unb = MILPSolution(
-        status=MILPSolveStatus.UNBOUNDED,
+    # 2. Unbounded LP
+    lp_unb = LPSolution(
+        status=SolveStatus.UNBOUNDED,
         objective=None,
         values={},
-        diagnostics=MILPSolverDiagnostics(),
+        diagnostics=SolverDiagnostics(),
         extras={},
     )
-    res_unb = ScenarioReconstructionService.reconstruct(model, reduction, milp_unb)
-    assert res_unb.status == MathematicalStatus.UNBOUNDED
+    res_unb = ScenarioReconstructionService.reconstruct(model, reduction, lp_unb)
+    assert res_unb.status == ScenarioSolveStatus.UNBOUNDED
     assert res_unb.has_candidate() is False
     assert res_unb.guaranteed_value is None
     assert res_unb.variables is None
@@ -497,7 +498,7 @@ def test_reconstruct_no_candidate_statuses() -> None:
         extras={},
     )
     res_ns = ScenarioReconstructionService.reconstruct(model, reduction, lp_not_solved)
-    assert res_ns.status == MathematicalStatus.NOT_SOLVED
+    assert res_ns.status == ScenarioSolveStatus.NOT_SOLVED
     assert res_ns.has_candidate() is False
 
 
@@ -526,3 +527,35 @@ def test_reconstruction_purity_and_immutability() -> None:
 
     # Solution dict was not modified
     assert lp_solution.values == original_values
+
+    assert res1.original_variable_order == ("x1", "x2")
+    assert res1.scenario_order == ("s1", "s2", "s3")
+    with pytest.raises(TypeError):
+        res1.variables["x1"] = 0.0  # type: ignore[index]
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("orientation", ScenarioOrientation.MAX_MIN_REWARD, "orientation"),
+        ("original_variable_order", ("x2", "x1"), "variable order"),
+        ("scenario_order", ("s2", "s1", "s3"), "scenario order"),
+        ("is_discrete", True, "discreteness"),
+    ],
+)
+def test_reconstruction_rejects_reduction_not_belonging_to_model(
+    field: str, value: object, message: str
+) -> None:
+    model, reduction = _make_example1_model()
+    solution = LPSolution(
+        status=SolveStatus.OPTIMAL,
+        objective=76.0 / 7.0,
+        values={"x1": 37.0 / 7.0, "x2": 33.0 / 7.0, "_aux_theta": 76.0 / 7.0},
+        diagnostics=SolverDiagnostics(),
+        extras={},
+    )
+
+    with pytest.raises(ScenarioReconstructionError, match=message):
+        ScenarioReconstructionService.reconstruct(
+            model, replace(reduction, **{field: value}), solution
+        )

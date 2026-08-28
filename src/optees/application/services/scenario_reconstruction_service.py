@@ -3,7 +3,6 @@ from __future__ import annotations
 import math
 from typing import Mapping, Union
 
-from optees.application.contracts.execution import MathematicalStatus
 from optees.application.services.scenario_reduction_service import (
     ScenarioReductionResult,
 )
@@ -11,7 +10,9 @@ from optees.domain.entities.lp.solution import LPSolution
 from optees.domain.entities.milp.solution import MILPSolution
 from optees.domain.entities.scenario.scenario_value import ScenarioValue
 from optees.domain.models.scenario.scenario_model import ScenarioModel
-from optees.domain.models.scenario.scenario_result import ScenarioResult
+from optees.domain.models.scenario.scenario_result import ScenarioResult, ScenarioSolveStatus
+from optees.domain.models.lp.lp_model import LPModel
+from optees.domain.models.milp.milp_model import MILPModel
 from optees.domain.value_objects.lp.solve_status import SolveStatus
 from optees.domain.value_objects.milp.solve_status import MILPSolveStatus
 
@@ -52,17 +53,20 @@ class ScenarioReconstructionService:
             )
         tol = float(consistency_tolerance)
 
-        # Map delegated solver status to MathematicalStatus
+        _validate_reduction_identity(model, reduction, delegated_solution)
+
         mapped_status = _map_status(delegated_solution)
 
         # Non-candidate states: INFEASIBLE, UNBOUNDED, NOT_SOLVED
         if mapped_status not in (
-            MathematicalStatus.OPTIMAL,
-            MathematicalStatus.FEASIBLE,
+            ScenarioSolveStatus.OPTIMAL,
+            ScenarioSolveStatus.FEASIBLE,
         ):
             return ScenarioResult(
                 status=mapped_status,
                 orientation=model.orientation,
+                original_variable_order=reduction.original_variable_order,
+                scenario_order=reduction.scenario_order,
                 guaranteed_value=None,
                 variables=None,
                 scenario_values=(),
@@ -185,6 +189,8 @@ class ScenarioReconstructionService:
         return ScenarioResult(
             status=mapped_status,
             orientation=model.orientation,
+            original_variable_order=reduction.original_variable_order,
+            scenario_order=reduction.scenario_order,
             guaranteed_value=guaranteed_val,
             variables=user_variables,
             scenario_values=tuple(scenario_values_list),
@@ -195,23 +201,53 @@ class ScenarioReconstructionService:
         )
 
 
-def _map_status(solution: Union[LPSolution, MILPSolution]) -> MathematicalStatus:
+def _validate_reduction_identity(
+    model: ScenarioModel,
+    reduction: ScenarioReductionResult,
+    solution: Union[LPSolution, MILPSolution],
+) -> None:
+    if reduction.orientation is not model.orientation:
+        raise ScenarioReconstructionError(
+            "Reduction orientation does not match the scenario model."
+        )
+    if reduction.original_variable_order != model.variable_names():
+        raise ScenarioReconstructionError(
+            "Reduction variable order does not match the scenario model."
+        )
+    if reduction.scenario_order != model.scenario_ids():
+        raise ScenarioReconstructionError(
+            "Reduction scenario order does not match the scenario model."
+        )
+    if reduction.is_discrete != model.is_discrete():
+        raise ScenarioReconstructionError(
+            "Reduction discreteness does not match the scenario model."
+        )
+    expected_pair = (MILPModel, MILPSolution) if reduction.is_discrete else (LPModel, LPSolution)
+    if not isinstance(reduction.model, expected_pair[0]) or not isinstance(
+        solution, expected_pair[1]
+    ):
+        raise ScenarioReconstructionError(
+            "Delegated solution type does not match the reviewed reduction."
+        )
+
+
+def _map_status(solution: Union[LPSolution, MILPSolution]) -> ScenarioSolveStatus:
     if isinstance(solution, LPSolution):
         if solution.status == SolveStatus.OPTIMAL:
-            return MathematicalStatus.OPTIMAL
+            return ScenarioSolveStatus.OPTIMAL
         if solution.status == SolveStatus.INFEASIBLE:
-            return MathematicalStatus.INFEASIBLE
+            return ScenarioSolveStatus.INFEASIBLE
         if solution.status == SolveStatus.UNBOUNDED:
-            return MathematicalStatus.UNBOUNDED
-        return MathematicalStatus.NOT_SOLVED
+            return ScenarioSolveStatus.UNBOUNDED
+        return ScenarioSolveStatus.NOT_SOLVED
     elif isinstance(solution, MILPSolution):
         if solution.status == MILPSolveStatus.OPTIMAL:
-            return MathematicalStatus.OPTIMAL
+            return ScenarioSolveStatus.OPTIMAL
         if solution.status == MILPSolveStatus.FEASIBLE:
-            return MathematicalStatus.FEASIBLE
+            return ScenarioSolveStatus.FEASIBLE
         if solution.status == MILPSolveStatus.INFEASIBLE:
-            return MathematicalStatus.INFEASIBLE
+            return ScenarioSolveStatus.INFEASIBLE
         if solution.status == MILPSolveStatus.UNBOUNDED:
-            return MathematicalStatus.UNBOUNDED
-        return MathematicalStatus.NOT_SOLVED
+            return ScenarioSolveStatus.UNBOUNDED
+        return ScenarioSolveStatus.NOT_SOLVED
     raise TypeError(f"Unknown solution type: {type(solution).__name__}")
