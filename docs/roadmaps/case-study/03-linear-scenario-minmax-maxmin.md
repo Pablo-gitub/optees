@@ -204,20 +204,86 @@ No solver, transport, composition, or UI capability was introduced. Only after r
 
 ## Micro-gate C — Use Case, Result And Independent Validation (`OPT-DS-03C`)
 
-Add the application use case and robust result model. Execute through injected
-LP/MILP application ports and independently recompute:
+This stage is split into three separately reviewed implementation units. Do not
+combine them. Existing LP/MILP solutions, result codecs, validators, status
+enums, and `SolutionValidation` are sources of truth rather than templates to
+copy.
 
-- candidate identity and finiteness;
-- original variable domains and bounds;
-- every scenario value;
-- worst/binding scenario set;
-- guarantee value and delegated objective consistency;
-- delegated validation provenance and honest partial/not-available states.
+### Micro-gate C1 — Result Reconstruction (`OPT-DS-03C1`)
 
-Use fake deterministic ports first. Do not register a public capability yet.
+Implement only an immutable robust result model and a pure reconstruction
+service that receives the original `ScenarioModel`, its reviewed
+`ScenarioReductionResult`, and an already produced `LPSolution` or
+`MILPSolution`. It does not invoke a solver and does not perform independent
+validation yet.
 
-**Gate `ROBUST-V`:** analytic and tampered-result tests prove the application
-semantics independently of a concrete solver.
+Before editing, compare and report the exact candidate, status, diagnostics,
+ordering, and no-candidate shapes of `LPSolution`, `MILPSolution`,
+`LPResultCodec`, and `MILPResultCodec`.
+
+The reconstructed result must:
+
+- expose only original decision variables in `original_variable_order`; never
+  expose the generated auxiliary variable as a user decision;
+- retain orientation and `scenario_order`, recompute every scenario value from
+  the original model, derive the guarantee and deterministic binding set using
+  the frozen tolerance, and preserve negative guarantees;
+- compare the recomputed guarantee with both the auxiliary value and delegated
+  objective using an explicit finite tolerance; record inconsistency as a
+  reconstruction failure rather than silently replacing values;
+- carry the delegated LP/MILP domain solution or a typed, lossless reference to
+  its status and diagnostics so later layers do not invent backend metadata;
+- preserve `optimal`, `feasible`, `infeasible`, `unbounded`, and `not_solved`
+  distinctions. Only optimal/feasible outcomes may contain a candidate;
+- return an explicit no-candidate robust result for infeasible, unbounded, and
+  not-solved outcomes, with no fabricated zero objective, variables, scenario
+  values, or binding set.
+
+Required tests use real domain `LPSolution`/`MILPSolution` objects and cover both
+orientations, continuous and discrete candidates, multiple binding ties,
+negative guarantees, non-zero shared offsets, reordered solver mappings,
+missing/unknown/duplicate/non-finite variables, missing/wrong auxiliary value,
+objective mismatch, and all no-candidate statuses. Tests must not copy codec
+schemas or use concrete numerical solvers.
+
+Explicit exclusions: no solver/port invocation, no independent
+`SolutionValidation`, no new public JSON codec/schema, capability registration,
+composition, transport, artifact, report, or UI.
+
+Stop if LP and MILP domain solutions cannot support one lossless reconstruction
+contract, if their status meanings conflict, or if preserving diagnostics would
+require changing an existing public codec.
+
+**Gate `ROBUST-R`:** pure reconstruction produces a deterministic, lossless
+robust domain result from real delegated solution types and rejects every
+tampered candidate/guarantee case.
+
+### Micro-gate C2 — Independent Robust Validation (`OPT-DS-03C2`)
+
+After `ROBUST-R` review, add `ScenarioIndependentSolutionValidator` using the
+existing `SolutionValidation`, `ValidationCheck`, and `ValidationViolation`
+contracts. Recompute original vector identity, finiteness, bounds, integrality,
+shared constraints, every scenario value, guarantee, binding set, auxiliary
+consistency, and delegated objective consistency without trusting diagnostics.
+Optimality remains a mathematical status, not a validation claim. Infeasible,
+unbounded, and no-candidate results return honest `not_available`.
+
+**Gate `ROBUST-V`:** analytic and tampered-result tests prove robust semantics
+independently of a concrete solver.
+
+### Micro-gate C3 — Application Orchestration (`OPT-DS-03C3`)
+
+After `ROBUST-V` review, add the application use case. Reuse
+`ScenarioReductionService`, `SolveLPUseCase`, and `SolveMILPUseCase` through
+injected application dependencies, then reconstruct and validate exactly once.
+Use deterministic fake solver ports. Do not duplicate LP/MILP mapping or invoke
+concrete adapters.
+
+**Gate `ROBUST-A`:** fake-port tests prove routing, status/diagnostic
+preservation, reconstruction, validation, and failure propagation end to end.
+
+The parent `OPT-DS-03C` is complete only when `ROBUST-R`, `ROBUST-V`, and
+`ROBUST-A` are all reviewed.
 
 ## Micro-gate D — Public Capability And Delivery (`OPT-DS-03D`)
 
@@ -253,5 +319,5 @@ the separately committed UI work.
 
 ## Next implementation boundary
 
-`OPT-DS-03A` is complete. Sections B–F remain sequencing constraints and require
-their own detailed work units; this roadmap does not authorize combining them.
+`OPT-DS-03A/B` are complete after review. `OPT-DS-03C1` is the only next
+implementation authorized here. C2–F remain separately reviewed work units.
