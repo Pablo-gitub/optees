@@ -502,6 +502,25 @@ def test_reconstruct_no_candidate_statuses() -> None:
     assert res_ns.has_candidate() is False
 
 
+@pytest.mark.parametrize(
+    "status", [SolveStatus.INFEASIBLE, SolveStatus.UNBOUNDED, SolveStatus.NOT_SOLVED]
+)
+def test_reconstruction_rejects_candidate_payload_for_no_candidate_status(
+    status: SolveStatus,
+) -> None:
+    model, reduction = _make_example1_model()
+    inconsistent = LPSolution(
+        status=status,
+        objective=1.0,
+        values={"x1": 0.0},
+        diagnostics=SolverDiagnostics(),
+        extras={},
+    )
+
+    with pytest.raises(ScenarioReconstructionError, match="no-candidate solver status"):
+        ScenarioReconstructionService.reconstruct(model, reduction, inconsistent)
+
+
 def test_reconstruction_purity_and_immutability() -> None:
     """Verify that reconstruction service does not mutate inputs and is deterministic."""
     model, reduction = _make_example1_model()
@@ -532,6 +551,10 @@ def test_reconstruction_purity_and_immutability() -> None:
     assert res1.scenario_order == ("s1", "s2", "s3")
     with pytest.raises(TypeError):
         res1.variables["x1"] = 0.0  # type: ignore[index]
+    with pytest.raises(TypeError, match="frozen mapping"):
+        res1.delegated_solution.values["x1"] = 0.0
+    with pytest.raises(TypeError, match="frozen mapping"):
+        res1.delegated_solution.extras["key"] = "changed"
 
 
 @pytest.mark.parametrize(

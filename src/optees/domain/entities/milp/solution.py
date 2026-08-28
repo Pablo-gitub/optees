@@ -4,6 +4,7 @@ from typing import Dict, Optional
 
 from optees.domain.value_objects.milp.solve_status import MILPSolveStatus
 from optees.domain.value_objects.milp.solver_diagnostics import MILPSolverDiagnostics
+from optees.domain.value_objects.immutable import freeze_mapping
 
 
 @dataclass(frozen=True)
@@ -15,6 +16,10 @@ class MILPSolution:
     values: Dict[str, float]
     diagnostics: MILPSolverDiagnostics
     extras: Dict[str, object]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "values", freeze_mapping(self.values))
+        object.__setattr__(self, "extras", freeze_mapping(self.extras))
 
     @staticmethod
     def from_utility_tuple(

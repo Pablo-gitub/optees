@@ -3,7 +3,7 @@
 ## Focused artifact gate
 
 ```bash
-PYTHONPATH=src python -m pytest -q \
+PYTHONPATH=src:. python -m pytest -q \
   tests/application/services/test_artifact_generation_service.py \
   tests/data/adapters/artifacts/test_canonical_table_renderer.py \
   tests/data/adapters/artifacts/test_categorical_chart_renderer.py \
@@ -152,16 +152,16 @@ python -m pip install -e ".[plot,local-service,test,dev]"
 python -m ruff check path/to/changed.py path/to/changed_test.py
 
 # fast local feedback: no full-window GUI, measured benchmarks, or sockets
-PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark and not tcp"
+PYTHONPATH=src:. python -m pytest -q -m "not gui and not benchmark and not tcp"
 
 # presentation behavior (kept serial until isolation is measured)
-PYTHONPATH=src python -m pytest -q -m gui
+PYTHONPATH=src:. python -m pytest -q -m gui
 
 # scientific/external benchmark integrations
-PYTHONPATH=src python -m pytest -q -m benchmark
+PYTHONPATH=src:. python -m pytest -q -m benchmark
 
 # forecasting engine, deterministic references, and public benchmark
-PYTHONPATH=src python -m pytest -q \
+PYTHONPATH=src:. python -m pytest -q \
   tests/domain/test_forecasting_model.py \
   tests/domain/test_forecasting_solution.py \
   tests/application/codecs/test_forecasting_codecs.py \
@@ -173,11 +173,11 @@ PYTHONPATH=src python -m pytest -q \
   tests/utility/test_forecasting_sunspots_benchmark.py
 
 # real loopback transport and subprocess lifecycle
-PYTHONPATH=src python -m pytest -q -m tcp
+PYTHONPATH=src:. python -m pytest -q -m tcp
 
 # local solver platform integration gate (contracts, codecs, services, CLI,
 # REST, MCP, Ollama harness, server settings, and packaged entry points)
-PYTHONPATH=src python -m pytest -q \
+PYTHONPATH=src:. python -m pytest -q \
   tests/application/contracts \
   tests/application/codecs \
   tests/application/validation \
@@ -190,16 +190,16 @@ PYTHONPATH=src python -m pytest -q \
   tests/adapters/test_rule_based_assistant_adapter.py
 
 # run the complete suite from a source checkout
-PYTHONPATH=src python -m pytest -q
+PYTHONPATH=src:. python -m pytest -q
 
 # profile the slowest tests while running the authoritative complete suite
-PYTHONPATH=src python -m pytest -q --durations=40
+PYTHONPATH=src:. python -m pytest -q --durations=40
 
 # rerun only the previous failures and stop at the first new failure
-PYTHONPATH=src python -m pytest -q --lf -x
+PYTHONPATH=src:. python -m pytest -q --lf -x
 
 # run the scientific/reference knapsack tests
-PYTHONPATH=src python -m pytest -q \
+PYTHONPATH=src:. python -m pytest -q \
   tests/utility/test_io_knapsack.py \
   tests/utility/test_orlib_mknap_adapter.py \
   tests/application/usecases/test_solve_knapsack_burkardt.py \
@@ -232,9 +232,9 @@ Candidate commands for the next measured comparison are intentionally not
 configured as defaults:
 
 ```bash
-PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark" --durations=20
-PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark" -n 2 --dist loadfile --durations=20
-PYTHONPATH=src python -m pytest -q -m "not gui and not benchmark" -n 4 --dist loadfile --durations=20
+PYTHONPATH=src:. python -m pytest -q -m "not gui and not benchmark" --durations=20
+PYTHONPATH=src:. python -m pytest -q -m "not gui and not benchmark" -n 2 --dist loadfile --durations=20
+PYTHONPATH=src:. python -m pytest -q -m "not gui and not benchmark" -n 4 --dist loadfile --durations=20
 ```
 
 ## Continuous Integration Gates

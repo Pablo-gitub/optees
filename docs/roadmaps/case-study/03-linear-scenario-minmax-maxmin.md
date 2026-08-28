@@ -259,6 +259,8 @@ robust domain result (`ScenarioResult`) from real delegated `LPSolution` and `MI
 via `ScenarioReconstructionService`, preserves explicit immutable variable/scenario order without a
 domain-to-application dependency, and rejects mismatched reductions as well as missing, non-finite,
 unknown, or tampered candidate/guarantee cases.
+The integrity review also freezes delegated LP/MILP value and diagnostic mappings and rejects
+objective or variable payloads attached to no-candidate solver statuses.
 No solver, validator, codec, transport, or UI capability was introduced. Only after review may `OPT-DS-03C2` begin.
 
 ### Micro-gate C2 — Independent Robust Validation (`OPT-DS-03C2`)

@@ -3,7 +3,7 @@
 ## Document Status
 
 - **State:** in progress
-- **Shipped baseline:** `0.10.2`, with 13 registered capabilities and desktop,
+- **Shipped baseline:** `0.10.2`, with 14 registered capabilities and desktop,
   CLI, REST, and MCP delivery surfaces
 - **Current product sequence:** finish the Forecasting handoff, then implement
   Unrelated Parallel Machines Scheduling and Two-player Zero-sum Game Theory

@@ -4,15 +4,22 @@ from typing import Dict, Optional
 
 from optees.domain.value_objects.lp.solve_status import SolveStatus
 from optees.domain.value_objects.lp.solver_diagnostics import SolverDiagnostics
+from optees.domain.value_objects.immutable import freeze_mapping
+
 
 @dataclass(frozen=True)
 class LPSolution:
     """Domain result for a solved LP."""
+
     status: SolveStatus
     objective: Optional[float]
-    values: Dict[str, float]           # var_name -> value
+    values: Dict[str, float]  # var_name -> value
     diagnostics: SolverDiagnostics
-    extras: Dict[str, object]          # raw solver metadata (alt_opt, var_names, etc.)
+    extras: Dict[str, object]  # raw solver metadata (alt_opt, var_names, etc.)
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "values", freeze_mapping(self.values))
+        object.__setattr__(self, "extras", freeze_mapping(self.extras))
 
     @staticmethod
     def from_utility_tuple(

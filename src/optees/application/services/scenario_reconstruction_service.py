@@ -62,6 +62,10 @@ class ScenarioReconstructionService:
             ScenarioSolveStatus.OPTIMAL,
             ScenarioSolveStatus.FEASIBLE,
         ):
+            if delegated_solution.objective is not None or delegated_solution.values:
+                raise ScenarioReconstructionError(
+                    "A no-candidate solver status cannot carry an objective or variable values."
+                )
             return ScenarioResult(
                 status=mapped_status,
                 orientation=model.orientation,

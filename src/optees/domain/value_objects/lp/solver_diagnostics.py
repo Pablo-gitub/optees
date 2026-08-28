@@ -2,6 +2,8 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
+from optees.domain.value_objects.immutable import freeze_mapping
+
 
 @dataclass(frozen=True)
 class SolverDiagnostics:
@@ -17,6 +19,12 @@ class SolverDiagnostics:
     ineqlin: Optional[Dict[str, Any]] = None
     lower: Optional[Dict[str, Any]] = None
     upper: Optional[Dict[str, Any]] = None
+
+    def __post_init__(self) -> None:
+        for name in ("eqlin", "ineqlin", "lower", "upper"):
+            value = getattr(self, name)
+            if value is not None:
+                object.__setattr__(self, name, freeze_mapping(value))
 
     @staticmethod
     def from_extras(extras: Dict[str, Any]) -> "SolverDiagnostics":
