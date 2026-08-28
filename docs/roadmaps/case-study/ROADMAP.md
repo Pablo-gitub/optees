@@ -8,7 +8,7 @@
 - **Product relationship:** this is a parallel evidence track; it does not
   replace the general product sequence in `project.md`
 - **Latest completed detailed work unit:** `02-qp-vertical-slice.md`
-- **Next detailed work unit:** not yet defined
+- **Current detailed work unit:** `03-linear-scenario-minmax-maxmin.md`
 - **Consumer roadmap:** the Decision Simulator `docs/ROADMAP.md`
 
 ## Goal
@@ -70,7 +70,7 @@ terminology, brokerage behavior, or claims of financial performance.
 | --- | --- | --- |
 | [x] | `OPT-DS-01` — Convex QP Contract Decision | `QP-C` achieved |
 | [x] | `OPT-DS-02` — Convex QP Vertical Slice | `QP-I` and `QP-UI` achieved |
-| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | Not started |
+| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `OPT-DS-03A` ready |
 | [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Awaiting Simulator evidence |
 | [ ] | `OPT-DS-05` — Convex MIQP | Not started |
 | [ ] | `OPT-DS-06` — Workflow Registry MVP | Not started |
@@ -121,6 +121,8 @@ bilingual, accessible, reviewed, and still passes `QP-I`.
   only when variable domains require it.
 - Return per-scenario values, the worst/binding scenarios, guarantee value,
   solver status, and independent validation.
+
+Detailed plan: `03-linear-scenario-minmax-maxmin.md`.
 
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
 against the identical frozen scenario package.
