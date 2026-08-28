@@ -254,9 +254,10 @@ Stop if LP and MILP domain solutions cannot support one lossless reconstruction
 contract, if their status meanings conflict, or if preserving diagnostics would
 require changing an existing public codec.
 
-**Gate `ROBUST-R`:** pure reconstruction produces a deterministic, lossless
-robust domain result from real delegated solution types and rejects every
-tampered candidate/guarantee case.
+**Gate `ROBUST-R` (Achieved):** pure reconstruction produces a deterministic, lossless
+robust domain result (`ScenarioResult`) from real delegated `LPSolution` and `MILPSolution` types
+via `ScenarioReconstructionService`, and rejects missing, non-finite, unknown, or tampered candidate/guarantee cases.
+No solver, validator, codec, transport, or UI capability was introduced. Only after review may `OPT-DS-03C2` begin.
 
 ### Micro-gate C2 — Independent Robust Validation (`OPT-DS-03C2`)
 

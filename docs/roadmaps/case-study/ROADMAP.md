@@ -132,6 +132,9 @@ semantics, and analytical probes are frozen.
 **Gate ROBUST-K:** achieved after review correction; pure domain models and exact epigraph/hypograph reductions
 to LPModel and MILPModel implemented and structurally verified against all reference cases.
 
+**Gate ROBUST-R:** achieved; pure result reconstruction (`ScenarioResult`) from real `LPSolution`/`MILPSolution`
+with strict consistency checks and deterministic ordering verified.
+
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
 against the identical frozen scenario package.
 
