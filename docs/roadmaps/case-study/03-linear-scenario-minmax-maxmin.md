@@ -195,9 +195,12 @@ Required coverage:
 - analytic equivalence against the `ROBUST-D` examples;
 - no solver, transport, composition or UI changes.
 
-**Gate `ROBUST-K`:** every accepted contract example reduces deterministically
-to actual Optees LP/MILP domain models; focused tests prove full structural
-equivalence, rejection behavior, immutability, and deterministic ordering.
+**Gate `ROBUST-K` (Achieved):** every accepted contract example reduces deterministically
+to actual Optees LP/MILP domain models; focused tests in
+`tests/domain/test_scenario_model.py` and
+`tests/application/services/test_scenario_reduction_service.py` prove full structural
+equivalence, rejection behavior, immutability, auxiliary collision safety, and deterministic ordering.
+No solver, transport, composition, or UI capability was introduced. Only after review may `OPT-DS-03C` begin.
 
 ## Micro-gate C — Use Case, Result And Independent Validation (`OPT-DS-03C`)
 

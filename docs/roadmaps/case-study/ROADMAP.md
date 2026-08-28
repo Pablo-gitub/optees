@@ -129,6 +129,9 @@ Frozen contract: `../../contracts/linear-scenario-optimization-contract.md`.
 epigraph/hypograph reductions, envelope-compatible JSON schemas, non-aliasing
 semantics, and analytical probes are frozen.
 
+**Gate ROBUST-K:** achieved; pure domain models and exact epigraph/hypograph reductions
+to LPModel and MILPModel implemented and structurally verified against all reference cases.
+
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
 against the identical frozen scenario package.
 
