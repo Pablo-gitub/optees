@@ -104,7 +104,11 @@ Stop and request review if LP/MILP status semantics cannot represent the
 robust claim honestly, if scenario probabilities become necessary, or if one
 public shape cannot preserve both orientations without ambiguous fields.
 
-**Gate `ROBUST-D`:** contract decisions and analytic probes are frozen; no
+**Gate `ROBUST-D` (Achieved):** contract decisions, mathematical formulations,
+non-aliasing proof, analytical examples, epigraph/hypograph reductions, JSON
+schemas, and analytical probes are frozen in
+`docs/contracts/linear-scenario-optimization-contract.md` and
+`tests/utility/test_linear_scenario_contract_decision_probes.py`. No
 production capability exists. Only after review may `OPT-DS-03B` begin.
 
 ## Micro-gate B — Domain And Exact Reduction (`OPT-DS-03B`)

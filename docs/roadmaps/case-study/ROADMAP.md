@@ -123,6 +123,9 @@ bilingual, accessible, reviewed, and still passes `QP-I`.
   solver status, and independent validation.
 
 Detailed plan: `03-linear-scenario-minmax-maxmin.md`.
+Frozen contract: `../../contracts/linear-scenario-optimization-contract.md`.
+
+**Gate ROBUST-D:** achieved; mathematical formulation, epigraph/hypograph reductions, JSON schemas, non-aliasing proof, and analytical probes are frozen.
 
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
 against the identical frozen scenario package.
