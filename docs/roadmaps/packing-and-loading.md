@@ -5,8 +5,10 @@
 - **State:** in progress
 - **Shipped baseline:** version 1 single-container orthogonal 3D packing,
   validation, desktop workflow, public service capability, and result artifacts
-- **Remaining scope:** support-aware and multi-container workflows, interactive
-  refinement, benchmark depth, and the later capacity-allocation workflow
+- **Remaining scope:** support-aware placement and loading order,
+  unloading-aware placement with configurable unloading sections,
+  multi-container workflows, interactive refinement, benchmark depth, and the
+  later capacity-allocation workflow
 - **Safety boundary:** output is not a physical load-safety certification
 
 This document defines the horizontal expansion that introduces geometric
@@ -35,18 +37,22 @@ The eventual user-facing order is:
 2. Single-container 3D Packing;
 3. Multi-container 3D Packing;
 4. Packing with Supports and Dunnage, with single-container and multi-container
-   modes when both are implemented.
+   modes when both are implemented;
+5. Unloading-Aware 3D Packing, as a separate support-and-sequence workflow
+   with explicitly configured unloading sections.
 
 The implementation order is intentionally different because the first target
 is the more useful geometric workflow:
 
 1. Single-container 3D Packing;
 2. support-aware single-container refinement;
-3. Multi-container 3D Packing;
-4. Packing with Supports and Dunnage;
-5. Interactive refinement;
-6. industrial constraints and heuristic solvers;
-7. Multi-container Capacity Allocation.
+3. support-aware loading sequence;
+4. Multi-container 3D Packing;
+5. Packing with Supports and Dunnage;
+6. Interactive refinement;
+7. unloading-aware support optimization;
+8. other industrial constraints and heuristic solvers;
+9. Multi-container Capacity Allocation.
 
 ## Mathematical Scope
 
@@ -197,7 +203,8 @@ as an integer quantity of indivisible units.
   footprint below it.
 - [x] Explicitly delimit simple gravity from support-area, load-bearing,
   balance, and stability constraints. Support-aware refinement starts in Phase
-  2; physical and industrial constraints remain Phase 6 scope.
+  2; unloading-aware removal remains Phase 6 and other physical or industrial
+  constraints remain Phase 7 scope.
 
 ### Verification
 
@@ -248,16 +255,32 @@ full static stability.
 - [ ] Use an explicit seed and reproducible tie-breakers.
 - [ ] Report supported base area and support ratio per loaded item without
   presenting either metric as a safety certification.
+- [ ] Derive an explicit directed support graph from the refined placement:
+  every edge records that the lower item provides direct bottom-face support
+  to the upper item.
+- [ ] Reject support cycles and preserve deterministic tie-breakers when more
+  than one valid support-aware placement has the same quality.
+- [ ] Produce a deterministic **loading sequence** in which every required
+  supporting item is placed before the item that depends on it. Items in the
+  same independent support layer use stable geometric and identifier
+  tie-breakers.
+- [ ] Keep placement quality and loading sequence as distinct outputs: the
+  support-aware refinement chooses the placement, while the sequence orders
+  how that accepted placement can be assembled without placing an item before
+  its modelled supports.
+- [ ] Report support dependencies and loading step for every loaded item in the
+  structured result and 3D inspection workflow.
 - [ ] Reject any candidate move that violates containment, allowed
   orientation, scalar capacities, or pairwise non-overlap.
 - [ ] Add analytic tests for floor support, partial support, unchanged primary
-  objective, deterministic output, gravity not restricting candidate moves,
-  and geometrically blocked placements.
+  objective, deterministic output, support-graph acyclicity, valid loading
+  order, gravity not restricting candidate moves, and geometrically blocked
+  placements.
 - [ ] Simplify rotation presets so common axis combinations are directly
   selectable while the domain continues to store explicit orientation sets.
 
 An exact secondary solve that maximizes support lexicographically is deferred
-to Phase 6. The Phase 2 heuristic must therefore be labelled as placement
+to Phase 7. The Phase 2 heuristic must therefore be labelled as placement
 improvement, not as a proof of maximum support.
 
 ## Phase 3 - Multi-Container 3D Packing
@@ -362,14 +385,85 @@ claim that Optees inferred physical properties that were absent from the data.
   variants of the same packing.
 - [ ] Explain which requirements are hard and which are penalty-based.
 
-## Phase 6 - Industrial Constraints And Heuristics
+## Phase 6 - Unloading-Aware Support Optimization
+
+This is a separate optimization workflow built after support-aware placement
+and loading-order semantics are stable. It does not silently change the Phase
+2 support-only result. Its purpose is to preserve the primary packing optimum
+while finding a placement that combines modelled bottom-face support with a
+declared unloading sequence and declared container openings.
+
+### Unloading Sections
+
+- [ ] Define a typed `UnloadingSection` with a stable identifier, container
+  face, position and usable rectangular opening. Supported faces must
+  distinguish both short ends and both long sides of the container.
+- [ ] Permit one or multiple sections in any explicit combination, including
+  one short-side opening, one or two long-side openings, or long- and
+  short-side openings together.
+- [ ] Keep section geometry inside the selected container face and reject
+  duplicate IDs, invalid spans, non-finite dimensions and openings that lie
+  outside the boundary.
+- [ ] Assign each item or destination group an unloading rank and either one
+  permitted section or an explicit set of permitted sections.
+- [ ] Define deterministic behavior for equal-rank items and state whether
+  they may leave in any order or as one jointly accessible group.
+- [ ] Expose unloading sections, ranks and assignments in a versioned JSON
+  contract and render openings distinctly in the 3D view.
+
+### Support And Unloading Compatibility
+
+- [ ] Preserve loaded value/priority and every hard feasibility constraint as
+  the first lexicographic level; unloading convenience must never silently
+  discard required cargo or reduce an already proven primary optimum.
+- [ ] Maximize the documented support-quality measure as an explicit
+  lexicographic level, retaining minimum per-item support ratio as a diagnostic.
+- [ ] Require the support graph to respect unloading order: an item scheduled
+  to leave earlier must not be a required support of an item that remains for
+  a later stop.
+- [ ] After every simulated unloading group, recompute the support graph and
+  verify that all remaining items satisfy the configured modelled support
+  threshold. A sequence that leaves an unsupported remainder is invalid.
+- [ ] Model geometric access to the assigned unloading section explicitly.
+  At minimum, detect cargo that blocks the declared axis-aligned removal
+  corridor; do not equate destination order alone with physical accessibility.
+- [ ] Distinguish **support-compatible unloading** from **removal-path
+  feasibility** in statuses and diagnostics. If a complete collision-free
+  handling path is not modelled, report that limitation rather than claiming
+  executable unloading.
+- [ ] Support an explicit secondary objective for obstruction or relocation
+  count only after its semantics and validation are frozen; never hide it in
+  an undocumented weighted sum with support area.
+- [ ] Return the unloading sequence, selected section, blocking relationships,
+  support state after each step, and any required relocation separately from
+  the ordinary packing result.
+
+### Verification And UI
+
+- [ ] Add analytic cases for every container face and representative
+  combinations of one, two and three unloading sections.
+- [ ] Test a forbidden configuration where an early-delivery item supports a
+  later-delivery item, and a valid inverse support order.
+- [ ] Test that removing the first group leaves the remaining modelled support
+  valid and that tampering with the sequence is detected independently.
+- [ ] Test blocked and unblocked axis-aligned corridors, equal-rank groups,
+  alternative permitted sections and deterministic section selection.
+- [ ] Compare support-only and unloading-aware placements without presenting
+  them as the same optimization or overwriting the original result.
+- [ ] Provide a step-through unloading view that highlights the active section,
+  next group, blockers and remaining support graph; keep authoritative checks
+  in the application layer rather than the presentation layer.
+- [ ] State prominently that geometric support and corridor checks are not a
+  certification of lifting equipment, operator clearance, material strength,
+  dynamic stability or transport safety.
+
+## Phase 7 - Other Industrial Constraints And Heuristics
 
 - [ ] Centre-of-mass projection diagnostics for each item and container.
 - [ ] Configurable minimum support-ratio constraints with explicit modelling
   assumptions.
 - [ ] Stackability, fragility, incompatibility, forbidden orientations, and
   load-bearing limits.
-- [ ] Unloading order and destination grouping.
 - [ ] Weight distribution and container-balance objectives.
 - [ ] Optional exact lexicographic re-solve that preserves the proven primary
   loaded-value optimum before optimizing support or balance.
@@ -380,7 +474,7 @@ claim that Optees inferred physical properties that were absent from the data.
   reproducibility metadata.
 - [ ] Exact-versus-heuristic comparison on small shared instances.
 
-## Phase 7 - Multi-Container Capacity Allocation
+## Phase 8 - Multi-Container Capacity Allocation
 
 This workflow deliberately ignores physical geometry. A scalar volume limit is
 therefore a capacity approximation, not proof that the objects physically fit.
