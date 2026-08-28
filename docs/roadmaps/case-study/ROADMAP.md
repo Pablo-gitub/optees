@@ -7,7 +7,8 @@
   Decision Simulator case study
 - **Product relationship:** this is a parallel evidence track; it does not
   replace the general product sequence in `project.md`
-- **Current detailed work unit:** `02-qp-vertical-slice.md`
+- **Latest completed detailed work unit:** `02-qp-vertical-slice.md`
+- **Next detailed work unit:** not yet defined
 - **Consumer roadmap:** the Decision Simulator `docs/ROADMAP.md`
 
 ## Goal
@@ -63,6 +64,19 @@ terminology, brokerage behavior, or claims of financial performance.
 
 ## Program Sequence
 
+### Progress overview
+
+| Done | Work unit | Current state |
+| --- | --- | --- |
+| [x] | `OPT-DS-01` — Convex QP Contract Decision | `QP-C` achieved |
+| [x] | `OPT-DS-02` — Convex QP Vertical Slice | `QP-I` and `QP-UI` achieved |
+| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | Not started |
+| [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Awaiting Simulator evidence |
+| [ ] | `OPT-DS-05` — Convex MIQP | Not started |
+| [ ] | `OPT-DS-06` — Workflow Registry MVP | Not started |
+| [ ] | `OPT-DS-07` — Min-max Regret Reference Workflow | Not started |
+| [ ] | `OPT-DS-08` — Evidence, Packaging, And Release Gate | Not started |
+
 ### OPT-DS-01 — Convex QP Contract Decision
 
 - Freeze the mathematical convention, convexity boundary, status semantics,
@@ -94,8 +108,8 @@ Detailed plan: `02-qp-vertical-slice.md`.
 
 **Gate QP-I:** achieved; frozen problem/result fixtures and capability implementation completed.
 
-**Gate QP-UI:** the separately committed PySide6 QP workflow is bilingual,
-accessible, visually reviewed, and still passes `QP-I`.
+**Gate QP-UI:** achieved; the separately committed PySide6 QP workflow is
+bilingual, accessible, reviewed, and still passes `QP-I`.
 
 ### OPT-DS-03 — Linear Scenario Min-max And Max-min
 

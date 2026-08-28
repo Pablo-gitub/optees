@@ -3,7 +3,7 @@
 ## Work Unit
 
 - **ID:** `OPT-DS-02`
-- **State:** ready
+- **State:** completed
 - **Type:** production capability with separately owned UI completion
 - **Parent roadmap:** `ROADMAP.md`
 - **Frozen contract:** `../../contracts/quadratic-programming-contract.md`
@@ -281,7 +281,7 @@ stop rather than implement solver/application logic.
   environments reported honestly;
 - regression run for existing LP/MILP/NLP navigation and shared widgets.
 
-## Gate `QP-UI` (Implemented, pending review)
+## Gate `QP-UI` (Achieved)
 
 Stage B desktop implementation is complete:
 
