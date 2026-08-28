@@ -113,8 +113,77 @@ production capability exists. Only after review may `OPT-DS-03B` begin.
 
 ## Micro-gate B — Domain And Exact Reduction (`OPT-DS-03B`)
 
-Implement only pure domain types, strict construction rules and the
-application-owned reduction to existing LP/MILP models.
+Implement only pure robust-scenario domain types, strict construction rules,
+and an application-owned reduction to the existing `LPModel` and `MILPModel`.
+This gate must not solve a problem or create a second LP/MILP representation.
+
+### Required pre-implementation comparison
+
+Before editing, record in the implementation report how the proposed types and
+reduction reuse or differ from all of these existing sources:
+
+- `domain/models/lp/lp_model.py` and its variable, objective, constraint,
+  bounds, relation, and sense value objects;
+- `domain/models/milp/milp_model.py` and `Integrality`;
+- `utility/lp_json_io.py` and `utility/milp_json_io.py` for field and option
+  semantics;
+- the reviewed public contract in
+  `docs/contracts/linear-scenario-optimization-contract.md`.
+
+No copied contract schema or parallel generic linear algebra model is allowed.
+
+### Authorized implementation
+
+- Add immutable ordered robust problem/value types under one focused domain
+  package. Preserve declared variable and scenario order.
+- Validate non-empty unique variable names and scenario IDs, exact coefficient
+  dimensions, finite coefficients/offsets/options, legal bounds, binary domain
+  semantics, constraint dimensions, positive tolerances, and generated-name
+  collisions at construction time.
+- Implement one pure reducer returning a typed reduction record containing the
+  delegated `LPModel` or `MILPModel`, orientation, original variable order,
+  scenario order, and auxiliary-variable identity needed for later result
+  reconstruction.
+- Use the reviewed epigraph/hypograph signs exactly. Preserve shared objective
+  coefficients and offsets, all shared constraints, bounds, labels, and
+  integrality. The auxiliary variable is continuous and unbounded.
+- Route an all-continuous problem to `LPModel`; route any integer or binary
+  decision variable to `MILPModel`. Preserve only solver options already
+  representable by the delegated model; do not invent backend options.
+- Generate the auxiliary name deterministically and collision-safely without
+  mutating user names.
+
+### Required tests
+
+- Direct structural assertions against real `LPModel`/`MILPModel` instances,
+  not dictionaries copied from documentation.
+- Both reviewed analytical examples and the binary example, checking every
+  delegated objective coefficient, offset, relation, right-hand side, bound,
+  integrality token, and ordering position.
+- Shared-objective and non-zero-offset cases for both orientations.
+- Auxiliary-name collision and deterministic repeatability cases.
+- Rejection tests for duplicate identities, dimension mismatch, NaN/infinity,
+  invalid bounds/integrality, empty scenarios, and invalid tolerances.
+- Regression tests proving the reducer does not mutate inputs and produces the
+  same canonical delegated representation on repeated calls.
+
+Tests must import production types and reducers. A test that only validates a
+schema or formula duplicated inside the test is not gate evidence.
+
+### Explicit exclusions
+
+- no concrete solver invocation or SciPy/OR-Tools dependency in new production code;
+- no result model, independent validator, codec, capability ID, descriptor,
+  registry/composition, CLI, REST, MCP, artifact, report, or UI change;
+- no edits to existing LP/MILP public contracts unless a genuine incompatibility
+  is found and work stops for review.
+
+### Stop conditions
+
+Stop without improvising if the reviewed robust contract cannot be represented
+losslessly by the existing LP/MILP models, if a required solver option has no
+existing owner, if the auxiliary variable cannot remain continuous in the
+MILP path, or if an existing public contract would need to change.
 
 Required coverage:
 
@@ -127,7 +196,8 @@ Required coverage:
 - no solver, transport, composition or UI changes.
 
 **Gate `ROBUST-K`:** every accepted contract example reduces deterministically
-to the reviewed LP/MILP representation and reconstructs the robust objective.
+to actual Optees LP/MILP domain models; focused tests prove full structural
+equivalence, rejection behavior, immutability, and deterministic ordering.
 
 ## Micro-gate C — Use Case, Result And Independent Validation (`OPT-DS-03C`)
 
