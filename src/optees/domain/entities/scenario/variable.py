@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import math
 from typing import Optional, Union
 
 from optees.domain.value_objects.lp.bounds import Bounds
@@ -34,6 +35,16 @@ class ScenarioVariable:
             object.__setattr__(self, "bounds", Bounds(0.0, 1.0))
         elif not isinstance(self.bounds, Bounds):
             raise ValueError(f"bounds must be an instance of Bounds, got {self.bounds!r}")
+        else:
+            for field_name, value in (("lower", self.bounds.lb), ("upper", self.bounds.ub)):
+                if value is not None and (
+                    isinstance(value, bool)
+                    or not isinstance(value, (int, float))
+                    or not math.isfinite(value)
+                ):
+                    raise ValueError(
+                        f"ScenarioVariable {field_name} bound must be finite or null, got {value!r}"
+                    )
 
     def rename(self, new_name: str) -> ScenarioVariable:
         return ScenarioVariable(new_name, self.label, self.bounds, self.integrality)

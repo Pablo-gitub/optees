@@ -21,17 +21,13 @@ from optees.domain.value_objects.scenario.scenario_orientation import (
 
 def test_scenario_orientation_parsing() -> None:
     assert ScenarioOrientation.from_str("minimize_maximum_loss") == ScenarioOrientation.MIN_MAX_LOSS
-    assert ScenarioOrientation.from_str("min_max_loss") == ScenarioOrientation.MIN_MAX_LOSS
-    assert ScenarioOrientation.from_str("loss") == ScenarioOrientation.MIN_MAX_LOSS
     assert (
         ScenarioOrientation.from_str("maximize_minimum_reward")
         == ScenarioOrientation.MAX_MIN_REWARD
     )
-    assert ScenarioOrientation.from_str("max_min_reward") == ScenarioOrientation.MAX_MIN_REWARD
-    assert ScenarioOrientation.from_str("reward") == ScenarioOrientation.MAX_MIN_REWARD
-
-    with pytest.raises(ValueError, match="Unsupported scenario orientation"):
-        ScenarioOrientation.from_str("arbitrary_unknown")
+    for unsupported in ("min_max_loss", "loss", "max_min_reward", "reward", "arbitrary_unknown"):
+        with pytest.raises(ValueError, match="Unsupported scenario orientation"):
+            ScenarioOrientation.from_str(unsupported)
 
 
 def test_scenario_variable_creation_and_mutators() -> None:
@@ -67,6 +63,10 @@ def test_scenario_variable_creation_and_mutators() -> None:
 def test_scenario_variable_rejects_empty_name() -> None:
     with pytest.raises(ValueError, match="must be a non-empty string"):
         ScenarioVariable(name="   ")
+
+    for invalid_bound in (True, float("nan"), float("inf"), float("-inf")):
+        with pytest.raises(ValueError, match="bound must be finite or null"):
+            ScenarioVariable(name="x", bounds=Bounds(invalid_bound, None))
 
 
 def test_scenario_entity_validation() -> None:
@@ -123,6 +123,20 @@ def test_scenario_options_validation() -> None:
 
     with pytest.raises(ValueError, match="time_limit_seconds must be a finite positive number"):
         ScenarioOptions(time_limit_seconds=-5.0)
+
+    for field in ("tolerance", "binding_tolerance", "time_limit_seconds"):
+        with pytest.raises(ValueError, match="finite positive number"):
+            ScenarioOptions(**{field: True})
+
+
+def test_scenario_model_rejects_invalid_options_type() -> None:
+    with pytest.raises(ValueError, match="ScenarioOptions instance"):
+        ScenarioModel(
+            orientation=ScenarioOrientation.MIN_MAX_LOSS,
+            variables=(ScenarioVariable(name="x"),),
+            scenarios=(Scenario(id="s", coefficients=(1.0,)),),
+            options={"tolerance": 1e-7},  # type: ignore[arg-type]
+        )
 
 
 def test_scenario_model_valid_creation_and_evaluations() -> None:

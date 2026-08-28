@@ -70,7 +70,7 @@ terminology, brokerage behavior, or claims of financial performance.
 | --- | --- | --- |
 | [x] | `OPT-DS-01` — Convex QP Contract Decision | `QP-C` achieved |
 | [x] | `OPT-DS-02` — Convex QP Vertical Slice | `QP-I` and `QP-UI` achieved |
-| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `OPT-DS-03A` complete after review; `OPT-DS-03B` next |
+| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `OPT-DS-03A/B` complete after review; `OPT-DS-03C` next |
 | [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Awaiting Simulator evidence |
 | [ ] | `OPT-DS-05` — Convex MIQP | Not started |
 | [ ] | `OPT-DS-06` — Workflow Registry MVP | Not started |
@@ -129,7 +129,7 @@ Frozen contract: `../../contracts/linear-scenario-optimization-contract.md`.
 epigraph/hypograph reductions, envelope-compatible JSON schemas, non-aliasing
 semantics, and analytical probes are frozen.
 
-**Gate ROBUST-K:** achieved; pure domain models and exact epigraph/hypograph reductions
+**Gate ROBUST-K:** achieved after review correction; pure domain models and exact epigraph/hypograph reductions
 to LPModel and MILPModel implemented and structurally verified against all reference cases.
 
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies

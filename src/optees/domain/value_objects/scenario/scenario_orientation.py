@@ -14,20 +14,12 @@ class ScenarioOrientation(str, Enum):
         if isinstance(value, ScenarioOrientation):
             return value
         token = str(value or "").strip().lower()
-        aliases = {
+        public_tokens = {
             "minimize_maximum_loss": ScenarioOrientation.MIN_MAX_LOSS,
-            "min_max_loss": ScenarioOrientation.MIN_MAX_LOSS,
-            "min_max": ScenarioOrientation.MIN_MAX_LOSS,
-            "minmax": ScenarioOrientation.MIN_MAX_LOSS,
-            "loss": ScenarioOrientation.MIN_MAX_LOSS,
             "maximize_minimum_reward": ScenarioOrientation.MAX_MIN_REWARD,
-            "max_min_reward": ScenarioOrientation.MAX_MIN_REWARD,
-            "max_min": ScenarioOrientation.MAX_MIN_REWARD,
-            "maxmin": ScenarioOrientation.MAX_MIN_REWARD,
-            "reward": ScenarioOrientation.MAX_MIN_REWARD,
         }
         try:
-            return aliases[token]
+            return public_tokens[token]
         except KeyError as exc:
             raise ValueError(
                 f"Unsupported scenario orientation {value!r}; "

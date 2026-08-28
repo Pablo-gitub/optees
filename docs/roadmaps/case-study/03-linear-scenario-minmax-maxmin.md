@@ -3,7 +3,7 @@
 ## Work Unit
 
 - **ID:** `OPT-DS-03`
-- **State:** `OPT-DS-03A` complete after review; ready to plan `OPT-DS-03B`
+- **State:** `OPT-DS-03A` and `OPT-DS-03B` complete after review; `OPT-DS-03C` remains unstarted
 - **Type:** domain-neutral robust-scenario capability delivered through bounded micro-gates
 - **Parent roadmap:** `ROADMAP.md`
 - **Prerequisite:** `QP-I` and `QP-UI` satisfied by `OPT-DS-02`
@@ -109,7 +109,7 @@ non-aliasing proof, analytical examples, epigraph/hypograph reductions, JSON
 schemas, and analytical probes are frozen in
 `docs/contracts/linear-scenario-optimization-contract.md` and
 `tests/utility/test_linear_scenario_contract_decision_probes.py`. No
-production capability exists. Only after review may `OPT-DS-03B` begin.
+production capability exists. This decision gate has passed independent review.
 
 ## Micro-gate B — Domain And Exact Reduction (`OPT-DS-03B`)
 
@@ -195,7 +195,7 @@ Required coverage:
 - analytic equivalence against the `ROBUST-D` examples;
 - no solver, transport, composition or UI changes.
 
-**Gate `ROBUST-K` (Achieved):** every accepted contract example reduces deterministically
+**Gate `ROBUST-K` (Achieved after review correction):** every accepted contract example reduces deterministically
 to actual Optees LP/MILP domain models; focused tests in
 `tests/domain/test_scenario_model.py` and
 `tests/application/services/test_scenario_reduction_service.py` prove full structural

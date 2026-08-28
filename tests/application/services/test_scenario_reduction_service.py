@@ -49,6 +49,8 @@ def test_example1_min_max_loss_lp_reduction() -> None:
     assert result.orientation == ScenarioOrientation.MIN_MAX_LOSS
     assert result.auxiliary_variable_name == "_aux_theta"
     assert result.auxiliary_variable_index == 2
+    assert result.original_variable_order == ("x1", "x2")
+    assert result.scenario_order == ("s1", "s2", "s3")
 
     lp_model = result.model
     assert isinstance(lp_model, LPModel)

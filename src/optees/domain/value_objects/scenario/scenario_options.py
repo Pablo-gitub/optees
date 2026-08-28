@@ -15,7 +15,8 @@ class ScenarioOptions:
 
     def __post_init__(self) -> None:
         if not (
-            isinstance(self.tolerance, (int, float))
+            not isinstance(self.tolerance, bool)
+            and isinstance(self.tolerance, (int, float))
             and math.isfinite(self.tolerance)
             and self.tolerance > 0
         ):
@@ -23,7 +24,8 @@ class ScenarioOptions:
                 f"options.tolerance must be a finite positive number, got {self.tolerance!r}"
             )
         if not (
-            isinstance(self.binding_tolerance, (int, float))
+            not isinstance(self.binding_tolerance, bool)
+            and isinstance(self.binding_tolerance, (int, float))
             and math.isfinite(self.binding_tolerance)
             and self.binding_tolerance > 0
         ):
@@ -32,7 +34,8 @@ class ScenarioOptions:
             )
         if self.time_limit_seconds is not None:
             if not (
-                isinstance(self.time_limit_seconds, (int, float))
+                not isinstance(self.time_limit_seconds, bool)
+                and isinstance(self.time_limit_seconds, (int, float))
                 and math.isfinite(self.time_limit_seconds)
                 and self.time_limit_seconds > 0
             ):

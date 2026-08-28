@@ -28,6 +28,8 @@ class ScenarioReductionResult:
     auxiliary_variable_index: int
     orientation: ScenarioOrientation
     is_discrete: bool
+    original_variable_order: tuple[str, ...]
+    scenario_order: tuple[str, ...]
 
 
 class ScenarioReductionService:
@@ -153,6 +155,8 @@ class ScenarioReductionService:
             auxiliary_variable_index=n,
             orientation=model.orientation,
             is_discrete=is_discrete,
+            original_variable_order=model.variable_names(),
+            scenario_order=model.scenario_ids(),
         )
 
 

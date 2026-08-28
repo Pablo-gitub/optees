@@ -108,8 +108,8 @@ class ScenarioModel:
         object.__setattr__(self, "shared_constraints", cons_t)
 
         # Options validation
-        opts = self.options if isinstance(self.options, ScenarioOptions) else ScenarioOptions()
-        object.__setattr__(self, "options", opts)
+        if not isinstance(self.options, ScenarioOptions):
+            raise ValueError(f"options must be a ScenarioOptions instance, got {self.options!r}")
 
     def n_vars(self) -> int:
         return len(self.variables)
