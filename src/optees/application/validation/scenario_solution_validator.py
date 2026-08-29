@@ -40,13 +40,11 @@ class ScenarioIndependentSolutionValidator:
         absolute_tolerance: float = 1e-7,
         relative_tolerance: float = 1e-7,
         integrality_tolerance: float = 1e-5,
-        binding_tolerance: float = 1e-6,
     ) -> None:
         for name, value in (
             ("absolute_tolerance", absolute_tolerance),
             ("relative_tolerance", relative_tolerance),
             ("integrality_tolerance", integrality_tolerance),
-            ("binding_tolerance", binding_tolerance),
         ):
             if isinstance(value, bool) or not math.isfinite(value) or value < 0:
                 raise ValueError(
@@ -55,7 +53,6 @@ class ScenarioIndependentSolutionValidator:
         self._absolute_tolerance = float(absolute_tolerance)
         self._relative_tolerance = float(relative_tolerance)
         self._integrality_tolerance = float(integrality_tolerance)
-        self._binding_tolerance = float(binding_tolerance)
 
     def __call__(
         self,
@@ -89,7 +86,7 @@ class ScenarioIndependentSolutionValidator:
             initial_violations = list(orientation_violations) + list(status_violations)
 
             if initial_violations:
-                return self._report(tuple(initial_checks), tuple(initial_violations))
+                return self._report(tuple(initial_checks), tuple(initial_violations), model)
 
             return SolutionValidation.not_available(
                 "No primal candidate is available for independent scenario validation."
@@ -116,7 +113,7 @@ class ScenarioIndependentSolutionValidator:
         # If candidate variable vector failed structural integrity (missing/unknown/non-finite vars),
         # do not execute mathematical evaluations that rely on indexing candidate variables.
         if candidate_map is None:
-            return self._report(tuple(checks), tuple(violations))
+            return self._report(tuple(checks), tuple(violations), model)
 
         # 5. Primal variable bounds check
         bounds_check, bounds_violations = self._validate_bounds(model, candidate_map)
@@ -166,7 +163,7 @@ class ScenarioIndependentSolutionValidator:
         checks.append(consistency_check)
         violations.extend(consistency_violations)
 
-        return self._report(tuple(checks), tuple(violations))
+        return self._report(tuple(checks), tuple(violations), model)
 
     def _validate_orientation(
         self,
@@ -862,8 +859,8 @@ class ScenarioIndependentSolutionValidator:
         rep_guar = getattr(result, "guaranteed_value", None)
         diff = 0.0
         allowed = 0.0
-        if rep_guar is not None and math.isfinite(float(rep_guar)):
-            rep_guar_f = float(rep_guar)
+        rep_guar_f = _as_finite_float(rep_guar)
+        if rep_guar_f is not None:
             diff = abs(rep_guar_f - recomputed_guarantee)
             allowed = self._allowed(rep_guar_f, recomputed_guarantee)
             if diff > allowed:
@@ -892,7 +889,7 @@ class ScenarioIndependentSolutionValidator:
             description="The reported guaranteed value equals the worst-case value recomputed from candidate scenario evaluations.",
             measurements={
                 "recomputed_guarantee": recomputed_guarantee,
-                "reported_guarantee": float(rep_guar) if rep_guar is not None else None,
+                "reported_guarantee": rep_guar_f,
                 "difference": diff,
                 "allowed": allowed,
             },
@@ -909,7 +906,7 @@ class ScenarioIndependentSolutionValidator:
     ) -> tuple[ValidationCheck, list[ValidationViolation]]:
         violations: list[ValidationViolation] = []
         is_loss = model.orientation.is_loss_minimization()
-        binding_tol = self._binding_tolerance
+        binding_tol = model.options.binding_tolerance
 
         if is_loss:
             threshold = recomputed_guarantee - binding_tol * max(1.0, abs(recomputed_guarantee))
@@ -927,7 +924,16 @@ class ScenarioIndependentSolutionValidator:
             )
 
         expected_binding_set = set(expected_binding_ids)
-        rep_binding_ids = tuple(getattr(result, "binding_scenario_ids", ()) or ())
+        raw_binding_ids = getattr(result, "binding_scenario_ids", ())
+        rep_binding_ids = (
+            tuple(raw_binding_ids)
+            if isinstance(raw_binding_ids, Sequence)
+            and not isinstance(raw_binding_ids, (str, bytes))
+            else ()
+        )
+        reported_binding_measurement = [
+            item if isinstance(item, str) else str(item) for item in rep_binding_ids
+        ]
 
         if rep_binding_ids != expected_binding_ids:
             violations.append(
@@ -937,7 +943,7 @@ class ScenarioIndependentSolutionValidator:
                     path="$.binding_scenario_ids",
                     message="Reported binding_scenario_ids do not match the deterministic binding set derived from evaluations.",
                     measurements={
-                        "reported": list(rep_binding_ids),
+                        "reported": reported_binding_measurement,
                         "expected": list(expected_binding_ids),
                     },
                 )
@@ -957,7 +963,9 @@ class ScenarioIndependentSolutionValidator:
                             message=f"Scenario '{scen.id}' is_binding flag ({rep_flag}) does not match expected binding classification ({expected_flag}).",
                             measurements={
                                 "scenario_id": scen.id,
-                                "reported_is_binding": rep_flag,
+                                "reported_is_binding": (
+                                    rep_flag if isinstance(rep_flag, bool) else str(rep_flag)
+                                ),
                                 "expected_is_binding": expected_flag,
                             },
                         )
@@ -970,7 +978,7 @@ class ScenarioIndependentSolutionValidator:
             description="The reported binding scenarios and flags match the deterministic binding set derived from recomputed evaluations.",
             measurements={
                 "expected_binding_scenario_ids": list(expected_binding_ids),
-                "reported_binding_scenario_ids": list(rep_binding_ids),
+                "reported_binding_scenario_ids": reported_binding_measurement,
             },
         )
         return check, violations
@@ -988,8 +996,8 @@ class ScenarioIndependentSolutionValidator:
 
         # Check auxiliary value consistency
         aux_val = getattr(result, "auxiliary_value", None)
-        if aux_val is not None and math.isfinite(float(aux_val)):
-            aux_f = float(aux_val)
+        aux_f = _as_finite_float(aux_val)
+        if aux_f is not None:
             diff_aux = abs(aux_f - recomputed_guarantee)
             allowed_aux = self._allowed(aux_f, recomputed_guarantee)
             if diff_aux > allowed_aux:
@@ -1011,8 +1019,8 @@ class ScenarioIndependentSolutionValidator:
         # Check delegated solver objective consistency
         delegated_sol = getattr(result, "delegated_solution", None)
         delegated_obj = getattr(delegated_sol, "objective", None)
-        if delegated_obj is not None and math.isfinite(float(delegated_obj)):
-            obj_f = float(delegated_obj)
+        obj_f = _as_finite_float(delegated_obj)
+        if obj_f is not None:
             diff_obj = abs(obj_f - recomputed_guarantee)
             allowed_obj = self._allowed(obj_f, recomputed_guarantee)
             if diff_obj > allowed_obj:
@@ -1055,12 +1063,13 @@ class ScenarioIndependentSolutionValidator:
         self,
         checks: tuple[ValidationCheck, ...],
         violations: tuple[ValidationViolation, ...],
+        model: ScenarioModel,
     ) -> SolutionValidation:
         tolerances: dict[str, float] = {
             "absolute": self._absolute_tolerance,
             "relative": self._relative_tolerance,
             "integrality": self._integrality_tolerance,
-            "binding": self._binding_tolerance,
+            "binding": model.options.binding_tolerance,
         }
         return SolutionValidation.from_checks(
             checks,
@@ -1091,6 +1100,13 @@ _MILP_STATUS_MAP = {
 
 def _check_status(passed: bool) -> ValidationCheckStatus:
     return ValidationCheckStatus.PASSED if passed else ValidationCheckStatus.FAILED
+
+
+def _as_finite_float(value: Any) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    number = float(value)
+    return number if math.isfinite(number) else None
 
 
 def _violation(

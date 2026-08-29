@@ -44,6 +44,7 @@ from optees.domain.value_objects.milp.solver_diagnostics import (
 from optees.domain.value_objects.scenario.scenario_orientation import (
     ScenarioOrientation,
 )
+from optees.domain.value_objects.scenario.scenario_options import ScenarioOptions
 
 
 @dataclass(frozen=True)
@@ -229,6 +230,51 @@ def test_validator_continuous_optimal_all_checks_passed() -> None:
     assert [c.code for c in report.checks] == expected_codes
     for check in report.checks:
         assert check.status is ValidationCheckStatus.PASSED
+
+
+def test_validator_uses_model_binding_tolerance() -> None:
+    model, _, lp_solution = _make_continuous_loss_fixture()
+    custom_model = ScenarioModel(
+        orientation=model.orientation,
+        variables=model.variables,
+        scenarios=model.scenarios,
+        shared_objective=model.shared_objective,
+        shared_constraints=model.shared_constraints,
+        options=ScenarioOptions(binding_tolerance=1.0),
+    )
+    reduction = ScenarioReductionService.reduce(custom_model)
+    result = ScenarioReconstructionService.reconstruct(custom_model, reduction, lp_solution)
+
+    report = ScenarioIndependentSolutionValidator()(custom_model, result)
+
+    assert report.status is SolutionValidationStatus.VERIFIED
+    assert report.tolerances["binding"] == 1.0
+
+
+def test_malformed_candidate_fields_return_failed_report_without_crashing() -> None:
+    model, valid_result, _ = _make_continuous_loss_fixture()
+    malformed = ForgedScenarioResultDouble(
+        status=valid_result.status,
+        orientation=valid_result.orientation,
+        original_variable_order=valid_result.original_variable_order,
+        scenario_order=valid_result.scenario_order,
+        guaranteed_value="not-a-number",
+        variables=valid_result.variables,
+        scenario_values=valid_result.scenario_values,
+        binding_scenario_ids=(object(),),
+        delegated_solution=valid_result.delegated_solution,
+        auxiliary_variable_name=valid_result.auxiliary_variable_name,
+        auxiliary_value="not-a-number",
+    )
+
+    report = ScenarioIndependentSolutionValidator()(model, malformed)  # type: ignore[arg-type]
+
+    assert report.status is SolutionValidationStatus.FAILED
+    assert {violation.code for violation in report.violations} >= {
+        "non_finite_guarantee",
+        "non_finite_auxiliary",
+        "binding_set_mismatch",
+    }
 
 
 def test_validator_discrete_feasible_all_checks_passed() -> None:

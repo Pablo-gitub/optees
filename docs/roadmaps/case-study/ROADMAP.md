@@ -140,7 +140,8 @@ with stable detail codes, orientation/order/status/type checks, and honest `not_
 
 **Gate ROBUST-V:** achieved; complete mathematical validation (`ScenarioIndependentSolutionValidator`) verified
 with bounds, discrete domain integrality, shared constraints, scenario evaluations, worst-case guarantee,
-deterministic binding set, and auxiliary/objective consistency.
+deterministic binding set, and auxiliary/objective consistency. Review corrections bind classification to
+the model tolerance and prevent malformed numerical or binding fields from escaping the validation contract.
 
 `ROBUST-V` completion evidence:
 
@@ -154,6 +155,7 @@ deterministic binding set, and auxiliary/objective consistency.
 - [x] Implement structural independent-validation foundation in `OPT-DS-03C2A`.
 - [x] Review malformed no-candidate reporting and prevent duplicate violations.
 - [x] Complete original-domain feasibility and robust-semantic validation in the medium gate `OPT-DS-03C2B`.
+- [x] Review model-tolerance fidelity and malformed-candidate failure containment.
 - [ ] Implement application orchestration and fake-port use case in `OPT-DS-03C3`.
 
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies

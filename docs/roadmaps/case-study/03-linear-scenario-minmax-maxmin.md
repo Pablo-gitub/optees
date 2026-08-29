@@ -366,9 +366,11 @@ Stop if the original model lacks enough information to recompute any published
 quantity, if objective semantics differ between LP and MILP, or if completing a
 check requires trusting diagnostics or changing a released contract.
 
-**Gate `ROBUST-V` (Achieved):** analytic, tolerance-boundary, and tampered-result tests
+**Gate `ROBUST-V` (Achieved after review correction):** analytic, tolerance-boundary, and tampered-result tests
 prove original-domain feasibility and robust semantics independently of a
-concrete solver via `ScenarioIndependentSolutionValidator`.
+concrete solver via `ScenarioIndependentSolutionValidator`. The integrity review
+binds scenario classification to the model's frozen binding tolerance and keeps
+malformed guarantee, auxiliary, and binding fields inside a bounded failed report.
 
 ### Micro-gate C3 — Application Orchestration (`OPT-DS-03C3`)
 
