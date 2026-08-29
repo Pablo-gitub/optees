@@ -135,6 +135,17 @@ to LPModel and MILPModel implemented and structurally verified against all refer
 **Gate ROBUST-R:** achieved; pure result reconstruction (`ScenarioResult`) from real `LPSolution`/`MILPSolution`
 with strict consistency checks and deterministic ordering verified.
 
+`ROBUST-R` completion evidence:
+
+- [x] Preserve explicit original-variable and scenario ordering.
+- [x] Keep the robust domain independent from application contracts.
+- [x] Recompute and cross-check scenario guarantee, auxiliary value, and delegated objective.
+- [x] Preserve LP/MILP status and diagnostics through deeply immutable snapshots.
+- [x] Reject mismatched reductions and malformed candidate payloads.
+- [x] Reject objective or variable payloads for no-candidate statuses.
+- [x] Pass focused reconstruction, codec, validator, and LP/MILP use-case regressions.
+- [ ] Implement independent robust validation in `OPT-DS-03C2`.
+
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
 against the identical frozen scenario package.
 

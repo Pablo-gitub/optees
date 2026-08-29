@@ -263,6 +263,17 @@ The integrity review also freezes delegated LP/MILP value and diagnostic mapping
 objective or variable payloads attached to no-candidate solver statuses.
 No solver, validator, codec, transport, or UI capability was introduced. Only after review may `OPT-DS-03C2` begin.
 
+Completion checklist:
+
+- [x] Immutable ordered robust result and delegated solution snapshots.
+- [x] Continuous optimal and discrete optimal/feasible candidates.
+- [x] Both orientations, negative guarantees, shared offsets, and binding ties.
+- [x] Missing, unknown, non-finite, reordered, or inconsistent candidate rejection.
+- [x] Explicit empty results for valid no-candidate states.
+- [x] Rejection of candidate data attached to no-candidate states.
+- [x] Focused domain, reconstruction, codec, validator, and use-case regressions.
+- [ ] `OPT-DS-03C2` independent validation implementation.
+
 ### Micro-gate C2 — Independent Robust Validation (`OPT-DS-03C2`)
 
 After `ROBUST-R` review, add `ScenarioIndependentSolutionValidator` using the

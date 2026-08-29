@@ -59,6 +59,10 @@ planned functionality must remain clearly marked as planned.
 
 - Agents may create local commits autonomously when a coherent, reviewed, and
   appropriately tested work unit is complete.
+- Before every commit, inspect the relevant general and detailed roadmaps and
+  update their checkboxes, gate state, and next authorized step to match the
+  implementation actually included in that commit. Do not mark partial or
+  unverified work complete.
 - Keep commits atomic and use concise imperative messages describing the
   repository change.
 - Before committing, inspect the staged diff and exclude unrelated files,
