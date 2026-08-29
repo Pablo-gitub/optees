@@ -138,7 +138,11 @@ with strict consistency checks and deterministic ordering verified.
 **Gate ROBUST-VS:** achieved; structural independent validation (`ScenarioIndependentSolutionValidator`) verified
 with stable detail codes, orientation/order/status/type checks, and honest `not_available`.
 
-`ROBUST-VS` completion evidence:
+**Gate ROBUST-V:** achieved; complete mathematical validation (`ScenarioIndependentSolutionValidator`) verified
+with bounds, discrete domain integrality, shared constraints, scenario evaluations, worst-case guarantee,
+deterministic binding set, and auxiliary/objective consistency.
+
+`ROBUST-V` completion evidence:
 
 - [x] Preserve explicit original-variable and scenario ordering.
 - [x] Keep the robust domain independent from application contracts.
@@ -149,7 +153,8 @@ with stable detail codes, orientation/order/status/type checks, and honest `not_
 - [x] Pass focused reconstruction, codec, validator, and LP/MILP use-case regressions.
 - [x] Implement structural independent-validation foundation in `OPT-DS-03C2A`.
 - [x] Review malformed no-candidate reporting and prevent duplicate violations.
-- [ ] Complete original-domain feasibility and robust-semantic validation in the medium gate `OPT-DS-03C2B`.
+- [x] Complete original-domain feasibility and robust-semantic validation in the medium gate `OPT-DS-03C2B`.
+- [ ] Implement application orchestration and fake-port use case in `OPT-DS-03C3`.
 
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
 against the identical frozen scenario package.

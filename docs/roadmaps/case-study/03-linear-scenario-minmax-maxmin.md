@@ -273,7 +273,7 @@ Completion checklist:
 - [x] Rejection of candidate data attached to no-candidate states.
 - [x] Focused domain, reconstruction, codec, validator, and use-case regressions.
 - [x] `OPT-DS-03C2A` structural independent-validation foundation.
-- [ ] `OPT-DS-03C2B` complete original-domain and robust-semantic validation.
+- [x] `OPT-DS-03C2B` complete original-domain and robust-semantic validation.
 
 ### Micro-gate C2 — Independent Robust Validation (`OPT-DS-03C2`)
 
@@ -366,9 +366,9 @@ Stop if the original model lacks enough information to recompute any published
 quantity, if objective semantics differ between LP and MILP, or if completing a
 check requires trusting diagnostics or changing a released contract.
 
-**Gate `ROBUST-V`:** analytic, tolerance-boundary, and tampered-result tests
+**Gate `ROBUST-V` (Achieved):** analytic, tolerance-boundary, and tampered-result tests
 prove original-domain feasibility and robust semantics independently of a
-concrete solver.
+concrete solver via `ScenarioIndependentSolutionValidator`.
 
 ### Micro-gate C3 — Application Orchestration (`OPT-DS-03C3`)
 
@@ -418,5 +418,5 @@ the separately committed UI work.
 
 ## Next implementation boundary
 
-`OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C1`, and `OPT-DS-03C2A` are complete after review.
-`OPT-DS-03C2B` is the only next implementation boundary authorized here. C3–F remain separately reviewed work units.
+`OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C1`, `OPT-DS-03C2A`, and `OPT-DS-03C2B` are complete after review.
+`OPT-DS-03C3` is the next and only authorized implementation boundary. C3–F remain separately reviewed work units.

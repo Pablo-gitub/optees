@@ -18,16 +18,20 @@ from optees.domain.models.scenario.scenario_result import (
     ScenarioResult,
     ScenarioSolveStatus,
 )
+from optees.domain.value_objects.lp.relation import Relation
 from optees.domain.value_objects.lp.solve_status import SolveStatus
+from optees.domain.value_objects.milp.integrality import Integrality
 from optees.domain.value_objects.milp.solve_status import MILPSolveStatus
 
 
 class ScenarioIndependentSolutionValidator:
     """Independent validator for finite linear scenario optimization results.
 
-    In stage C2A (ROBUST-VS), verifies structural integrity, orientation equality,
-    variable/scenario identities and ordering, finiteness, status coherence,
-    and solution type compatibility without trusting solver diagnostics.
+    Verifies structural integrity, orientation equality, variable/scenario identities,
+    primal variable bounds, discrete domains (integer/binary), shared linear constraints,
+    scenario evaluations from original data, worst-case guarantee, deterministic binding set,
+    and consistency with the auxiliary variable and delegated solver objective without
+    trusting solver diagnostics or claiming optimality.
     """
 
     def __init__(
@@ -35,12 +39,23 @@ class ScenarioIndependentSolutionValidator:
         *,
         absolute_tolerance: float = 1e-7,
         relative_tolerance: float = 1e-7,
+        integrality_tolerance: float = 1e-5,
+        binding_tolerance: float = 1e-6,
     ) -> None:
-        for value in (absolute_tolerance, relative_tolerance):
+        for name, value in (
+            ("absolute_tolerance", absolute_tolerance),
+            ("relative_tolerance", relative_tolerance),
+            ("integrality_tolerance", integrality_tolerance),
+            ("binding_tolerance", binding_tolerance),
+        ):
             if isinstance(value, bool) or not math.isfinite(value) or value < 0:
-                raise ValueError("Scenario validation tolerances must be finite and non-negative")
+                raise ValueError(
+                    f"Scenario validation tolerance '{name}' must be finite and non-negative"
+                )
         self._absolute_tolerance = float(absolute_tolerance)
         self._relative_tolerance = float(relative_tolerance)
+        self._integrality_tolerance = float(integrality_tolerance)
+        self._binding_tolerance = float(binding_tolerance)
 
     def __call__(
         self,
@@ -70,7 +85,6 @@ class ScenarioIndependentSolutionValidator:
 
         # Handling for no-candidate statuses (infeasible, unbounded, not_solved)
         if not is_candidate_status:
-            # If structural violations exist on orientation or status/delegated solution, report failure
             initial_checks = [orientation_check, status_check]
             initial_violations = list(orientation_violations) + list(status_violations)
 
@@ -88,14 +102,69 @@ class ScenarioIndependentSolutionValidator:
         )
 
         # 3. Variable vector & ordering check
-        var_check, var_violations = self._validate_variable_vector(model, result)
+        var_check, var_violations, candidate_map = self._validate_variable_vector(model, result)
         checks.append(var_check)
         violations.extend(var_violations)
 
-        # 4. Scenario values & ordering check
-        scen_check, scen_violations = self._validate_scenario_values(model, result)
+        # 4. Scenario values structural check
+        scen_check, scen_violations, reported_scen_vals = self._validate_scenario_values_structure(
+            model, result
+        )
         checks.append(scen_check)
         violations.extend(scen_violations)
+
+        # If candidate variable vector failed structural integrity (missing/unknown/non-finite vars),
+        # do not execute mathematical evaluations that rely on indexing candidate variables.
+        if candidate_map is None:
+            return self._report(tuple(checks), tuple(violations))
+
+        # 5. Primal variable bounds check
+        bounds_check, bounds_violations = self._validate_bounds(model, candidate_map)
+        checks.append(bounds_check)
+        violations.extend(bounds_violations)
+
+        # 6. Discrete domain (integrality & binary) check (if model is discrete)
+        if model.is_discrete():
+            integrality_check, integrality_violations = self._validate_integrality(
+                model, candidate_map
+            )
+            checks.append(integrality_check)
+            violations.extend(integrality_violations)
+
+        # 7. Shared linear constraints check
+        constraints_check, constraints_violations = self._validate_shared_constraints(
+            model, candidate_map
+        )
+        checks.append(constraints_check)
+        violations.extend(constraints_violations)
+
+        # 8. Scenario evaluations check (recomputed from original model)
+        evals_check, evals_violations, recomputed_evals = self._validate_scenario_evaluations(
+            model, candidate_map, reported_scen_vals
+        )
+        checks.append(evals_check)
+        violations.extend(evals_violations)
+
+        # 9. Worst-case guarantee check
+        guarantee_check, guarantee_violations, recomputed_guarantee = self._validate_guarantee(
+            model, recomputed_evals, result
+        )
+        checks.append(guarantee_check)
+        violations.extend(guarantee_violations)
+
+        # 10. Deterministic binding set check
+        binding_check, binding_violations = self._validate_binding_set(
+            model, recomputed_evals, recomputed_guarantee, result, reported_scen_vals
+        )
+        checks.append(binding_check)
+        violations.extend(binding_violations)
+
+        # 11. Consistency check (auxiliary variable and delegated solver objective)
+        consistency_check, consistency_violations = self._validate_consistency(
+            recomputed_guarantee, result
+        )
+        checks.append(consistency_check)
+        violations.extend(consistency_violations)
 
         return self._report(tuple(checks), tuple(violations))
 
@@ -140,7 +209,6 @@ class ScenarioIndependentSolutionValidator:
         result_status = getattr(result, "status", None)
         delegated_solution = getattr(result, "delegated_solution", None)
 
-        # Check solution type compatibility
         is_discrete = model.is_discrete()
         expected_type = MILPSolution if is_discrete else LPSolution
         type_passed = isinstance(delegated_solution, expected_type)
@@ -164,7 +232,6 @@ class ScenarioIndependentSolutionValidator:
                 )
             )
 
-        # Check status mapping coherence
         status_passed = False
         delegated_status_str = ""
         if isinstance(delegated_solution, LPSolution):
@@ -195,7 +262,6 @@ class ScenarioIndependentSolutionValidator:
                 )
             )
 
-        # Check candidate presence constraint for no-candidate statuses
         candidate_violations: list[ValidationViolation] = []
         if result_status not in (
             ScenarioSolveStatus.OPTIMAL,
@@ -277,7 +343,7 @@ class ScenarioIndependentSolutionValidator:
         self,
         model: ScenarioModel,
         result: Any,
-    ) -> tuple[ValidationCheck, list[ValidationViolation]]:
+    ) -> tuple[ValidationCheck, list[ValidationViolation], dict[str, float] | None]:
         violations: list[ValidationViolation] = []
         declared_order = model.variable_names()
         declared_set = set(declared_order)
@@ -313,7 +379,7 @@ class ScenarioIndependentSolutionValidator:
                 description="The candidate contains finite values for every declared variable in exact original order.",
                 measurements={"declared_count": len(declared_order)},
             )
-            return check, violations
+            return check, violations, None
 
         var_keys = tuple(variables_map.keys())
         missing = sorted(declared_set - set(var_keys))
@@ -347,12 +413,15 @@ class ScenarioIndependentSolutionValidator:
             )
 
         # Check finiteness of variable values
+        clean_map: dict[str, float] = {}
+        has_non_finite_var = False
         for name, val in variables_map.items():
             if (
                 isinstance(val, bool)
                 or not isinstance(val, (int, float))
                 or not math.isfinite(float(val))
             ):
+                has_non_finite_var = True
                 violations.append(
                     _violation(
                         code="non_finite_variable",
@@ -362,6 +431,8 @@ class ScenarioIndependentSolutionValidator:
                         measurements={"variable": name, "value": str(val)},
                     )
                 )
+            else:
+                clean_map[name] = float(val)
 
         # Check finiteness of guarantee
         guarantee = getattr(result, "guaranteed_value", None)
@@ -409,13 +480,21 @@ class ScenarioIndependentSolutionValidator:
                 "candidate_count": len(variables_map),
             },
         )
-        return check, violations
+        return (
+            check,
+            violations,
+            clean_map if (not missing and not unknown and not has_non_finite_var) else None,
+        )
 
-    def _validate_scenario_values(
+    def _validate_scenario_values_structure(
         self,
         model: ScenarioModel,
         result: Any,
-    ) -> tuple[ValidationCheck, list[ValidationViolation]]:
+    ) -> tuple[
+        ValidationCheck,
+        list[ValidationViolation],
+        tuple[Any, ...] | None,
+    ]:
         violations: list[ValidationViolation] = []
         declared_scen_ids = model.scenario_ids()
         declared_scen_set = set(declared_scen_ids)
@@ -451,7 +530,7 @@ class ScenarioIndependentSolutionValidator:
                 description="Every declared scenario has a corresponding finite evaluation in exact original order.",
                 measurements={"declared_scenario_count": len(declared_scen_ids)},
             )
-            return check, violations
+            return check, violations, None
 
         actual_ids = tuple(getattr(sv, "scenario_id", None) for sv in scen_values)
         missing_ids = sorted(declared_scen_set - set(actual_ids))
@@ -484,7 +563,7 @@ class ScenarioIndependentSolutionValidator:
                 )
             )
 
-        # Check finiteness of each scenario value
+        has_non_finite_sv = False
         for idx, sv in enumerate(scen_values):
             val = getattr(sv, "value", None)
             scen_id = getattr(sv, "scenario_id", f"index_{idx}")
@@ -494,6 +573,7 @@ class ScenarioIndependentSolutionValidator:
                 or not isinstance(val, (int, float))
                 or not math.isfinite(float(val))
             ):
+                has_non_finite_sv = True
                 violations.append(
                     _violation(
                         code="non_finite_scenario_value",
@@ -514,22 +594,480 @@ class ScenarioIndependentSolutionValidator:
                 "scenario_value_count": len(scen_values),
             },
         )
+        return (
+            check,
+            violations,
+            tuple(scen_values)
+            if (not missing_ids and not unknown_ids and not has_non_finite_sv)
+            else None,
+        )
+
+    def _validate_bounds(
+        self,
+        model: ScenarioModel,
+        candidate: dict[str, float],
+    ) -> tuple[ValidationCheck, list[ValidationViolation]]:
+        violations: list[ValidationViolation] = []
+        max_bound_violation = 0.0
+
+        for var in model.variables:
+            val = candidate[var.name]
+            bounds = var.bounds
+
+            if bounds.lb is not None:
+                lb = float(bounds.lb)
+                raw_lb_violation = lb - val
+                lb_violation = max(0.0, raw_lb_violation)
+                max_bound_violation = max(max_bound_violation, lb_violation)
+                allowed_lb = self._allowed(val, lb)
+                if lb_violation > allowed_lb:
+                    violations.append(
+                        _violation(
+                            code="lower_bound_violation",
+                            check_code="scenario.bounds",
+                            path=f"$.variables.{var.name}",
+                            message=f"Variable '{var.name}' violates its lower bound ({lb}).",
+                            measurements={
+                                "variable": var.name,
+                                "value": val,
+                                "bound": lb,
+                                "violation": lb_violation,
+                                "allowed": allowed_lb,
+                            },
+                        )
+                    )
+
+            if bounds.ub is not None:
+                ub = float(bounds.ub)
+                raw_ub_violation = val - ub
+                ub_violation = max(0.0, raw_ub_violation)
+                max_bound_violation = max(max_bound_violation, ub_violation)
+                allowed_ub = self._allowed(val, ub)
+                if ub_violation > allowed_ub:
+                    violations.append(
+                        _violation(
+                            code="upper_bound_violation",
+                            check_code="scenario.bounds",
+                            path=f"$.variables.{var.name}",
+                            message=f"Variable '{var.name}' violates its upper bound ({ub}).",
+                            measurements={
+                                "variable": var.name,
+                                "value": val,
+                                "bound": ub,
+                                "violation": ub_violation,
+                                "allowed": allowed_ub,
+                            },
+                        )
+                    )
+
+        passed = not violations
+        check = ValidationCheck(
+            code="scenario.bounds",
+            status=_check_status(passed),
+            description="Every candidate value satisfies its declared lower and upper bounds.",
+            measurements={
+                "variable_count": len(model.variables),
+                "maximum_violation": max_bound_violation,
+            },
+        )
         return check, violations
+
+    def _validate_integrality(
+        self,
+        model: ScenarioModel,
+        candidate: dict[str, float],
+    ) -> tuple[ValidationCheck, list[ValidationViolation]]:
+        violations: list[ValidationViolation] = []
+        integer_count = 0
+        binary_count = 0
+        maximum_distance = 0.0
+
+        for var in model.variables:
+            if not var.integrality.is_discrete():
+                continue
+            val = candidate[var.name]
+
+            if var.integrality is Integrality.BINARY:
+                binary_count += 1
+                nearest = 0.0 if val < 0.5 else 1.0
+                dist = abs(val - nearest)
+                maximum_distance = max(maximum_distance, dist)
+                if dist > self._integrality_tolerance:
+                    violations.append(
+                        _violation(
+                            code="binary_domain_violation",
+                            check_code="scenario.integrality",
+                            path=f"$.variables.{var.name}",
+                            message=f"Binary variable '{var.name}' is not within integrality tolerance of 0 or 1.",
+                            measurements={
+                                "variable": var.name,
+                                "value": val,
+                                "nearest_domain_value": nearest,
+                                "distance": dist,
+                                "allowed": self._integrality_tolerance,
+                            },
+                        )
+                    )
+            else:
+                integer_count += 1
+                nearest = float(round(val))
+                dist = abs(val - nearest)
+                maximum_distance = max(maximum_distance, dist)
+                if dist > self._integrality_tolerance:
+                    violations.append(
+                        _violation(
+                            code="integrality_violation",
+                            check_code="scenario.integrality",
+                            path=f"$.variables.{var.name}",
+                            message=f"Integer variable '{var.name}' is not within integrality tolerance of an integer.",
+                            measurements={
+                                "variable": var.name,
+                                "value": val,
+                                "nearest_domain_value": nearest,
+                                "distance": dist,
+                                "allowed": self._integrality_tolerance,
+                            },
+                        )
+                    )
+
+        passed = not violations
+        check = ValidationCheck(
+            code="scenario.integrality",
+            status=_check_status(passed),
+            description="Every integer and binary candidate value satisfies its declared discrete domain.",
+            measurements={
+                "integer_variable_count": integer_count,
+                "binary_variable_count": binary_count,
+                "maximum_distance": maximum_distance,
+            },
+        )
+        return check, violations
+
+    def _validate_shared_constraints(
+        self,
+        model: ScenarioModel,
+        candidate: dict[str, float],
+    ) -> tuple[ValidationCheck, list[ValidationViolation]]:
+        violations: list[ValidationViolation] = []
+        max_constraint_violation = 0.0
+
+        for idx, con in enumerate(model.shared_constraints):
+            lhs = sum(
+                coef * candidate[var.name] for coef, var in zip(con.coefficients, model.variables)
+            )
+            rhs = float(con.rhs)
+
+            if con.relation is Relation.LE:
+                violation = max(0.0, lhs - rhs)
+            elif con.relation is Relation.GE:
+                violation = max(0.0, rhs - lhs)
+            else:
+                violation = abs(lhs - rhs)
+
+            max_constraint_violation = max(max_constraint_violation, violation)
+            allowed = self._allowed(lhs, rhs)
+
+            if violation > allowed:
+                violations.append(
+                    _violation(
+                        code="constraint_violation",
+                        check_code="scenario.constraints",
+                        path=f"$.shared_constraints[{idx}]",
+                        message=f"Shared constraint {idx} ('{con.name}') is violated by the candidate.",
+                        measurements={
+                            "constraint_index": idx,
+                            "constraint_name": con.name,
+                            "left_hand_side": lhs,
+                            "relation": con.relation.value,
+                            "right_hand_side": rhs,
+                            "violation": violation,
+                            "allowed": allowed,
+                        },
+                    )
+                )
+
+        passed = not violations
+        check = ValidationCheck(
+            code="scenario.constraints",
+            status=_check_status(passed),
+            description="Every shared linear constraint is satisfied by the candidate vector.",
+            measurements={
+                "constraint_count": len(model.shared_constraints),
+                "maximum_violation": max_constraint_violation,
+            },
+        )
+        return check, violations
+
+    def _validate_scenario_evaluations(
+        self,
+        model: ScenarioModel,
+        candidate: dict[str, float],
+        reported_scen_vals: tuple[Any, ...] | None,
+    ) -> tuple[ValidationCheck, list[ValidationViolation], list[float]]:
+        violations: list[ValidationViolation] = []
+        recomputed_evals = [
+            model.evaluate_scenario(k, candidate) for k in range(model.n_scenarios())
+        ]
+        max_diff = 0.0
+
+        if reported_scen_vals is not None:
+            for k, scen in enumerate(model.scenarios):
+                rep_sv = reported_scen_vals[k]
+                rep_val = getattr(rep_sv, "value", None)
+                if rep_val is not None and math.isfinite(float(rep_val)):
+                    rep_f = float(rep_val)
+                    recomp_f = recomputed_evals[k]
+                    diff = abs(rep_f - recomp_f)
+                    max_diff = max(max_diff, diff)
+                    allowed = self._allowed(rep_f, recomp_f)
+                    if diff > allowed:
+                        violations.append(
+                            _violation(
+                                code="scenario_evaluation_mismatch",
+                                check_code="scenario.evaluations",
+                                path=f"$.scenario_values[{k}].value",
+                                message=f"Scenario '{scen.id}' reported evaluation ({rep_f}) differs from recomputed value ({recomp_f}).",
+                                measurements={
+                                    "scenario_id": scen.id,
+                                    "reported": rep_f,
+                                    "recomputed": recomp_f,
+                                    "difference": diff,
+                                    "allowed": allowed,
+                                },
+                            )
+                        )
+
+        passed = not violations
+        check = ValidationCheck(
+            code="scenario.evaluations",
+            status=_check_status(passed),
+            description="The reported scenario evaluations equal the evaluations recomputed from the original model.",
+            measurements={
+                "scenario_count": model.n_scenarios(),
+                "maximum_difference": max_diff,
+            },
+        )
+        return check, violations, recomputed_evals
+
+    def _validate_guarantee(
+        self,
+        model: ScenarioModel,
+        recomputed_evals: list[float],
+        result: Any,
+    ) -> tuple[ValidationCheck, list[ValidationViolation], float]:
+        is_loss = model.orientation.is_loss_minimization()
+        recomputed_guarantee = max(recomputed_evals) if is_loss else min(recomputed_evals)
+        violations: list[ValidationViolation] = []
+
+        rep_guar = getattr(result, "guaranteed_value", None)
+        diff = 0.0
+        allowed = 0.0
+        if rep_guar is not None and math.isfinite(float(rep_guar)):
+            rep_guar_f = float(rep_guar)
+            diff = abs(rep_guar_f - recomputed_guarantee)
+            allowed = self._allowed(rep_guar_f, recomputed_guarantee)
+            if diff > allowed:
+                violations.append(
+                    _violation(
+                        code="guarantee_mismatch",
+                        check_code="scenario.guarantee",
+                        path="$.guaranteed_value",
+                        message=(
+                            f"Reported guaranteed value {rep_guar_f} differs from "
+                            f"recomputed worst-case guarantee {recomputed_guarantee}."
+                        ),
+                        measurements={
+                            "reported": rep_guar_f,
+                            "recomputed": recomputed_guarantee,
+                            "difference": diff,
+                            "allowed": allowed,
+                        },
+                    )
+                )
+
+        passed = not violations
+        check = ValidationCheck(
+            code="scenario.guarantee",
+            status=_check_status(passed),
+            description="The reported guaranteed value equals the worst-case value recomputed from candidate scenario evaluations.",
+            measurements={
+                "recomputed_guarantee": recomputed_guarantee,
+                "reported_guarantee": float(rep_guar) if rep_guar is not None else None,
+                "difference": diff,
+                "allowed": allowed,
+            },
+        )
+        return check, violations, recomputed_guarantee
+
+    def _validate_binding_set(
+        self,
+        model: ScenarioModel,
+        recomputed_evals: list[float],
+        recomputed_guarantee: float,
+        result: Any,
+        reported_scen_vals: tuple[Any, ...] | None,
+    ) -> tuple[ValidationCheck, list[ValidationViolation]]:
+        violations: list[ValidationViolation] = []
+        is_loss = model.orientation.is_loss_minimization()
+        binding_tol = self._binding_tolerance
+
+        if is_loss:
+            threshold = recomputed_guarantee - binding_tol * max(1.0, abs(recomputed_guarantee))
+            expected_binding_ids = tuple(
+                scen.id
+                for k, scen in enumerate(model.scenarios)
+                if recomputed_evals[k] >= threshold - 1e-14
+            )
+        else:
+            threshold = recomputed_guarantee + binding_tol * max(1.0, abs(recomputed_guarantee))
+            expected_binding_ids = tuple(
+                scen.id
+                for k, scen in enumerate(model.scenarios)
+                if recomputed_evals[k] <= threshold + 1e-14
+            )
+
+        expected_binding_set = set(expected_binding_ids)
+        rep_binding_ids = tuple(getattr(result, "binding_scenario_ids", ()) or ())
+
+        if rep_binding_ids != expected_binding_ids:
+            violations.append(
+                _violation(
+                    code="binding_set_mismatch",
+                    check_code="scenario.binding_set",
+                    path="$.binding_scenario_ids",
+                    message="Reported binding_scenario_ids do not match the deterministic binding set derived from evaluations.",
+                    measurements={
+                        "reported": list(rep_binding_ids),
+                        "expected": list(expected_binding_ids),
+                    },
+                )
+            )
+
+        if reported_scen_vals is not None:
+            for k, scen in enumerate(model.scenarios):
+                rep_sv = reported_scen_vals[k]
+                rep_flag = getattr(rep_sv, "is_binding", None)
+                expected_flag = scen.id in expected_binding_set
+                if rep_flag != expected_flag:
+                    violations.append(
+                        _violation(
+                            code="binding_flag_mismatch",
+                            check_code="scenario.binding_set",
+                            path=f"$.scenario_values[{k}].is_binding",
+                            message=f"Scenario '{scen.id}' is_binding flag ({rep_flag}) does not match expected binding classification ({expected_flag}).",
+                            measurements={
+                                "scenario_id": scen.id,
+                                "reported_is_binding": rep_flag,
+                                "expected_is_binding": expected_flag,
+                            },
+                        )
+                    )
+
+        passed = not violations
+        check = ValidationCheck(
+            code="scenario.binding_set",
+            status=_check_status(passed),
+            description="The reported binding scenarios and flags match the deterministic binding set derived from recomputed evaluations.",
+            measurements={
+                "expected_binding_scenario_ids": list(expected_binding_ids),
+                "reported_binding_scenario_ids": list(rep_binding_ids),
+            },
+        )
+        return check, violations
+
+    def _validate_consistency(
+        self,
+        recomputed_guarantee: float,
+        result: Any,
+    ) -> tuple[ValidationCheck, list[ValidationViolation]]:
+        violations: list[ValidationViolation] = []
+        diff_aux = 0.0
+        allowed_aux = 0.0
+        diff_obj: float | None = None
+        allowed_obj: float | None = None
+
+        # Check auxiliary value consistency
+        aux_val = getattr(result, "auxiliary_value", None)
+        if aux_val is not None and math.isfinite(float(aux_val)):
+            aux_f = float(aux_val)
+            diff_aux = abs(aux_f - recomputed_guarantee)
+            allowed_aux = self._allowed(aux_f, recomputed_guarantee)
+            if diff_aux > allowed_aux:
+                violations.append(
+                    _violation(
+                        code="auxiliary_consistency_mismatch",
+                        check_code="scenario.consistency",
+                        path="$.auxiliary_value",
+                        message=f"Reported auxiliary value ({aux_f}) is inconsistent with recomputed guarantee ({recomputed_guarantee}).",
+                        measurements={
+                            "auxiliary_value": aux_f,
+                            "recomputed_guarantee": recomputed_guarantee,
+                            "difference": diff_aux,
+                            "allowed": allowed_aux,
+                        },
+                    )
+                )
+
+        # Check delegated solver objective consistency
+        delegated_sol = getattr(result, "delegated_solution", None)
+        delegated_obj = getattr(delegated_sol, "objective", None)
+        if delegated_obj is not None and math.isfinite(float(delegated_obj)):
+            obj_f = float(delegated_obj)
+            diff_obj = abs(obj_f - recomputed_guarantee)
+            allowed_obj = self._allowed(obj_f, recomputed_guarantee)
+            if diff_obj > allowed_obj:
+                violations.append(
+                    _violation(
+                        code="objective_consistency_mismatch",
+                        check_code="scenario.consistency",
+                        path="$.delegated_solution.objective",
+                        message=f"Delegated solver objective ({obj_f}) is inconsistent with recomputed guarantee ({recomputed_guarantee}).",
+                        measurements={
+                            "delegated_objective": obj_f,
+                            "recomputed_guarantee": recomputed_guarantee,
+                            "difference": diff_obj,
+                            "allowed": allowed_obj,
+                        },
+                    )
+                )
+
+        passed = not violations
+        check = ValidationCheck(
+            code="scenario.consistency",
+            status=_check_status(passed),
+            description="The auxiliary variable and delegated solver objective are consistent with the recomputed guarantee.",
+            measurements={
+                "auxiliary_difference": diff_aux,
+                "auxiliary_allowed": allowed_aux,
+                "objective_difference": diff_obj,
+                "objective_allowed": allowed_obj,
+            },
+        )
+        return check, violations
+
+    def _allowed(self, first: float, second: float) -> float:
+        return self._absolute_tolerance + self._relative_tolerance * max(
+            abs(first),
+            abs(second),
+        )
 
     def _report(
         self,
         checks: tuple[ValidationCheck, ...],
         violations: tuple[ValidationViolation, ...],
     ) -> SolutionValidation:
+        tolerances: dict[str, float] = {
+            "absolute": self._absolute_tolerance,
+            "relative": self._relative_tolerance,
+            "integrality": self._integrality_tolerance,
+            "binding": self._binding_tolerance,
+        }
         return SolutionValidation.from_checks(
             checks,
             violations=violations,
-            tolerances={
-                "absolute": self._absolute_tolerance,
-                "relative": self._relative_tolerance,
-            },
+            tolerances=tolerances,
             limitations=(
-                "Structural validation does not independently prove mathematical optimality.",
+                "Feasibility, integrality, and robust consistency do not independently prove mathematical optimality.",
                 "The validator does not assess whether the scenario model represents business intent.",
             ),
         )

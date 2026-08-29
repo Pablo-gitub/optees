@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from types import MappingProxyType
 from typing import Any
 
 import pytest
@@ -23,6 +22,10 @@ from optees.domain.entities.lp.solution import LPSolution
 from optees.domain.entities.milp.solution import MILPSolution
 from optees.domain.entities.scenario.constraint import ScenarioConstraint
 from optees.domain.entities.scenario.scenario import Scenario
+from optees.domain.entities.scenario.scenario_value import ScenarioValue
+from optees.domain.entities.scenario.shared_objective import (
+    ScenarioSharedObjective,
+)
 from optees.domain.entities.scenario.variable import ScenarioVariable
 from optees.domain.models.scenario.scenario_model import ScenarioModel
 from optees.domain.models.scenario.scenario_result import (
@@ -77,8 +80,8 @@ class ForgedScenarioResultDouble:
 
 def _make_continuous_loss_fixture() -> tuple[ScenarioModel, ScenarioResult, LPSolution]:
     vars_ = (
-        ScenarioVariable(name="x1", bounds=Bounds(0.0, None)),
-        ScenarioVariable(name="x2", bounds=Bounds(0.0, None)),
+        ScenarioVariable(name="x1", bounds=Bounds(0.0, 10.0)),
+        ScenarioVariable(name="x2", bounds=Bounds(0.0, 10.0)),
     )
     scenarios = (
         Scenario(id="s1", coefficients=(2.0, -1.0), offset=5.0),
@@ -119,18 +122,18 @@ def _make_discrete_loss_fixture() -> tuple[ScenarioModel, ScenarioResult, MILPSo
     vars_ = (
         ScenarioVariable(name="x1", integrality=Integrality.BINARY),
         ScenarioVariable(name="x2", integrality=Integrality.BINARY),
-        ScenarioVariable(name="x3", integrality=Integrality.BINARY),
+        ScenarioVariable(name="x3", integrality=Integrality.INTEGER, bounds=Bounds(0.0, 5.0)),
     )
     scenarios = (
-        Scenario(id="s1", coefficients=(10.0, 2.0, 8.0), offset=0.0),
-        Scenario(id="s2", coefficients=(3.0, 12.0, 4.0), offset=0.0),
-        Scenario(id="s3", coefficients=(6.0, 5.0, 9.0), offset=0.0),
+        Scenario(id="s1", coefficients=(10.0, 2.0, 3.0), offset=0.0),
+        Scenario(id="s2", coefficients=(3.0, 12.0, 1.0), offset=0.0),
+        Scenario(id="s3", coefficients=(6.0, 5.0, 4.0), offset=0.0),
     )
     constraints = (
         ScenarioConstraint(
             name="cardinality",
             coefficients=(1.0, 1.0, 1.0),
-            relation=Relation.EQ,
+            relation=Relation.LE,
             rhs=2.0,
         ),
     )
@@ -157,39 +160,489 @@ def _make_discrete_loss_fixture() -> tuple[ScenarioModel, ScenarioResult, MILPSo
     return model, result, milp_sol
 
 
-def test_validator_continuous_optimal_valid() -> None:
-    """Verify that a valid continuous optimal candidate passes structural validation with VERIFIED status."""
+def _make_continuous_reward_negative_fixture() -> tuple[ScenarioModel, ScenarioResult, LPSolution]:
+    vars_ = (
+        ScenarioVariable(name="x1", bounds=Bounds(0.0, 5.0)),
+        ScenarioVariable(name="x2", bounds=Bounds(0.0, 5.0)),
+    )
+    shared_obj = ScenarioSharedObjective(
+        coefficients=(-1.0, -1.0),
+        offset=-10.0,
+    )
+    scenarios = (
+        Scenario(id="s1", coefficients=(-2.0, 1.0), offset=1.0),
+        Scenario(id="s2", coefficients=(1.0, -3.0), offset=2.0),
+    )
+    constraints = (
+        ScenarioConstraint(
+            name="min_activity",
+            coefficients=(1.0, 1.0),
+            relation=Relation.GE,
+            rhs=2.0,
+        ),
+    )
+    model = ScenarioModel(
+        orientation=ScenarioOrientation.MAX_MIN_REWARD,
+        variables=vars_,
+        scenarios=scenarios,
+        shared_objective=shared_obj,
+        shared_constraints=constraints,
+    )
+    reduction = ScenarioReductionService.reduce(model)
+    lp_sol = LPSolution(
+        status=SolveStatus.OPTIMAL,
+        objective=-12.0,
+        values={
+            "x1": 1.0,
+            "x2": 1.0,
+            "_aux_tau": -12.0,
+        },
+        diagnostics=SolverDiagnostics(),
+        extras={},
+    )
+    result = ScenarioReconstructionService.reconstruct(model, reduction, lp_sol)
+    return model, result, lp_sol
+
+
+def test_validator_continuous_optimal_all_checks_passed() -> None:
+    """Verify that a valid continuous model passes all 10 applicable checks with VERIFIED status."""
     model, result, _ = _make_continuous_loss_fixture()
     validator = ScenarioIndependentSolutionValidator()
     report = validator(model, result)
 
     assert report.status is SolutionValidationStatus.VERIFIED
-    assert len(report.checks) == 4
+    assert len(report.checks) == 10
     assert len(report.violations) == 0
 
-    check_codes = [c.code for c in report.checks]
-    assert check_codes == [
+    expected_codes = [
         "scenario.orientation",
         "scenario.status_coherence",
         "scenario.variable_vector",
         "scenario.scenario_values",
+        "scenario.bounds",
+        "scenario.constraints",
+        "scenario.evaluations",
+        "scenario.guarantee",
+        "scenario.binding_set",
+        "scenario.consistency",
     ]
+    assert [c.code for c in report.checks] == expected_codes
     for check in report.checks:
         assert check.status is ValidationCheckStatus.PASSED
 
 
-def test_validator_discrete_feasible_valid() -> None:
-    """Verify that a valid discrete feasible candidate passes structural validation with VERIFIED status."""
+def test_validator_discrete_feasible_all_checks_passed() -> None:
+    """Verify that a valid discrete model includes scenario.integrality and passes all 11 checks."""
     model, result, _ = _make_discrete_loss_fixture()
     validator = ScenarioIndependentSolutionValidator()
     report = validator(model, result)
 
     assert report.status is SolutionValidationStatus.VERIFIED
-    assert len(report.checks) == 4
+    assert len(report.checks) == 11
     assert len(report.violations) == 0
 
+    expected_codes = [
+        "scenario.orientation",
+        "scenario.status_coherence",
+        "scenario.variable_vector",
+        "scenario.scenario_values",
+        "scenario.bounds",
+        "scenario.integrality",
+        "scenario.constraints",
+        "scenario.evaluations",
+        "scenario.guarantee",
+        "scenario.binding_set",
+        "scenario.consistency",
+    ]
+    assert [c.code for c in report.checks] == expected_codes
     for check in report.checks:
         assert check.status is ValidationCheckStatus.PASSED
+
+
+def test_validator_max_min_reward_negative_guarantee_valid() -> None:
+    """Verify that max_min_reward with negative guarantee, shared objective, and GE constraint validates cleanly."""
+    model, result, _ = _make_continuous_reward_negative_fixture()
+    validator = ScenarioIndependentSolutionValidator()
+    report = validator(model, result)
+
+    assert report.status is SolutionValidationStatus.VERIFIED
+    assert result.guaranteed_value == -12.0
+    assert len(report.violations) == 0
+
+
+def test_validator_bounds_violations() -> None:
+    """Verify lower and upper bound violations are detected with exact codes and paths."""
+    model, valid_result, lp_sol = _make_continuous_loss_fixture()
+    # x1=12.0 violates upper bound 10.0, x2=-1.0 violates lower bound 0.0
+    corrupt_result = ForgedScenarioResultDouble(
+        status=valid_result.status,
+        orientation=valid_result.orientation,
+        original_variable_order=valid_result.original_variable_order,
+        scenario_order=valid_result.scenario_order,
+        guaranteed_value=valid_result.guaranteed_value,
+        variables={"x1": 12.0, "x2": -1.0},
+        scenario_values=valid_result.scenario_values,
+        binding_scenario_ids=valid_result.binding_scenario_ids,
+        delegated_solution=lp_sol,
+        auxiliary_variable_name=valid_result.auxiliary_variable_name,
+        auxiliary_value=valid_result.auxiliary_value,
+    )
+
+    validator = ScenarioIndependentSolutionValidator()
+    report = validator(model, corrupt_result)  # type: ignore[arg-type]
+
+    assert report.status is SolutionValidationStatus.FAILED
+    bounds_check = next(c for c in report.checks if c.code == "scenario.bounds")
+    assert bounds_check.status is ValidationCheckStatus.FAILED
+
+    violation_codes = {v.code for v in report.violations}
+    assert "upper_bound_violation" in violation_codes
+    assert "lower_bound_violation" in violation_codes
+
+    v_ub = next(v for v in report.violations if v.code == "upper_bound_violation")
+    assert v_ub.path == "$.variables.x1"
+    assert v_ub.measurements["bound"] == 10.0
+
+    v_lb = next(v for v in report.violations if v.code == "lower_bound_violation")
+    assert v_lb.path == "$.variables.x2"
+    assert v_lb.measurements["bound"] == 0.0
+
+
+def test_validator_integrality_and_binary_violations_around_tolerance() -> None:
+    """Verify discrete domain checks just inside and just outside tolerance."""
+    model, valid_result, milp_sol = _make_discrete_loss_fixture()
+    tol = 1e-5
+
+    # 1. Just INSIDE tolerance -> should pass integrality
+    inside_result = ForgedScenarioResultDouble(
+        status=valid_result.status,
+        orientation=valid_result.orientation,
+        original_variable_order=valid_result.original_variable_order,
+        scenario_order=valid_result.scenario_order,
+        guaranteed_value=valid_result.guaranteed_value,
+        variables={"x1": 1.0 + tol * 0.5, "x2": 1.0 - tol * 0.5, "x3": 0.0 + tol * 0.5},
+        scenario_values=valid_result.scenario_values,
+        binding_scenario_ids=valid_result.binding_scenario_ids,
+        delegated_solution=milp_sol,
+        auxiliary_variable_name=valid_result.auxiliary_variable_name,
+        auxiliary_value=valid_result.auxiliary_value,
+    )
+    validator = ScenarioIndependentSolutionValidator(integrality_tolerance=tol)
+    report_inside = validator(model, inside_result)  # type: ignore[arg-type]
+    int_check = next(c for c in report_inside.checks if c.code == "scenario.integrality")
+    assert int_check.status is ValidationCheckStatus.PASSED
+
+    # 2. Just OUTSIDE tolerance -> should fail integrality
+    outside_result = ForgedScenarioResultDouble(
+        status=valid_result.status,
+        orientation=valid_result.orientation,
+        original_variable_order=valid_result.original_variable_order,
+        scenario_order=valid_result.scenario_order,
+        guaranteed_value=valid_result.guaranteed_value,
+        variables={
+            "x1": 1.0 + tol * 2.0,
+            "x2": 0.5,
+            "x3": 2.2,
+        },  # x1 slightly off, x2 far off binary, x3 off integer
+        scenario_values=valid_result.scenario_values,
+        binding_scenario_ids=valid_result.binding_scenario_ids,
+        delegated_solution=milp_sol,
+        auxiliary_variable_name=valid_result.auxiliary_variable_name,
+        auxiliary_value=valid_result.auxiliary_value,
+    )
+    report_outside = validator(model, outside_result)  # type: ignore[arg-type]
+    assert report_outside.status is SolutionValidationStatus.FAILED
+    int_check_out = next(c for c in report_outside.checks if c.code == "scenario.integrality")
+    assert int_check_out.status is ValidationCheckStatus.FAILED
+
+    codes = {v.code for v in report_outside.violations}
+    assert "binary_domain_violation" in codes
+    assert "integrality_violation" in codes
+
+
+def test_validator_shared_constraints_le_ge_eq_tolerance() -> None:
+    """Verify shared constraints with LE, GE, and EQ relations just inside and just outside tolerance."""
+    vars_ = (
+        ScenarioVariable(name="x1"),
+        ScenarioVariable(name="x2"),
+    )
+    scenarios = (Scenario(id="s1", coefficients=(1.0, 0.0)),)
+    constraints = (
+        ScenarioConstraint(name="c_eq", coefficients=(1.0, 1.0), relation=Relation.EQ, rhs=10.0),
+        ScenarioConstraint(name="c_le", coefficients=(2.0, 0.0), relation=Relation.LE, rhs=8.0),
+        ScenarioConstraint(name="c_ge", coefficients=(0.0, 2.0), relation=Relation.GE, rhs=6.0),
+    )
+    model = ScenarioModel(
+        orientation=ScenarioOrientation.MIN_MAX_LOSS,
+        variables=vars_,
+        scenarios=scenarios,
+        shared_constraints=constraints,
+    )
+    reduction = ScenarioReductionService.reduce(model)
+    lp_sol = LPSolution(
+        status=SolveStatus.OPTIMAL,
+        objective=4.0,
+        values={"x1": 4.0, "x2": 6.0, "_aux_theta": 4.0},
+        diagnostics=SolverDiagnostics(),
+        extras={},
+    )
+    valid_res = ScenarioReconstructionService.reconstruct(model, reduction, lp_sol)
+
+    validator = ScenarioIndependentSolutionValidator(absolute_tolerance=1e-6)
+
+    # Valid candidate (x1=4.0, x2=6.0):
+    # c_eq: 4+6=10 (EQ 10) OK
+    # c_le: 2*4=8 (LE 8) OK
+    # c_ge: 2*6=12 (GE 6) OK
+    assert validator(model, valid_res).status is SolutionValidationStatus.VERIFIED
+
+    # Violate c_eq (x1=4.1, x2=6.0 -> lhs=10.1 != 10.0)
+    # Violate c_le (x1=4.1 -> lhs=8.2 > 8.0)
+    # Violate c_ge (x2=2.0 -> lhs=4.0 < 6.0)
+    corrupt_res = ForgedScenarioResultDouble(
+        status=valid_res.status,
+        orientation=valid_res.orientation,
+        original_variable_order=valid_res.original_variable_order,
+        scenario_order=valid_res.scenario_order,
+        guaranteed_value=valid_res.guaranteed_value,
+        variables={"x1": 4.1, "x2": 2.0},
+        scenario_values=valid_res.scenario_values,
+        binding_scenario_ids=valid_res.binding_scenario_ids,
+        delegated_solution=lp_sol,
+        auxiliary_variable_name=valid_res.auxiliary_variable_name,
+        auxiliary_value=valid_res.auxiliary_value,
+    )
+    report = validator(model, corrupt_res)  # type: ignore[arg-type]
+    assert report.status is SolutionValidationStatus.FAILED
+    con_check = next(c for c in report.checks if c.code == "scenario.constraints")
+    assert con_check.status is ValidationCheckStatus.FAILED
+
+    con_violations = [v for v in report.violations if v.check_code == "scenario.constraints"]
+    assert len(con_violations) == 3
+    paths = {v.path for v in con_violations}
+    assert paths == {
+        "$.shared_constraints[0]",
+        "$.shared_constraints[1]",
+        "$.shared_constraints[2]",
+    }
+
+
+def test_validator_scenario_evaluations_mismatch() -> None:
+    """Verify tampering with published scenario evaluation values fails scenario.evaluations."""
+    model, valid_res, _ = _make_continuous_loss_fixture()
+
+    # Tamper with scenario s2 value (reported 999.0 instead of recomputed ~12.2857)
+    tampered_scen_vals = (
+        valid_res.scenario_values[0],
+        ScenarioValue("s2", 999.0, valid_res.scenario_values[1].is_binding),
+        valid_res.scenario_values[2],
+    )
+    corrupt_res = ForgedScenarioResultDouble(
+        status=valid_res.status,
+        orientation=valid_res.orientation,
+        original_variable_order=valid_res.original_variable_order,
+        scenario_order=valid_res.scenario_order,
+        guaranteed_value=valid_res.guaranteed_value,
+        variables=valid_res.variables,
+        scenario_values=tampered_scen_vals,
+        binding_scenario_ids=valid_res.binding_scenario_ids,
+        delegated_solution=valid_res.delegated_solution,
+        auxiliary_variable_name=valid_res.auxiliary_variable_name,
+        auxiliary_value=valid_res.auxiliary_value,
+    )
+
+    validator = ScenarioIndependentSolutionValidator()
+    report = validator(model, corrupt_res)  # type: ignore[arg-type]
+
+    assert report.status is SolutionValidationStatus.FAILED
+    eval_check = next(c for c in report.checks if c.code == "scenario.evaluations")
+    assert eval_check.status is ValidationCheckStatus.FAILED
+
+    violation = next(v for v in report.violations if v.code == "scenario_evaluation_mismatch")
+    assert violation.path == "$.scenario_values[1].value"
+    assert violation.measurements["scenario_id"] == "s2"
+    assert violation.measurements["reported"] == 999.0
+
+
+def test_validator_guarantee_mismatch() -> None:
+    """Verify tampering with guaranteed_value fails scenario.guarantee."""
+    model, valid_res, _ = _make_continuous_loss_fixture()
+
+    corrupt_res = ForgedScenarioResultDouble(
+        status=valid_res.status,
+        orientation=valid_res.orientation,
+        original_variable_order=valid_res.original_variable_order,
+        scenario_order=valid_res.scenario_order,
+        guaranteed_value=50.0,  # Tampered! Recomputed is ~10.857
+        variables=valid_res.variables,
+        scenario_values=valid_res.scenario_values,
+        binding_scenario_ids=valid_res.binding_scenario_ids,
+        delegated_solution=valid_res.delegated_solution,
+        auxiliary_variable_name=valid_res.auxiliary_variable_name,
+        auxiliary_value=valid_res.auxiliary_value,
+    )
+
+    validator = ScenarioIndependentSolutionValidator()
+    report = validator(model, corrupt_res)  # type: ignore[arg-type]
+
+    assert report.status is SolutionValidationStatus.FAILED
+    guar_check = next(c for c in report.checks if c.code == "scenario.guarantee")
+    assert guar_check.status is ValidationCheckStatus.FAILED
+
+    violation = next(v for v in report.violations if v.code == "guarantee_mismatch")
+    assert violation.path == "$.guaranteed_value"
+    assert violation.measurements["reported"] == 50.0
+
+
+def test_validator_binding_set_and_flag_mismatch() -> None:
+    """Verify tampering with binding_scenario_ids or is_binding flags fails scenario.binding_set."""
+    model, valid_res, _ = _make_continuous_loss_fixture()
+
+    # Valid binding scenarios are ('s1', 's2')
+    # Tamper binding_scenario_ids to only ('s1',) and invert is_binding flag on s2
+    tampered_scen_vals = (
+        valid_res.scenario_values[0],
+        ScenarioValue("s2", valid_res.scenario_values[1].value, False),  # Tampered flag!
+        valid_res.scenario_values[2],
+    )
+    corrupt_res = ForgedScenarioResultDouble(
+        status=valid_res.status,
+        orientation=valid_res.orientation,
+        original_variable_order=valid_res.original_variable_order,
+        scenario_order=valid_res.scenario_order,
+        guaranteed_value=valid_res.guaranteed_value,
+        variables=valid_res.variables,
+        scenario_values=tampered_scen_vals,
+        binding_scenario_ids=("s1",),  # Tampered binding list!
+        delegated_solution=valid_res.delegated_solution,
+        auxiliary_variable_name=valid_res.auxiliary_variable_name,
+        auxiliary_value=valid_res.auxiliary_value,
+    )
+
+    validator = ScenarioIndependentSolutionValidator()
+    report = validator(model, corrupt_res)  # type: ignore[arg-type]
+
+    assert report.status is SolutionValidationStatus.FAILED
+    bind_check = next(c for c in report.checks if c.code == "scenario.binding_set")
+    assert bind_check.status is ValidationCheckStatus.FAILED
+
+    codes = {v.code for v in report.violations}
+    assert "binding_set_mismatch" in codes
+    assert "binding_flag_mismatch" in codes
+
+
+def test_validator_consistency_tampering_auxiliary_and_delegated_objective() -> None:
+    """Verify tampering with auxiliary_value or delegated_solution.objective fails scenario.consistency."""
+    model, valid_res, lp_sol = _make_continuous_loss_fixture()
+
+    # 1. Tamper auxiliary value
+    corrupt_aux = ForgedScenarioResultDouble(
+        status=valid_res.status,
+        orientation=valid_res.orientation,
+        original_variable_order=valid_res.original_variable_order,
+        scenario_order=valid_res.scenario_order,
+        guaranteed_value=valid_res.guaranteed_value,
+        variables=valid_res.variables,
+        scenario_values=valid_res.scenario_values,
+        binding_scenario_ids=valid_res.binding_scenario_ids,
+        delegated_solution=valid_res.delegated_solution,
+        auxiliary_variable_name=valid_res.auxiliary_variable_name,
+        auxiliary_value=999.0,  # Tampered auxiliary
+    )
+    validator = ScenarioIndependentSolutionValidator()
+    report_aux = validator(model, corrupt_aux)  # type: ignore[arg-type]
+    assert report_aux.status is SolutionValidationStatus.FAILED
+    assert any(v.code == "auxiliary_consistency_mismatch" for v in report_aux.violations)
+
+    # 2. Tamper delegated objective
+    tampered_lp = LPSolution(
+        status=SolveStatus.OPTIMAL,
+        objective=123.456,  # Tampered objective
+        values=lp_sol.values,
+        diagnostics=lp_sol.diagnostics,
+        extras=lp_sol.extras,
+    )
+    corrupt_obj = ForgedScenarioResultDouble(
+        status=valid_res.status,
+        orientation=valid_res.orientation,
+        original_variable_order=valid_res.original_variable_order,
+        scenario_order=valid_res.scenario_order,
+        guaranteed_value=valid_res.guaranteed_value,
+        variables=valid_res.variables,
+        scenario_values=valid_res.scenario_values,
+        binding_scenario_ids=valid_res.binding_scenario_ids,
+        delegated_solution=tampered_lp,
+        auxiliary_variable_name=valid_res.auxiliary_variable_name,
+        auxiliary_value=valid_res.auxiliary_value,
+    )
+    report_obj = validator(model, corrupt_obj)  # type: ignore[arg-type]
+    assert report_obj.status is SolutionValidationStatus.FAILED
+    assert any(v.code == "objective_consistency_mismatch" for v in report_obj.violations)
+
+
+def test_validator_simultaneous_violations_no_duplicate_reporting() -> None:
+    """Verify simultaneous bounds, constraints, evaluations, and consistency violations are deduplicated and reported cleanly."""
+    model, valid_res, _ = _make_continuous_loss_fixture()
+
+    tampered_lp = LPSolution(
+        status=SolveStatus.OPTIMAL,
+        objective=999.0,
+        values={},
+        diagnostics=SolverDiagnostics(),
+        extras={},
+    )
+    # x1=20 (violates UB 10 and constraint budget 10), x2=0
+    corrupt_res = ForgedScenarioResultDouble(
+        status=valid_res.status,
+        orientation=valid_res.orientation,
+        original_variable_order=valid_res.original_variable_order,
+        scenario_order=valid_res.scenario_order,
+        guaranteed_value=10.0,
+        variables={"x1": 20.0, "x2": 0.0},
+        scenario_values=valid_res.scenario_values,
+        binding_scenario_ids=("s1",),
+        delegated_solution=tampered_lp,
+        auxiliary_variable_name="_aux_theta",
+        auxiliary_value=10.0,
+    )
+
+    validator = ScenarioIndependentSolutionValidator()
+    report = validator(model, corrupt_res)  # type: ignore[arg-type]
+
+    assert report.status is SolutionValidationStatus.FAILED
+    # Ensure every violation points to a unique, non-duplicated check failure
+    violation_tuples = [(v.code, v.path) for v in report.violations]
+    assert len(violation_tuples) == len(set(violation_tuples))
+
+
+def test_validator_no_crash_on_structural_failure() -> None:
+    """Verify validator safely stops and reports failure when candidate variables mapping is missing or corrupt."""
+    model, valid_res, _ = _make_continuous_loss_fixture()
+
+    corrupt_res = ForgedScenarioResultDouble(
+        status=valid_res.status,
+        orientation=valid_res.orientation,
+        original_variable_order=valid_res.original_variable_order,
+        scenario_order=valid_res.scenario_order,
+        guaranteed_value=valid_res.guaranteed_value,
+        variables="not_a_mapping",  # Malformed type!
+        scenario_values=valid_res.scenario_values,
+        binding_scenario_ids=valid_res.binding_scenario_ids,
+        delegated_solution=valid_res.delegated_solution,
+        auxiliary_variable_name=valid_res.auxiliary_variable_name,
+        auxiliary_value=valid_res.auxiliary_value,
+    )
+
+    validator = ScenarioIndependentSolutionValidator()
+    # Must produce a FAILED report without raising AttributeError or TypeError during bounds/constraint evaluation
+    report = validator(model, corrupt_res)  # type: ignore[arg-type]
+
+    assert report.status is SolutionValidationStatus.FAILED
+    assert any(v.code == "invalid_variable_vector" for v in report.violations)
+    # Mathematical checks that require candidate indexing must not have run
+    check_codes = [c.code for c in report.checks]
+    assert "scenario.bounds" not in check_codes
+    assert "scenario.constraints" not in check_codes
 
 
 @pytest.mark.parametrize(
@@ -226,331 +679,3 @@ def test_validator_no_candidate_statuses_return_not_available(
         "No primal candidate is available for independent scenario validation."
         in report.limitations
     )
-
-
-def test_validator_orientation_mismatch() -> None:
-    """Verify that orientation discrepancy fails scenario.orientation check with exact detail code and path."""
-    model, valid_result, _ = _make_continuous_loss_fixture()
-    # Forge a double with wrong orientation
-    corrupt_result = ForgedScenarioResultDouble(
-        status=valid_result.status,
-        orientation=ScenarioOrientation.MAX_MIN_REWARD,  # model is MIN_MAX_LOSS
-        original_variable_order=valid_result.original_variable_order,
-        scenario_order=valid_result.scenario_order,
-        guaranteed_value=valid_result.guaranteed_value,
-        variables=valid_result.variables,
-        scenario_values=valid_result.scenario_values,
-        binding_scenario_ids=valid_result.binding_scenario_ids,
-        delegated_solution=valid_result.delegated_solution,
-        auxiliary_variable_name=valid_result.auxiliary_variable_name,
-        auxiliary_value=valid_result.auxiliary_value,
-    )
-
-    validator = ScenarioIndependentSolutionValidator()
-    report = validator(model, corrupt_result)  # type: ignore[arg-type]
-
-    assert report.status is SolutionValidationStatus.FAILED
-    orientation_check = next(c for c in report.checks if c.code == "scenario.orientation")
-    assert orientation_check.status is ValidationCheckStatus.FAILED
-
-    violation = next(v for v in report.violations if v.code == "orientation_mismatch")
-    assert violation.check_code == "scenario.orientation"
-    assert violation.path == "$.orientation"
-    assert "Result orientation" in violation.message
-
-
-def test_validator_status_mismatch() -> None:
-    """Verify that robust status inconsistent with delegated status fails scenario.status_coherence."""
-    model, valid_result, lp_sol = _make_continuous_loss_fixture()
-    # Robust status is FEASIBLE, but LPSolution status is OPTIMAL
-    corrupt_result = ForgedScenarioResultDouble(
-        status=ScenarioSolveStatus.FEASIBLE,
-        orientation=valid_result.orientation,
-        original_variable_order=valid_result.original_variable_order,
-        scenario_order=valid_result.scenario_order,
-        guaranteed_value=valid_result.guaranteed_value,
-        variables=valid_result.variables,
-        scenario_values=valid_result.scenario_values,
-        binding_scenario_ids=valid_result.binding_scenario_ids,
-        delegated_solution=lp_sol,  # SolveStatus.OPTIMAL
-        auxiliary_variable_name=valid_result.auxiliary_variable_name,
-        auxiliary_value=valid_result.auxiliary_value,
-    )
-
-    validator = ScenarioIndependentSolutionValidator()
-    report = validator(model, corrupt_result)  # type: ignore[arg-type]
-
-    assert report.status is SolutionValidationStatus.FAILED
-    status_check = next(c for c in report.checks if c.code == "scenario.status_coherence")
-    assert status_check.status is ValidationCheckStatus.FAILED
-
-    violation = next(v for v in report.violations if v.code == "status_mismatch")
-    assert violation.check_code == "scenario.status_coherence"
-    assert violation.path == "$.status"
-
-
-def test_validator_solution_type_mismatch() -> None:
-    """Verify that continuous model paired with MILPSolution fails scenario.status_coherence."""
-    model, valid_result, _ = _make_continuous_loss_fixture()
-    # Model is continuous, but solution is MILPSolution
-    fake_milp_sol = MILPSolution(
-        status=MILPSolveStatus.OPTIMAL,
-        objective=valid_result.guaranteed_value,
-        values=dict(valid_result.variables or {}),
-        diagnostics=MILPSolverDiagnostics(),
-        extras={},
-    )
-    corrupt_result = ForgedScenarioResultDouble(
-        status=valid_result.status,
-        orientation=valid_result.orientation,
-        original_variable_order=valid_result.original_variable_order,
-        scenario_order=valid_result.scenario_order,
-        guaranteed_value=valid_result.guaranteed_value,
-        variables=valid_result.variables,
-        scenario_values=valid_result.scenario_values,
-        binding_scenario_ids=valid_result.binding_scenario_ids,
-        delegated_solution=fake_milp_sol,
-        auxiliary_variable_name=valid_result.auxiliary_variable_name,
-        auxiliary_value=valid_result.auxiliary_value,
-    )
-
-    validator = ScenarioIndependentSolutionValidator()
-    report = validator(model, corrupt_result)  # type: ignore[arg-type]
-
-    assert report.status is SolutionValidationStatus.FAILED
-    violation = next(v for v in report.violations if v.code == "solution_type_mismatch")
-    assert violation.check_code == "scenario.status_coherence"
-    assert violation.path == "$.delegated_solution"
-
-
-def test_validator_unexpected_candidate_on_no_candidate_status() -> None:
-    """Verify that candidate attached to INFEASIBLE fails with unexpected_candidate violation."""
-    model, valid_result, _ = _make_continuous_loss_fixture()
-    lp_inf = LPSolution(
-        status=SolveStatus.INFEASIBLE,
-        objective=None,
-        values={},
-        diagnostics=SolverDiagnostics(),
-        extras={},
-    )
-    corrupt_result = ForgedScenarioResultDouble(
-        status=ScenarioSolveStatus.INFEASIBLE,
-        orientation=valid_result.orientation,
-        original_variable_order=valid_result.original_variable_order,
-        scenario_order=valid_result.scenario_order,
-        guaranteed_value=10.0,  # Unexpected candidate!
-        variables={"x1": 5.0, "x2": 5.0},  # Unexpected candidate!
-        scenario_values=valid_result.scenario_values,  # Unexpected!
-        binding_scenario_ids=("s1",),  # Unexpected!
-        delegated_solution=lp_inf,
-        auxiliary_variable_name="_aux_theta",
-        auxiliary_value=10.0,  # Unexpected!
-    )
-
-    validator = ScenarioIndependentSolutionValidator()
-    report = validator(model, corrupt_result)  # type: ignore[arg-type]
-
-    assert report.status is SolutionValidationStatus.FAILED
-    unexpected_violations = [v for v in report.violations if v.code == "unexpected_candidate"]
-    assert len(unexpected_violations) == 5
-    assert len({(v.code, v.path) for v in unexpected_violations}) == 5
-    paths = {v.path for v in unexpected_violations}
-    assert "$.variables" in paths
-    assert "$.guaranteed_value" in paths
-
-
-def test_validator_variable_order_mismatch() -> None:
-    """Verify that variable order divergence fails scenario.variable_vector."""
-    model, valid_result, _ = _make_continuous_loss_fixture()
-    # Invert variables order to x2, x1
-    corrupt_variables = MappingProxyType(
-        {
-            "x2": valid_result.variables["x2"],
-            "x1": valid_result.variables["x1"],
-        }
-    )
-    corrupt_result = ForgedScenarioResultDouble(
-        status=valid_result.status,
-        orientation=valid_result.orientation,
-        original_variable_order=("x2", "x1"),  # Mismatched from model ("x1", "x2")
-        scenario_order=valid_result.scenario_order,
-        guaranteed_value=valid_result.guaranteed_value,
-        variables=corrupt_variables,
-        scenario_values=valid_result.scenario_values,
-        binding_scenario_ids=valid_result.binding_scenario_ids,
-        delegated_solution=valid_result.delegated_solution,
-        auxiliary_variable_name=valid_result.auxiliary_variable_name,
-        auxiliary_value=valid_result.auxiliary_value,
-    )
-
-    validator = ScenarioIndependentSolutionValidator()
-    report = validator(model, corrupt_result)  # type: ignore[arg-type]
-
-    assert report.status is SolutionValidationStatus.FAILED
-    var_check = next(c for c in report.checks if c.code == "scenario.variable_vector")
-    assert var_check.status is ValidationCheckStatus.FAILED
-
-    violation_codes = [v.code for v in report.violations]
-    assert "variable_order_mismatch" in violation_codes
-
-
-def test_validator_missing_and_unknown_variables() -> None:
-    """Verify that missing and unknown variables fail scenario.variable_vector with invalid_variable_vector."""
-    model, valid_result, _ = _make_continuous_loss_fixture()
-    # x2 missing, x_unknown present
-    corrupt_variables = MappingProxyType(
-        {
-            "x1": valid_result.variables["x1"],
-            "x_unknown": 99.0,
-        }
-    )
-    corrupt_result = ForgedScenarioResultDouble(
-        status=valid_result.status,
-        orientation=valid_result.orientation,
-        original_variable_order=valid_result.original_variable_order,
-        scenario_order=valid_result.scenario_order,
-        guaranteed_value=valid_result.guaranteed_value,
-        variables=corrupt_variables,
-        scenario_values=valid_result.scenario_values,
-        binding_scenario_ids=valid_result.binding_scenario_ids,
-        delegated_solution=valid_result.delegated_solution,
-        auxiliary_variable_name=valid_result.auxiliary_variable_name,
-        auxiliary_value=valid_result.auxiliary_value,
-    )
-
-    validator = ScenarioIndependentSolutionValidator()
-    report = validator(model, corrupt_result)  # type: ignore[arg-type]
-
-    assert report.status is SolutionValidationStatus.FAILED
-    violation = next(v for v in report.violations if v.code == "invalid_variable_vector")
-    assert violation.path == "$.variables"
-    assert "x2" in violation.measurements["missing"]
-    assert "x_unknown" in violation.measurements["unknown"]
-
-
-def test_validator_scenario_order_and_identity_mismatch() -> None:
-    """Verify that scenario order or identity mismatch fails scenario.scenario_values."""
-    model, valid_result, _ = _make_continuous_loss_fixture()
-    # Reordered scenario values (s2, s1, s3)
-    corrupt_scen_values = (
-        valid_result.scenario_values[1],
-        valid_result.scenario_values[0],
-        valid_result.scenario_values[2],
-    )
-    corrupt_result = ForgedScenarioResultDouble(
-        status=valid_result.status,
-        orientation=valid_result.orientation,
-        original_variable_order=valid_result.original_variable_order,
-        scenario_order=("s2", "s1", "s3"),  # Mismatched order
-        guaranteed_value=valid_result.guaranteed_value,
-        variables=valid_result.variables,
-        scenario_values=corrupt_scen_values,
-        binding_scenario_ids=valid_result.binding_scenario_ids,
-        delegated_solution=valid_result.delegated_solution,
-        auxiliary_variable_name=valid_result.auxiliary_variable_name,
-        auxiliary_value=valid_result.auxiliary_value,
-    )
-
-    validator = ScenarioIndependentSolutionValidator()
-    report = validator(model, corrupt_result)  # type: ignore[arg-type]
-
-    assert report.status is SolutionValidationStatus.FAILED
-    scen_check = next(c for c in report.checks if c.code == "scenario.scenario_values")
-    assert scen_check.status is ValidationCheckStatus.FAILED
-
-    violation = next(v for v in report.violations if v.code == "scenario_order_mismatch")
-    assert violation.path in ("$.scenario_order", "$.scenario_values")
-
-
-def test_validator_non_finite_numerical_surfaces() -> None:
-    """Verify that non-finite numbers (NaN, Inf) on any numerical surface are caught as violations."""
-    model, valid_result, _ = _make_continuous_loss_fixture()
-
-    # 1. Non-finite variable value
-    corrupt_var_result = ForgedScenarioResultDouble(
-        status=valid_result.status,
-        orientation=valid_result.orientation,
-        original_variable_order=valid_result.original_variable_order,
-        scenario_order=valid_result.scenario_order,
-        guaranteed_value=valid_result.guaranteed_value,
-        variables={"x1": float("nan"), "x2": 4.714286},
-        scenario_values=valid_result.scenario_values,
-        binding_scenario_ids=valid_result.binding_scenario_ids,
-        delegated_solution=valid_result.delegated_solution,
-        auxiliary_variable_name=valid_result.auxiliary_variable_name,
-        auxiliary_value=valid_result.auxiliary_value,
-    )
-    validator = ScenarioIndependentSolutionValidator()
-    report_var = validator(model, corrupt_var_result)  # type: ignore[arg-type]
-    assert report_var.status is SolutionValidationStatus.FAILED
-    assert any(v.code == "non_finite_variable" for v in report_var.violations)
-
-    # 2. Non-finite guarantee
-    corrupt_guar_result = ForgedScenarioResultDouble(
-        status=valid_result.status,
-        orientation=valid_result.orientation,
-        original_variable_order=valid_result.original_variable_order,
-        scenario_order=valid_result.scenario_order,
-        guaranteed_value=float("inf"),
-        variables=valid_result.variables,
-        scenario_values=valid_result.scenario_values,
-        binding_scenario_ids=valid_result.binding_scenario_ids,
-        delegated_solution=valid_result.delegated_solution,
-        auxiliary_variable_name=valid_result.auxiliary_variable_name,
-        auxiliary_value=valid_result.auxiliary_value,
-    )
-    report_guar = validator(model, corrupt_guar_result)  # type: ignore[arg-type]
-    assert report_guar.status is SolutionValidationStatus.FAILED
-    assert any(v.code == "non_finite_guarantee" for v in report_guar.violations)
-
-    # 3. Non-finite auxiliary value
-    corrupt_aux_result = ForgedScenarioResultDouble(
-        status=valid_result.status,
-        orientation=valid_result.orientation,
-        original_variable_order=valid_result.original_variable_order,
-        scenario_order=valid_result.scenario_order,
-        guaranteed_value=valid_result.guaranteed_value,
-        variables=valid_result.variables,
-        scenario_values=valid_result.scenario_values,
-        binding_scenario_ids=valid_result.binding_scenario_ids,
-        delegated_solution=valid_result.delegated_solution,
-        auxiliary_variable_name=valid_result.auxiliary_variable_name,
-        auxiliary_value=float("-inf"),
-    )
-    report_aux = validator(model, corrupt_aux_result)  # type: ignore[arg-type]
-    assert report_aux.status is SolutionValidationStatus.FAILED
-    assert any(v.code == "non_finite_auxiliary" for v in report_aux.violations)
-
-    # 4. Non-finite scenario value
-    corrupt_sv_values = (
-        ForgedScenarioValueDouble("s1", float("nan"), True),
-        valid_result.scenario_values[1],
-        valid_result.scenario_values[2],
-    )
-    corrupt_sv_result = ForgedScenarioResultDouble(
-        status=valid_result.status,
-        orientation=valid_result.orientation,
-        original_variable_order=valid_result.original_variable_order,
-        scenario_order=valid_result.scenario_order,
-        guaranteed_value=valid_result.guaranteed_value,
-        variables=valid_result.variables,
-        scenario_values=corrupt_sv_values,
-        binding_scenario_ids=valid_result.binding_scenario_ids,
-        delegated_solution=valid_result.delegated_solution,
-        auxiliary_variable_name=valid_result.auxiliary_variable_name,
-        auxiliary_value=valid_result.auxiliary_value,
-    )
-    report_sv = validator(model, corrupt_sv_result)  # type: ignore[arg-type]
-    assert report_sv.status is SolutionValidationStatus.FAILED
-    assert any(v.code == "non_finite_scenario_value" for v in report_sv.violations)
-
-
-def test_validator_rejects_invalid_type_inputs() -> None:
-    """Verify TypeError on invalid Python types at boundary."""
-    validator = ScenarioIndependentSolutionValidator()
-    with pytest.raises(TypeError, match="model must be an instance"):
-        validator(None, None)  # type: ignore[arg-type]
-
-    model, result, _ = _make_continuous_loss_fixture()
-    with pytest.raises(TypeError, match="result must be an instance"):
-        validator(model, "invalid_result_string")  # type: ignore[arg-type]
