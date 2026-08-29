@@ -261,7 +261,7 @@ domain-to-application dependency, and rejects mismatched reductions as well as m
 unknown, or tampered candidate/guarantee cases.
 The integrity review also freezes delegated LP/MILP value and diagnostic mappings and rejects
 objective or variable payloads attached to no-candidate solver statuses.
-No solver, validator, codec, transport, or UI capability was introduced. Only after review may `OPT-DS-03C2` begin.
+No solver, validator, codec, transport, or UI capability was introduced. Only after review may `OPT-DS-03C2A` begin.
 
 Completion checklist:
 
@@ -272,17 +272,72 @@ Completion checklist:
 - [x] Explicit empty results for valid no-candidate states.
 - [x] Rejection of candidate data attached to no-candidate states.
 - [x] Focused domain, reconstruction, codec, validator, and use-case regressions.
-- [ ] `OPT-DS-03C2` independent validation implementation.
+- [ ] `OPT-DS-03C2A` structural independent-validation foundation.
 
 ### Micro-gate C2 — Independent Robust Validation (`OPT-DS-03C2`)
 
-After `ROBUST-R` review, add `ScenarioIndependentSolutionValidator` using the
-existing `SolutionValidation`, `ValidationCheck`, and `ValidationViolation`
-contracts. Recompute original vector identity, finiteness, bounds, integrality,
-shared constraints, every scenario value, guarantee, binding set, auxiliary
-consistency, and delegated objective consistency without trusting diagnostics.
-Optimality remains a mathematical status, not a validation claim. Infeasible,
-unbounded, and no-candidate results return honest `not_available`.
+This stage is split into three separately reviewed implementation units. Do not
+combine them. `SolutionValidation`, `ValidationCheck`, `ValidationViolation`,
+the LP/MILP independent validators, and the reviewed `ScenarioResult` are the
+sources of truth. A validator reports mathematical evidence; it does not repair
+or normalize a result and it never claims solver optimality.
+
+#### Micro-gate C2A — Structural Validation Foundation (`OPT-DS-03C2A`)
+
+Add only `ScenarioIndependentSolutionValidator` and structural/status checks.
+Before editing, compare the complete LP and MILP validation shapes, especially
+`verified`, `failed`, `not_available`, check naming, violation paths, tolerance
+reporting, candidate rules, and status handling. Reuse the existing validation
+contracts directly; do not introduce scenario-specific copies.
+
+For a candidate result, independently verify:
+
+- model/result orientation equality;
+- exact `original_variable_order`, `scenario_order`, variable keys, scenario
+  IDs, uniqueness, and ordering;
+- finite guarantee, auxiliary value, decision values, and scenario values;
+- agreement between robust status and delegated LP/MILP status;
+- LP versus MILP solution type agrees with continuous versus discrete model;
+- candidate presence is exactly limited to `optimal` and `feasible`.
+
+For `infeasible`, `unbounded`, and `not_solved`, return honest
+`not_available` using the existing contract, with no passed mathematical checks
+and no fabricated candidate. Malformed candidate/status shapes return a failed
+validation with bounded, stable scenario-specific detail codes rather than an
+exception. Type misuse may still raise `TypeError` at the public Python boundary.
+
+Required tests use real LP/MILP domain solutions and cover valid continuous
+optimal, valid discrete feasible, every no-candidate status, orientation/order/
+identity/status/type mismatch, duplicate or missing identities where a forged
+test double is required, and every non-finite numerical surface. Assert the
+complete validation structure and paths, not only the final status.
+
+Explicit exclusions: no bounds, integrality, shared-constraint, scenario-
+formula, guarantee, binding, auxiliary/objective consistency check; no solver,
+use case, codec, schema, registry, transport, artifact, report, or UI change.
+
+Stop if the existing validation contracts cannot express `not_available` or a
+lossless structural failure without changing a released LP/MILP contract.
+
+**Gate `ROBUST-VS`:** structural and status tampering is reported through the
+existing independent-validation contract without trusting solver diagnostics.
+
+#### Micro-gate C2B — Original-domain Feasibility (`OPT-DS-03C2B`)
+
+After `ROBUST-VS` review, independently recompute variable bounds, integrality
+and every shared constraint from the original `ScenarioModel`. Use the model's
+frozen tolerances and stable per-variable/per-constraint paths. Do not yet
+validate scenario values, guarantee, binding set, auxiliary or objective.
+
+**Gate `ROBUST-VF`:** analytic and tampered candidates prove original-domain
+primal feasibility independently of LP/MILP diagnostics.
+
+#### Micro-gate C2C — Robust Semantic Consistency (`OPT-DS-03C2C`)
+
+After `ROBUST-VF` review, recompute every scenario value, guarantee and binding
+set, then cross-check auxiliary and delegated objective consistency. Preserve
+negative guarantees and multiple ties. Combine all reviewed structural and
+feasibility checks into one deterministic `SolutionValidation`.
 
 **Gate `ROBUST-V`:** analytic and tampered-result tests prove robust semantics
 independently of a concrete solver.

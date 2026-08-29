@@ -144,7 +144,7 @@ with strict consistency checks and deterministic ordering verified.
 - [x] Reject mismatched reductions and malformed candidate payloads.
 - [x] Reject objective or variable payloads for no-candidate statuses.
 - [x] Pass focused reconstruction, codec, validator, and LP/MILP use-case regressions.
-- [ ] Implement independent robust validation in `OPT-DS-03C2`.
+- [ ] Implement structural independent-validation foundation in `OPT-DS-03C2A`.
 
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
 against the identical frozen scenario package.
