@@ -70,7 +70,7 @@ terminology, brokerage behavior, or claims of financial performance.
 | --- | --- | --- |
 | [x] | `OPT-DS-01` — Convex QP Contract Decision | `QP-C` achieved |
 | [x] | `OPT-DS-02` — Convex QP Vertical Slice | `QP-I` and `QP-UI` achieved |
-| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `OPT-DS-03A/B` complete after review; `OPT-DS-03C1` next |
+| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `OPT-DS-03A/B`, `OPT-DS-03C1`, and `OPT-DS-03C2A` complete after review; `OPT-DS-03C2B` next |
 | [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Awaiting Simulator evidence |
 | [ ] | `OPT-DS-05` — Convex MIQP | Not started |
 | [ ] | `OPT-DS-06` — Workflow Registry MVP | Not started |
@@ -148,6 +148,7 @@ with stable detail codes, orientation/order/status/type checks, and honest `not_
 - [x] Reject objective or variable payloads for no-candidate statuses.
 - [x] Pass focused reconstruction, codec, validator, and LP/MILP use-case regressions.
 - [x] Implement structural independent-validation foundation in `OPT-DS-03C2A`.
+- [x] Review malformed no-candidate reporting and prevent duplicate violations.
 - [ ] Implement original-domain primal feasibility in `OPT-DS-03C2B`.
 - [ ] Implement robust semantic consistency in `OPT-DS-03C2C`.
 

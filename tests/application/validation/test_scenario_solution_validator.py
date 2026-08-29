@@ -352,7 +352,8 @@ def test_validator_unexpected_candidate_on_no_candidate_status() -> None:
 
     assert report.status is SolutionValidationStatus.FAILED
     unexpected_violations = [v for v in report.violations if v.code == "unexpected_candidate"]
-    assert len(unexpected_violations) >= 1
+    assert len(unexpected_violations) == 5
+    assert len({(v.code, v.path) for v in unexpected_violations}) == 5
     paths = {v.path for v in unexpected_violations}
     assert "$.variables" in paths
     assert "$.guaranteed_value" in paths

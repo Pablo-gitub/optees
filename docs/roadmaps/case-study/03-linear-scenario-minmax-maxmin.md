@@ -321,8 +321,9 @@ use case, codec, schema, registry, transport, artifact, report, or UI change.
 Stop if the existing validation contracts cannot express `not_available` or a
 lossless structural failure without changing a released LP/MILP contract.
 
-**Gate `ROBUST-VS` (Achieved):** structural and status tampering is reported through the
+**Gate `ROBUST-VS` (Achieved after review correction):** structural and status tampering is reported through the
 existing independent-validation contract (`ScenarioIndependentSolutionValidator`) without trusting solver diagnostics.
+The integrity review also ensures that every malformed no-candidate field produces one stable violation rather than duplicated evidence.
 No bounds, integrality, constraint, or scenario formula evaluation was introduced. Only after review may `OPT-DS-03C2B` begin.
 
 #### Micro-gate C2B — Original-domain Feasibility (`OPT-DS-03C2B`)

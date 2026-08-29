@@ -74,10 +74,6 @@ class ScenarioIndependentSolutionValidator:
             initial_checks = [orientation_check, status_check]
             initial_violations = list(orientation_violations) + list(status_violations)
 
-            # Also verify no candidate payload is attached to no-candidate status
-            candidate_violations = self._validate_no_candidate_payload(result)
-            initial_violations.extend(candidate_violations)
-
             if initial_violations:
                 return self._report(tuple(initial_checks), tuple(initial_violations))
 
