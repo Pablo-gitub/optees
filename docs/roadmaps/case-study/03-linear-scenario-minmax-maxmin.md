@@ -272,7 +272,9 @@ Completion checklist:
 - [x] Explicit empty results for valid no-candidate states.
 - [x] Rejection of candidate data attached to no-candidate states.
 - [x] Focused domain, reconstruction, codec, validator, and use-case regressions.
-- [ ] `OPT-DS-03C2A` structural independent-validation foundation.
+- [x] `OPT-DS-03C2A` structural independent-validation foundation.
+- [ ] `OPT-DS-03C2B` original-domain primal feasibility validation.
+- [ ] `OPT-DS-03C2C` robust semantic consistency validation.
 
 ### Micro-gate C2 — Independent Robust Validation (`OPT-DS-03C2`)
 
@@ -319,8 +321,9 @@ use case, codec, schema, registry, transport, artifact, report, or UI change.
 Stop if the existing validation contracts cannot express `not_available` or a
 lossless structural failure without changing a released LP/MILP contract.
 
-**Gate `ROBUST-VS`:** structural and status tampering is reported through the
-existing independent-validation contract without trusting solver diagnostics.
+**Gate `ROBUST-VS` (Achieved):** structural and status tampering is reported through the
+existing independent-validation contract (`ScenarioIndependentSolutionValidator`) without trusting solver diagnostics.
+No bounds, integrality, constraint, or scenario formula evaluation was introduced. Only after review may `OPT-DS-03C2B` begin.
 
 #### Micro-gate C2B — Original-domain Feasibility (`OPT-DS-03C2B`)
 
@@ -390,5 +393,5 @@ the separately committed UI work.
 
 ## Next implementation boundary
 
-`OPT-DS-03A/B` are complete after review. `OPT-DS-03C1` is the only next
-implementation authorized here. C2–F remain separately reviewed work units.
+`OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C1`, and `OPT-DS-03C2A` are complete after review.
+`OPT-DS-03C2B` is the only next implementation boundary authorized here. C2B–F remain separately reviewed work units.
