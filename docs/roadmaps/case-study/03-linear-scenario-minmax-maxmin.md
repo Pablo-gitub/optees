@@ -3,7 +3,7 @@
 ## Work Unit
 
 - **ID:** `OPT-DS-03`
-- **State:** `OPT-DS-03A` and `OPT-DS-03B` complete after review; `OPT-DS-03C` remains unstarted
+- **State:** `OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C1`, and `OPT-DS-03C2A` complete after review; `OPT-DS-03C2B` is next
 - **Type:** domain-neutral robust-scenario capability delivered through bounded micro-gates
 - **Parent roadmap:** `ROADMAP.md`
 - **Prerequisite:** `QP-I` and `QP-UI` satisfied by `OPT-DS-02`
@@ -273,13 +273,12 @@ Completion checklist:
 - [x] Rejection of candidate data attached to no-candidate states.
 - [x] Focused domain, reconstruction, codec, validator, and use-case regressions.
 - [x] `OPT-DS-03C2A` structural independent-validation foundation.
-- [ ] `OPT-DS-03C2B` original-domain primal feasibility validation.
-- [ ] `OPT-DS-03C2C` robust semantic consistency validation.
+- [ ] `OPT-DS-03C2B` complete original-domain and robust-semantic validation.
 
 ### Micro-gate C2 — Independent Robust Validation (`OPT-DS-03C2`)
 
-This stage is split into three separately reviewed implementation units. Do not
-combine them. `SolutionValidation`, `ValidationCheck`, `ValidationViolation`,
+This stage has one completed structural foundation and one medium mathematical
+validation gate. `SolutionValidation`, `ValidationCheck`, `ValidationViolation`,
 the LP/MILP independent validators, and the reviewed `ScenarioResult` are the
 sources of truth. A validator reports mathematical evidence; it does not repair
 or normalize a result and it never claims solver optimality.
@@ -326,25 +325,50 @@ existing independent-validation contract (`ScenarioIndependentSolutionValidator`
 The integrity review also ensures that every malformed no-candidate field produces one stable violation rather than duplicated evidence.
 No bounds, integrality, constraint, or scenario formula evaluation was introduced. Only after review may `OPT-DS-03C2B` begin.
 
-#### Micro-gate C2B — Original-domain Feasibility (`OPT-DS-03C2B`)
+#### Medium gate C2B — Complete Mathematical Validation (`OPT-DS-03C2B`)
 
-After `ROBUST-VS` review, independently recompute variable bounds, integrality
-and every shared constraint from the original `ScenarioModel`. Use the model's
-frozen tolerances and stable per-variable/per-constraint paths. Do not yet
-validate scenario values, guarantee, binding set, auxiliary or objective.
+Extend the reviewed structural validator into one complete independent robust
+validator. Implement this gate in the following internal order, keeping each
+step green before continuing, but deliver one coherent commit:
 
-**Gate `ROBUST-VF`:** analytic and tampered candidates prove original-domain
-primal feasibility independently of LP/MILP diagnostics.
+1. recompute every original decision-variable bound and integer/binary domain;
+2. recompute every shared constraint from the original `ScenarioModel`;
+3. recompute every scenario value in declared order from original coefficients,
+   offsets, shared objective terms, and the candidate vector;
+4. derive the orientation-specific guarantee and deterministic binding set;
+5. cross-check reported scenario values, guarantee, binding IDs, auxiliary
+   value, and delegated LP/MILP objective.
 
-#### Micro-gate C2C — Robust Semantic Consistency (`OPT-DS-03C2C`)
+Use the model's frozen absolute and relative tolerances consistently through one
+shared comparison helper. Report stable, bounded per-variable, per-constraint,
+and per-scenario paths. Preserve negative guarantees and multiple binding ties.
+Continue evaluating independent checks when safe so one report exposes all
+useful violations; never index missing or malformed candidate data after the
+structural check has failed. Do not consult solver diagnostics, mutate or
+normalize results, invoke a solver, or claim optimality.
 
-After `ROBUST-VF` review, recompute every scenario value, guarantee and binding
-set, then cross-check auxiliary and delegated objective consistency. Preserve
-negative guarantees and multiple ties. Combine all reviewed structural and
-feasibility checks into one deterministic `SolutionValidation`.
+Required tests must cover both orientations and continuous/discrete models,
+lower and upper bound failures, integer and binary violations around tolerance,
+all shared relations, shared objective coefficients and offsets, negative
+guarantees, multiple ties, and independent tampering of scenario values,
+guarantee, binding IDs, auxiliary value, and delegated objective. Include cases
+with simultaneous violations and boundary values just inside and outside the
+frozen tolerance. Assert complete check order, status, detail codes, paths,
+measurements, tolerances, and limitations. Valid no-candidate results must
+remain `not_available`; malformed structural inputs must remain bounded failed
+reports and must not crash later mathematical checks.
 
-**Gate `ROBUST-V`:** analytic and tampered-result tests prove robust semantics
-independently of a concrete solver.
+Explicit exclusions: no solver/use-case orchestration, codec or schema,
+capability registration, composition, transport, artifacts, reports, UI, or
+changes to LP/MILP validation contracts.
+
+Stop if the original model lacks enough information to recompute any published
+quantity, if objective semantics differ between LP and MILP, or if completing a
+check requires trusting diagnostics or changing a released contract.
+
+**Gate `ROBUST-V`:** analytic, tolerance-boundary, and tampered-result tests
+prove original-domain feasibility and robust semantics independently of a
+concrete solver.
 
 ### Micro-gate C3 — Application Orchestration (`OPT-DS-03C3`)
 
@@ -395,4 +419,4 @@ the separately committed UI work.
 ## Next implementation boundary
 
 `OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C1`, and `OPT-DS-03C2A` are complete after review.
-`OPT-DS-03C2B` is the only next implementation boundary authorized here. C2B–F remain separately reviewed work units.
+`OPT-DS-03C2B` is the only next implementation boundary authorized here. C3–F remain separately reviewed work units.

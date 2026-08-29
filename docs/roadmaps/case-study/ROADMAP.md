@@ -149,8 +149,7 @@ with stable detail codes, orientation/order/status/type checks, and honest `not_
 - [x] Pass focused reconstruction, codec, validator, and LP/MILP use-case regressions.
 - [x] Implement structural independent-validation foundation in `OPT-DS-03C2A`.
 - [x] Review malformed no-candidate reporting and prevent duplicate violations.
-- [ ] Implement original-domain primal feasibility in `OPT-DS-03C2B`.
-- [ ] Implement robust semantic consistency in `OPT-DS-03C2C`.
+- [ ] Complete original-domain feasibility and robust-semantic validation in the medium gate `OPT-DS-03C2B`.
 
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
 against the identical frozen scenario package.
