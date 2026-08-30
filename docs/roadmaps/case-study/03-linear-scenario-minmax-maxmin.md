@@ -372,13 +372,53 @@ concrete solver via `ScenarioIndependentSolutionValidator`. The integrity review
 binds scenario classification to the model's frozen binding tolerance and keeps
 malformed guarantee, auxiliary, and binding fields inside a bounded failed report.
 
-### Micro-gate C3 — Application Orchestration (`OPT-DS-03C3`)
+### Medium gate C3 — Application Orchestration (`OPT-DS-03C3`)
 
-After `ROBUST-V` review, add the application use case. Reuse
-`ScenarioReductionService`, `SolveLPUseCase`, and `SolveMILPUseCase` through
-injected application dependencies, then reconstruct and validate exactly once.
-Use deterministic fake solver ports. Do not duplicate LP/MILP mapping or invoke
-concrete adapters.
+After `ROBUST-V` review, add one application use case that owns only the robust
+solve sequence. It receives injected `SolveLPUseCase` and `SolveMILPUseCase`
+dependencies and executes, in order:
+
+1. validate the Python boundary and reduce the original `ScenarioModel` once;
+2. route the reviewed delegated model to exactly one LP or MILP use case;
+3. reconstruct one `ScenarioResult` from the unchanged original model,
+   `ScenarioReductionResult`, and delegated domain solution;
+4. return that domain result without serializing it or invoking a concrete
+   solver adapter.
+
+Independent validation remains the separate
+`ScenarioIndependentSolutionValidator` responsibility. The C3 use case must not
+call it internally: the future `OptimizationService` registration owns the
+single post-serialization validation invocation. Acceptance tests may call the
+validator once after the use case to prove the composed result reaches
+`verified`, but production orchestration must not validate twice.
+
+The use case must preserve all delegated statuses and diagnostics without
+catching or translating them into fabricated robust results. Reduction,
+delegated execution, and reconstruction failures propagate through their
+existing typed boundaries. Cancellation, time limit, feasibility incumbent,
+and solver option semantics remain owned by the existing LP/MILP paths.
+
+Required tests use deterministic recording fake `LPSolverPort` and
+`MILPSolverPort` implementations behind the real LP/MILP use cases. Cover both
+orientations, continuous LP routing, mixed/integer/binary MILP routing, optimal
+and feasible candidates, every no-candidate status, negative guarantees,
+multiple binding ties, shared offsets, exact call count and delegated problem
+shape, diagnostic preservation, dependency exceptions, malformed raw solver
+responses, and reconstruction inconsistency. Assert that the unused solver
+port is never called and that repeated execution does not mutate the model or
+retain state. One acceptance case per route must run the independent validator
+exactly once and obtain the expected report.
+
+Explicit exclusions: no new solver adapter, retry/fallback policy, public codec
+or schema, capability ID or descriptor, registry/composition, CLI, REST, MCP,
+artifact, report, localization, presentation, or UI change. Do not refactor the
+existing LP/MILP use cases unless a demonstrated incompatibility triggers the
+stop condition.
+
+Stop if LP and MILP use cases cannot be injected behind one lossless robust
+orchestration boundary, if delegated status/diagnostic information is lost, if
+the use case would need to know a concrete backend, or if public registration
+must change before the result can be returned.
 
 **Gate `ROBUST-A`:** fake-port tests prove routing, status/diagnostic
 preservation, reconstruction, validation, and failure propagation end to end.

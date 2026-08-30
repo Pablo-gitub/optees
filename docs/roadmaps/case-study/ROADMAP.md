@@ -70,7 +70,7 @@ terminology, brokerage behavior, or claims of financial performance.
 | --- | --- | --- |
 | [x] | `OPT-DS-01` — Convex QP Contract Decision | `QP-C` achieved |
 | [x] | `OPT-DS-02` — Convex QP Vertical Slice | `QP-I` and `QP-UI` achieved |
-| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `OPT-DS-03A/B`, `OPT-DS-03C1`, and `OPT-DS-03C2A` complete after review; `OPT-DS-03C2B` next |
+| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `ROBUST-D/K/R/VS/V` achieved; `OPT-DS-03C3` next |
 | [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Awaiting Simulator evidence |
 | [ ] | `OPT-DS-05` — Convex MIQP | Not started |
 | [ ] | `OPT-DS-06` — Workflow Registry MVP | Not started |
