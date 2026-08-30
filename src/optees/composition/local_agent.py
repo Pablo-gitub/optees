@@ -48,6 +48,11 @@ from optees.application.codecs.lp_problem_codec import lp_model_from_public_dict
 from optees.application.codecs.lp_result_codec import LPResultCodec
 from optees.application.codecs.qp_problem_codec import qp_model_from_public_dict
 from optees.application.codecs.qp_result_codec import QPResultCodec
+from optees.application.codecs.scenario_problem_codec import (
+    scenario_max_min_reward_model_from_public_dict,
+    scenario_min_max_loss_model_from_public_dict,
+)
+from optees.application.codecs.scenario_result_codec import ScenarioResultCodec
 from optees.application.codecs.milp_problem_codec import milp_model_from_public_dict
 from optees.application.codecs.milp_result_codec import MILPResultCodec
 from optees.application.codecs.nlp_problem_codec import nlp_model_from_public_dict
@@ -83,6 +88,8 @@ from optees.application.contracts.capability_ids import (
     LP_CAPABILITY_ID,
     QP_CAPABILITY_ID,
     MILP_CAPABILITY_ID,
+    SCENARIO_MIN_MAX_LOSS_CAPABILITY_ID,
+    SCENARIO_MAX_MIN_REWARD_CAPABILITY_ID,
     NLP_CAPABILITY_ID,
     PACKING_CAPABILITY_ID,
     REGRESSION_CAPABILITY_ID,
@@ -153,6 +160,9 @@ from optees.application.validation.lp_solution_validator import (
 from optees.application.validation.qp_solution_validator import (
     QPIndependentSolutionValidator,
 )
+from optees.application.validation.scenario_solution_validator import (
+    ScenarioIndependentSolutionValidator,
+)
 from optees.application.validation.forecasting_solution_validator import (
     ForecastingIndependentSolutionValidator,
 )
@@ -172,6 +182,9 @@ from optees.application.usecases.solve_knapsack_usecase import SolveKnapsackUseC
 from optees.application.usecases.solve_lp_usecase import SolveLPUseCase
 from optees.application.usecases.solve_qp_usecase import SolveQPUseCase
 from optees.application.usecases.solve_milp_usecase import SolveMILPUseCase
+from optees.application.usecases.solve_scenario_usecase import (
+    SolveScenarioUseCase,
+)
 from optees.application.usecases.solve_multi_dimensional_knapsack_capability_usecase import (
     MultiDimensionalResult,
     SolveMultiDimensionalKnapsackCapabilityUseCase,
@@ -268,9 +281,14 @@ from optees.domain.models.packing.single_container_packing_model import (
     SingleContainerPackingModel,
 )
 from optees.domain.models.regression.regression_model import RegressionModel
+from optees.domain.models.scenario.scenario_model import ScenarioModel
+from optees.domain.models.scenario.scenario_result import ScenarioResult
 from optees.domain.value_objects.forecasting import ForecastingMethod
+
 LP_BACKEND_ID = "scipy.highs"
 QP_BACKEND_ID = "osqp.direct"
+SCENARIO_ROUTER_ID = "optees.linear_scenario_router"
+SCENARIO_BACKEND_IDS = ("scipy.linprog.highs", "ortools.cbc")
 KNAPSACK_ZERO_ONE_BACKEND_ID = "internal.dynamic_programming"
 KNAPSACK_BOUNDED_BACKEND_ID = "internal.bounded_dynamic_programming"
 KNAPSACK_UNBOUNDED_BACKEND_ID = "internal.unbounded_dynamic_programming"
@@ -300,16 +318,34 @@ def create_local_optimization_service() -> OptimizationService:
     """Build the production in-process service without importing presentation code."""
 
     registry = CapabilityRegistry()
+    lp_usable = scipy_highs_is_usable()
+    milp_usable = import_is_usable("ortools")
+    scenario_usable = lp_usable and milp_usable
+
     registry.register(
         create_lp_registration(
             solver_port=LPSolverAdapter(),
-            dependency_available=scipy_highs_is_usable(),
+            dependency_available=lp_usable,
         )
     )
     registry.register(
         create_qp_registration(
             solver_port=OSQPSolverAdapter(),
             dependency_available=import_is_usable("osqp"),
+        )
+    )
+    registry.register(
+        create_scenario_min_max_loss_registration(
+            lp_solver_port=LPSolverAdapter(),
+            milp_solver_port=MILPSolverAdapter(),
+            dependency_available=scenario_usable,
+        )
+    )
+    registry.register(
+        create_scenario_max_min_reward_registration(
+            lp_solver_port=LPSolverAdapter(),
+            milp_solver_port=MILPSolverAdapter(),
+            dependency_available=scenario_usable,
         )
     )
     registry.register(
@@ -344,9 +380,7 @@ def create_local_optimization_service() -> OptimizationService:
             dependency_available=import_is_usable("ortools"),
         )
     )
-    registry.register(
-        create_dijkstra_registration(solver_port=DijkstraSolverAdapter())
-    )
+    registry.register(create_dijkstra_registration(solver_port=DijkstraSolverAdapter()))
     registry.register(
         create_nlp_registration(
             solver_port=ScipyNLPSolverAdapter(),
@@ -470,11 +504,7 @@ def create_local_artifact_service(
             descriptor=definition.descriptor(),
             renderer=PackingSceneRenderer(),
             media_types={
-                format_: (
-                    "image/png"
-                    if format_ is ArtifactFormat.PNG
-                    else "application/zip"
-                )
+                format_: ("image/png" if format_ is ArtifactFormat.PNG else "application/zip")
                 for format_ in definition.formats
             },
         )
@@ -526,8 +556,7 @@ def create_local_report_service(
 
 def _available_artifacts(capability_id: str) -> tuple[AvailableArtifact, ...]:
     tables = tuple(
-        definition.descriptor()
-        for definition in canonical_table_definitions_for(capability_id)
+        definition.descriptor() for definition in canonical_table_definitions_for(capability_id)
     )
     return (
         tables
@@ -602,14 +631,88 @@ def create_qp_registration(
     )
 
 
+def create_scenario_min_max_loss_optimization_service(
+    *,
+    lp_solver_port: LPSolverPort,
+    milp_solver_port: MILPSolverPort,
+    dependency_available: bool = True,
+) -> OptimizationService:
+    registry = CapabilityRegistry()
+    registry.register(
+        create_scenario_min_max_loss_registration(
+            lp_solver_port=lp_solver_port,
+            milp_solver_port=milp_solver_port,
+            dependency_available=dependency_available,
+        )
+    )
+    return OptimizationService(registry)
+
+
+def create_scenario_min_max_loss_registration(
+    *,
+    lp_solver_port: LPSolverPort,
+    milp_solver_port: MILPSolverPort,
+    dependency_available: bool = True,
+) -> RegisteredCapability[ScenarioModel, ScenarioResult]:
+    use_case = SolveScenarioUseCase(
+        solve_lp_usecase=SolveLPUseCase(lp_solver_port),
+        solve_milp_usecase=SolveMILPUseCase(milp_solver_port),
+    )
+    codec = ScenarioResultCodec()
+    return RegisteredCapability(
+        descriptor=_scenario_min_max_loss_descriptor(dependency_available=dependency_available),
+        parse_problem=scenario_min_max_loss_model_from_public_dict,
+        execute=use_case.execute,
+        serialize_result=codec.serialize,
+        backend_id=SCENARIO_ROUTER_ID,
+        validate_domain_result=ScenarioIndependentSolutionValidator(),
+    )
+
+
+def create_scenario_max_min_reward_optimization_service(
+    *,
+    lp_solver_port: LPSolverPort,
+    milp_solver_port: MILPSolverPort,
+    dependency_available: bool = True,
+) -> OptimizationService:
+    registry = CapabilityRegistry()
+    registry.register(
+        create_scenario_max_min_reward_registration(
+            lp_solver_port=lp_solver_port,
+            milp_solver_port=milp_solver_port,
+            dependency_available=dependency_available,
+        )
+    )
+    return OptimizationService(registry)
+
+
+def create_scenario_max_min_reward_registration(
+    *,
+    lp_solver_port: LPSolverPort,
+    milp_solver_port: MILPSolverPort,
+    dependency_available: bool = True,
+) -> RegisteredCapability[ScenarioModel, ScenarioResult]:
+    use_case = SolveScenarioUseCase(
+        solve_lp_usecase=SolveLPUseCase(lp_solver_port),
+        solve_milp_usecase=SolveMILPUseCase(milp_solver_port),
+    )
+    codec = ScenarioResultCodec()
+    return RegisteredCapability(
+        descriptor=_scenario_max_min_reward_descriptor(dependency_available=dependency_available),
+        parse_problem=scenario_max_min_reward_model_from_public_dict,
+        execute=use_case.execute,
+        serialize_result=codec.serialize,
+        backend_id=SCENARIO_ROUTER_ID,
+        validate_domain_result=ScenarioIndependentSolutionValidator(),
+    )
+
+
 def create_knapsack_zero_one_optimization_service(
     *,
     solver_port: KnapsackSolverPort,
 ) -> OptimizationService:
     registry = CapabilityRegistry()
-    registry.register(
-        create_knapsack_zero_one_registration(solver_port=solver_port)
-    )
+    registry.register(create_knapsack_zero_one_registration(solver_port=solver_port))
     return OptimizationService(registry)
 
 
@@ -844,9 +947,7 @@ def create_regression_registration(
     use_case = TrainRegressionUseCase(solver_port)
     codec = RegressionResultCodec()
     return RegisteredCapability(
-        descriptor=_regression_descriptor(
-            dependency_available=dependency_available
-        ),
+        descriptor=_regression_descriptor(dependency_available=dependency_available),
         parse_problem=regression_model_from_public_dict,
         execute=use_case.execute,
         serialize_result=codec.serialize,
@@ -878,9 +979,7 @@ def create_classification_registration(
     use_case = TrainClassificationUseCase(solver_port)
     codec = ClassificationResultCodec()
     return RegisteredCapability(
-        descriptor=_classification_descriptor(
-            dependency_available=dependency_available
-        ),
+        descriptor=_classification_descriptor(dependency_available=dependency_available),
         parse_problem=classification_model_from_public_dict,
         execute=use_case.execute,
         serialize_result=codec.serialize,
@@ -920,9 +1019,7 @@ def create_forecasting_registration(
     )
     codec = ForecastingResultCodec()
     return RegisteredCapability(
-        descriptor=_forecasting_descriptor(
-            dependency_available=dependency_available
-        ),
+        descriptor=_forecasting_descriptor(dependency_available=dependency_available),
         parse_problem=forecasting_model_from_public_dict,
         execute=use_case.execute,
         serialize_result=codec.serialize,
@@ -966,9 +1063,7 @@ def create_packing_registration(
 
 def _qp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
     unavailable_reason = (
-        None
-        if dependency_available
-        else "OSQP is required by the continuous convex QP backend."
+        None if dependency_available else "OSQP is required by the continuous convex QP backend."
     )
     return CapabilityDescriptor(
         capability_id=QP_CAPABILITY_ID,
@@ -1187,11 +1282,232 @@ def _qp_result_schema() -> dict:
     }
 
 
-def _lp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
+def _scenario_min_max_loss_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
     unavailable_reason = (
         None
         if dependency_available
-        else "SciPy is required by the continuous LP backend."
+        else "SciPy (HiGHS) and OR-Tools are required for linear scenario min-max loss optimization."
+    )
+    return CapabilityDescriptor(
+        capability_id=SCENARIO_MIN_MAX_LOSS_CAPABILITY_ID,
+        title="Linear scenario min-max loss optimization",
+        problem_type="linear_scenario",
+        contract_version="1",
+        problem_schema_version="1",
+        result_schema_version="1",
+        input_schema=_scenario_input_schema(orientation="minimize_maximum_loss"),
+        result_schema=_scenario_result_schema(orientation="minimize_maximum_loss"),
+        default_options={"tolerance": 1e-7, "binding_tolerance": 1e-6},
+        available=dependency_available,
+        unavailable_reason=unavailable_reason,
+        backend_candidates=SCENARIO_BACKEND_IDS,
+        supports_time_limit=True,
+        supports_cancellation=False,
+        available_artifacts=_available_artifacts(SCENARIO_MIN_MAX_LOSS_CAPABILITY_ID),
+    )
+
+
+def _scenario_max_min_reward_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
+    unavailable_reason = (
+        None
+        if dependency_available
+        else "SciPy (HiGHS) and OR-Tools are required for linear scenario max-min reward optimization."
+    )
+    return CapabilityDescriptor(
+        capability_id=SCENARIO_MAX_MIN_REWARD_CAPABILITY_ID,
+        title="Linear scenario max-min reward optimization",
+        problem_type="linear_scenario",
+        contract_version="1",
+        problem_schema_version="1",
+        result_schema_version="1",
+        input_schema=_scenario_input_schema(orientation="maximize_minimum_reward"),
+        result_schema=_scenario_result_schema(orientation="maximize_minimum_reward"),
+        default_options={"tolerance": 1e-7, "binding_tolerance": 1e-6},
+        available=dependency_available,
+        unavailable_reason=unavailable_reason,
+        backend_candidates=SCENARIO_BACKEND_IDS,
+        supports_time_limit=True,
+        supports_cancellation=False,
+        available_artifacts=_available_artifacts(SCENARIO_MAX_MIN_REWARD_CAPABILITY_ID),
+    )
+
+
+def _scenario_input_schema(*, orientation: str) -> dict:
+    number_or_null = {"type": ["number", "null"]}
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": False,
+        "required": [
+            "version",
+            "problem_type",
+            "orientation",
+            "variables",
+            "scenarios",
+        ],
+        "properties": {
+            "version": {
+                "const": "1",
+                "description": "Linear scenario problem schema version.",
+            },
+            "problem_type": {
+                "const": "linear_scenario",
+                "description": "Problem family identifier.",
+            },
+            "orientation": {
+                "const": orientation,
+                "description": "Robust scenario optimization orientation.",
+            },
+            "variables": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 500,
+                "description": (
+                    "Decision variables in the order used by every coefficient array. "
+                    "Use null for an unbounded lower or upper bound."
+                ),
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["name"],
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1},
+                        "label": {"type": "string"},
+                        "lower_bound": number_or_null,
+                        "upper_bound": number_or_null,
+                        "integrality": {
+                            "enum": ["C", "I", "B"],
+                            "default": "C",
+                        },
+                    },
+                },
+            },
+            "shared_objective": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "coefficients": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                    },
+                    "offset": {"type": "number", "default": 0.0},
+                },
+            },
+            "scenarios": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 2000,
+                "description": ("Scenarios declaring linear coefficients and constant offset."),
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["id", "coefficients"],
+                    "properties": {
+                        "id": {"type": "string", "minLength": 1},
+                        "label": {"type": "string"},
+                        "coefficients": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 500,
+                            "items": {"type": "number"},
+                        },
+                        "offset": {"type": "number", "default": 0.0},
+                    },
+                },
+            },
+            "shared_constraints": {
+                "type": "array",
+                "maxItems": 1000,
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["coefficients", "relation", "rhs"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "coefficients": {
+                            "type": "array",
+                            "items": {"type": "number"},
+                        },
+                        "relation": {"enum": ["<=", "=", ">="]},
+                        "rhs": {"type": "number"},
+                    },
+                },
+            },
+            "options": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "tolerance": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "default": 1e-7,
+                    },
+                    "binding_tolerance": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                        "default": 1e-6,
+                    },
+                    "time_limit_seconds": {
+                        "type": "number",
+                        "exclusiveMinimum": 0,
+                    },
+                },
+            },
+        },
+    }
+
+
+def _scenario_result_schema(*, orientation: str) -> dict:
+    return {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": False,
+        "required": [
+            "orientation",
+            "guaranteed_value",
+            "variables",
+            "scenario_values",
+            "binding_scenario_ids",
+        ],
+        "properties": {
+            "orientation": {"const": orientation},
+            "guaranteed_value": {"type": ["number", "null"]},
+            "variables": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["name", "value"],
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1},
+                        "value": {"type": "number"},
+                    },
+                },
+            },
+            "scenario_values": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["scenario_id", "value", "is_binding"],
+                    "properties": {
+                        "scenario_id": {"type": "string"},
+                        "value": {"type": "number"},
+                        "is_binding": {"type": "boolean"},
+                    },
+                },
+            },
+            "binding_scenario_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+        },
+    }
+
+
+def _lp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
+    unavailable_reason = (
+        None if dependency_available else "SciPy is required by the continuous LP backend."
     )
     return CapabilityDescriptor(
         capability_id=LP_CAPABILITY_ID,
@@ -1291,9 +1607,7 @@ def _lp_input_schema() -> dict:
                     "coefficients": [30, 40],
                     "offset": 0,
                 },
-                "constraints": [
-                    {"coefficients": [2, 4], "relation": "<=", "rhs": 18}
-                ],
+                "constraints": [{"coefficients": [2, 4], "relation": "<=", "rhs": 18}],
             }
         ],
     }
@@ -1690,9 +2004,7 @@ def _knapsack_multi_dimensional_descriptor() -> CapabilityDescriptor:
         backend_candidates=KNAPSACK_MULTI_DIMENSIONAL_BACKEND_IDS,
         supports_time_limit=False,
         supports_cancellation=False,
-        available_artifacts=_available_artifacts(
-            KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID
-        ),
+        available_artifacts=_available_artifacts(KNAPSACK_MULTI_DIMENSIONAL_CAPABILITY_ID),
     )
 
 
@@ -1712,9 +2024,7 @@ def _knapsack_multi_dimensional_input_schema() -> dict:
             "version": {"const": "1"},
             "problem_type": {"const": "knapsack"},
             "variant": {"const": "multi_dimensional"},
-            "domain": {
-                "enum": ["zero_one", "bounded", "unbounded", "fractional"]
-            },
+            "domain": {"enum": ["zero_one", "bounded", "unbounded", "fractional"]},
             "resources": {
                 "type": "array",
                 "minItems": 1,
@@ -1805,9 +2115,7 @@ def _milp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
         default_options={},
         available=dependency_available,
         unavailable_reason=(
-            None
-            if dependency_available
-            else "OR-Tools is required by the MILP backends."
+            None if dependency_available else "OR-Tools is required by the MILP backends."
         ),
         backend_candidates=MILP_BACKEND_IDS,
         supports_time_limit=True,
@@ -2003,9 +2311,7 @@ def _nlp_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
         },
         available=dependency_available,
         unavailable_reason=(
-            None
-            if dependency_available
-            else "SciPy is required by the continuous NLP backend."
+            None if dependency_available else "SciPy is required by the continuous NLP backend."
         ),
         backend_candidates=(NLP_BACKEND_ID,),
         supports_time_limit=False,
@@ -2155,9 +2461,7 @@ def _forecasting_input_schema() -> dict:
                 ]
             },
             "horizon": {"type": "integer", "minimum": 1, "maximum": 10_000},
-            "method": {
-                "enum": ["naive", "seasonal_naive", "holt_winters_additive"]
-            },
+            "method": {"enum": ["naive", "seasonal_naive", "holt_winters_additive"]},
             "season_length": {"type": ["integer", "null"], "minimum": 2},
             "missing_period_policy": {"const": "reject"},
             "observations": {
@@ -2169,9 +2473,7 @@ def _forecasting_input_schema() -> dict:
                 "type": ["object", "null"],
                 "additionalProperties": False,
                 "properties": {
-                    "strategy": {
-                        "enum": ["none", "holdout", "rolling_origin"]
-                    },
+                    "strategy": {"enum": ["none", "holdout", "rolling_origin"]},
                     "holdout_size": {"type": "integer", "minimum": 1},
                     "origin_count": {"type": "integer", "minimum": 1},
                     "step": {"type": "integer", "minimum": 1},
@@ -2200,8 +2502,7 @@ def _forecasting_result_schema() -> dict:
         "additionalProperties": False,
         "required": ["mae", "rmse", "mape", "mase"],
         "properties": {
-            name: {"type": ["number", "null"]}
-            for name in ("mae", "rmse", "mape", "mase")
+            name: {"type": ["number", "null"]} for name in ("mae", "rmse", "mape", "mase")
         },
     }
     point_schema = {
@@ -2263,9 +2564,7 @@ def _forecasting_result_schema() -> dict:
         ],
         "properties": {
             "forecast_available": {"type": "boolean"},
-            "method": {
-                "enum": ["naive", "seasonal_naive", "holt_winters_additive"]
-            },
+            "method": {"enum": ["naive", "seasonal_naive", "holt_winters_additive"]},
             "origin": {"type": "string", "format": "date-time"},
             "points": {"type": "array", "items": point_schema},
             "metrics": metric_schema,
@@ -2274,9 +2573,7 @@ def _forecasting_result_schema() -> dict:
                 "additionalProperties": False,
                 "required": ["status", "folds"],
                 "properties": {
-                    "status": {
-                        "enum": ["not_requested", "evaluated", "partial", "failed"]
-                    },
+                    "status": {"enum": ["not_requested", "evaluated", "partial", "failed"]},
                     "folds": {"type": "array", "items": fold_schema},
                 },
             },
@@ -2410,9 +2707,7 @@ def _regression_descriptor(*, dependency_available: bool) -> CapabilityDescripto
         },
         available=dependency_available,
         unavailable_reason=(
-            None
-            if dependency_available
-            else "NumPy is required by the regression backend."
+            None if dependency_available else "NumPy is required by the regression backend."
         ),
         backend_candidates=(REGRESSION_BACKEND_ID,),
         supports_time_limit=False,
@@ -2491,9 +2786,7 @@ def _regression_result_schema() -> dict:
     }
 
 
-def _classification_descriptor(
-    *, dependency_available: bool
-) -> CapabilityDescriptor:
+def _classification_descriptor(*, dependency_available: bool) -> CapabilityDescriptor:
     return CapabilityDescriptor(
         capability_id=CLASSIFICATION_CAPABILITY_ID,
         title="Educational binary logistic classification",
@@ -2643,8 +2936,7 @@ def _regression_metrics_schema() -> dict:
         "type": "object",
         "required": ["mae", "mse", "rmse", "r_squared"],
         "properties": {
-            key: {"type": ["number", "null"]}
-            for key in ("mae", "mse", "rmse", "r_squared")
+            key: {"type": ["number", "null"]} for key in ("mae", "mse", "rmse", "r_squared")
         },
     }
 
@@ -2654,8 +2946,7 @@ def _classification_metrics_schema() -> dict:
         "type": "object",
         "required": ["accuracy", "precision", "recall", "f1"],
         "properties": {
-            key: {"type": ["number", "null"]}
-            for key in ("accuracy", "precision", "recall", "f1")
+            key: {"type": ["number", "null"]} for key in ("accuracy", "precision", "recall", "f1")
         },
     }
 
@@ -2670,9 +2961,7 @@ def _confusion_schema() -> dict:
     return {
         "type": "object",
         "required": list(fields),
-        "properties": {
-            key: {"type": "integer", "minimum": 0} for key in fields
-        },
+        "properties": {key: {"type": "integer", "minimum": 0} for key in fields},
     }
 
 
@@ -2834,9 +3123,7 @@ def _packing_result_schema() -> dict:
         "required": ["requested", "recovery"],
         "properties": {
             "requested": _packing_solution_schema(),
-            "recovery": {
-                "oneOf": [_packing_solution_schema(), {"type": "null"}]
-            },
+            "recovery": {"oneOf": [_packing_solution_schema(), {"type": "null"}]},
         },
     }
 

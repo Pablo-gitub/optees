@@ -161,11 +161,13 @@ preservation and failure propagation verified across deterministic fake solver p
 - [x] Complete original-domain feasibility and robust-semantic validation in the medium gate `OPT-DS-03C2B`.
 - [x] Review model-tolerance fidelity and malformed-candidate failure containment.
 - [x] Implement application orchestration and fake-port use case in `OPT-DS-03C3`.
-- [ ] Implement public capability descriptor, codecs, CLI, REST, and MCP in `OPT-DS-03D`.
-  - [ ] Add strict orientation-bound problem and result codecs for both capability IDs.
-  - [ ] Preserve `ROBUST-V` through one backward-compatible domain-result validation hook.
-  - [ ] Register both capabilities over the existing LP/MILP composition.
-  - [ ] Prove discovery, validation and execution parity through service, CLI, REST and MCP.
+- [x] Implement public capability descriptor, codecs, CLI, REST, and MCP in `OPT-DS-03D`.
+  - [x] Add strict orientation-bound problem and result codecs for both capability IDs.
+  - [x] Preserve `ROBUST-V` through one backward-compatible domain-result validation hook.
+  - [x] Register both capabilities over the existing LP/MILP composition.
+  - [x] Prove discovery, validation and execution parity through service, CLI, REST and MCP.
+
+**Gate ROBUST-I:** achieved; discovery, problem validation, execution, independent validation, and normalized results have parity across application service, CLI, REST and MCP.
 
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
 against the identical frozen scenario package.

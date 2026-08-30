@@ -37,9 +37,7 @@ class OptimizationService:
         clock: Callable[[], float] = perf_counter,
     ) -> None:
         self._registry = registry
-        self._job_id_factory = job_id_factory or (
-            lambda: f"job-{uuid4().hex}"
-        )
+        self._job_id_factory = job_id_factory or (lambda: f"job-{uuid4().hex}")
         self._clock = clock
 
     def list_capabilities(self) -> tuple[dict[str, JsonValue], ...]:
@@ -56,18 +54,14 @@ class OptimizationService:
         if registration is None:
             return self._capability_not_found(capability_id, request_id=request_id)
 
-        normalized_payload = self._normalize_payload(
-            capability_id, payload, request_id=request_id
-        )
+        normalized_payload = self._normalize_payload(capability_id, payload, request_id=request_id)
         if isinstance(normalized_payload, StructuredError):
             return normalized_payload
 
         try:
             registration.parse_problem(normalized_payload)
         except (TypeError, ValueError) as exc:
-            return self._validation_error(
-                capability_id, exc, request_id=request_id
-            )
+            return self._validation_error(capability_id, exc, request_id=request_id)
 
         descriptor = registration.descriptor
         warnings = (
@@ -92,9 +86,7 @@ class OptimizationService:
     ) -> ExecutionOutcome:
         registration = self._registry.get(capability_id)
         if registration is None:
-            return self._capability_not_found(
-                capability_id, request_id=request_id
-            )
+            return self._capability_not_found(capability_id, request_id=request_id)
 
         descriptor = registration.descriptor
         if not descriptor.available:
@@ -108,18 +100,14 @@ class OptimizationService:
                 },
             )
 
-        normalized_payload = self._normalize_payload(
-            capability_id, payload, request_id=request_id
-        )
+        normalized_payload = self._normalize_payload(capability_id, payload, request_id=request_id)
         if isinstance(normalized_payload, StructuredError):
             return normalized_payload
 
         try:
             model = registration.parse_problem(normalized_payload)
         except (TypeError, ValueError) as exc:
-            return self._validation_error(
-                capability_id, exc, request_id=request_id
-            )
+            return self._validation_error(capability_id, exc, request_id=request_id)
 
         started_at = self._clock()
         try:
@@ -137,15 +125,20 @@ class OptimizationService:
         diagnostics: dict[str, object] = dict(serialized.diagnostics)
         diagnostics["backend_id"] = registration.backend_id
         diagnostics["elapsed_seconds"] = elapsed_seconds
-        normalized_diagnostics = require_json_value(
-            diagnostics, path="$.diagnostics"
-        )
+        normalized_diagnostics = require_json_value(diagnostics, path="$.diagnostics")
         assert isinstance(normalized_diagnostics, dict)
 
         validation = SolutionValidation.not_available(
             "No independent validator is registered for this capability."
         )
-        if registration.validate_result is not None:
+        if registration.validate_domain_result is not None:
+            try:
+                validation = registration.validate_domain_result(model, domain_result)
+            except Exception:
+                validation = SolutionValidation.not_available(
+                    "The independent validator failed internally."
+                )
+        elif registration.validate_result is not None:
             try:
                 validation = registration.validate_result(model, serialized)
             except Exception:
@@ -186,9 +179,7 @@ class OptimizationService:
         return bool(registration.cancel_execution())
 
     @staticmethod
-    def _capability_not_found(
-        capability_id: str, *, request_id: str | None
-    ) -> StructuredError:
+    def _capability_not_found(capability_id: str, *, request_id: str | None) -> StructuredError:
         return StructuredError(
             code=ErrorCode.CAPABILITY_NOT_FOUND,
             message=f"Capability '{capability_id}' is not registered.",

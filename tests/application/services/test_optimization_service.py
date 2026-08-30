@@ -17,7 +17,10 @@ from optees.application.contracts.solution_validation import (
     SolutionValidationStatus,
 )
 from optees.application.ports.lp_solver_port import LPSolverPort
-from optees.application.services.capability_registry import CapabilityRegistry
+from optees.application.services.capability_registry import (
+    CapabilityRegistry,
+    RegisteredCapability,
+)
 from optees.application.services.optimization_service import OptimizationService
 from optees.composition.local_agent import (
     LP_BACKEND_ID,
@@ -163,9 +166,7 @@ def test_validate_parses_payload_without_executing_solver():
 
 
 def test_validate_reports_valid_payload_even_if_backend_is_unavailable():
-    service = create_lp_optimization_service(
-        solver_port=FakeLPSolver(), dependency_available=False
-    )
+    service = create_lp_optimization_service(solver_port=FakeLPSolver(), dependency_available=False)
 
     outcome = service.validate(LP_CAPABILITY_ID, _valid_payload())
 
@@ -196,9 +197,7 @@ def test_unknown_capability_returns_stable_structured_error():
 
 
 def test_unavailable_dependency_is_visible_in_discovery_and_solve_error():
-    service = create_lp_optimization_service(
-        solver_port=FakeLPSolver(), dependency_available=False
-    )
+    service = create_lp_optimization_service(solver_port=FakeLPSolver(), dependency_available=False)
 
     descriptor = service.list_capabilities()[0]
     outcome = service.solve(LP_CAPABILITY_ID, _valid_payload())
@@ -220,6 +219,58 @@ def test_technical_execution_error_does_not_leak_exception_message():
     assert isinstance(outcome, StructuredError)
     assert outcome.code is ErrorCode.EXECUTION_FAILED
     assert "secret dataset" not in str(outcome.to_dict())
+
+
+def test_domain_validator_failure_preserves_the_solver_result_and_is_not_available():
+    from optees.domain.entities.lp.solution import LPSolution
+    from optees.domain.models.lp.lp_model import LPModel
+
+    registration = create_lp_registration(solver_port=FakeLPSolver())
+    registry = CapabilityRegistry()
+    registry.register(
+        RegisteredCapability[LPModel, LPSolution](
+            descriptor=registration.descriptor,
+            parse_problem=registration.parse_problem,
+            execute=registration.execute,
+            serialize_result=registration.serialize_result,
+            backend_id=registration.backend_id,
+            validate_domain_result=lambda _model, _result: 1 / 0,  # type: ignore[return-value]
+        )
+    )
+    service = OptimizationService(registry, job_id_factory=lambda: "job-test")
+
+    outcome = service.solve(LP_CAPABILITY_ID, _valid_payload())
+
+    assert isinstance(outcome, ExecutionEnvelope)
+    assert outcome.mathematical_status is MathematicalStatus.OPTIMAL
+    assert outcome.result["objective"] == pytest.approx(10.0)
+    assert outcome.validation.status is SolutionValidationStatus.NOT_AVAILABLE
+    assert "failed internally" in outcome.validation.limitations[0]
+
+
+def test_neither_validator_registered_returns_not_available():
+    from optees.domain.entities.lp.solution import LPSolution
+    from optees.domain.models.lp.lp_model import LPModel
+
+    registration = create_lp_registration(solver_port=FakeLPSolver())
+    registry = CapabilityRegistry()
+    registry.register(
+        RegisteredCapability[LPModel, LPSolution](
+            descriptor=registration.descriptor,
+            parse_problem=registration.parse_problem,
+            execute=registration.execute,
+            serialize_result=registration.serialize_result,
+            backend_id=registration.backend_id,
+        )
+    )
+    service = OptimizationService(registry, job_id_factory=lambda: "job-test")
+
+    outcome = service.solve(LP_CAPABILITY_ID, _valid_payload())
+
+    assert isinstance(outcome, ExecutionEnvelope)
+    assert outcome.mathematical_status is MathematicalStatus.OPTIMAL
+    assert outcome.validation.status is SolutionValidationStatus.NOT_AVAILABLE
+    assert "No independent validator is registered" in outcome.validation.limitations[0]
 
 
 def test_validator_failure_preserves_the_solver_result_and_is_not_available():
@@ -247,16 +298,12 @@ def test_validator_failure_preserves_the_solver_result_and_is_not_available():
     reason="SciPy is not installed.",
 )
 def test_production_composition_solves_reference_lp_without_presentation_imports():
-    presentation_before = {
-        name for name in sys.modules if name.startswith("optees.presentation")
-    }
+    presentation_before = {name for name in sys.modules if name.startswith("optees.presentation")}
     service = create_local_optimization_service()
 
     outcome = service.solve(LP_CAPABILITY_ID, _valid_payload())
 
-    presentation_after = {
-        name for name in sys.modules if name.startswith("optees.presentation")
-    }
+    presentation_after = {name for name in sys.modules if name.startswith("optees.presentation")}
     assert isinstance(outcome, ExecutionEnvelope)
     assert outcome.mathematical_status is MathematicalStatus.OPTIMAL
     assert outcome.validation.status is SolutionValidationStatus.VERIFIED

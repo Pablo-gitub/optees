@@ -83,9 +83,7 @@ def test_descriptor_advertises_artifacts_without_affecting_existing_defaults():
     )
 
     assert plain.to_dict()["available_artifacts"] == []
-    assert descriptor.to_dict()["available_artifacts"][0]["artifact_type"] == (
-        "solution_table"
-    )
+    assert descriptor.to_dict()["available_artifacts"][0]["artifact_type"] == ("solution_table")
 
 
 def test_cancellable_descriptor_requires_an_executable_callback():
@@ -109,3 +107,52 @@ def test_cancellable_descriptor_requires_an_executable_callback():
             ),
             backend_id="test.backend",
         )
+
+
+def test_registered_capability_rejects_both_validators():
+    descriptor = CapabilityDescriptor(
+        capability_id="test.dual_validators",
+        title="Dual Validators",
+        problem_type="test",
+        input_schema={},
+        result_schema={},
+    )
+    with pytest.raises(
+        ValueError,
+        match="validate_result and validate_domain_result are mutually exclusive",
+    ):
+        RegisteredCapability(
+            descriptor=descriptor,
+            parse_problem=lambda payload: payload,
+            execute=lambda model: model,
+            serialize_result=lambda result: SerializedResult(
+                mathematical_status=MathematicalStatus.OPTIMAL,
+                result=result,
+            ),
+            backend_id="test.backend",
+            validate_result=lambda _m, _s: None,  # type: ignore[return-value]
+            validate_domain_result=lambda _m, _r: None,  # type: ignore[return-value]
+        )
+
+
+def test_registered_capability_accepts_domain_validator():
+    descriptor = CapabilityDescriptor(
+        capability_id="test.domain_validator",
+        title="Domain Validator",
+        problem_type="test",
+        input_schema={},
+        result_schema={},
+    )
+    reg = RegisteredCapability(
+        descriptor=descriptor,
+        parse_problem=lambda payload: payload,
+        execute=lambda model: model,
+        serialize_result=lambda result: SerializedResult(
+            mathematical_status=MathematicalStatus.OPTIMAL,
+            result=result,
+        ),
+        backend_id="test.backend",
+        validate_domain_result=lambda _m, _r: None,  # type: ignore[return-value]
+    )
+    assert reg.validate_domain_result is not None
+    assert reg.validate_result is None

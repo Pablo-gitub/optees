@@ -75,6 +75,8 @@ def test_list_capabilities_emits_one_versioned_json_document():
         "ml.classification.binary_logistic",
         "ml.forecasting.univariate",
         "packing.single_container_3d",
+        "scenario.linear.min_max_loss",
+        "scenario.linear.max_min_reward",
     }
 
 

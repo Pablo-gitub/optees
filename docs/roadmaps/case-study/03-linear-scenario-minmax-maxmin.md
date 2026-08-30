@@ -3,7 +3,7 @@
 ## Work Unit
 
 - **ID:** `OPT-DS-03`
-- **State:** `OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C1`, and `OPT-DS-03C2A` complete after review; `OPT-DS-03C2B` is next
+- **State:** `OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C`, and `OPT-DS-03D` complete; `OPT-DS-03E` is next
 - **Type:** domain-neutral robust-scenario capability delivered through bounded micro-gates
 - **Parent roadmap:** `ROADMAP.md`
 - **Prerequisite:** `QP-I` and `QP-UI` satisfied by `OPT-DS-02`
@@ -500,7 +500,7 @@ cannot be injected through existing composition, or if the frozen JSON schema
 conflicts with the implemented domain model. Report the exact incompatibility
 without weakening the contract or widening the gate.
 
-**Gate `ROBUST-I`:** discovery, validation, execution and normalized results
+**Gate `ROBUST-I` (Achieved):** discovery, validation, execution, independent validation, and normalized results
 have parity across application service, CLI, REST and MCP.
 
 ## Micro-gate E — Frozen Fixtures And Simulator Handoff (`OPT-DS-03E`)
@@ -527,5 +527,5 @@ the separately committed UI work.
 
 ## Next implementation boundary
 
-`OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C1`, `OPT-DS-03C2`, and `OPT-DS-03C3` are complete after review.
-`OPT-DS-03D` is the next and only authorized implementation boundary. D–F remain separately reviewed work units.
+`OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C`, and `OPT-DS-03D` are complete.
+`OPT-DS-03E` is the next and only authorized implementation boundary. E and F remain separately reviewed work units.

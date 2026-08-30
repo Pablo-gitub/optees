@@ -24,15 +24,16 @@ class RegisteredCapability(Generic[ModelT, ResultT]):
     serialize_result: Callable[[ResultT], SerializedResult]
     backend_id: str
     validate_result: Callable[[ModelT, SerializedResult], SolutionValidation] | None = None
+    validate_domain_result: Callable[[ModelT, ResultT], SolutionValidation] | None = None
     cancel_execution: Callable[[], bool] | None = None
 
     def __post_init__(self) -> None:
         if not self.backend_id.strip():
             raise ValueError("backend_id must not be empty.")
         if self.descriptor.supports_cancellation and self.cancel_execution is None:
-            raise ValueError(
-                "a cancellation callback is required when cancellation is supported"
-            )
+            raise ValueError("a cancellation callback is required when cancellation is supported")
+        if self.validate_result is not None and self.validate_domain_result is not None:
+            raise ValueError("validate_result and validate_domain_result are mutually exclusive.")
 
 
 class CapabilityRegistry:
@@ -52,6 +53,5 @@ class CapabilityRegistry:
 
     def descriptors(self) -> tuple[CapabilityDescriptor, ...]:
         return tuple(
-            registration.descriptor
-            for _, registration in sorted(self._registrations.items())
+            registration.descriptor for _, registration in sorted(self._registrations.items())
         )
