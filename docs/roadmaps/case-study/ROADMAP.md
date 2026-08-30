@@ -143,7 +143,11 @@ with bounds, discrete domain integrality, shared constraints, scenario evaluatio
 deterministic binding set, and auxiliary/objective consistency. Review corrections bind classification to
 the model tolerance and prevent malformed numerical or binding fields from escaping the validation contract.
 
-`ROBUST-V` completion evidence:
+**Gate ROBUST-A:** achieved; application use case (`SolveScenarioUseCase`) orchestrates exact reduction,
+routing to injected `SolveLPUseCase`/`SolveMILPUseCase`, and reconstruction end-to-end with full status/diagnostic
+preservation and failure propagation verified across deterministic fake solver ports.
+
+`ROBUST-A` completion evidence:
 
 - [x] Preserve explicit original-variable and scenario ordering.
 - [x] Keep the robust domain independent from application contracts.
@@ -156,7 +160,8 @@ the model tolerance and prevent malformed numerical or binding fields from escap
 - [x] Review malformed no-candidate reporting and prevent duplicate violations.
 - [x] Complete original-domain feasibility and robust-semantic validation in the medium gate `OPT-DS-03C2B`.
 - [x] Review model-tolerance fidelity and malformed-candidate failure containment.
-- [ ] Implement application orchestration and fake-port use case in `OPT-DS-03C3`.
+- [x] Implement application orchestration and fake-port use case in `OPT-DS-03C3`.
+- [ ] Implement public capability descriptor, codecs, CLI, REST, and MCP in `OPT-DS-03D`.
 
 **Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
 against the identical frozen scenario package.

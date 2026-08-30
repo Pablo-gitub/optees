@@ -274,6 +274,7 @@ Completion checklist:
 - [x] Focused domain, reconstruction, codec, validator, and use-case regressions.
 - [x] `OPT-DS-03C2A` structural independent-validation foundation.
 - [x] `OPT-DS-03C2B` complete original-domain and robust-semantic validation.
+- [x] `OPT-DS-03C3` application orchestration and fake-port use case.
 
 ### Micro-gate C2 — Independent Robust Validation (`OPT-DS-03C2`)
 
@@ -420,11 +421,10 @@ orchestration boundary, if delegated status/diagnostic information is lost, if
 the use case would need to know a concrete backend, or if public registration
 must change before the result can be returned.
 
-**Gate `ROBUST-A`:** fake-port tests prove routing, status/diagnostic
-preservation, reconstruction, validation, and failure propagation end to end.
+**Gate `ROBUST-A` (Achieved):** fake-port tests prove routing, status/diagnostic
+preservation, reconstruction, validation, and failure propagation end to end via `SolveScenarioUseCase`.
 
-The parent `OPT-DS-03C` is complete only when `ROBUST-R`, `ROBUST-V`, and
-`ROBUST-A` are all reviewed.
+The parent `OPT-DS-03C` is complete after review of `ROBUST-R`, `ROBUST-V`, and `ROBUST-A`.
 
 ## Micro-gate D — Public Capability And Delivery (`OPT-DS-03D`)
 
@@ -460,5 +460,5 @@ the separately committed UI work.
 
 ## Next implementation boundary
 
-`OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C1`, `OPT-DS-03C2A`, and `OPT-DS-03C2B` are complete after review.
-`OPT-DS-03C3` is the next and only authorized implementation boundary. C3–F remain separately reviewed work units.
+`OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C1`, `OPT-DS-03C2`, and `OPT-DS-03C3` are complete after review.
+`OPT-DS-03D` is the next and only authorized implementation boundary. D–F remain separately reviewed work units.
