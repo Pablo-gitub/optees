@@ -428,10 +428,77 @@ The parent `OPT-DS-03C` is complete after review of `ROBUST-R`, `ROBUST-V`, and 
 
 ## Micro-gate D — Public Capability And Delivery (`OPT-DS-03D`)
 
-Add strict codecs, descriptor, composition and generic CLI/REST/MCP delivery.
-Unknown fields, non-finite values and version mismatches must fail with stable
-robust-specific detail codes. Concrete execution delegates to the already
-registered LP/MILP backends and preserves their diagnostics and limitations.
+Deliver the two frozen scenario orientations as complete headless public
+capabilities through the existing generic delivery stack. This is one medium
+gate: it may change application contracts only where required to preserve the
+already reviewed independent validation, and it must not begin fixtures or UI.
+
+### Frozen public surface
+
+- Add the two constants already frozen by the contract:
+  `scenario.linear.min_max_loss` and
+  `scenario.linear.max_min_reward`. Each descriptor fixes its orientation and
+  uses problem/result schema version `1`.
+- Add one strict problem decoder parameterized by the expected orientation.
+  It must reject unknown fields, wrong problem/version/orientation tokens,
+  booleans where numbers are required, non-finite values, malformed nested
+  objects, dimension mismatches and invalid domain values with stable
+  scenario-specific paths and detail codes. Preserve declared variable,
+  constraint and scenario ordering; never infer or sign-flip an orientation.
+- Add one result encoder from `ScenarioResult` to the exact inner DTO frozen in
+  section 9.2. Candidate statuses publish ordered variables, scenario values,
+  binding IDs and the guarantee. No-candidate statuses publish `null` guarantee
+  and empty arrays. Delegated auxiliary values and private reconstruction data
+  must not leak into the public result; backend diagnostics remain in the
+  standard envelope.
+- Compose two registrations over one `SolveScenarioUseCase`, reusing the
+  existing injected LP and MILP use cases and their concrete backends. Do not
+  add a solver, fallback, retry, market terminology, artifact or special
+  transport endpoint.
+
+### Validation compatibility boundary
+
+`ScenarioIndependentSolutionValidator` requires the lossless domain result,
+including delegated auxiliary/objective evidence that the frozen public DTO
+deliberately omits. Therefore extend `RegisteredCapability` and
+`OptimizationService` with one backward-compatible optional domain-result
+validation callback. Existing serialized-result validators and registrations
+must remain unchanged. The two callbacks are mutually exclusive; reject a
+registration that declares both. Scenario registrations use the domain-result
+callback exactly once after successful execution and before returning the
+envelope. Internal validator failure remains an honest bounded
+`not_available` report and must not change the mathematical result.
+
+Do not weaken `ROBUST-V`, expose private fields, reconstruct a domain result
+from the lossy public DTO, or run both validators. Focused registry/service
+tests must prove old serialized validation behavior, new domain validation,
+mutual exclusion, exactly-once invocation and failure containment.
+
+### Delivery and verification
+
+Prove for both capability IDs:
+
+- deterministic discovery order and accurate availability/reason metadata;
+- validation accepts its own orientation and rejects the other;
+- application-service execution for continuous LP and discrete MILP routes,
+  including candidate and no-candidate statuses;
+- identical normalized envelope semantics through generic CLI, REST and MCP
+  adapters, using existing adapter test patterns rather than new endpoints;
+- one independent validation report per solve and preservation of delegated
+  status, termination reason, diagnostics and dependency limitations;
+- full regression of registry, optimization service, production composition,
+  LP/MILP capabilities and all non-GUI transport tests affected by registration.
+
+Explicit exclusions: canonical handoff fixtures/hashes (`OPT-DS-03E`), reports,
+artifacts, localization, presentation/UI, simulator code, new solver adapters,
+and unrelated registry refactors.
+
+Stop before improvising if the generic transports cannot expose a registered
+capability without a new endpoint, if lossless `ROBUST-V` validation cannot be
+preserved by the bounded domain callback, if either concrete delegated backend
+cannot be injected through existing composition, or if the frozen JSON schema
+conflicts with the implemented domain model. Report the exact incompatibility
+without weakening the contract or widening the gate.
 
 **Gate `ROBUST-I`:** discovery, validation, execution and normalized results
 have parity across application service, CLI, REST and MCP.
