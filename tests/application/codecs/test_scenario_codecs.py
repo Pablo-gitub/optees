@@ -279,6 +279,34 @@ def test_problem_codec_rejects_invalid_relation_and_options() -> None:
     assert exc_info2.value.path == "$.options.tolerance"
 
 
+@pytest.mark.parametrize(
+    ("mutation", "expected_path"),
+    [
+        (lambda payload: payload["variables"][0].update(label=None), "$.variables[0].label"),
+        (lambda payload: payload["scenarios"][0].update(label=7), "$.scenarios[0].label"),
+        (lambda payload: payload.update(shared_objective=None), "$.shared_objective"),
+        (lambda payload: payload.update(shared_constraints=None), "$.shared_constraints"),
+        (lambda payload: payload.update(options=None), "$.options"),
+        (
+            lambda payload: payload["options"].update(time_limit_seconds=None),
+            "$.options.time_limit_seconds",
+        ),
+    ],
+)
+def test_problem_codec_rejects_values_for_non_nullable_schema_fields(
+    mutation: object, expected_path: str
+) -> None:
+    payload = _valid_loss_payload()
+    assert callable(mutation)
+    mutation(payload)
+
+    with pytest.raises(CodedValidationError) as exc_info:
+        scenario_min_max_loss_model_from_public_dict(payload)
+
+    assert exc_info.value.detail_code == "scenario.invalid_structure"
+    assert exc_info.value.path == expected_path
+
+
 def test_result_codec_optimal_candidate() -> None:
     lp_sol = LPSolution(
         status=SolveStatus.OPTIMAL,

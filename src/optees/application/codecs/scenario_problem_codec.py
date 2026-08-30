@@ -73,6 +73,22 @@ def _parse_optional_number(val: Any, path: str) -> float | None:
     return _parse_number(val, path)
 
 
+def _parse_optional_string(value: Any, path: str, *, default: str = "") -> str:
+    if value is None:
+        raise CodedValidationError(
+            f"Expected string at {path}, got null",
+            detail_code="scenario.invalid_structure",
+            path=path,
+        )
+    if not isinstance(value, str):
+        raise CodedValidationError(
+            f"Expected string at {path}, got {type(value).__name__}",
+            detail_code="scenario.invalid_structure",
+            path=path,
+        )
+    return value if value else default
+
+
 def scenario_model_from_public_dict(
     payload: Mapping[str, Any],
     *,
@@ -212,7 +228,11 @@ def scenario_model_from_public_dict(
             )
         seen_var_names.add(clean_name)
 
-        label = str(raw_var.get("label", ""))
+        label = (
+            _parse_optional_string(raw_var["label"], f"{var_path}.label")
+            if "label" in raw_var
+            else ""
+        )
 
         lb = _parse_optional_number(raw_var.get("lower_bound"), f"{var_path}.lower_bound")
         ub = _parse_optional_number(raw_var.get("upper_bound"), f"{var_path}.upper_bound")
@@ -302,7 +322,11 @@ def scenario_model_from_public_dict(
             )
         seen_scenario_ids.add(clean_id)
 
-        scen_label = str(raw_scen.get("label", ""))
+        scen_label = (
+            _parse_optional_string(raw_scen["label"], f"{scen_path}.label")
+            if "label" in raw_scen
+            else ""
+        )
 
         if "coefficients" not in raw_scen:
             raise CodedValidationError(
@@ -343,13 +367,13 @@ def scenario_model_from_public_dict(
     parsed_shared_objective: ScenarioSharedObjective | None = None
     if "shared_objective" in payload:
         raw_obj = payload["shared_objective"]
-        if raw_obj is not None:
-            if not isinstance(raw_obj, Mapping):
-                raise CodedValidationError(
-                    "shared_objective must be an object",
-                    detail_code="scenario.invalid_structure",
-                    path="$.shared_objective",
-                )
+        if not isinstance(raw_obj, Mapping):
+            raise CodedValidationError(
+                "shared_objective must be an object",
+                detail_code="scenario.invalid_structure",
+                path="$.shared_objective",
+            )
+        else:
             for ok in raw_obj:
                 if ok not in _ALLOWED_SHARED_OBJECTIVE_KEYS:
                     raise CodedValidationError(
@@ -387,15 +411,13 @@ def scenario_model_from_public_dict(
     parsed_constraints: list[ScenarioConstraint] = []
     if "shared_constraints" in payload:
         raw_constraints = payload["shared_constraints"]
-        if raw_constraints is not None:
-            if not isinstance(raw_constraints, Sequence) or isinstance(
-                raw_constraints, (str, bytes)
-            ):
-                raise CodedValidationError(
-                    "shared_constraints must be an array",
-                    detail_code="scenario.invalid_structure",
-                    path="$.shared_constraints",
-                )
+        if not isinstance(raw_constraints, Sequence) or isinstance(raw_constraints, (str, bytes)):
+            raise CodedValidationError(
+                "shared_constraints must be an array",
+                detail_code="scenario.invalid_structure",
+                path="$.shared_constraints",
+            )
+        else:
             if len(raw_constraints) > 1000:
                 raise CodedValidationError(
                     f"shared_constraints count exceeds maximum 1000, got {len(raw_constraints)}",
@@ -436,7 +458,11 @@ def scenario_model_from_public_dict(
                         path=f"{cons_path}.rhs",
                     )
 
-                c_name = str(raw_cons.get("name", f"c{c_idx + 1}"))
+                c_name = (
+                    _parse_optional_string(raw_cons["name"], f"{cons_path}.name")
+                    if "name" in raw_cons
+                    else f"c{c_idx + 1}"
+                )
                 raw_c_coefs = raw_cons["coefficients"]
                 if not isinstance(raw_c_coefs, Sequence) or isinstance(raw_c_coefs, (str, bytes)):
                     raise CodedValidationError(
@@ -480,13 +506,13 @@ def scenario_model_from_public_dict(
     time_limit: float | None = None
     if "options" in payload:
         raw_options = payload["options"]
-        if raw_options is not None:
-            if not isinstance(raw_options, Mapping):
-                raise CodedValidationError(
-                    "options must be an object",
-                    detail_code="scenario.invalid_structure",
-                    path="$.options",
-                )
+        if not isinstance(raw_options, Mapping):
+            raise CodedValidationError(
+                "options must be an object",
+                detail_code="scenario.invalid_structure",
+                path="$.options",
+            )
+        else:
             for opt_key in raw_options:
                 if opt_key not in _ALLOWED_OPTIONS_KEYS:
                     raise CodedValidationError(
@@ -514,11 +540,10 @@ def scenario_model_from_public_dict(
                         path="$.options.binding_tolerance",
                     )
             if "time_limit_seconds" in raw_options:
-                time_limit = _parse_optional_number(
-                    raw_options["time_limit_seconds"],
-                    "$.options.time_limit_seconds",
+                time_limit = _parse_number(
+                    raw_options["time_limit_seconds"], "$.options.time_limit_seconds"
                 )
-                if time_limit is not None and time_limit <= 0:
+                if time_limit <= 0:
                     raise CodedValidationError(
                         f"options.time_limit_seconds must be positive, got {time_limit}",
                         detail_code="scenario.invalid_option",
