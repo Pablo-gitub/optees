@@ -3,7 +3,7 @@
 ## Work Unit
 
 - **ID:** `OPT-DS-03`
-- **State:** `OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C`, and `OPT-DS-03D` complete; `OPT-DS-03E` is next
+- **State:** `OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C`, `OPT-DS-03D`, and `OPT-DS-03E` complete; `OPT-DS-03F` is next
 - **Type:** domain-neutral robust-scenario capability delivered through bounded micro-gates
 - **Parent roadmap:** `ROADMAP.md`
 - **Prerequisite:** `QP-I` and `QP-UI` satisfied by `OPT-DS-02`
@@ -566,8 +566,7 @@ ambiguous, the frozen schema cannot represent a reference case, or a digest
 would depend on its own future commit. Document the limitation; do not loosen
 validation or manufacture evidence.
 
-**Gate `ROBUST-C`:** the Simulator may implement expected-value and worst-case
-policies against the identical frozen scenario package.
+**Gate `ROBUST-C` (Achieved):** the scenario reference fixture bundle, README, and manifest are published with verified SHA-256 hashes, covering both orientations, LP/MILP routes, honest status reporting, and independent validation probes. The Simulator may implement expected-value and worst-case policies against the identical frozen scenario package without runtime dependencies on Optees.
 
 ## Micro-gate F — Desktop Workflow (`OPT-DS-03F`, Claude)
 
@@ -582,5 +581,5 @@ the separately committed UI work.
 
 ## Next implementation boundary
 
-`OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C`, and `OPT-DS-03D` are complete.
-`OPT-DS-03E` is the next and only authorized implementation boundary. E and F remain separately reviewed work units.
+`OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C`, `OPT-DS-03D`, and `OPT-DS-03E` are complete.
+`OPT-DS-03F` (Desktop Workflow, Claude) is the next and only authorized implementation boundary. Only after separate review of `ROBUST-C` may Claude begin UI work.

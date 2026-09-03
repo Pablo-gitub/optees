@@ -1,0 +1,22 @@
+{
+  "aggregate_sha256": "86e2fb631a731a3e87d217339fd5cd443eb91728044b69943e78364e4c7940a5",
+  "capability_ids": [
+    "scenario.linear.max_min_reward",
+    "scenario.linear.min_max_loss"
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "7c649e38fd83423360def0beecf19e946594eecc9d4518ef8ce34c936b3c26b4"
+    },
+    {
+      "path": "reference_cases.json",
+      "sha256": "20c2a57e6d2b6603ecf60c63dcf648441be3cd6881455f9072f6c142ea9dc804"
+    }
+  ],
+  "implementation_baseline_commit": "d6fa7afecca8dae9755741ed37db09308fcdde6c",
+  "manifest_version": "1",
+  "optees_version": "0.10.2",
+  "problem_schema_version": "1",
+  "result_schema_version": "1"
+}

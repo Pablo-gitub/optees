@@ -1,0 +1,790 @@
+{
+  "capability_ids": [
+    "scenario.linear.max_min_reward",
+    "scenario.linear.min_max_loss"
+  ],
+  "cases": [
+    {
+      "analytic_solution": {
+        "binding_scenario_ids": [
+          "s1",
+          "s2"
+        ],
+        "guaranteed_value": 10.857142857142858,
+        "scenario_values": {
+          "s1": 10.857142857142858,
+          "s2": 10.857142857142858,
+          "s3": 6.0
+        },
+        "variables": {
+          "x1": 5.285714285714286,
+          "x2": 4.714285714285714
+        }
+      },
+      "backend_delivery": {
+        "expected_mathematical_status": "optimal",
+        "expected_route": "lp",
+        "expected_router": "optees.linear_scenario_router"
+      },
+      "capability_id": "scenario.linear.min_max_loss",
+      "description": "Continuous min-max loss with negative scenario coefficients and multiple binding scenarios.",
+      "expected_public_result": {
+        "binding_scenario_ids": [
+          "s1",
+          "s2"
+        ],
+        "guaranteed_value": 10.857142857142858,
+        "orientation": "minimize_maximum_loss",
+        "scenario_values": [
+          {
+            "is_binding": true,
+            "scenario_id": "s1",
+            "value": 10.857142857142858
+          },
+          {
+            "is_binding": true,
+            "scenario_id": "s2",
+            "value": 10.857142857142858
+          },
+          {
+            "is_binding": false,
+            "scenario_id": "s3",
+            "value": 6.0
+          }
+        ],
+        "variables": [
+          {
+            "name": "x1",
+            "value": 5.285714285714286
+          },
+          {
+            "name": "x2",
+            "value": 4.714285714285714
+          }
+        ]
+      },
+      "expected_validation": {
+        "status": "verified"
+      },
+      "id": "continuous_min_max_loss_multi_binding",
+      "kind": "analytic_reference_case",
+      "problem": {
+        "options": {
+          "binding_tolerance": 1e-06,
+          "tolerance": 1e-07
+        },
+        "orientation": "minimize_maximum_loss",
+        "problem_type": "linear_scenario",
+        "scenarios": [
+          {
+            "coefficients": [
+              2.0,
+              -1.0
+            ],
+            "id": "s1",
+            "label": "High-demand regime",
+            "offset": 5.0
+          },
+          {
+            "coefficients": [
+              -1.0,
+              3.0
+            ],
+            "id": "s2",
+            "label": "Low-demand regime",
+            "offset": 2.0
+          },
+          {
+            "coefficients": [
+              1.0,
+              1.0
+            ],
+            "id": "s3",
+            "label": "Baseline regime",
+            "offset": -4.0
+          }
+        ],
+        "shared_constraints": [
+          {
+            "coefficients": [
+              1.0,
+              1.0
+            ],
+            "name": "total_budget",
+            "relation": "=",
+            "rhs": 10.0
+          }
+        ],
+        "variables": [
+          {
+            "integrality": "C",
+            "label": "Resource allocation 1",
+            "lower_bound": 0.0,
+            "name": "x1",
+            "upper_bound": null
+          },
+          {
+            "integrality": "C",
+            "label": "Resource allocation 2",
+            "lower_bound": 0.0,
+            "name": "x2",
+            "upper_bound": null
+          }
+        ],
+        "version": "1"
+      }
+    },
+    {
+      "analytic_solution": {
+        "binding_scenario_ids": [
+          "sA",
+          "sB"
+        ],
+        "guaranteed_value": -1.6923076923076923,
+        "scenario_values": {
+          "sA": -1.6923076923076923,
+          "sB": -1.6923076923076923,
+          "sC": 1.0
+        },
+        "variables": {
+          "y1": 3.3846153846153846,
+          "y2": 2.6153846153846154
+        }
+      },
+      "backend_delivery": {
+        "expected_mathematical_status": "optimal",
+        "expected_route": "lp",
+        "expected_router": "optees.linear_scenario_router"
+      },
+      "capability_id": "scenario.linear.max_min_reward",
+      "description": "Continuous max-min reward with strictly negative guarantee and multiple binding scenarios.",
+      "expected_public_result": {
+        "binding_scenario_ids": [
+          "sA",
+          "sB"
+        ],
+        "guaranteed_value": -1.6923076923076923,
+        "orientation": "maximize_minimum_reward",
+        "scenario_values": [
+          {
+            "is_binding": true,
+            "scenario_id": "sA",
+            "value": -1.6923076923076923
+          },
+          {
+            "is_binding": true,
+            "scenario_id": "sB",
+            "value": -1.6923076923076923
+          },
+          {
+            "is_binding": false,
+            "scenario_id": "sC",
+            "value": 1.0
+          }
+        ],
+        "variables": [
+          {
+            "name": "y1",
+            "value": 3.3846153846153846
+          },
+          {
+            "name": "y2",
+            "value": 2.6153846153846154
+          }
+        ]
+      },
+      "expected_validation": {
+        "status": "verified"
+      },
+      "id": "continuous_max_min_reward_negative_guarantee_multi_binding",
+      "kind": "analytic_reference_case",
+      "problem": {
+        "options": {
+          "binding_tolerance": 1e-06,
+          "tolerance": 1e-07
+        },
+        "orientation": "maximize_minimum_reward",
+        "problem_type": "linear_scenario",
+        "scenarios": [
+          {
+            "coefficients": [
+              4.0,
+              -2.0
+            ],
+            "id": "sA",
+            "label": "Adverse scenario A",
+            "offset": -10.0
+          },
+          {
+            "coefficients": [
+              -2.0,
+              5.0
+            ],
+            "id": "sB",
+            "label": "Adverse scenario B",
+            "offset": -8.0
+          },
+          {
+            "coefficients": [
+              1.0,
+              1.0
+            ],
+            "id": "sC",
+            "label": "Moderate scenario C",
+            "offset": -5.0
+          }
+        ],
+        "shared_constraints": [
+          {
+            "coefficients": [
+              1.0,
+              1.0
+            ],
+            "name": "resource_limit",
+            "relation": "<=",
+            "rhs": 6.0
+          }
+        ],
+        "variables": [
+          {
+            "integrality": "C",
+            "label": "Allocation 1",
+            "lower_bound": 0.0,
+            "name": "y1",
+            "upper_bound": 5.0
+          },
+          {
+            "integrality": "C",
+            "label": "Allocation 2",
+            "lower_bound": 0.0,
+            "name": "y2",
+            "upper_bound": 5.0
+          }
+        ],
+        "version": "1"
+      }
+    },
+    {
+      "analytic_solution": {
+        "binding_scenario_ids": [
+          "s1"
+        ],
+        "guaranteed_value": 12.0,
+        "scenario_values": {
+          "s1": 12.0,
+          "s2": 6.0,
+          "s3": 10.0
+        },
+        "variables": {
+          "b1": 1.0,
+          "b2": 0.0,
+          "b3": 0.0
+        }
+      },
+      "backend_delivery": {
+        "expected_mathematical_status": "optimal",
+        "expected_route": "milp",
+        "expected_router": "optees.linear_scenario_router"
+      },
+      "capability_id": "scenario.linear.min_max_loss",
+      "description": "Discrete binary min-max loss routing problem solved via MILP.",
+      "expected_public_result": {
+        "binding_scenario_ids": [
+          "s1"
+        ],
+        "guaranteed_value": 12.0,
+        "orientation": "minimize_maximum_loss",
+        "scenario_values": [
+          {
+            "is_binding": true,
+            "scenario_id": "s1",
+            "value": 12.0
+          },
+          {
+            "is_binding": false,
+            "scenario_id": "s2",
+            "value": 6.0
+          },
+          {
+            "is_binding": false,
+            "scenario_id": "s3",
+            "value": 10.0
+          }
+        ],
+        "variables": [
+          {
+            "name": "b1",
+            "value": 1.0
+          },
+          {
+            "name": "b2",
+            "value": 0.0
+          },
+          {
+            "name": "b3",
+            "value": 0.0
+          }
+        ]
+      },
+      "expected_validation": {
+        "status": "verified"
+      },
+      "id": "discrete_binary_routing_milp",
+      "kind": "analytic_reference_case",
+      "problem": {
+        "options": {
+          "binding_tolerance": 1e-06,
+          "tolerance": 1e-07
+        },
+        "orientation": "minimize_maximum_loss",
+        "problem_type": "linear_scenario",
+        "scenarios": [
+          {
+            "coefficients": [
+              12.0,
+              8.0,
+              15.0
+            ],
+            "id": "s1",
+            "label": "Scenario 1",
+            "offset": 0.0
+          },
+          {
+            "coefficients": [
+              6.0,
+              14.0,
+              7.0
+            ],
+            "id": "s2",
+            "label": "Scenario 2",
+            "offset": 0.0
+          },
+          {
+            "coefficients": [
+              10.0,
+              10.0,
+              10.0
+            ],
+            "id": "s3",
+            "label": "Scenario 3",
+            "offset": 0.0
+          }
+        ],
+        "shared_constraints": [
+          {
+            "coefficients": [
+              1.0,
+              1.0,
+              1.0
+            ],
+            "name": "select_one",
+            "relation": "=",
+            "rhs": 1.0
+          }
+        ],
+        "variables": [
+          {
+            "integrality": "B",
+            "label": "Option 1",
+            "lower_bound": 0.0,
+            "name": "b1",
+            "upper_bound": 1.0
+          },
+          {
+            "integrality": "B",
+            "label": "Option 2",
+            "lower_bound": 0.0,
+            "name": "b2",
+            "upper_bound": 1.0
+          },
+          {
+            "integrality": "B",
+            "label": "Option 3",
+            "lower_bound": 0.0,
+            "name": "b3",
+            "upper_bound": 1.0
+          }
+        ],
+        "version": "1"
+      }
+    },
+    {
+      "analytic_solution": null,
+      "backend_delivery": {
+        "expected_mathematical_status": "infeasible",
+        "expected_route": "lp",
+        "expected_router": "optees.linear_scenario_router"
+      },
+      "capability_id": "scenario.linear.min_max_loss",
+      "description": "Continuous min-max loss with contradictory shared constraints yielding an empty feasible set.",
+      "expected_public_result": {
+        "binding_scenario_ids": [],
+        "guaranteed_value": null,
+        "orientation": "minimize_maximum_loss",
+        "scenario_values": [],
+        "variables": []
+      },
+      "expected_validation": {
+        "reason": "No primal candidate is available for independent scenario validation.",
+        "status": "not_available"
+      },
+      "id": "mathematically_infeasible_problem",
+      "kind": "analytic_reference_case",
+      "problem": {
+        "orientation": "minimize_maximum_loss",
+        "problem_type": "linear_scenario",
+        "scenarios": [
+          {
+            "coefficients": [
+              1.0,
+              0.0
+            ],
+            "id": "s1",
+            "label": "S1",
+            "offset": 0.0
+          },
+          {
+            "coefficients": [
+              0.0,
+              1.0
+            ],
+            "id": "s2",
+            "label": "S2",
+            "offset": 0.0
+          }
+        ],
+        "shared_constraints": [
+          {
+            "coefficients": [
+              1.0,
+              1.0
+            ],
+            "name": "c_ge",
+            "relation": ">=",
+            "rhs": 15.0
+          },
+          {
+            "coefficients": [
+              1.0,
+              1.0
+            ],
+            "name": "c_le",
+            "relation": "<=",
+            "rhs": 5.0
+          }
+        ],
+        "variables": [
+          {
+            "integrality": "C",
+            "label": "X1",
+            "lower_bound": 0.0,
+            "name": "x1",
+            "upper_bound": 10.0
+          },
+          {
+            "integrality": "C",
+            "label": "X2",
+            "lower_bound": 0.0,
+            "name": "x2",
+            "upper_bound": 10.0
+          }
+        ],
+        "version": "1"
+      }
+    },
+    {
+      "analytic_solution": null,
+      "backend_delivery": {
+        "expected_mathematical_status": "unbounded",
+        "expected_route": "lp",
+        "expected_router": "optees.linear_scenario_router"
+      },
+      "capability_id": "scenario.linear.max_min_reward",
+      "description": "Continuous max-min reward with unconstrained variables where minimum reward can increase indefinitely.",
+      "expected_public_result": {
+        "binding_scenario_ids": [],
+        "guaranteed_value": null,
+        "orientation": "maximize_minimum_reward",
+        "scenario_values": [],
+        "variables": []
+      },
+      "expected_validation": {
+        "reason": "No primal candidate is available for independent scenario validation.",
+        "status": "not_available"
+      },
+      "id": "mathematically_unbounded_problem",
+      "kind": "analytic_reference_case",
+      "problem": {
+        "orientation": "maximize_minimum_reward",
+        "problem_type": "linear_scenario",
+        "scenarios": [
+          {
+            "coefficients": [
+              2.0
+            ],
+            "id": "s1",
+            "label": "S1",
+            "offset": 0.0
+          },
+          {
+            "coefficients": [
+              3.0
+            ],
+            "id": "s2",
+            "label": "S2",
+            "offset": 1.0
+          }
+        ],
+        "shared_constraints": [],
+        "variables": [
+          {
+            "integrality": "C",
+            "label": "X1",
+            "lower_bound": 0.0,
+            "name": "x1",
+            "upper_bound": null
+          }
+        ],
+        "version": "1"
+      }
+    },
+    {
+      "capability_id": "scenario.linear.min_max_loss",
+      "delivery_error": {
+        "code": "dependency_unavailable",
+        "message_pattern": "No installed solver backend satisfies required capabilities",
+        "status": "failed"
+      },
+      "description": "Delivery probe demonstrating delivery behavior when backend dependency is unavailable.",
+      "id": "delivery_dependency_unavailable",
+      "kind": "delivery_probe",
+      "problem": {
+        "orientation": "minimize_maximum_loss",
+        "problem_type": "linear_scenario",
+        "scenarios": [
+          {
+            "coefficients": [
+              1.0
+            ],
+            "id": "s1",
+            "offset": 0.0
+          }
+        ],
+        "variables": [
+          {
+            "integrality": "C",
+            "lower_bound": 0.0,
+            "name": "x1",
+            "upper_bound": 1.0
+          }
+        ],
+        "version": "1"
+      }
+    },
+    {
+      "capability_id": "scenario.linear.min_max_loss",
+      "description": "Rejection of problem payload whose orientation does not match the capability orientation.",
+      "expected_error": {
+        "detail_code": "scenario.orientation_mismatch",
+        "path": "$.orientation"
+      },
+      "id": "invalid_problem_orientation_mismatch",
+      "kind": "invalid_problem_probe",
+      "problem": {
+        "orientation": "maximize_minimum_reward",
+        "problem_type": "linear_scenario",
+        "scenarios": [
+          {
+            "coefficients": [
+              1.0
+            ],
+            "id": "s1",
+            "offset": 0.0
+          }
+        ],
+        "variables": [
+          {
+            "integrality": "C",
+            "lower_bound": 0.0,
+            "name": "x1",
+            "upper_bound": 1.0
+          }
+        ],
+        "version": "1"
+      }
+    },
+    {
+      "capability_id": "scenario.linear.min_max_loss",
+      "description": "Rejection of scenario coefficient vector whose length differs from declared variables.",
+      "expected_error": {
+        "detail_code": "scenario.dimension_mismatch",
+        "path": "$.scenarios[0].coefficients"
+      },
+      "id": "invalid_problem_dimension_mismatch",
+      "kind": "invalid_problem_probe",
+      "problem": {
+        "orientation": "minimize_maximum_loss",
+        "problem_type": "linear_scenario",
+        "scenarios": [
+          {
+            "coefficients": [
+              1.0,
+              2.0,
+              3.0
+            ],
+            "id": "s1",
+            "offset": 0.0
+          }
+        ],
+        "variables": [
+          {
+            "integrality": "C",
+            "lower_bound": 0.0,
+            "name": "x1",
+            "upper_bound": 1.0
+          },
+          {
+            "integrality": "C",
+            "lower_bound": 0.0,
+            "name": "x2",
+            "upper_bound": 1.0
+          }
+        ],
+        "version": "1"
+      }
+    },
+    {
+      "base_case_id": "continuous_min_max_loss_multi_binding",
+      "capability_id": "scenario.linear.min_max_loss",
+      "description": "Rejection of non-finite numbers (NaN or Infinity) in problem payload.",
+      "expected_error": {
+        "detail_code": "scenario.non_finite_value",
+        "path": "$.scenarios[0].coefficients[0]"
+      },
+      "id": "invalid_problem_non_finite_input",
+      "kind": "invalid_problem_probe",
+      "mutation": {
+        "path": "$.scenarios[0].coefficients[0]",
+        "target": "problem",
+        "value_type": "nan"
+      }
+    },
+    {
+      "base_case_id": "continuous_min_max_loss_multi_binding",
+      "description": "Tampered candidate variable vector violating shared linear constraints.",
+      "expected_validation": {
+        "primary_violation_check": "scenario.constraints",
+        "primary_violation_code": "constraint_violation",
+        "status": "failed"
+      },
+      "id": "tampered_candidate_variables",
+      "kind": "tampered_validation_probe",
+      "tampering": {
+        "original_value": 5.285714285714286,
+        "path": "$.variables.x1",
+        "tampered_value": 8.0,
+        "target": "variables"
+      }
+    },
+    {
+      "base_case_id": "continuous_min_max_loss_multi_binding",
+      "description": "Tampered reported scenario evaluation differing from recomputed model evaluation.",
+      "expected_validation": {
+        "primary_violation_check": "scenario.evaluations",
+        "primary_violation_code": "scenario_evaluation_mismatch",
+        "status": "failed"
+      },
+      "id": "tampered_scenario_values",
+      "kind": "tampered_validation_probe",
+      "tampering": {
+        "original_value": 10.857142857142858,
+        "path": "$.scenario_values[0].value",
+        "scenario_id": "s1",
+        "tampered_value": 99.0,
+        "target": "scenario_values"
+      }
+    },
+    {
+      "base_case_id": "continuous_min_max_loss_multi_binding",
+      "description": "Tampered reported guaranteed value differing from worst-case scenario evaluation.",
+      "expected_validation": {
+        "primary_violation_check": "scenario.guarantee",
+        "primary_violation_code": "guarantee_mismatch",
+        "status": "failed"
+      },
+      "id": "tampered_guarantee_value",
+      "kind": "tampered_validation_probe",
+      "tampering": {
+        "original_value": 10.857142857142858,
+        "path": "$.guaranteed_value",
+        "tampered_value": 5.0,
+        "target": "guaranteed_value"
+      }
+    },
+    {
+      "base_case_id": "continuous_min_max_loss_multi_binding",
+      "description": "Tampered reported binding scenario set differing from deterministic binding threshold.",
+      "expected_validation": {
+        "primary_violation_check": "scenario.binding_set",
+        "primary_violation_code": "binding_set_mismatch",
+        "status": "failed"
+      },
+      "id": "tampered_binding_scenario_ids",
+      "kind": "tampered_validation_probe",
+      "tampering": {
+        "original_value": [
+          "s1",
+          "s2"
+        ],
+        "path": "$.binding_scenario_ids",
+        "tampered_value": [
+          "s3"
+        ],
+        "target": "binding_scenario_ids"
+      }
+    },
+    {
+      "base_case_id": "continuous_min_max_loss_multi_binding",
+      "description": "Tampered auxiliary variable value inconsistent with recomputed worst-case guarantee.",
+      "expected_validation": {
+        "primary_violation_check": "scenario.consistency",
+        "primary_violation_code": "auxiliary_consistency_mismatch",
+        "status": "failed"
+      },
+      "id": "tampered_auxiliary_value",
+      "kind": "tampered_validation_probe",
+      "tampering": {
+        "original_value": 10.857142857142858,
+        "path": "$.auxiliary_value",
+        "tampered_value": 20.0,
+        "target": "auxiliary_value"
+      }
+    },
+    {
+      "base_case_id": "continuous_min_max_loss_multi_binding",
+      "description": "Tampered delegated solver objective inconsistent with recomputed worst-case guarantee.",
+      "expected_validation": {
+        "primary_violation_check": "scenario.consistency",
+        "primary_violation_code": "objective_consistency_mismatch",
+        "status": "failed"
+      },
+      "id": "tampered_delegated_objective",
+      "kind": "tampered_validation_probe",
+      "tampering": {
+        "original_value": 10.857142857142858,
+        "path": "$.delegated_solution.objective",
+        "tampered_value": 50.0,
+        "target": "delegated_solution.objective"
+      }
+    }
+  ],
+  "description": "Domain-neutral frozen reference fixtures, edge cases, invalid probes, and tampered validation cases for linear scenario min-max and max-min optimization.",
+  "fixture_format_version": "1",
+  "implementation_baseline_commit": "d6fa7afecca8dae9755741ed37db09308fcdde6c",
+  "limitations": {
+    "feasible_incumbent_and_timeout": "Feasible incumbent and timeout statuses depend non-deterministically on processor speed, load, and OS scheduling across heterogeneous test environments and hardware. To avoid fragile or fabricated solver artifacts, Optees does not include machine-dependent timeout golden results; the contract specifies the status mappings should a solver return them, but reference fixtures remain strictly deterministic."
+  },
+  "optees_version": "0.10.2",
+  "problem_schema_version": "1",
+  "result_schema_version": "1"
+}

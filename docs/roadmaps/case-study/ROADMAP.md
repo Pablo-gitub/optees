@@ -171,13 +171,12 @@ preservation and failure propagation verified across deterministic fake solver p
 
 `ROBUST-C` handoff checklist:
 
-- [ ] Publish versioned domain-neutral scenario reference fixtures.
-- [ ] Publish and verify per-file and aggregate canonical SHA-256 hashes.
-- [ ] Cover both orientations, continuous/discrete routes and honest failure/status evidence.
-- [ ] Document Simulator pinning of the exact producer commit, Optees version and copied bytes.
+- [x] Publish versioned domain-neutral scenario reference fixtures.
+- [x] Publish and verify per-file and aggregate canonical SHA-256 hashes.
+- [x] Cover both orientations, continuous/discrete routes and honest failure/status evidence.
+- [x] Document Simulator pinning of the exact producer commit, Optees version and copied bytes.
 
-**Gate ROBUST-C:** the simulator can run expected-value and worst-case policies
-against the identical frozen scenario package.
+**Gate ROBUST-C:** achieved; the scenario reference fixture bundle, README, and manifest are published with verified SHA-256 hashes, covering both orientations, LP/MILP routes, honest status reporting, and independent validation probes. The simulator can run expected-value and worst-case policies against the identical frozen scenario package without runtime dependencies on Optees.
 
 ### OPT-DS-04 — Targeted Forecasting Expansion
 
