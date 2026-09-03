@@ -505,11 +505,66 @@ have parity across application service, CLI, REST and MCP.
 
 ## Micro-gate E — Frozen Fixtures And Simulator Handoff (`OPT-DS-03E`)
 
-Publish domain-neutral versioned fixtures for both orientations, continuous
-and discrete domains, multiple ties, infeasible input, delegated timeout or
-feasible incumbent where supported, dependency failure and tampered results.
-Record canonical SHA-256 hashes and the exact Optees commit/version consumed by
-the Simulator. Run the appropriately broad non-GUI regression gate.
+Publish a bounded, domain-neutral handoff package that the Simulator can copy
+and verify without importing Optees internals. This gate changes no mathematical
+semantics, solver implementation, public schema or transport.
+
+### Fixture package
+
+Create `tests/data/scenario/` with one reviewed JSON bundle and focused tests.
+The bundle has its own fixture-format version and records the two capability
+IDs, problem/result schema version `1`, Optees version, and the implementation
+baseline commit `d6fa7afecca8dae9755741ed37db09308fcdde6c`. Do not put the
+eventual fixture commit hash inside content hashed by that same commit; the
+Simulator records the exact producer commit when it vendors the package.
+
+Include, without trading terminology:
+
+- continuous min-max loss with negative coefficients and multiple binding ties;
+- continuous max-min reward with a negative guarantee and multiple ties;
+- discrete/binary routing through MILP;
+- valid infeasible and valid unbounded mathematical cases;
+- a deterministic feasible-incumbent/time-limit case only if the installed
+  backend exposes it reproducibly; otherwise record that limitation explicitly
+  rather than fabricating a status;
+- dependency-unavailable delivery evidence separated from mathematical input;
+- invalid problem probes for orientation, dimensions and non-finite input;
+- tampered candidate, scenario value, guarantee, binding set, auxiliary value
+  and delegated objective validation probes.
+
+Analytical expectations are authoritative for mathematical values. Concrete
+solver smoke tests may prove delivery, but solver-generated diagnostics,
+elapsed time, job IDs and platform-dependent messages must not enter golden
+hashes. Tolerance-based numeric assertions must not be mislabeled as byte-exact
+universal solver output.
+
+### Canonicalization and handoff manifest
+
+Use one explicit canonical JSON procedure already owned by the public contract
+layer. Record lowercase SHA-256 digests for each source fixture file and for a
+deterministically ordered aggregate manifest. Tests must recompute every digest
+from bytes, reject mutation and missing/extra entries, and prove that every
+valid problem decodes through the production codec and every expected result
+validates through `ScenarioIndependentSolutionValidator`.
+
+Add a short consumer README describing what may be copied, which fields are
+normative, how tolerances apply, and how the Simulator must pin the exact Optees
+producer commit/version and copied byte hashes. Do not add a runtime dependency
+from either repository to the other.
+
+Run focused fixture/codec/validator/composition tests, both real LP and MILP
+smokes where dependencies are available, generic CLI/REST/MCP scenario parity,
+and the broad non-GUI gate permitted by the environment. Report socket,
+packaging or optional-dependency skips honestly.
+
+Explicit exclusions: Simulator policy code, market examples, new solver
+behavior, generated reports/artifacts, UI/localization, packaging/release,
+version bump, tags, and `OPT-DS-03F`.
+
+Stop if a required status cannot be reproduced honestly, canonicalization is
+ambiguous, the frozen schema cannot represent a reference case, or a digest
+would depend on its own future commit. Document the limitation; do not loosen
+validation or manufacture evidence.
 
 **Gate `ROBUST-C`:** the Simulator may implement expected-value and worst-case
 policies against the identical frozen scenario package.
