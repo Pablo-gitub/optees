@@ -12,6 +12,10 @@ from optees.core.theme import theme
 from optees.core.assets import asset
 from optees.core.string_manager import strings as S
 from optees.core.version import get_app_version, is_packaged_app
+from optees.application.contracts.capability_ids import (
+    SCENARIO_MAX_MIN_REWARD_CAPABILITY_ID,
+    SCENARIO_MIN_MAX_LOSS_CAPABILITY_ID,
+)
 
 from optees.presentation.views.home_view import HomePage
 from optees.presentation.views.lp_view.lp_view import LPView
@@ -22,6 +26,8 @@ from optees.presentation.views.nlp_view import NLPView
 from optees.presentation.views.nlp_solution_view import NLPSolutionView
 from optees.presentation.views.qp_view import QPView
 from optees.presentation.views.qp_solution_view import QPSolutionView
+from optees.presentation.views.scenario_view import ScenarioView
+from optees.presentation.views.scenario_solution_view import ScenarioSolutionView
 from optees.presentation.views.graph_view import GraphView
 from optees.presentation.views.graph_solution_view import GraphSolutionView
 from optees.presentation.views.packing_view import PackingView
@@ -95,6 +101,7 @@ from optees.data.adapters.milp.milp_solver_adapter import MILPSolverAdapter
 from optees.data.adapters.nlp.nlp_solver_adapter import ScipyNLPSolverAdapter
 from optees.data.adapters.qp.osqp_solver_adapter import OSQPSolverAdapter
 from optees.composition.backend_health import import_is_usable
+from optees.composition.local_agent import create_local_optimization_service
 from optees.data.adapters.graph.dijkstra_solver_adapter import DijkstraSolverAdapter
 from optees.data.adapters.regression.numpy_regression_adapter import NumpyRegressionAdapter
 from optees.data.adapters.forecasting import (
@@ -176,6 +183,13 @@ class MainWindow(QMainWindow):
         # Stage A codec and validator; the result view only renders them.
         self.qp_result_codec = QPResultCodec()
         self.qp_solution_validator = QPIndependentSolutionValidator()
+
+        # The linear scenario workflow submits through the ordinary registered
+        # capability path, so the desktop reuses the production composition
+        # instead of touching LP/MILP adapters or the reduction service.
+        self.optimization_service = create_local_optimization_service()
+        self.scenario_page = ScenarioView()
+        self.scenario_page.set_optimization_service(self.optimization_service)
 
         self.graph_page = GraphView()
         self.graph_solver_port = DijkstraSolverAdapter()
@@ -278,6 +292,7 @@ class MainWindow(QMainWindow):
         self.knapsack_solution_page = KnapsackSolutionView()
         self.nlp_solution_page = NLPSolutionView()
         self.qp_solution_page = QPSolutionView()
+        self.scenario_solution_page = ScenarioSolutionView()
         self.graph_solution_page = GraphSolutionView()
         self.packing_solution_page = PackingSolutionView()
         self.regression_solution_page = RegressionSolutionView()
@@ -302,6 +317,8 @@ class MainWindow(QMainWindow):
         self.register_page("qp_example", self.qp_example_page)
         self.register_page("qp_problem", self.qp_problem_page)
         self.register_page("qp_solution", self.qp_solution_page)
+        self.register_page("scenario", self.scenario_page)
+        self.register_page("scenario_solution", self.scenario_solution_page)
         self.register_page("graph", self.graph_page)
         self.register_page("graph_example", self.graph_example_page)
         self.register_page("graph_problem", self.graph_problem_page)
@@ -387,6 +404,10 @@ class MainWindow(QMainWindow):
         self.stack.setCurrentWidget(self._pages[name])
         self._update_assistant_bubble_visibility()
 
+    def _goto_scenario(self, capability_id: str) -> None:
+        self.scenario_page.set_capability_id(capability_id)
+        self.goto("scenario")
+
     def _build_assistant_bubble(self) -> None:
         self.assistant_bubble = FloatingAssistantButton(
             asset("icons/assistant.png"),
@@ -450,6 +471,22 @@ class MainWindow(QMainWindow):
         self.act_packing = QAction(S.t("alg.packing"), self)
         self.act_packing.triggered.connect(lambda: self.goto("packing"))
         menu.addAction(self.act_packing)
+
+        menu.addSeparator()
+
+        # The two scenario orientations are separate registered capabilities,
+        # so navigation names them individually rather than as one alias.
+        self.act_scenario_min_max = QAction(S.t("alg.scenario_min_max"), self)
+        self.act_scenario_min_max.triggered.connect(
+            lambda: self._goto_scenario(SCENARIO_MIN_MAX_LOSS_CAPABILITY_ID)
+        )
+        menu.addAction(self.act_scenario_min_max)
+
+        self.act_scenario_max_min = QAction(S.t("alg.scenario_max_min"), self)
+        self.act_scenario_max_min.triggered.connect(
+            lambda: self._goto_scenario(SCENARIO_MAX_MIN_REWARD_CAPABILITY_ID)
+        )
+        menu.addAction(self.act_scenario_max_min)
 
         self.drop.setMenu(menu)
         self.toolbar.addWidget(self.drop)
@@ -522,7 +559,9 @@ class MainWindow(QMainWindow):
                     self.milp_page, self.knap_page, self.nlp_page, self.nlp_example_page,
                     self.nlp_problem_page, self.nlp_solution_page,
                     self.qp_page, self.qp_example_page, self.qp_problem_page,
-                    self.qp_solution_page, self.graph_page,
+                    self.qp_solution_page,
+                    self.scenario_page, self.scenario_solution_page,
+                    self.graph_page,
                     self.graph_example_page, self.graph_problem_page, self.graph_solution_page,
                     self.packing_page, self.packing_example_page, self.packing_problem_page,
                     self.packing_solution_page,
@@ -551,6 +590,8 @@ class MainWindow(QMainWindow):
         self.act_qp.setText(S.t("alg.qp"))
         self.act_graph.setText(S.t("alg.graph"))
         self.act_packing.setText(S.t("alg.packing"))
+        self.act_scenario_min_max.setText(S.t("alg.scenario_min_max"))
+        self.act_scenario_max_min.setText(S.t("alg.scenario_max_min"))
         self.drop_ml.setText(S.t("nav.machine_learning").replace("&", "&&"))
         self.act_regression.setText(S.t("alg.regression"))
         self.act_classification.setText(S.t("alg.classification"))
@@ -568,7 +609,9 @@ class MainWindow(QMainWindow):
                  self.milp_page, self.knap_page, self.nlp_page, self.nlp_example_page,
                  self.nlp_problem_page, self.nlp_solution_page,
                  self.qp_page, self.qp_example_page, self.qp_problem_page,
-                 self.qp_solution_page, self.graph_page,
+                 self.qp_solution_page,
+                 self.scenario_page, self.scenario_solution_page,
+                 self.graph_page,
                  self.graph_example_page, self.graph_problem_page, self.graph_solution_page,
                  self.packing_page, self.packing_example_page, self.packing_problem_page,
                  self.packing_solution_page,

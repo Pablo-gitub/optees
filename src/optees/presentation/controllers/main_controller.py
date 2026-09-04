@@ -12,6 +12,7 @@ from optees.presentation.views.milp_view import MILPView
 from optees.presentation.views.knapsack_view import KnapsackView
 from optees.presentation.views.nlp_view import NLPView
 from optees.presentation.views.qp_view import QPView
+from optees.presentation.views.scenario_view import ScenarioView
 from optees.presentation.views.graph_view import GraphView
 from optees.presentation.views.packing_view import PackingView
 from optees.presentation.views.regression_view import RegressionView
@@ -46,6 +47,8 @@ class MainController(QObject):
             home.go_nlp.connect(lambda: self.window.goto("nlp"))
         if hasattr(home, "go_qp"):
             home.go_qp.connect(lambda: self.window.goto("qp"))
+        if hasattr(home, "go_scenario"):
+            home.go_scenario.connect(lambda: self.window.goto("scenario"))
         if hasattr(home, "go_graph"):
             home.go_graph.connect(lambda: self.window.goto("graph"))
         if hasattr(home, "go_packing"):
@@ -136,6 +139,14 @@ class MainController(QObject):
         qp_solution = self.window.page("qp_solution")
         if hasattr(qp_solution, "back_requested"):
             qp_solution.back_requested.connect(lambda: self.window.goto("qp"))
+
+        # Linear scenario min-max / max-min -> registered capability envelope
+        scenario: ScenarioView = self.window.page("scenario")  # type: ignore[assignment]
+        scenario.solve_completed.connect(self._on_scenario_solved)
+        scenario.solve_rejected.connect(self._on_scenario_rejected)
+        scenario_solution = self.window.page("scenario_solution")
+        if hasattr(scenario_solution, "back_requested"):
+            scenario_solution.back_requested.connect(lambda: self.window.goto("scenario"))
 
         # Graph Theory -> Dijkstra result
         graph: GraphView = self.window.page("graph")  # type: ignore[assignment]
@@ -353,6 +364,29 @@ class MainController(QObject):
         except Exception:
             log.debug("QP independent validation could not be produced", exc_info=True)
             return None
+
+    def _on_scenario_solved(self, envelope) -> None:
+        """Show the execution envelope exactly as the application produced it."""
+        solution_view = self.window.page("scenario_solution")
+        if hasattr(solution_view, "set_envelope"):
+            solution_view.set_envelope(envelope)  # type: ignore[attr-defined]
+        try:
+            log.debug(
+                "Scenario envelope received: job=%s math=%s termination=%s",
+                getattr(envelope, "job_status", None),
+                getattr(envelope, "mathematical_status", None),
+                getattr(envelope, "termination_reason", None),
+            )
+        except Exception:
+            pass
+        self.window.goto("scenario_solution")
+
+    def _on_scenario_rejected(self, error) -> None:
+        """Show a structured rejection instead of a fabricated empty result."""
+        solution_view = self.window.page("scenario_solution")
+        if hasattr(solution_view, "set_error"):
+            solution_view.set_error(error)  # type: ignore[attr-defined]
+        self.window.goto("scenario_solution")
 
     def _on_graph_solved(self, solution) -> None:
         sol_view = self.window.page("graph_solution")

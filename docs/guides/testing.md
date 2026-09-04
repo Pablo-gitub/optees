@@ -82,6 +82,19 @@ metadata-only MCP retrieval.
   independent-validation report, the two-variable contour view and its
   higher-dimensional alternative, accessible names, backend availability, the
   large-model compact editor, and bilingual retranslation.
+- `tests/presentation/test_scenario_view_model.py`,
+  `tests/presentation/test_scenario_flow.py` and
+  `tests/presentation/test_scenario_comparison_widget.py`: linear scenario
+  desktop workflow. They cover public-payload assembly for both orientations,
+  declared ordering, optional shared term and option mapping, asynchronous
+  success, structured validation rejection, infeasible, unbounded and
+  dependency-unavailable outcomes, cancellation and stale-result protection,
+  navigation and toolbar naming of the two capabilities, grid add/remove and
+  rebinding, accessible names and keyboard access, bilingual retranslation, the
+  four separately reported statuses, and a comparison chart preserving negative
+  values, binding ties, declared order and no-candidate states. Mathematical
+  expectations come from the frozen contract's reference examples and are
+  produced by the registered capability rather than recomputed in the tests.
 - `tests/presentation/test_graph_flow_happy.py`: graph Home navigation, manual
   solve flow, imported graph form, highlighted route result, and unreachable
   explanation.

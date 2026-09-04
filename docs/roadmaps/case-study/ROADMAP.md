@@ -70,7 +70,7 @@ terminology, brokerage behavior, or claims of financial performance.
 | --- | --- | --- |
 | [x] | `OPT-DS-01` — Convex QP Contract Decision | `QP-C` achieved |
 | [x] | `OPT-DS-02` — Convex QP Vertical Slice | `QP-I` and `QP-UI` achieved |
-| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `ROBUST-C` achieved; `OPT-DS-03F` UI next |
+| [ ] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `ROBUST-C` achieved; `ROBUST-UI` implemented, pending review |
 | [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Awaiting Simulator evidence |
 | [ ] | `OPT-DS-05` — Convex MIQP | Not started |
 | [ ] | `OPT-DS-06` — Workflow Registry MVP | Not started |
@@ -178,9 +178,12 @@ preservation and failure propagation verified across deterministic fake solver p
 
 **Gate ROBUST-C:** achieved; the scenario reference fixture bundle, README, and manifest are published with verified SHA-256 hashes, covering both orientations, LP/MILP routes, honest status reporting, and independent validation probes. The simulator can run expected-value and worst-case policies against the identical frozen scenario package without runtime dependencies on Optees.
 
-**Next boundary:** `OPT-DS-03F` is assigned exclusively to Claude for the
-bilingual, accessible desktop workflow. Backend mathematical and contract
-surfaces remain frozen during this gate.
+**Gate ROBUST-UI:** implemented and pending review; the separately committed
+PySide6 scenario workflow supports both orientations as distinct semantics,
+reports job, mathematical, termination and validation statuses separately, and
+visualizes scenario values against the guaranteed bound without recomputing any
+mathematical result. Backend mathematical and contract surfaces were not
+changed by this gate.
 
 ### OPT-DS-04 — Targeted Forecasting Expansion
 

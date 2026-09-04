@@ -50,6 +50,10 @@
     "qp": {
       "title": "Convex Quadratic Programming (QP)",
       "subtitle": "Use this method when the objective is quadratic and convex, such as minimizing risk, squared error, or deviation from a target, under linear constraints."
+    },
+"scenario": {
+      "title": "Linear Scenario Optimization",
+      "subtitle": "Use this method when one decision must hold up across several explicitly listed scenarios, either capping the worst loss or guaranteeing the worst reward."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -68,6 +72,8 @@
     "knap": "0/1 Knapsack",
     "nlp": "Nonlinear Programming (NLP)",
     "qp": "Convex Quadratic (QP)",
+    "scenario_min_max": "Scenario: minimize maximum loss",
+    "scenario_max_min": "Scenario: maximize minimum reward",
     "graph": "Shortest Path (Dijkstra)",
     "packing": "3D Packing & Loading",
     "regression": "Linear Regression",
@@ -258,6 +264,13 @@
       "constraints": "Check the linear constraints. Every row needs one finite coefficient per declared variable, a relation, and a finite right-hand side.",
       "options": "Check the solver options: tolerance, iteration limit, and time limit must be finite numbers inside their allowed range.",
       "model": "Check variable names, the objective, the constraints, and the solver options before solving."
+    },
+    "scenario": {
+      "variables": "Check the decision variables: every row needs a unique non-empty name, and each bound must be a finite number or left blank.",
+      "scenarios": "Check the scenarios: every row needs a unique non-empty identifier, one finite coefficient per declared variable, and a finite constant.",
+      "constraints": "Check the shared constraints: every row needs one finite coefficient per declared variable, a relation, and a finite right-hand side.",
+      "options": "Check the solver options: tolerances and the time limit must be finite positive numbers, or left blank to use the default.",
+      "model": "Check the variables, scenarios, shared terms and options before submitting the problem."
     },
     "assistant": {
       "generated_model": "The generated draft is not valid for the selected formulation. Review the recommendation and enter or import the model manually."
@@ -1392,6 +1405,274 @@
         "button": "Export problem JSON",
         "dialog_title": "Save QP problem",
         "default_name": "qp_problem.json"
+      }
+    }
+  },
+  "scenario": {
+    "header": {
+      "title": "Linear Scenario Optimization",
+      "section": "Problem setup",
+      "description": "Decide once, then be judged by the worst of several explicitly listed scenarios. Each scenario evaluates the same decision variables with its own linear coefficients and constant. Choose below whether the worst case is a loss you want to cap or a reward you want to floor — the two are different questions, not two spellings of one."
+    },
+    "dependency": {
+      "unavailable": "This capability is unavailable in this installation, so nothing can be solved here. Reported reason: {reason}"
+    },
+    "intro": {
+      "info_tooltip": "What this workflow decides",
+      "info_title": "Deciding under listed scenarios",
+      "info_body": "A finite, ordered list of scenarios replaces a single forecast. Optees does not weight them by probability: it optimizes the worst one, so the answer carries a guarantee that holds across every scenario you listed.",
+      "info_html": "<h3>The shape of the problem</h3><p>You declare decision variables once. Every scenario then scores those same variables with its own coefficients <code>c<sup>(k)</sup></code> and constant <code>γ<sub>k</sub></code>, giving a value <code>v<sub>k</sub>(x)</code> per scenario.</p><h3>What is optimized</h3><p>Not the average. The <em>worst</em> scenario. That is what makes the reported bound a guarantee: every listed scenario is at least as good as it.</p><h3>What Optees does not assume</h3><p>No probabilities, no likelihoods, no ranking of scenarios by plausibility. A scenario you list is a scenario that counts, fully. Excluding an implausible case is your modelling decision, taken before you get here.</p>"
+    },
+    "orientation": {
+      "section": "Worst-case orientation",
+      "hint": "Pick the semantics that matches your quantity. This choice selects a different registered capability, not a sign flip.",
+      "min_max_loss": "Minimize the maximum loss",
+      "min_max_loss_description": "Scenario values are losses, costs or penalties: lower is better. Optees finds the decision whose worst scenario loss is as small as possible, and reports that worst loss as the guarantee. No listed scenario can cost more than it.",
+      "max_min_reward": "Maximize the minimum reward",
+      "max_min_reward_description": "Scenario values are rewards, payoffs or gains: higher is better. Optees finds the decision whose worst scenario reward is as large as possible, and reports that worst reward as the guarantee. No listed scenario can pay less than it.",
+      "capability": "Registered capability: {capability}",
+      "info_tooltip": "Why these are two capabilities",
+      "info_title": "Loss and reward are not the same problem",
+      "info_body": "The two orientations have separate capability identifiers and separate result semantics. Optees never converts one into the other behind your back, because the sign of a coefficient means opposite things in each.",
+      "info_html": "<h3>The same number, two meanings</h3><p>Under <b>minimize maximum loss</b>, a positive coefficient means that raising that variable makes things <em>worse</em>. Under <b>maximize minimum reward</b>, the same positive coefficient means it makes things <em>better</em>.</p><h3>The binding set flips too</h3><p>For loss, the binding scenarios are the ones reaching the <em>highest</em> value. For reward, they are the ones reaching the <em>lowest</em>. An engine that silently negated coefficients would report exactly the wrong scenarios as the ones holding you back.</p><h3>So they stay separate</h3><p>Algebraically one can be rewritten as the other. Optees still exposes both as first-class capabilities, because asking a person to negate every coefficient, constant and output by hand is where formulation errors come from.</p>"
+    },
+    "variables": {
+      "section": "Decision variables",
+      "hint": "Variables are ordered: their position fixes the column used by every scenario, constraint and shared term below. Leave a bound blank for no limit.",
+      "columns": {
+        "name": "Variable",
+        "label": "Description",
+        "lower": "Lower bound",
+        "upper": "Upper bound",
+        "integrality": "Domain"
+      },
+      "integrality": {
+        "C": "Continuous",
+        "I": "Integer",
+        "B": "Binary"
+      },
+      "add": "Add variable",
+      "remove": "Remove variable"
+    },
+    "shared_objective": {
+      "section": "Shared term (optional)",
+      "hint": "A term added identically to every scenario, useful for a cost or benefit that does not depend on which scenario occurs.",
+      "enable": "Add a shared term to every scenario",
+      "offset": "Shared constant"
+    },
+    "constraints": {
+      "section": "Shared constraints",
+      "hint": "Constraints restrict the decision itself and hold in every scenario. A problem with none is still valid: the variable bounds alone define what is feasible.",
+      "columns": {
+        "name": "Name",
+        "relation": "Relation",
+        "rhs": "Right-hand side"
+      },
+      "empty": "No shared constraints yet. Add one, or solve with variable bounds only.",
+      "add": "Add constraint",
+      "remove": "Remove constraint"
+    },
+    "scenarios": {
+      "section": "Scenarios",
+      "hint": "Each row is one scenario: its coefficients score the declared variables, and its constant shifts the result. Order is preserved everywhere in the answer.",
+      "columns": {
+        "id": "Scenario",
+        "label": "Description",
+        "offset": "Constant"
+      },
+      "add": "Add scenario",
+      "remove": "Remove scenario",
+      "info_tooltip": "How a scenario is evaluated",
+      "info_title": "Scenario evaluation",
+      "info_body": "Scenario k evaluates to the sum of its coefficients times the decision variables, plus its constant, plus the shared term when one is declared.",
+      "info_html": "<h3>The formula</h3><p><code>v<sub>k</sub>(x) = Σ<sub>j</sub> (c<sup>(0)</sup><sub>j</sub> + c<sup>(k)</sup><sub>j</sub>) x<sub>j</sub> + (γ<sub>0</sub> + γ<sub>k</sub>)</code></p><p>where <code>c<sup>(0)</sup></code> and <code>γ<sub>0</sub></code> are the optional shared term, and <code>c<sup>(k)</sup></code>, <code>γ<sub>k</sub></code> belong to this scenario alone.</p><h3>Ties are kept</h3><p>When several scenarios reach the worst value together, all of them are reported as binding, in the order you declared them. None is dropped to make the answer look tidier.</p>"
+    },
+    "options": {
+      "section": "Solver options",
+      "hint": "Tolerances govern how exactly values must match before a scenario counts as binding. Leave the time limit blank to use the backend default.",
+      "tolerance": "Tolerance",
+      "binding_tolerance": "Binding tolerance",
+      "time_limit": "Time limit (s)",
+      "time_limit_placeholder": "blank = default",
+      "info_tooltip": "Tolerances and limits",
+      "info_title": "Tolerances and limits",
+      "info_body": "The binding tolerance decides how close a scenario value must be to the guarantee before it is reported as binding. Both tolerances are relative to the magnitude of the value being compared.",
+      "info_html": "<h3>Binding tolerance</h3><p>A scenario is binding when <code>|v<sub>k</sub>(x*) − guarantee| ≤ ε · max(1, |guarantee|)</code>. Raising it groups near-ties together; lowering it separates them.</p><h3>Time limit</h3><p>A run stopped by the limit reports the candidate it held as <em>feasible</em>, never as proven optimal, and the termination reason says so explicitly.</p>"
+    },
+    "solve": {
+      "button": "Solve",
+      "cancel": "Cancel",
+      "running": "Solving…",
+      "cancelled": "The pending result was discarded. The backend does not advertise interruption, so the underlying run may still finish and be ignored."
+    },
+    "validation": {
+      "title": "Check the problem",
+      "body": "The problem cannot be submitted yet:\n{detail}"
+    },
+    "solution": {
+      "title": "Scenario optimization result",
+      "back": "Back to the formulation",
+      "empty": "No result yet. Formulate a problem and solve it to see the outcome here.",
+      "warnings": "Warnings",
+      "orientation": "Orientation: {orientation}",
+      "status": {
+        "section": "Reported statuses",
+        "hint": "These four facts are reported separately and mean different things. A run can complete technically while being mathematically infeasible, or return a proven optimum whose independent validation is unavailable.",
+        "unreported": "Not reported",
+        "captions": {
+          "job": "Job status",
+          "mathematical": "Mathematical status",
+          "termination": "Termination reason",
+          "validation": "Independent validation"
+        }
+      },
+      "job_status": {
+        "queued": "Queued",
+        "running": "Running",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "failed": "Failed"
+      },
+      "mathematical_status": {
+        "optimal": "Optimal",
+        "feasible": "Feasible candidate",
+        "infeasible": "Infeasible",
+        "unbounded": "Unbounded",
+        "not_solved": "Not solved"
+      },
+      "termination_reason": {
+        "completed": "Completed",
+        "time_limit": "Time limit reached",
+        "iteration_limit": "Iteration limit reached",
+        "cancelled": "Cancelled",
+        "dependency_failure": "Dependency failure",
+        "internal_error": "Internal error"
+      },
+      "validation_status": {
+        "verified": "Verified",
+        "partial": "Partial",
+        "failed": "Failed",
+        "not_available": "Not available"
+      },
+      "guarantee": {
+        "section": "Guaranteed bound",
+        "min_max_loss": "Guaranteed maximum loss",
+        "max_min_reward": "Guaranteed minimum reward",
+        "hint_min_max_loss": "No listed scenario costs more than this. It is the value of the worst scenario at the returned decision.",
+        "hint_max_min_reward": "No listed scenario pays less than this. It is the value of the worst scenario at the returned decision.",
+        "unavailable": "This outcome carries no guaranteed value, because no candidate decision exists."
+      },
+      "variables": {
+        "section": "Decision variables",
+        "hint": "The returned decision, in the order the variables were declared.",
+        "columns": {
+          "order": "#",
+          "name": "Variable",
+          "value": "Value"
+        },
+        "empty": "This outcome returned no decision variables."
+      },
+      "scenarios": {
+        "section": "Scenario values",
+        "hint": "Every scenario evaluated at the returned decision, in declared order. Binding scenarios are the ones that reach the guarantee and therefore hold it where it is.",
+        "columns": {
+          "order": "#",
+          "id": "Scenario",
+          "value": "Value",
+          "binding": "Binding"
+        },
+        "binding_yes": "Binding",
+        "binding_no": "—",
+        "binding_summary": "Binding scenarios: {ids}",
+        "binding_none": "No scenario was reported as binding.",
+        "empty": "This outcome returned no scenario values."
+      },
+      "validation": {
+        "section": "Independent validation",
+        "hint": "Optees re-checks the returned answer against the original scenario package instead of trusting the solver's own report.",
+        "columns": {
+          "check": "Check",
+          "result": "Result",
+          "detail": "Description"
+        },
+        "passed": "Passed",
+        "failed": "Failed",
+        "violations": "Violations",
+        "limitations": "What this does not prove",
+        "limitation": {
+          "1": "Feasibility, integrality and robust consistency do not independently prove mathematical optimality.",
+          "2": "The validator does not judge whether the scenario package represents what you actually meant to ask."
+        },
+        "names": {
+          "orientation": "Orientation",
+          "status_coherence": "Status coherence",
+          "variable_vector": "Decision vector",
+          "scenario_values": "Scenario value shape",
+          "bounds": "Variable bounds",
+          "integrality": "Variable domains",
+          "constraints": "Shared constraints",
+          "evaluations": "Scenario evaluations",
+          "guarantee": "Guaranteed bound",
+          "binding_set": "Binding set",
+          "consistency": "Delegated consistency"
+        },
+        "checks": {
+          "orientation": "The result declares the same orientation as the submitted problem.",
+          "status_coherence": "The reported status agrees with the delegated solver status, and a candidate is present only where a candidate is allowed.",
+          "variable_vector": "The decision carries one finite value per declared variable, in declared order and without duplicates.",
+          "scenario_values": "The scenario value array matches the declared scenarios one-to-one, in order.",
+          "bounds": "Every returned value lies inside its declared lower and upper bound.",
+          "integrality": "Integer and binary variables hold integral values within tolerance.",
+          "constraints": "Each shared constraint is re-evaluated at the returned decision and compared with its relation and right-hand side.",
+          "evaluations": "Every scenario value is recomputed from the original coefficients and constants and compared with the reported one.",
+          "guarantee": "The worst scenario value is recomputed for this orientation and compared with the reported guarantee.",
+          "binding_set": "The binding scenarios are re-derived under the declared tolerance and compared with the reported set.",
+          "consistency": "The guarantee agrees with the auxiliary value and the delegated solver objective."
+        }
+      },
+      "diagnostics": {
+        "section": "Delegated solver metadata",
+        "hint": "Reported by the LP or MILP backend that executed the reduced problem, and kept as-is rather than reinterpreted by this screen.",
+        "columns": {
+          "field": "Field",
+          "value": "Value"
+        },
+        "fields": {
+          "backend": "Backend",
+          "backend_id": "Backend route",
+          "status_code": "Backend status code",
+          "iterations": "Iterations",
+          "wall_time": "Backend wall time (s)",
+          "elapsed_seconds": "Elapsed time (s)",
+          "success": "Backend success flag",
+          "message": "Backend message"
+        }
+      },
+      "comparison": {
+        "section": "Scenario comparison",
+        "title": "Scenario values against the guaranteed bound",
+        "legend": "Binding scenarios are marked {marker}, drawn with a hatched fill and a heavier outline. The dashed line marks the guaranteed bound at {guarantee}.",
+        "guarantee_line": "Guaranteed bound",
+        "no_candidate": "No scenario values were returned, so there is nothing to compare. The reported statuses above explain why.",
+        "matplotlib_unavailable": "Charting support is not installed in this application session, so the tables above are the complete result.",
+        "accessible_description": "Bar chart of {count} scenario values against the guaranteed bound {guarantee}. Binding scenarios: {binding}.",
+        "axis": {
+          "loss": "Scenario loss",
+          "reward": "Scenario reward"
+        }
+      },
+      "error": {
+        "section": "The request was rejected",
+        "code": "Reported error: {code}",
+        "details": "Reported details",
+        "codes": {
+          "validation_failed": "the problem payload was rejected",
+          "dependency_unavailable": "the capability is unavailable in this installation",
+          "capability_not_found": "the capability is not registered",
+          "execution_failed": "execution failed locally",
+          "invalid_request": "the request was malformed",
+          "internal_error": "an internal error occurred"
+        }
       }
     }
   }

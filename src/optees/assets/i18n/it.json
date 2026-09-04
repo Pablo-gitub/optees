@@ -50,6 +50,10 @@
     "qp": {
       "title": "Programmazione Quadratica Convessa (QP)",
       "subtitle": "Usa questo metodo quando l'obiettivo e' quadratico e convesso, come minimizzare rischio, errore quadratico o scostamento da un target, con vincoli lineari."
+    },
+"scenario": {
+      "title": "Ottimizzazione lineare per scenari",
+      "subtitle": "Usa questo metodo quando una sola decisione deve reggere in piu' scenari elencati esplicitamente, limitando la perdita peggiore oppure garantendo il rendimento peggiore."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -68,6 +72,8 @@
     "knap": "Zaino 0/1",
     "nlp": "Programmazione Nonlineare (NLP)",
     "qp": "Quadratica Convessa (QP)",
+    "scenario_min_max": "Scenari: minimizza la perdita massima",
+    "scenario_max_min": "Scenari: massimizza il rendimento minimo",
     "graph": "Cammino minimo (Dijkstra)",
     "packing": "Packing e caricamento 3D",
     "regression": "Regressione lineare",
@@ -258,6 +264,13 @@
       "constraints": "Controlla i vincoli lineari: ogni riga richiede un coefficiente finito per ciascuna variabile dichiarata, una relazione e un termine noto finito.",
       "options": "Controlla le opzioni del solver: tolleranza, limite di iterazioni e limite di tempo devono essere numeri finiti entro l'intervallo ammesso.",
       "model": "Controlla i nomi delle variabili, l'obiettivo, i vincoli e le opzioni del solver prima di risolvere."
+    },
+    "scenario": {
+      "variables": "Controlla le variabili decisionali: ogni riga richiede un nome univoco e non vuoto, e ogni limite deve essere un numero finito oppure lasciato vuoto.",
+      "scenarios": "Controlla gli scenari: ogni riga richiede un identificatore univoco e non vuoto, un coefficiente finito per ciascuna variabile dichiarata e una costante finita.",
+      "constraints": "Controlla i vincoli condivisi: ogni riga richiede un coefficiente finito per ciascuna variabile dichiarata, una relazione e un termine noto finito.",
+      "options": "Controlla le opzioni del solver: le tolleranze e il limite di tempo devono essere numeri finiti positivi oppure lasciati vuoti per usare il valore predefinito.",
+      "model": "Controlla variabili, scenari, termini condivisi e opzioni prima di inviare il problema."
     },
     "assistant": {
       "generated_model": "La bozza generata non e' valida per la formulazione selezionata. Controlla il suggerimento e inserisci o importa il modello manualmente."
@@ -1390,6 +1403,274 @@
         "button": "Esporta il problema in JSON",
         "dialog_title": "Salva problema QP",
         "default_name": "problema_qp.json"
+      }
+    }
+  },
+  "scenario": {
+    "header": {
+      "title": "Ottimizzazione lineare per scenari",
+      "section": "Formulazione del problema",
+      "description": "Decidi una volta sola e poi lasciati giudicare dal peggiore di piu' scenari elencati esplicitamente. Ogni scenario valuta le stesse variabili decisionali con propri coefficienti lineari e propria costante. Scegli qui sotto se il caso peggiore e' una perdita da limitare o un rendimento da garantire: sono due domande diverse, non due modi di scrivere la stessa."
+    },
+    "dependency": {
+      "unavailable": "Questa capability non e' disponibile in questa installazione, quindi qui non e' possibile risolvere nulla. Motivo riportato: {reason}"
+    },
+    "intro": {
+      "info_tooltip": "Che cosa decide questo flusso",
+      "info_title": "Decidere con scenari elencati",
+      "info_body": "Un elenco finito e ordinato di scenari sostituisce una singola previsione. Optees non li pesa per probabilita': ottimizza il peggiore, cosi' la risposta porta con se' una garanzia valida su tutti gli scenari elencati.",
+      "info_html": "<h3>La forma del problema</h3><p>Dichiari le variabili decisionali una sola volta. Ogni scenario valuta poi quelle stesse variabili con i propri coefficienti <code>c<sup>(k)</sup></code> e la propria costante <code>γ<sub>k</sub></code>, producendo un valore <code>v<sub>k</sub>(x)</code> per scenario.</p><h3>Che cosa viene ottimizzato</h3><p>Non la media, ma lo scenario <em>peggiore</em>. E' questo che rende il valore riportato una garanzia: ogni scenario elencato risulta almeno altrettanto buono.</p><h3>Che cosa Optees non assume</h3><p>Nessuna probabilita', nessuna verosimiglianza, nessun ordinamento degli scenari per plausibilita'. Uno scenario elencato conta per intero. Escludere un caso implausibile e' una tua decisione di modellazione, presa prima di arrivare qui.</p>"
+    },
+    "orientation": {
+      "section": "Orientamento del caso peggiore",
+      "hint": "Scegli la semantica che corrisponde alla tua grandezza. Questa scelta seleziona una capability registrata diversa, non un cambio di segno.",
+      "min_max_loss": "Minimizza la perdita massima",
+      "min_max_loss_description": "I valori degli scenari sono perdite, costi o penalita': piu' basso e' meglio. Optees trova la decisione la cui perdita nello scenario peggiore e' la piu' piccola possibile e riporta quella perdita come garanzia. Nessuno scenario elencato puo' costare di piu'.",
+      "max_min_reward": "Massimizza il rendimento minimo",
+      "max_min_reward_description": "I valori degli scenari sono rendimenti, guadagni o benefici: piu' alto e' meglio. Optees trova la decisione il cui rendimento nello scenario peggiore e' il piu' grande possibile e riporta quel rendimento come garanzia. Nessuno scenario elencato puo' rendere di meno.",
+      "capability": "Capability registrata: {capability}",
+      "info_tooltip": "Perche' sono due capability",
+      "info_title": "Perdita e rendimento non sono lo stesso problema",
+      "info_body": "I due orientamenti hanno identificatori di capability distinti e semantiche del risultato distinte. Optees non converte mai l'uno nell'altro alle tue spalle, perche' il segno di un coefficiente significa cose opposte nei due casi.",
+      "info_html": "<h3>Lo stesso numero, due significati</h3><p>Con <b>minimizza la perdita massima</b>, un coefficiente positivo indica che aumentare quella variabile <em>peggiora</em> la situazione. Con <b>massimizza il rendimento minimo</b>, lo stesso coefficiente positivo indica che la <em>migliora</em>.</p><h3>Anche l'insieme attivo si inverte</h3><p>Per la perdita, gli scenari attivi sono quelli che raggiungono il valore <em>massimo</em>. Per il rendimento, quelli che raggiungono il <em>minimo</em>. Un motore che invertisse i segni in silenzio riporterebbe esattamente gli scenari sbagliati come quelli vincolanti.</p><h3>Percio' restano separate</h3><p>Algebricamente una si puo' riscrivere come l'altra. Optees espone comunque entrambe come capability di prima classe, perche' chiedere a una persona di negare a mano ogni coefficiente, costante e risultato e' proprio l'origine degli errori di formulazione.</p>"
+    },
+    "variables": {
+      "section": "Variabili decisionali",
+      "hint": "Le variabili sono ordinate: la loro posizione fissa la colonna usata da ogni scenario, vincolo e termine condiviso qui sotto. Lascia vuoto un limite per non imporlo.",
+      "columns": {
+        "name": "Variabile",
+        "label": "Descrizione",
+        "lower": "Limite inferiore",
+        "upper": "Limite superiore",
+        "integrality": "Dominio"
+      },
+      "integrality": {
+        "C": "Continua",
+        "I": "Intera",
+        "B": "Binaria"
+      },
+      "add": "Aggiungi variabile",
+      "remove": "Rimuovi variabile"
+    },
+    "shared_objective": {
+      "section": "Termine condiviso (opzionale)",
+      "hint": "Un termine aggiunto in modo identico a ogni scenario, utile per un costo o un beneficio che non dipende da quale scenario si verifichi.",
+      "enable": "Aggiungi un termine condiviso a ogni scenario",
+      "offset": "Costante condivisa"
+    },
+    "constraints": {
+      "section": "Vincoli condivisi",
+      "hint": "I vincoli limitano la decisione stessa e valgono in ogni scenario. Un problema senza vincoli resta valido: in tal caso sono i soli limiti delle variabili a definire cosa e' ammissibile.",
+      "columns": {
+        "name": "Nome",
+        "relation": "Relazione",
+        "rhs": "Termine noto"
+      },
+      "empty": "Nessun vincolo condiviso. Aggiungine uno oppure risolvi usando solo i limiti delle variabili.",
+      "add": "Aggiungi vincolo",
+      "remove": "Rimuovi vincolo"
+    },
+    "scenarios": {
+      "section": "Scenari",
+      "hint": "Ogni riga e' uno scenario: i suoi coefficienti valutano le variabili dichiarate e la sua costante trasla il risultato. L'ordine viene preservato ovunque nella risposta.",
+      "columns": {
+        "id": "Scenario",
+        "label": "Descrizione",
+        "offset": "Costante"
+      },
+      "add": "Aggiungi scenario",
+      "remove": "Rimuovi scenario",
+      "info_tooltip": "Come viene valutato uno scenario",
+      "info_title": "Valutazione di uno scenario",
+      "info_body": "Lo scenario k vale la somma dei suoi coefficienti moltiplicati per le variabili decisionali, piu' la sua costante, piu' il termine condiviso quando e' dichiarato.",
+      "info_html": "<h3>La formula</h3><p><code>v<sub>k</sub>(x) = Σ<sub>j</sub> (c<sup>(0)</sup><sub>j</sub> + c<sup>(k)</sup><sub>j</sub>) x<sub>j</sub> + (γ<sub>0</sub> + γ<sub>k</sub>)</code></p><p>dove <code>c<sup>(0)</sup></code> e <code>γ<sub>0</sub></code> sono il termine condiviso opzionale, mentre <code>c<sup>(k)</sup></code> e <code>γ<sub>k</sub></code> appartengono solo a questo scenario.</p><h3>I pareggi vengono mantenuti</h3><p>Quando piu' scenari raggiungono insieme il valore peggiore, vengono riportati tutti come attivi, nell'ordine in cui li hai dichiarati. Nessuno viene scartato per rendere la risposta piu' ordinata.</p>"
+    },
+    "options": {
+      "section": "Opzioni del solver",
+      "hint": "Le tolleranze governano quanto esattamente i valori devono coincidere perche' uno scenario risulti attivo. Lascia vuoto il limite di tempo per usare il valore predefinito del backend.",
+      "tolerance": "Tolleranza",
+      "binding_tolerance": "Tolleranza di attivazione",
+      "time_limit": "Limite di tempo (s)",
+      "time_limit_placeholder": "vuoto = predefinito",
+      "info_tooltip": "Tolleranze e limiti",
+      "info_title": "Tolleranze e limiti",
+      "info_body": "La tolleranza di attivazione stabilisce quanto il valore di uno scenario debba essere vicino alla garanzia perche' venga riportato come attivo. Entrambe le tolleranze sono relative alla grandezza del valore confrontato.",
+      "info_html": "<h3>Tolleranza di attivazione</h3><p>Uno scenario e' attivo quando <code>|v<sub>k</sub>(x*) − garanzia| ≤ ε · max(1, |garanzia|)</code>. Aumentarla raggruppa i quasi-pareggi; ridurla li separa.</p><h3>Limite di tempo</h3><p>Un'esecuzione fermata dal limite riporta il candidato posseduto come <em>ammissibile</em>, mai come ottimo dimostrato, e il motivo di terminazione lo dichiara esplicitamente.</p>"
+    },
+    "solve": {
+      "button": "Risolvi",
+      "cancel": "Annulla",
+      "running": "Risoluzione in corso…",
+      "cancelled": "Il risultato in attesa e' stato scartato. Il backend non dichiara di supportare l'interruzione, quindi l'esecuzione sottostante potrebbe comunque terminare e venire ignorata."
+    },
+    "validation": {
+      "title": "Controlla il problema",
+      "body": "Il problema non puo' ancora essere inviato:\n{detail}"
+    },
+    "solution": {
+      "title": "Risultato dell'ottimizzazione per scenari",
+      "back": "Torna alla formulazione",
+      "empty": "Nessun risultato. Formula un problema e risolvilo per vederne qui l'esito.",
+      "warnings": "Avvisi",
+      "orientation": "Orientamento: {orientation}",
+      "status": {
+        "section": "Stati riportati",
+        "hint": "Questi quattro fatti sono riportati separatamente e significano cose diverse. Un'esecuzione puo' concludersi tecnicamente pur essendo matematicamente non ammissibile, oppure restituire un ottimo dimostrato la cui validazione indipendente non e' disponibile.",
+        "unreported": "Non riportato",
+        "captions": {
+          "job": "Stato dell'esecuzione",
+          "mathematical": "Stato matematico",
+          "termination": "Motivo di terminazione",
+          "validation": "Validazione indipendente"
+        }
+      },
+      "job_status": {
+        "queued": "In coda",
+        "running": "In corso",
+        "completed": "Completata",
+        "cancelled": "Annullata",
+        "failed": "Fallita"
+      },
+      "mathematical_status": {
+        "optimal": "Ottimo",
+        "feasible": "Candidato ammissibile",
+        "infeasible": "Non ammissibile",
+        "unbounded": "Illimitato",
+        "not_solved": "Non risolto"
+      },
+      "termination_reason": {
+        "completed": "Completata",
+        "time_limit": "Limite di tempo raggiunto",
+        "iteration_limit": "Limite di iterazioni raggiunto",
+        "cancelled": "Annullata",
+        "dependency_failure": "Dipendenza non disponibile",
+        "internal_error": "Errore interno"
+      },
+      "validation_status": {
+        "verified": "Verificata",
+        "partial": "Parziale",
+        "failed": "Fallita",
+        "not_available": "Non disponibile"
+      },
+      "guarantee": {
+        "section": "Valore garantito",
+        "min_max_loss": "Perdita massima garantita",
+        "max_min_reward": "Rendimento minimo garantito",
+        "hint_min_max_loss": "Nessuno scenario elencato costa piu' di questo valore. E' il valore dello scenario peggiore nella decisione restituita.",
+        "hint_max_min_reward": "Nessuno scenario elencato rende meno di questo valore. E' il valore dello scenario peggiore nella decisione restituita.",
+        "unavailable": "Questo esito non porta alcun valore garantito, perche' non esiste una decisione candidata."
+      },
+      "variables": {
+        "section": "Variabili decisionali",
+        "hint": "La decisione restituita, nell'ordine in cui le variabili sono state dichiarate.",
+        "columns": {
+          "order": "#",
+          "name": "Variabile",
+          "value": "Valore"
+        },
+        "empty": "Questo esito non ha restituito variabili decisionali."
+      },
+      "scenarios": {
+        "section": "Valori degli scenari",
+        "hint": "Ogni scenario valutato nella decisione restituita, in ordine di dichiarazione. Gli scenari attivi sono quelli che raggiungono la garanzia e quindi la trattengono dov'e'.",
+        "columns": {
+          "order": "#",
+          "id": "Scenario",
+          "value": "Valore",
+          "binding": "Attivo"
+        },
+        "binding_yes": "Attivo",
+        "binding_no": "—",
+        "binding_summary": "Scenari attivi: {ids}",
+        "binding_none": "Nessuno scenario e' stato riportato come attivo.",
+        "empty": "Questo esito non ha restituito valori degli scenari."
+      },
+      "validation": {
+        "section": "Validazione indipendente",
+        "hint": "Optees ricontrolla la risposta restituita rispetto al pacchetto di scenari originale, senza fidarsi del rapporto del solver.",
+        "columns": {
+          "check": "Controllo",
+          "result": "Esito",
+          "detail": "Descrizione"
+        },
+        "passed": "Superato",
+        "failed": "Fallito",
+        "violations": "Violazioni",
+        "limitations": "Cosa questo non dimostra",
+        "limitation": {
+          "1": "Ammissibilita', integralita' e coerenza robusta non dimostrano di per se' l'ottimalita' matematica.",
+          "2": "Il validatore non giudica se il pacchetto di scenari rappresenti cio' che intendevi davvero chiedere."
+        },
+        "names": {
+          "orientation": "Orientamento",
+          "status_coherence": "Coerenza degli stati",
+          "variable_vector": "Vettore decisionale",
+          "scenario_values": "Struttura dei valori",
+          "bounds": "Limiti delle variabili",
+          "integrality": "Domini delle variabili",
+          "constraints": "Vincoli condivisi",
+          "evaluations": "Valutazioni degli scenari",
+          "guarantee": "Valore garantito",
+          "binding_set": "Insieme attivo",
+          "consistency": "Coerenza delegata"
+        },
+        "checks": {
+          "orientation": "Il risultato dichiara lo stesso orientamento del problema inviato.",
+          "status_coherence": "Lo stato riportato concorda con lo stato del solver delegato e un candidato e' presente solo dove e' ammesso.",
+          "variable_vector": "La decisione porta un valore finito per ogni variabile dichiarata, nell'ordine dichiarato e senza duplicati.",
+          "scenario_values": "L'elenco dei valori corrisponde uno a uno agli scenari dichiarati, nello stesso ordine.",
+          "bounds": "Ogni valore restituito ricade entro il proprio limite inferiore e superiore.",
+          "integrality": "Le variabili intere e binarie assumono valori interi entro la tolleranza.",
+          "constraints": "Ogni vincolo condiviso viene rivalutato nella decisione restituita e confrontato con la propria relazione e il proprio termine noto.",
+          "evaluations": "Ogni valore di scenario viene ricalcolato dai coefficienti e dalle costanti originali e confrontato con quello riportato.",
+          "guarantee": "Il valore dello scenario peggiore viene ricalcolato per questo orientamento e confrontato con la garanzia riportata.",
+          "binding_set": "Gli scenari attivi vengono riderivati con la tolleranza dichiarata e confrontati con l'insieme riportato.",
+          "consistency": "La garanzia concorda con il valore ausiliario e con l'obiettivo del solver delegato."
+        }
+      },
+      "diagnostics": {
+        "section": "Metadati del solver delegato",
+        "hint": "Riportati dal backend LP o MILP che ha eseguito il problema ridotto, mantenuti tali e non reinterpretati da questa schermata.",
+        "columns": {
+          "field": "Campo",
+          "value": "Valore"
+        },
+        "fields": {
+          "backend": "Backend",
+          "backend_id": "Percorso del backend",
+          "status_code": "Codice di stato del backend",
+          "iterations": "Iterazioni",
+          "wall_time": "Tempo del backend (s)",
+          "elapsed_seconds": "Tempo trascorso (s)",
+          "success": "Flag di successo del backend",
+          "message": "Messaggio del backend"
+        }
+      },
+      "comparison": {
+        "section": "Confronto fra scenari",
+        "title": "Valori degli scenari rispetto al valore garantito",
+        "legend": "Gli scenari attivi sono contrassegnati con {marker}, disegnati con riempimento tratteggiato e bordo piu' spesso. La linea tratteggiata indica il valore garantito a {guarantee}.",
+        "guarantee_line": "Valore garantito",
+        "no_candidate": "Non sono stati restituiti valori di scenario, quindi non c'e' nulla da confrontare. Gli stati riportati qui sopra ne spiegano il motivo.",
+        "matplotlib_unavailable": "Il supporto grafico non e' installato in questa sessione dell'applicazione: le tabelle qui sopra costituiscono quindi il risultato completo.",
+        "accessible_description": "Grafico a barre di {count} valori di scenario rispetto al valore garantito {guarantee}. Scenari attivi: {binding}.",
+        "axis": {
+          "loss": "Perdita nello scenario",
+          "reward": "Rendimento nello scenario"
+        }
+      },
+      "error": {
+        "section": "La richiesta e' stata rifiutata",
+        "code": "Errore riportato: {code}",
+        "details": "Dettagli riportati",
+        "codes": {
+          "validation_failed": "il payload del problema e' stato rifiutato",
+          "dependency_unavailable": "la capability non e' disponibile in questa installazione",
+          "capability_not_found": "la capability non e' registrata",
+          "execution_failed": "l'esecuzione locale e' fallita",
+          "invalid_request": "la richiesta era malformata",
+          "internal_error": "si e' verificato un errore interno"
+        }
       }
     }
   }

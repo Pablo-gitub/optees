@@ -34,6 +34,17 @@ def localized_error_detail(scope: str, error: Exception | str) -> str:
     if scope.endswith("_export"):
         return S.t("error_feedback.export.write")
 
+    if scope == "scenario_validation":
+        if _contains(detail, "scenario"):
+            return S.t("error_feedback.scenario.scenarios")
+        if _contains(detail, "constraint"):
+            return S.t("error_feedback.scenario.constraints")
+        if _contains(detail, "variable", "bound"):
+            return S.t("error_feedback.scenario.variables")
+        if _contains(detail, "tolerance", "time limit"):
+            return S.t("error_feedback.scenario.options")
+        return S.t("error_feedback.scenario.model")
+
     if scope == "qp_validation":
         if _contains(detail, "semi-definite", "concave", "convex", "eigenvalue"):
             return S.t("error_feedback.qp.curvature")

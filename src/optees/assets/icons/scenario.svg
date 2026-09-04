@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Optees — Linear Scenario Optimization</title>
+  <desc>Axes with several diverging scenario lines and a dashed worst-case bound touching the binding scenarios.</desc>
+  <g fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M56 200 H206"/>
+    <path d="M56 200 V66"/>
+    <path d="M76 168 L196 92"/>
+    <path d="M76 96 L196 156"/>
+    <path d="M76 132 L196 132"/>
+  </g>
+  <path d="M64 122 H200" fill="none" stroke="currentColor" stroke-width="9"
+        stroke-linecap="round" stroke-dasharray="20 18" opacity="0.65"/>
+  <circle cx="132" cy="122" r="13" fill="currentColor"/>
+</svg>

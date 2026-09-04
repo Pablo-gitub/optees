@@ -61,6 +61,7 @@ class HomePage(QWidget):
     go_knap = Signal()
     go_nlp = Signal()
     go_qp = Signal()
+    go_scenario = Signal()
     go_graph = Signal()
     go_packing = Signal()
     go_regression = Signal()
@@ -132,6 +133,11 @@ class HomePage(QWidget):
             S.t("cards.qp.subtitle"),
             icon_path=str(asset("icons/qp.svg")),
         )
+        self.card_scenario = CardButton(
+            S.t("cards.scenario.title"),
+            S.t("cards.scenario.subtitle"),
+            icon_path=str(asset("icons/scenario.svg")),
+        )
         self.card_graph = CardButton(
             S.t("cards.graph.title"),
             S.t("cards.graph.subtitle"),
@@ -164,6 +170,7 @@ class HomePage(QWidget):
         self.card_knap.clicked.connect(self.go_knap.emit)
         self.card_nlp.clicked.connect(self.go_nlp.emit)
         self.card_qp.clicked.connect(self.go_qp.emit)
+        self.card_scenario.clicked.connect(self.go_scenario.emit)
         self.card_graph.clicked.connect(self.go_graph.emit)
         self.card_packing.clicked.connect(self.go_packing.emit)
         self.card_regression.clicked.connect(self.go_regression.emit)
@@ -171,7 +178,13 @@ class HomePage(QWidget):
         self.card_forecasting.clicked.connect(self.go_forecasting.emit)
 
         # add cards to the first optimization category
-        for card in (self.card_lp, self.card_milp, self.card_knap, self.card_packing):
+        for card in (
+            self.card_lp,
+            self.card_milp,
+            self.card_knap,
+            self.card_packing,
+            self.card_scenario,
+        ):
             self.cat_lin.add_card(card)
 
         self.cat_nlp.add_card(self.card_nlp)
@@ -224,6 +237,11 @@ class HomePage(QWidget):
         self.card_qp._title.setText(f"<span style='font-weight:700'>{S.t('cards.qp.title')}</span>")
         self.card_qp._sub.setText(S.t("cards.qp.subtitle"))
 
+        self.card_scenario._title.setText(
+            f"<span style='font-weight:700'>{S.t('cards.scenario.title')}</span>"
+        )
+        self.card_scenario._sub.setText(S.t("cards.scenario.subtitle"))
+
         self.card_graph._title.setText(f"<span style='font-weight:700'>{S.t('cards.graph.title')}</span>")
         self.card_graph._sub.setText(S.t("cards.graph.subtitle"))
 
@@ -263,6 +281,7 @@ class HomePage(QWidget):
             self.card_knap,
             self.card_nlp,
             self.card_qp,
+            self.card_scenario,
             self.card_graph,
             self.card_packing,
             self.card_regression,

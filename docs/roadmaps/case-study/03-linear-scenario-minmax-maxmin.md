@@ -3,7 +3,7 @@
 ## Work Unit
 
 - **ID:** `OPT-DS-03`
-- **State:** `OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C`, `OPT-DS-03D`, and `OPT-DS-03E` complete; `OPT-DS-03F` is next
+- **State:** `OPT-DS-03A` through `OPT-DS-03E` complete; `OPT-DS-03F` implemented and pending review
 - **Type:** domain-neutral robust-scenario capability delivered through bounded micro-gates
 - **Parent roadmap:** `ROADMAP.md`
 - **Prerequisite:** `QP-I` and `QP-UI` satisfied by `OPT-DS-02`
@@ -637,10 +637,40 @@ contract, if the UI would need to infer mathematical facts, or if an existing
 shared component requires a cross-layer dependency violation. Do not silently
 widen the gate; report the incompatibility for Codex review.
 
-**Gate `ROBUST-UI`:** focused GUI and regression tests pass and Codex accepts
-the separately committed UI work.
+**Gate `ROBUST-UI` (Implemented, pending review):** the bilingual desktop
+workflow is committed separately and its focused GUI plus non-GUI regressions
+pass. Delivered in this gate:
+
+- `ScenarioViewModel` (`presentation/viewmodels/`) owns orientation selection,
+  public-payload assembly, asynchronous submission on `QThreadPool`, generation
+  based stale-result protection and cancellation. It republishes the returned
+  `ExecutionEnvelope` or `StructuredError` verbatim.
+- `ScenarioView` provides ordered editing of variables with bounds and
+  integrality, an optional shared term, shared constraints, scenarios and
+  solver options, rebinding every coefficient grid to the declared variable
+  order and rejecting incomplete rows through the existing error presentation.
+- `ScenarioSolutionView` reports job status, mathematical status, termination
+  reason and independent-validation status as four separate facts, plus the
+  guaranteed bound, ordered decision variables, ordered scenario values with
+  binding markers, the binding set, delegated solver metadata, validation
+  checks with their limitations, warnings and structured rejections.
+- `ScenarioComparisonWidget` compares scenario values against the guaranteed
+  bound, marking binding scenarios with a hatch, a heavier outline and a `◆`
+  label so the distinction never relies on colour alone.
+- Both capability IDs are named individually in the toolbar and by two labelled
+  radio options; the orientation submitted always matches the selected
+  capability, so the two semantics are never aliased.
+- Presentation imports only `application.contracts.capability_ids` and `core`
+  helpers: no solver adapter, reduction service, reconstruction service,
+  validator or scenario domain model is reachable from the UI.
+
+Evidence: `tests/presentation/test_scenario_view_model.py` (20),
+`tests/presentation/test_scenario_comparison_widget.py` (12) and
+`tests/presentation/test_scenario_flow.py` (25) all pass, together with the
+non-GUI gate and the GUI marker.
 
 ## Next implementation boundary
 
 `OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C`, `OPT-DS-03D`, and `OPT-DS-03E` are complete.
-`OPT-DS-03F` (Desktop Workflow, Claude) is the next and only authorized implementation boundary. Only after separate review of `ROBUST-C` may Claude begin UI work.
+`OPT-DS-03F` (Desktop Workflow, Claude) is implemented and awaiting Codex review
+of `ROBUST-UI`. No further roadmap item is authorized until that review.
