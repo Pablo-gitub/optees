@@ -1653,6 +1653,7 @@
         "guarantee_line": "Valore garantito",
         "no_candidate": "Non sono stati restituiti valori di scenario, quindi non c'e' nulla da confrontare. Gli stati riportati qui sopra ne spiegano il motivo.",
         "matplotlib_unavailable": "Il supporto grafico non e' installato in questa sessione dell'applicazione: le tabelle qui sopra costituiscono quindi il risultato completo.",
+        "invalid_result": "Il risultato degli scenari restituito non e' valido, quindi il grafico non puo' visualizzarlo in sicurezza.",
         "accessible_description": "Grafico a barre di {count} valori di scenario rispetto al valore garantito {guarantee}. Scenari attivi: {binding}.",
         "axis": {
           "loss": "Perdita nello scenario",

@@ -1655,6 +1655,7 @@
         "guarantee_line": "Guaranteed bound",
         "no_candidate": "No scenario values were returned, so there is nothing to compare. The reported statuses above explain why.",
         "matplotlib_unavailable": "Charting support is not installed in this application session, so the tables above are the complete result.",
+        "invalid_result": "The returned scenario result is invalid, so the chart cannot display it safely.",
         "accessible_description": "Bar chart of {count} scenario values against the guaranteed bound {guarantee}. Binding scenarios: {binding}.",
         "axis": {
           "loss": "Scenario loss",

@@ -637,7 +637,7 @@ contract, if the UI would need to infer mathematical facts, or if an existing
 shared component requires a cross-layer dependency violation. Do not silently
 widen the gate; report the incompatibility for Codex review.
 
-**Gate `ROBUST-UI` (Implemented, pending review):** the bilingual desktop
+**Gate `ROBUST-UI` (Achieved after review correction):** the bilingual desktop
 workflow is committed separately and its focused GUI plus non-GUI regressions
 pass. Delivered in this gate:
 
@@ -657,6 +657,9 @@ pass. Delivered in this gate:
 - `ScenarioComparisonWidget` compares scenario values against the guaranteed
   bound, marking binding scenarios with a hatch, a heavier outline and a `◆`
   label so the distinction never relies on colour alone.
+- Review correction rejects malformed/non-finite scenario values and non-boolean
+  binding flags instead of drawing fabricated zeroes, and escapes structured
+  error and validation text before rendering it as rich text.
 - Both capability IDs are named individually in the toolbar and by two labelled
   radio options; the orientation submitted always matches the selected
   capability, so the two semantics are never aliased.
@@ -665,12 +668,12 @@ pass. Delivered in this gate:
   validator or scenario domain model is reachable from the UI.
 
 Evidence: `tests/presentation/test_scenario_view_model.py` (20),
-`tests/presentation/test_scenario_comparison_widget.py` (12) and
-`tests/presentation/test_scenario_flow.py` (25) all pass, together with the
+`tests/presentation/test_scenario_comparison_widget.py` (17) and
+`tests/presentation/test_scenario_flow.py` (26) all pass, together with the
 non-GUI gate and the GUI marker.
 
 ## Next implementation boundary
 
-`OPT-DS-03A`, `OPT-DS-03B`, `OPT-DS-03C`, `OPT-DS-03D`, and `OPT-DS-03E` are complete.
-`OPT-DS-03F` (Desktop Workflow, Claude) is implemented and awaiting Codex review
-of `ROBUST-UI`. No further roadmap item is authorized until that review.
+`OPT-DS-03A` through `OPT-DS-03F` are complete and `ROBUST-UI` is achieved.
+`OPT-DS-03` is closed. `OPT-DS-04` remains blocked until Simulator evidence
+justifies a targeted forecasting expansion.

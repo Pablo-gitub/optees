@@ -9,6 +9,7 @@ binding scenarios are displayed exactly as returned.
 
 from __future__ import annotations
 
+from html import escape
 import math
 from typing import Any, Optional
 
@@ -308,8 +309,9 @@ class ScenarioSolutionView(QWidget):
         details = error.get("details") or []
         if details:
             rows = "".join(
-                f"<li><code>{detail.get('path', '')}</code> — "
-                f"{detail.get('code', '')}: {detail.get('message', '')}</li>"
+                f"<li><code>{escape(str(detail.get('path', '')))}</code> — "
+                f"{escape(str(detail.get('code', '')))}: "
+                f"{escape(str(detail.get('message', '')))}</li>"
                 for detail in details
                 if isinstance(detail, dict)
             )
@@ -513,7 +515,7 @@ class ScenarioSolutionView(QWidget):
         limitations = [str(item) for item in (validation.get("limitations") or [])]
         if limitations:
             bullets = "".join(
-                f"<li>{_localized_limitation(index, text)}</li>"
+                f"<li>{escape(_localized_limitation(index, text))}</li>"
                 for index, text in enumerate(limitations)
             )
             self.validation_limitations.setText(

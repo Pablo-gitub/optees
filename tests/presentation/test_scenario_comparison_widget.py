@@ -60,6 +60,28 @@ def test_no_candidate_result_is_named_not_drawn_as_zero(widget) -> None:
     assert widget.status_label.text() == S.t("scenario.solution.comparison.no_candidate")
 
 
+@pytest.mark.parametrize("invalid_value", ["not-a-number", float("nan"), float("inf"), True])
+def test_invalid_scenario_value_is_not_fabricated_as_zero(widget, invalid_value) -> None:
+    widget.set_result(
+        _result(
+            "minimize_maximum_loss",
+            1.0,
+            [("s1", invalid_value, True)],
+        )
+    )
+
+    assert widget.visualization_state == "invalid_result"
+    assert widget.status_label.text() == S.t("scenario.solution.comparison.invalid_result")
+
+
+def test_non_boolean_binding_flag_is_not_interpreted(widget) -> None:
+    result = _result("minimize_maximum_loss", 1.0, [("s1", 1.0, True)])
+    result["scenario_values"][0]["is_binding"] = "false"
+    widget.set_result(result)
+
+    assert widget.visualization_state == "invalid_result"
+
+
 def test_declared_scenario_order_is_preserved(widget) -> None:
     widget.set_result(
         _result(

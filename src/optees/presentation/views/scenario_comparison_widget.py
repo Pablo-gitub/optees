@@ -88,9 +88,7 @@ class ScenarioComparisonWidget(QWidget):
         else:
             self._orientation = str(result.get("orientation", ""))
             guaranteed = result.get("guaranteed_value")
-            self._guaranteed_value = (
-                float(guaranteed) if isinstance(guaranteed, (int, float)) else None
-            )
+            self._guaranteed_value = _safe_float(guaranteed)
             raw = result.get("scenario_values") or ()
             self._scenario_values = tuple(entry for entry in raw if isinstance(entry, dict))
         self._render()
@@ -161,7 +159,15 @@ class ScenarioComparisonWidget(QWidget):
         # Declared order reads top-to-bottom, so the first scenario sits highest.
         positions = list(range(len(entries)))[::-1]
         values = [_safe_float(entry.get("value")) for entry in entries]
-        binding_flags = [bool(entry.get("is_binding")) for entry in entries]
+        binding_flags = [entry.get("is_binding") for entry in entries]
+        if any(value is None for value in values) or any(
+            not isinstance(flag, bool) for flag in binding_flags
+        ):
+            self._set_unavailable(
+                "invalid_result",
+                S.t("scenario.solution.comparison.invalid_result"),
+            )
+            return
 
         for position, value, is_binding in zip(positions, values, binding_flags):
             axis.barh(
@@ -254,12 +260,12 @@ def _axis_key(orientation: str) -> str:
     return "loss" if orientation == "minimize_maximum_loss" else "reward"
 
 
-def _safe_float(value: Any) -> float:
+def _safe_float(value: Any) -> Optional[float]:
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         number = float(value)
         if math.isfinite(number):
             return number
-    return 0.0
+    return None
 
 
 def _format_number(value: Optional[float]) -> str:

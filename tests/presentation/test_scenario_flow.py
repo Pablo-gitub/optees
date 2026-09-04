@@ -377,6 +377,28 @@ def test_a_structured_rejection_is_shown_instead_of_an_empty_result(window) -> N
     assert view.envelope is None
 
 
+def test_structured_rejection_details_are_html_escaped(window) -> None:
+    view = window.scenario_solution_page
+    error = StructuredError(
+        code=ErrorCode.VALIDATION_FAILED,
+        message="Invalid input",
+        details=(
+            ErrorDetail(
+                path="<b>field</b>",
+                message="<img src=x>",
+                code="invalid<input>",
+            ),
+        ),
+    )
+
+    view.set_error(error)
+
+    rendered = view.error_details.text()
+    assert "&lt;b&gt;field&lt;/b&gt;" in rendered
+    assert "&lt;img src=x&gt;" in rendered
+    assert "invalid&lt;input&gt;" in rendered
+
+
 def test_actions_are_disabled_while_a_submission_is_in_flight(window) -> None:
     window.goto("scenario")
     page = window.scenario_page
