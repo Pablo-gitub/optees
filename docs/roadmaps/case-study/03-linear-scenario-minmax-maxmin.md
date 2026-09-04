@@ -576,6 +576,67 @@ comparison and binding-scenario visualization. Presentation must consume the
 reviewed application API and retain failures, validation and delegated solver
 statuses visibly.
 
+### Required pre-implementation inspection
+
+Before editing, Claude must read `AGENTS.md`, `CLAUDE.md`, the architecture and
+testing guides, this roadmap, the frozen scenario contract, the QP desktop
+workflow and the existing LP/MILP presentation patterns. The implementation
+report must identify which existing view, view-model, navigation, async job,
+result, error, i18n and visualization components will be reused. It must not
+copy mathematical reduction or validation logic into presentation code.
+
+### Authorized implementation
+
+- Add one scenario-optimization desktop workflow following the existing
+  presentation view/view-model boundary and application composition path.
+- Support both capability IDs and label their different semantics explicitly:
+  minimize maximum loss and maximize minimum reward must never appear as aliases.
+- Provide structured editing for variables, bounds/domains, shared constraints,
+  scenarios, coefficients, constants and the applicable solver options. Preserve
+  user-declared ordering and reject incomplete table rows through the existing
+  validation/error presentation mechanisms.
+- Submit through the reviewed public/application capability path. The UI must not
+  build LP/MILP reductions, invoke solver adapters directly, recompute guarantees,
+  decide binding scenarios or reinterpret validation.
+- Present job, mathematical and termination status separately. Show guaranteed
+  value, ordered decision variables, ordered per-scenario values, binding markers,
+  delegated solver metadata and independent-validation status without hiding
+  negative values, infeasible/unbounded results or unavailable validation.
+- Add one accessible visualization comparing scenario values with the guaranteed
+  bound and making binding scenarios distinguishable without relying on color
+  alone. It must consume the returned result verbatim and handle negative values,
+  ties, empty/no-candidate results and resize/theme changes.
+- Keep English and Italian resources synchronized, reuse design tokens and
+  existing accessible controls, provide keyboard traversal and meaningful
+  accessible names, and avoid hardcoded translatable text.
+
+### Required evidence
+
+- View-model tests for both orientations, ordered input mapping, option mapping,
+  async success, validation failure, infeasible, unbounded, dependency-unavailable,
+  cancellation and stale-result protection.
+- Widget tests for navigation, bilingual strings, keyboard access, accessible
+  names, table add/remove behavior and correct enabling/disabling of actions.
+- Visualization tests for negative values, multiple binding ties, deterministic
+  ordering, no-candidate states and resize/theme refresh without mathematical
+  recomputation.
+- One composition smoke test proving that the desktop workflow resolves both
+  registered scenario capabilities through the ordinary application boundary.
+- Focused GUI tests plus the affected non-GUI capability, codec, validation,
+  registry and composition regressions; run architecture, Ruff and format gates.
+  If headless Qt or display support prevents a check, report it rather than
+  weakening or deleting the test.
+
+### Explicit exclusions and stop conditions
+
+No domain/application solver changes, schema changes, new capability IDs,
+fixture rewrites, Simulator code, market terminology, report/artifact expansion,
+workflow registry, version bump, tag, release or push is authorized. Stop if the
+reviewed application result cannot support the required display without a new
+contract, if the UI would need to infer mathematical facts, or if an existing
+shared component requires a cross-layer dependency violation. Do not silently
+widen the gate; report the incompatibility for Codex review.
+
 **Gate `ROBUST-UI`:** focused GUI and regression tests pass and Codex accepts
 the separately committed UI work.
 
