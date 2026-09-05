@@ -35,7 +35,7 @@ stable when delivery state changes.
 | [Convex QP vertical slice](case-study/02-qp-vertical-slice.md) | Completed | Capability and desktop gates QP-I and QP-UI achieved |
 | [Linear scenario min-max/max-min](case-study/03-linear-scenario-minmax-maxmin.md) | Completed | ROBUST-C and ROBUST-UI achieved |
 | [QP consumer handoff](case-study/04-qp-consumer-handoff.md) | Completed | Manifest and handoff evidence reviewed |
-| [Targeted forecasting expansion](case-study/05-targeted-forecasting-expansion.md) | Candidate / blocked | `FC-C` reopened after review; baseline evidence and corrected contract required |
+| [Targeted forecasting expansion](case-study/05-targeted-forecasting-expansion.md) | Candidate / blocked | `FC-C` reopened after review; evidence protocol established; Simulator evidence awaited |
 | [Documentation, website, and release](documentation-website-release.md) | In progress | Coordinated public documentation and release work |
 
 The register is a navigation summary. When it conflicts with a roadmap's

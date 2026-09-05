@@ -212,7 +212,8 @@ is complete; `OPT-DS-04` remains evidence-gated by the Simulator.
 ### OPT-DS-04 — Targeted Forecasting Expansion
 
 Detailed plan: `05-targeted-forecasting-expansion.md`.
-Next boundary: baseline evidence and corrected `OPT-DS-04A` decision only; no engine authorization.
+Evidence protocol: `forecasting-evidence-protocol.md`.
+Next boundary: Decision Simulator baseline evidence complying with `forecasting-evidence-protocol.md`; `FC-C` remains NOT satisfied; no engine authorization.
 
 Prioritize this phase using evidence from baseline simulator episodes. Candidate
 increments are:

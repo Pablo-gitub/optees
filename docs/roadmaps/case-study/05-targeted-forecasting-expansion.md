@@ -17,7 +17,8 @@
 
 The original planning and contract-freeze claims are not accepted as execution
 readiness. First supply baseline simulator evidence selecting the smallest useful
-increment. No such evidence is attached to this plan. The statistical corrections
+increment, complying with the authoritative [forecasting evidence protocol](forecasting-evidence-protocol.md).
+No such evidence is attached to this plan. The statistical corrections
 and unresolved decisions are maintained in
 [the candidate decision document](../../contracts/targeted-forecasting-contract.md).
 The sequence below is provisional, not an authorization to implement every candidate.
@@ -209,6 +210,7 @@ all GUI tests without modifying mathematical or validation layers.
 
 ## Next Implementation Boundary
 
-Only evidence collection and revision of the candidate statistical/contract decision
-may proceed. `FC-C` must be independently accepted before `OPT-DS-04B` can be
-assigned. No targeted forecasting production or UI implementation is authorized.
+Only evidence collection adhering to [forecasting-evidence-protocol.md](forecasting-evidence-protocol.md)
+and subsequent revision of the candidate statistical/contract decision may proceed.
+`FC-C` remains NOT satisfied and must be independently accepted before `OPT-DS-04B` can be
+assigned. No targeted forecasting production, solver, codec, or UI implementation is authorized.
