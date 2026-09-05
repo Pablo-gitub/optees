@@ -21,6 +21,8 @@ Evidence-gated candidate: [Targeted forecasting expansion](05-targeted-forecasti
   wording corrected and checksums refreshed (11 focused tests pass).
 - [x] Targeted forecasting expansion scope and micro-gates planned in `05-targeted-forecasting-expansion.md`.
 - [x] Independent review of the forecasting draft; unsafe freeze withdrawn.
+- [x] Define and independently review the Simulator forecasting evidence
+  protocol; no candidate selected and no engine authorized.
 - [ ] Micro-gate A (`OPT-DS-04A`): evidence-backed scope and corrected contract freeze (`FC-C` reopened).
 - [ ] Micro-gate B (`OPT-DS-04B`): engine and pure evaluator (Gate `FC-E`).
 

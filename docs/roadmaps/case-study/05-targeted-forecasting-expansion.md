@@ -28,6 +28,11 @@ Review verification: 150 tests pass across the corrected decision probes and
 arithmetic counterexamples and existing fixture health, not `FC-C` completion.
 No production code or UI changed; the full runtime/GUI suite was not rerun.
 
+The evidence protocol was subsequently reviewed against the shipped forecasting
+models, codecs and validator. Fifty-eight focused forecasting/probe tests pass;
+the protocol no longer preselects candidates or invents universal statistical
+thresholds. This still does not constitute Simulator evidence.
+
 ## Candidate objective
 
 Deliver targeted, domain-neutral time-series forecasting increments motivated by
