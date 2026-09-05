@@ -12,8 +12,8 @@
 - **Problem Schema Version:** `1`
 - **Result Schema Version:** `1`
 - **Implementation Status:** public capability delivery completed through
-  `OPT-DS-03D`; frozen Simulator handoff fixtures remain planned for
-  `OPT-DS-03E`.
+  `OPT-DS-03D`; frozen Simulator handoff fixtures and manifest completed in
+  `OPT-DS-03E`, and desktop UI completed in `OPT-DS-03F`.
 
 This contract defines and freezes the mathematical foundations, epigraph/hypograph
 reductions to linear programming (LP) and mixed-integer linear programming (MILP),

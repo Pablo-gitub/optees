@@ -674,6 +674,9 @@ non-GUI gate and the GUI marker.
 
 ## Next implementation boundary
 
+- [x] Align contract delivery status with completed E/F gates; distinguish
+  fixture baseline identity from the runtime executable identity in handoff guidance.
+
 Review correction evidence: all 66 scenario presentation tests passed under
 offscreen Qt; Ruff and diff whitespace checks passed for the changed files.
 

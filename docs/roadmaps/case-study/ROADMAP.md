@@ -13,6 +13,11 @@
 
 ## Goal
 
+- [x] Integration-readiness documentation review: frozen scenario contract now
+  reflects completed handoff fixtures and UI. Runtime consumers must record the
+  actual executable commit/version; fixture baseline commits identify evidence,
+  not necessarily the executable used in an experiment.
+
 - [x] Post-UI review correction: variable removal preserves surviving shared,
   constraint and scenario coefficients; first/middle/last removal is covered.
   `OPT-DS-03` remains complete; no forecasting gate is authorized by this fix.
