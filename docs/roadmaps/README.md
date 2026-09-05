@@ -33,7 +33,9 @@ stable when delivery state changes.
 | [Decision Simulator case-study expansion](case-study/ROADMAP.md) | In progress | Parallel evidence track: QP, robust scenarios, forecasting depth, MIQP, and Registry |
 | [Convex QP contract decision](case-study/01-qp-contract-decision.md) | Completed | Contract decision frozen; gate QP-C achieved |
 | [Convex QP vertical slice](case-study/02-qp-vertical-slice.md) | Completed | Capability and desktop gates QP-I and QP-UI achieved |
-| [Linear scenario min-max/max-min](case-study/03-linear-scenario-minmax-maxmin.md) | In progress | ROBUST-D accepted after review; OPT-DS-03B is next |
+| [Linear scenario min-max/max-min](case-study/03-linear-scenario-minmax-maxmin.md) | Completed | ROBUST-C and ROBUST-UI achieved |
+| [QP consumer handoff](case-study/04-qp-consumer-handoff.md) | Completed | Manifest and handoff evidence reviewed |
+| [Targeted forecasting expansion](case-study/05-targeted-forecasting-expansion.md) | In progress | OPT-DS-04A planned; contract decision boundary |
 | [Documentation, website, and release](documentation-website-release.md) | In progress | Coordinated public documentation and release work |
 
 The register is a navigation summary. When it conflicts with a roadmap's

@@ -7,18 +7,20 @@
   Decision Simulator case study
 - **Product relationship:** this is a parallel evidence track; it does not
   replace the general product sequence in `project.md`
-- **Latest completed detailed work unit:** `02-qp-vertical-slice.md`
-- **Current detailed work unit:** `03-linear-scenario-minmax-maxmin.md`
+- **Latest completed detailed work unit:** `04-qp-consumer-handoff.md`
+- **Current detailed work unit:** `05-targeted-forecasting-expansion.md`
 - **Consumer roadmap:** the Decision Simulator `docs/ROADMAP.md`
 
 ## Goal
 
-Next bounded parallel unit: [QP consumer handoff](04-qp-consumer-handoff.md)
-(`OPT-DS-QP-H`, Gemini). It packages existing evidence, not a new algorithm.
+Next bounded parallel unit: [Targeted forecasting expansion](05-targeted-forecasting-expansion.md)
+(`OPT-DS-04`, Gemini). It defines and delivers domain-neutral forecasting extensions for decision simulation.
 
 - [x] QP handoff manifest scope and provenance rules planned.
 - [x] QP handoff manifest implemented and independently reviewed; partial-validation
   wording corrected and checksums refreshed (11 focused tests pass).
+- [x] Targeted forecasting expansion scope and micro-gates planned in `05-targeted-forecasting-expansion.md`.
+- [ ] Micro-gate A (`OPT-DS-04A`): statistical contract decision and schema freeze (Gate `FC-C`).
 
 - [x] Integration-readiness documentation review: frozen scenario contract now
   reflects completed handoff fixtures and UI. Runtime consumers must record the
@@ -87,7 +89,7 @@ terminology, brokerage behavior, or claims of financial performance.
 | [x] | `OPT-DS-01` — Convex QP Contract Decision | `QP-C` achieved |
 | [x] | `OPT-DS-02` — Convex QP Vertical Slice | `QP-I` and `QP-UI` achieved |
 | [x] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `ROBUST-C` and `ROBUST-UI` achieved |
-| [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Awaiting Simulator evidence |
+| [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | `OPT-DS-04A` planned; contract decision in progress |
 | [ ] | `OPT-DS-05` — Convex MIQP | Not started |
 | [ ] | `OPT-DS-06` — Workflow Registry MVP | Not started |
 | [ ] | `OPT-DS-07` — Min-max Regret Reference Workflow | Not started |
@@ -207,6 +209,9 @@ is complete; `OPT-DS-04` remains evidence-gated by the Simulator.
 
 ### OPT-DS-04 — Targeted Forecasting Expansion
 
+Detailed plan: `05-targeted-forecasting-expansion.md`.
+Active boundary: `OPT-DS-04A` (Statistical and Contract Decision, Gate `FC-C`).
+
 Prioritize this phase using evidence from baseline simulator episodes. Candidate
 increments are:
 
@@ -217,9 +222,12 @@ increments are:
 - calibrated intervals, quantiles, or finite scenarios;
 - chronological model comparison without future leakage.
 
-The detailed roadmap must select the smallest coherent subset that unlocks the
+The detailed roadmap selects the smallest coherent subset that unlocks the
 next decision experiments. Deep neural forecasting, large search spaces, and
 opaque automatic model selection remain deferred.
+
+**Gate FC-C:** contract decisions, mathematical formulations, schemas, and
+reference probes are frozen and independently reviewed.
 
 **Gate FC-E:** every added output has chronological evaluation, independent
 validation, and a documented downstream interpretation.
