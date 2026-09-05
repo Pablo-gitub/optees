@@ -17,7 +17,8 @@ Next bounded parallel unit: [QP consumer handoff](04-qp-consumer-handoff.md)
 (`OPT-DS-QP-H`, Gemini). It packages existing evidence, not a new algorithm.
 
 - [x] QP handoff manifest scope and provenance rules planned.
-- [ ] QP handoff manifest implementation complete; independent review pending.
+- [x] QP handoff manifest implemented and independently reviewed; partial-validation
+  wording corrected and checksums refreshed (11 focused tests pass).
 
 - [x] Integration-readiness documentation review: frozen scenario contract now
   reflects completed handoff fixtures and UI. Runtime consumers must record the

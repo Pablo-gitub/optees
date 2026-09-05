@@ -44,7 +44,9 @@ The manifest (`manifest.json`) catalogs all covered files using repository-root 
      - `unbounded_problem`: linear descent direction with zero quadratic curvature and no upper bound (`mathematical_status: "unbounded"`).
    - Independent validation expectations:
      - `verified`: candidate satisfies bounds, constraints, and KKT first-order optimality conditions within tolerances.
-     - `partial`: interior optimum verified against bounds and gradient stationarity where active dual multipliers are absent.
+     - `partial`: the available primal checks pass, but dual data is absent and
+       the independent KKT/stationarity check is not performed. This status
+       alone does not certify optimality, including for an interior candidate.
      - `not_available`: no primal candidate is available for independent validation (infeasible or unbounded).
 
 2. **`examples/qp_resource_allocation_2variables.json`**:

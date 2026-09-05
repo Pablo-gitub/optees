@@ -1,5 +1,5 @@
 {
-  "aggregate_sha256": "281b04528d5296b21acf69f6a4af861b4957a68b24680914b8f71c97169671ba",
+  "aggregate_sha256": "1aa555d0b1bcf7b83f967bc57b22033e27b13bcb7e0d39d560c7f554eaf8805c",
   "capability_id": "qp.continuous",
   "capability_ids": [
     "qp.continuous"
@@ -12,7 +12,7 @@
     },
     {
       "path": "tests/data/qp/README.md",
-      "sha256": "48ce7a7e8917c1801f85d7333660f4e5721688049b16a1d1137e73acd8e6acc3"
+      "sha256": "6945bd9da2dd68f75d3779f1d6e94136b3e5bd8a1f4e24b14bc2593dcc7161e8"
     },
     {
       "path": "tests/data/qp/reference_cases.json",

@@ -1,6 +1,6 @@
 # QP Consumer Handoff Evidence
 
-- ID: `OPT-DS-QP-H`; status: ready for implementation, not implemented.
+- ID: `OPT-DS-QP-H`; status: implemented and independently reviewed.
 - Owner: Gemini; independent review afterwards. No UI assignment.
 - This is completion of existing QP handoff evidence, NOT OPT-DS-04 forecasting.
 - Prerequisite: reviewed QP-I/QP-UI. Parent: [case-study roadmap](ROADMAP.md).
@@ -57,7 +57,13 @@ the committed source fixtures. Reuse existing checksum helpers where appropriate
 - [x] Manifest and README complete; original fixture bytes preserved.
 - [x] Production QP reference tests and manifest corruption tests pass.
 - [x] Focused Ruff/format and diff checks pass; documentation links verified.
-- [ ] Independent review accepted.
+- [x] Independent review accepted after correcting the meaning of partial
+  validation: no independent KKT/stationarity check is performed without dual
+  data. A production-service regression verifies this; README and aggregate
+  manifest hashes were refreshed without changing the original JSON fixtures.
+
+Review evidence: all 11 QP fixture/manifest tests pass; focused Ruff/format and
+diff checks pass. No solver or public contract changed.
 
 Run the QP reference tests and new focused tests using the configured optees
 environment with PYTHONPATH=src; apply docs/guides/testing.md for any broader

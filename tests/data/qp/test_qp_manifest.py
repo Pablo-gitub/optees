@@ -78,6 +78,15 @@ def test_qp_manifest_versions_match_production_discovery() -> None:
     assert manifest["result_schema_version"] == descriptor.result_schema_version
 
 
+def test_partial_reference_does_not_claim_independent_stationarity() -> None:
+    cases = json.loads((QP_DATA_DIR / "reference_cases.json").read_text())["cases"]
+    case = next(c for c in cases if c["id"] == "unconstrained_interior_optimum")
+    envelope = create_local_optimization_service().solve(QP_CAPABILITY_ID, case["problem"])
+    assert envelope.validation is not None
+    assert envelope.validation.status.value == "partial"
+    assert "qp.kkt_stationarity" not in {check.code for check in envelope.validation.checks}
+
+
 def test_qp_manifest_corruption_and_mutation_detection() -> None:
     manifest = load_manifest()
     ref_path = REPO_ROOT / "tests" / "data" / "qp" / "reference_cases.json"
