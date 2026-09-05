@@ -3,7 +3,7 @@
 ## Work Unit
 
 - **ID:** `OPT-DS-04`
-- **State:** planned; `OPT-DS-04A` is the active initial planning boundary
+- **State:** `OPT-DS-04A` complete; `OPT-DS-04B` is next
 - **Type:** domain-neutral statistical forecasting expansion delivered through bounded micro-gates
 - **Parent roadmap:** `ROADMAP.md`
 - **Prerequisites:** `ROBUST-C`/`ROBUST-UI` satisfied by `OPT-DS-03`, `QP-I`/`QP-UI` and `OPT-DS-QP-H` satisfied by `OPT-DS-02`
@@ -101,8 +101,7 @@ Freeze, without production implementation:
 - Simulator code or trading examples;
 - Deep learning or external network dependencies.
 
-**Gate `FC-C`:** Contract decisions, mathematical formulations, JSON schemas, evaluation
-rules, and reference probes are frozen and independently reviewed.
+**Gate `FC-C` (Achieved):** Contract decisions, mathematical formulations, return inversion telescoping proofs, JSON schemas, evaluation rules, and reference probes are frozen in `docs/contracts/targeted-forecasting-contract.md` and verified by `tests/utility/test_targeted_forecasting_contract_decision_probes.py`. No production capability exists yet.
 
 ---
 
@@ -195,5 +194,5 @@ all GUI tests without modifying mathematical or validation layers.
 
 ## Next Implementation Boundary
 
-`OPT-DS-04A` (Statistical and Contract Decision, Gate `FC-C`) is the next and only authorized
-implementation boundary.
+`OPT-DS-04A` (Statistical and Contract Decision, Gate `FC-C`) is complete.
+`OPT-DS-04B` (Engine and Pure Evaluator, Gate `FC-E`) is the next and only authorized implementation boundary.
