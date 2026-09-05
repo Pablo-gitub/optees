@@ -529,6 +529,11 @@ class ScenarioView(QWidget):
         row = table.currentRow()
         if row < 0:
             row = table.rowCount() - 1
+        # Remove the same variable from every grid before rebuilding headers.
+        # Truncating the grids would silently reassign later coefficients.
+        self.shared_table.removeColumn(row)
+        self.constraints_table.removeColumn(row + 1)
+        self.scenarios_table.removeColumn(row + 2)
         table.blockSignals(True)
         try:
             table.removeRow(row)

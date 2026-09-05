@@ -674,6 +674,14 @@ non-GUI gate and the GUI marker.
 
 ## Next implementation boundary
 
+Review correction evidence: all 66 scenario presentation tests passed under
+offscreen Qt; Ruff and diff whitespace checks passed for the changed files.
+
+- [x] Post-review regression: removing a variable deletes its coefficient column
+  from the shared objective, constraints and scenarios before rebinding headers.
+  First, middle and last removal and subsequent addition are tested, preventing
+  silent reassignment of the mathematical model's coefficients.
+
 `OPT-DS-03A` through `OPT-DS-03F` are complete and `ROBUST-UI` is achieved.
 `OPT-DS-03` is closed. `OPT-DS-04` remains blocked until Simulator evidence
 justifies a targeted forecasting expansion.

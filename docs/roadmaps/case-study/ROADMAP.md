@@ -13,6 +13,10 @@
 
 ## Goal
 
+- [x] Post-UI review correction: variable removal preserves surviving shared,
+  constraint and scenario coefficients; first/middle/last removal is covered.
+  `OPT-DS-03` remains complete; no forecasting gate is authorized by this fix.
+
 Expand Optees enough to compare meaningful forecasting and optimization
 orchestrations over repeated market-data decisions, while keeping every new
 capability domain-neutral and useful outside trading.

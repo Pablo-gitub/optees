@@ -29,6 +29,29 @@ from optees.presentation.views.scenario_comparison_widget import BINDING_MARKER
 SOLVE_TIMEOUT_MS = 20_000
 
 
+@pytest.mark.parametrize("removed", [0, 1, 2])
+def test_remove_variable_preserves_coefficient_identity(qtbot, removed):
+    from PySide6.QtWidgets import QTableWidgetItem
+    from optees.presentation.views.scenario_view import ScenarioView
+
+    view = ScenarioView()
+    qtbot.addWidget(view)
+    view._on_add_variable()
+    view._on_add_constraint()
+    grids = [(view.shared_table, 0), (view.constraints_table, 1), (view.scenarios_table, 2)]
+    for table, offset in grids:
+        for column, value in enumerate([11, 22, 33]):
+            table.setItem(0, column + offset, QTableWidgetItem(str(value)))
+    view.variables_table.setCurrentCell(removed, 0)
+    view._on_remove_variable()
+    expected = [str(v) for i, v in enumerate([11, 22, 33]) if i != removed]
+    for table, offset in grids:
+        assert [table.item(0, c + offset).text() for c in range(2)] == expected
+    view._on_add_variable()
+    for table, offset in grids:
+        assert table.item(0, 2 + offset).text() == "0"
+
+
 # ---------------------------------------------------------------------------
 # Composition and navigation
 # ---------------------------------------------------------------------------
