@@ -3,7 +3,7 @@
 ## Work Unit
 
 - **ID:** `OPT-DS-04`
-- **State:** `OPT-DS-04A` complete; `OPT-DS-04B` is next
+- **State:** candidate planning only; `FC-C` reopened, implementation blocked
 - **Type:** domain-neutral statistical forecasting expansion delivered through bounded micro-gates
 - **Parent roadmap:** `ROADMAP.md`
 - **Prerequisites:** `ROBUST-C`/`ROBUST-UI` satisfied by `OPT-DS-03`, `QP-I`/`QP-UI` and `OPT-DS-QP-H` satisfied by `OPT-DS-02`
@@ -13,7 +13,21 @@
 - **Review:** Codex after every micro-gate
 - **Final integration gate:** `FC-H`
 
-## Objective
+## Independent review and prerequisite
+
+The original planning and contract-freeze claims are not accepted as execution
+readiness. First supply baseline simulator evidence selecting the smallest useful
+increment. No such evidence is attached to this plan. The statistical corrections
+and unresolved decisions are maintained in
+[the candidate decision document](../../contracts/targeted-forecasting-contract.md).
+The sequence below is provisional, not an authorization to implement every candidate.
+
+Review verification: 150 tests pass across the corrected decision probes and
+`tests/data/`; focused Ruff checks and formatting pass. These checks establish
+arithmetic counterexamples and existing fixture health, not `FC-C` completion.
+No production code or UI changed; the full runtime/GUI suite was not rerun.
+
+## Candidate objective
 
 Deliver targeted, domain-neutral time-series forecasting increments motivated by
 decision-simulation requirements, expanding beyond the baseline `naive`, `seasonal_naive`,
@@ -25,8 +39,8 @@ and `holt_winters_additive` capabilities:
    future data leakage.
 3. **Transparent volatility estimation**: rolling standard deviation and exponentially
    weighted moving average (EWMA) volatility estimators providing explicit variance scales.
-4. **Finite scenario and prediction interval generation**: calibrated parametric and empirical
-   quantile intervals, plus discrete scenario bundles formatted directly for consumption by
+4. **Finite scenario and prediction interval generation**: candidate parametric and empirical
+   quantile intervals, plus candidate finite scenarios requiring a consumer mapping to
    `scenario.linear.min_max_loss` and `scenario.linear.max_min_reward`.
 
 Optees owns the statistical formulation, chronological validation, honest status reporting,
@@ -49,15 +63,14 @@ This work unit follows the bounded micro-gate sequence established in `OPT-DS-03
 - One local atomic commit per micro-gate with concise imperative message; no AI attribution;
   no remote push.
 
-## Frozen Architectural Direction
+## Proposed Architectural Direction
 
 - **Chronological integrity:** All training, estimation, and evaluation must respect strict
   time ordering. Shuffling, random splitting, and retroactive window recalculations are forbidden.
 - **Domain neutrality:** Time-series observations remain generic `(timestamp, value)` pairs.
-- **Downstream composability:** Generated scenario bundles must conform exactly to the frozen
-  Problem Schema v1 of `scenario.linear.*` (`docs/contracts/linear-scenario-optimization-contract.md`),
-  enabling direct programmatic pipe-lining into robust scenario optimization without custom
-  transport adapters.
+- **Downstream composability:** Forecasts are not optimization problems. A consumer-owned
+  mapping must define variables, units, affine loss/reward coefficients and constraints
+  before using `scenario.linear.*`; direct DTO compatibility is not established.
 - **Independent verification:** Point forecasts, intervals, metrics, and scenario values
   must be verified by independent arithmetic and temporal checks.
 
@@ -101,7 +114,9 @@ Freeze, without production implementation:
 - Simulator code or trading examples;
 - Deep learning or external network dependencies.
 
-**Gate `FC-C` (Achieved):** Contract decisions, mathematical formulations, return inversion telescoping proofs, JSON schemas, evaluation rules, and reference probes are frozen in `docs/contracts/targeted-forecasting-contract.md` and verified by `tests/utility/test_targeted_forecasting_contract_decision_probes.py`. No production capability exists yet.
+**Gate `FC-C` (NOT achieved):** Baseline evidence, statistical decisions, executable
+schema probes and independent review remain required. Existing analytical probes
+are not implementation or interoperability evidence.
 
 ---
 
@@ -194,5 +209,6 @@ all GUI tests without modifying mathematical or validation layers.
 
 ## Next Implementation Boundary
 
-`OPT-DS-04A` (Statistical and Contract Decision, Gate `FC-C`) is complete.
-`OPT-DS-04B` (Engine and Pure Evaluator, Gate `FC-E`) is the next and only authorized implementation boundary.
+Only evidence collection and revision of the candidate statistical/contract decision
+may proceed. `FC-C` must be independently accepted before `OPT-DS-04B` can be
+assigned. No targeted forecasting production or UI implementation is authorized.

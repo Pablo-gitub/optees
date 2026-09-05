@@ -8,19 +8,20 @@
 - **Product relationship:** this is a parallel evidence track; it does not
   replace the general product sequence in `project.md`
 - **Latest completed detailed work unit:** `04-qp-consumer-handoff.md`
-- **Current detailed work unit:** `05-targeted-forecasting-expansion.md`
+- **Candidate detailed work unit (not ready):** `05-targeted-forecasting-expansion.md`
 - **Consumer roadmap:** the Decision Simulator `docs/ROADMAP.md`
 
 ## Goal
 
-Next bounded parallel unit: [Targeted forecasting expansion](05-targeted-forecasting-expansion.md)
-(`OPT-DS-04`, Gemini). It defines and delivers domain-neutral forecasting extensions for decision simulation.
+Evidence-gated candidate: [Targeted forecasting expansion](05-targeted-forecasting-expansion.md)
+(`OPT-DS-04`, Gemini). It proposes extensions; baseline evidence and a corrected contract decision are required before implementation.
 
 - [x] QP handoff manifest scope and provenance rules planned.
 - [x] QP handoff manifest implemented and independently reviewed; partial-validation
   wording corrected and checksums refreshed (11 focused tests pass).
 - [x] Targeted forecasting expansion scope and micro-gates planned in `05-targeted-forecasting-expansion.md`.
-- [x] Micro-gate A (`OPT-DS-04A`): statistical contract decision and schema freeze (Gate `FC-C` achieved).
+- [x] Independent review of the forecasting draft; unsafe freeze withdrawn.
+- [ ] Micro-gate A (`OPT-DS-04A`): evidence-backed scope and corrected contract freeze (`FC-C` reopened).
 - [ ] Micro-gate B (`OPT-DS-04B`): engine and pure evaluator (Gate `FC-E`).
 
 - [x] Integration-readiness documentation review: frozen scenario contract now
@@ -90,7 +91,7 @@ terminology, brokerage behavior, or claims of financial performance.
 | [x] | `OPT-DS-01` — Convex QP Contract Decision | `QP-C` achieved |
 | [x] | `OPT-DS-02` — Convex QP Vertical Slice | `QP-I` and `QP-UI` achieved |
 | [x] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `ROBUST-C` and `ROBUST-UI` achieved |
-| [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Gate `FC-C` achieved; `OPT-DS-04B` next |
+| [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Candidate only; `FC-C` reopened, engine blocked |
 | [ ] | `OPT-DS-05` — Convex MIQP | Not started |
 | [ ] | `OPT-DS-06` — Workflow Registry MVP | Not started |
 | [ ] | `OPT-DS-07` — Min-max Regret Reference Workflow | Not started |
@@ -211,7 +212,7 @@ is complete; `OPT-DS-04` remains evidence-gated by the Simulator.
 ### OPT-DS-04 — Targeted Forecasting Expansion
 
 Detailed plan: `05-targeted-forecasting-expansion.md`.
-Active boundary: `OPT-DS-04A` (Statistical and Contract Decision, Gate `FC-C`).
+Next boundary: baseline evidence and corrected `OPT-DS-04A` decision only; no engine authorization.
 
 Prioritize this phase using evidence from baseline simulator episodes. Candidate
 increments are:
