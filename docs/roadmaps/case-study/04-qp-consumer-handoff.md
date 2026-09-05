@@ -54,9 +54,9 @@ the committed source fixtures. Reuse existing checksum helpers where appropriate
 ## Gate and stop
 
 - [x] Planning scope, identity semantics and evidence frozen.
-- [ ] Manifest and README complete; original fixture bytes preserved.
-- [ ] Production QP reference tests and manifest corruption tests pass.
-- [ ] Focused Ruff/format and diff checks pass; documentation links verified.
+- [x] Manifest and README complete; original fixture bytes preserved.
+- [x] Production QP reference tests and manifest corruption tests pass.
+- [x] Focused Ruff/format and diff checks pass; documentation links verified.
 - [ ] Independent review accepted.
 
 Run the QP reference tests and new focused tests using the configured optees

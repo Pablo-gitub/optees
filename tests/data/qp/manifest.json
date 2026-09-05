@@ -1,0 +1,28 @@
+{
+  "aggregate_sha256": "281b04528d5296b21acf69f6a4af861b4957a68b24680914b8f71c97169671ba",
+  "capability_id": "qp.continuous",
+  "capability_ids": [
+    "qp.continuous"
+  ],
+  "contract_version": "1",
+  "files": [
+    {
+      "path": "examples/qp_resource_allocation_2variables.json",
+      "sha256": "52f649d98aa5d60071c6d9c578b97c7dd597cc89065fa74b3392fcc2b6a3b476"
+    },
+    {
+      "path": "tests/data/qp/README.md",
+      "sha256": "48ce7a7e8917c1801f85d7333660f4e5721688049b16a1d1137e73acd8e6acc3"
+    },
+    {
+      "path": "tests/data/qp/reference_cases.json",
+      "sha256": "a9e133c0064feb7ebf266ff019909bd8dde850a01a1f7612aa0eb123c6cdf805"
+    }
+  ],
+  "implementation_baseline_commit": "1f3b45de0d75ddcfb239a8867d48b4926b3264ab",
+  "manifest_version": "1",
+  "optees_version": "0.10.2",
+  "path_base": "repository_root",
+  "problem_schema_version": "1",
+  "result_schema_version": "1"
+}
