@@ -36,20 +36,34 @@ class FlowLayout(QLayout):
     def _do_layout(self, rect: QRect, *, test_only: bool) -> int:
         l, t, r, b = self.getContentsMargins()
         x = rect.x() + l
-        y = rect.y() + t
-        line_h = 0
         max_x = rect.right() - r
+
+        lines = []
+        line = []
+        line_h = 0
 
         for it in self._items:
             sz = it.sizeHint()
             w, h = sz.width(), sz.height()
-            if x + w > max_x + 1 and line_h > 0:  # wrap
+            if line and (x + w > max_x + 1):
+                lines.append((line, line_h))
+                line = []
                 x = rect.x() + l
-                y += line_h + self._v
                 line_h = 0
-            if not test_only:
-                it.setGeometry(QRect(QPoint(x, y), sz))
+            line.append((it, x, w))
             x += w + self._h
             line_h = max(line_h, h)
 
-        return y + line_h + b
+        if line:
+            lines.append((line, line_h))
+
+        cur_y = rect.y() + t
+        for line_items, line_h in lines:
+            for it, it_x, it_w in line_items:
+                if not test_only:
+                    it.setGeometry(QRect(it_x, cur_y, it_w, line_h))
+            cur_y += line_h + self._v
+
+        if lines:
+            return cur_y - self._v + b
+        return rect.y() + t + b

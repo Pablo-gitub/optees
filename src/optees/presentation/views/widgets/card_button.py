@@ -11,8 +11,8 @@ from optees.core.assets import asset as asset_path
 from optees.core.design import tokens
 from optees.core.theme import theme
 
-CARD_W = 360
-CARD_H = 140
+CARD_W = 380
+CARD_H = 150
 
 
 def _abs_icon_path(p: Optional[str]) -> Optional[str]:
@@ -63,9 +63,12 @@ class CardButton(QFrame):
 
         self._sub = QLabel(subtitle)
         self._sub.setWordWrap(True)
+        self._sub.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         self._sub.setStyleSheet("color: rgba(255,255,255,0.75);")
 
         title_row = QHBoxLayout()
+        title_row.setContentsMargins(0, 0, 0, 0)
+        title_row.setSpacing(8)
         title_row.addWidget(self._title, 1)
 
         if badge:
@@ -75,6 +78,8 @@ class CardButton(QFrame):
             title_row.addWidget(b, 0, Qt.AlignRight)
 
         text_col = QVBoxLayout()
+        text_col.setContentsMargins(0, 0, 0, 0)
+        text_col.setSpacing(8)
         text_col.addLayout(title_row)
         text_col.addWidget(self._sub, 1)
         root.addLayout(text_col, 1)
@@ -84,13 +89,24 @@ class CardButton(QFrame):
 
     # The width is fixed, so derive the height from the wrapped content instead
     # of a fixed value: this is what stops long descriptions from being clipped.
-    def sizeHint(self) -> QSize:
+    def hasHeightForWidth(self) -> bool:
+        return True
+
+    def heightForWidth(self, w: int) -> int:
         layout = self.layout()
-        if layout is not None and layout.hasHeightForWidth():
-            height = layout.heightForWidth(CARD_W)
-        else:
-            height = super().sizeHint().height()
-        return QSize(CARD_W, max(CARD_H, height))
+        if layout is not None and layout.count() >= 2:
+            l, t, r, b = layout.getContentsMargins()
+            icon_w = self._icon.sizeHint().width() if hasattr(self, "_icon") else 72
+            spacing = layout.spacing()
+            text_w = max(1, w - l - r - icon_w - spacing - 2)
+            text_col = layout.itemAt(1).layout()
+            text_h = text_col.heightForWidth(text_w) if text_col is not None else 0
+            content_h = max(icon_w, text_h)
+            return max(CARD_H, t + b + content_h)
+        return CARD_H
+
+    def sizeHint(self) -> QSize:
+        return QSize(CARD_W, self.heightForWidth(CARD_W))
 
     def minimumSizeHint(self) -> QSize:
         return self.sizeHint()
