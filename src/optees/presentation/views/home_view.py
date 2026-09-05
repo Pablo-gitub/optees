@@ -15,7 +15,7 @@ from optees.presentation.views.widgets.card_button import CardButton
 from optees.presentation.views.widgets.flow_layout import FlowLayout
 
 CARD_W = 380
-CARD_H = 150
+CARD_H = 160
 
 
 class Category(QFrame):

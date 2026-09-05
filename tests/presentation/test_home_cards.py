@@ -23,12 +23,12 @@ def test_card_button_dimensions_and_size_hints(qtbot) -> None:
     assert card.width() == CARD_W
     assert card.width() == 380
     assert card.minimumHeight() == CARD_H
-    assert card.minimumHeight() == 150
+    assert card.minimumHeight() == 160
     assert card.hasHeightForWidth() is True
 
     hint = card.sizeHint()
     assert hint.width() == 380
-    assert hint.height() >= 150
+    assert hint.height() >= 160
     assert card.minimumSizeHint() == hint
 
 
@@ -72,13 +72,15 @@ def test_flow_layout_aligns_row_heights(qtbot) -> None:
     assert short_card.height() == long_card.sizeHint().height()
 
 
-def test_nlp_card_in_home_page_renders_without_clipping(window, qtbot) -> None:
+def test_nlp_and_qp_cards_in_home_page_render_without_clipping(window, qtbot) -> None:
     home = window.home_page
     card_nlp = home.card_nlp
     card_qp = home.card_qp
 
     assert card_nlp.width() == 380
-    assert card_nlp.height() >= 150
+    assert card_nlp.height() >= 160
+    assert card_qp.width() == 380
+    assert card_qp.height() >= 160
 
     # In Italian (default or set), title fits cleanly on a single line
     S.set_language("it")
@@ -87,22 +89,30 @@ def test_nlp_card_in_home_page_renders_without_clipping(window, qtbot) -> None:
     window.show()
     qtbot.waitExposed(window)
 
-    # Nonlinear category cards share the same row height
+    # Both nonlinear category cards share the same row height and are at least CARD_H
     assert card_nlp.height() == card_qp.height()
+    assert card_qp.height() >= CARD_H
     assert card_nlp.height() >= card_nlp.sizeHint().height()
+    assert card_qp.height() >= card_qp.sizeHint().height()
 
-    # Text must be contained within card geometry
+    # Text must be fully contained within card geometry without clipping
     assert card_nlp._title.text() != ""
     assert card_nlp._sub.text() != ""
     assert card_nlp._title.geometry().bottom() < card_nlp.height()
     assert card_nlp._sub.geometry().bottom() < card_nlp.height()
 
+    assert card_qp._title.text() != ""
+    assert card_qp._sub.text() != ""
+    assert card_qp._title.geometry().bottom() < card_qp.height()
+    assert card_qp._sub.geometry().bottom() < card_qp.height()
+
     # Title fits in one line in Italian with 380px card width
     assert card_nlp._title.height() <= 28
 
-    # Switch to English and verify single-line title and row alignment
+    # Switch to English and verify single-line title, row alignment, and bounds
     S.set_language("en")
     home.refresh_strings()
     assert card_nlp._title.text() != ""
     assert card_nlp._title.height() <= 28
     assert card_nlp.height() == card_qp.height()
+    assert card_qp._sub.geometry().bottom() < card_qp.height()

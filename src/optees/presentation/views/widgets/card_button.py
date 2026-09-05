@@ -12,7 +12,7 @@ from optees.core.design import tokens
 from optees.core.theme import theme
 
 CARD_W = 380
-CARD_H = 150
+CARD_H = 160
 
 
 def _abs_icon_path(p: Optional[str]) -> Optional[str]:
@@ -96,12 +96,12 @@ class CardButton(QFrame):
         layout = self.layout()
         if layout is not None and layout.count() >= 2:
             l, t, r, b = layout.getContentsMargins()
-            icon_w = self._icon.sizeHint().width() if hasattr(self, "_icon") else 72
+            icon_w = getattr(self._icon, "_size", 72) if hasattr(self, "_icon") else 72
             spacing = layout.spacing()
             text_w = max(1, w - l - r - icon_w - spacing - 2)
             text_col = layout.itemAt(1).layout()
             text_h = text_col.heightForWidth(text_w) if text_col is not None else 0
-            content_h = max(icon_w, text_h)
+            content_h = max(icon_w, text_h + 8)
             return max(CARD_H, t + b + content_h)
         return CARD_H
 

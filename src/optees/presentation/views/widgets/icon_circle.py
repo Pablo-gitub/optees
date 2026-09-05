@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Optional
 import os
 
-from PySide6.QtCore import Qt, QEvent, QRect
+from PySide6.QtCore import Qt, QEvent, QRect, QSize
 from PySide6.QtGui import QPainter, QPixmap, QPalette, QImage, QColor, QFont
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QFrame
@@ -34,6 +34,12 @@ class IconCircle(QFrame):
 
         if icon_path:
             self.set_icon_path(icon_path)
+
+    def sizeHint(self) -> QSize:
+        return QSize(self._size, self._size)
+
+    def minimumSizeHint(self) -> QSize:
+        return self.sizeHint()
 
     # ---------- public API ----------
 
