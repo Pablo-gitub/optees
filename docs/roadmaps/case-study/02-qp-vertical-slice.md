@@ -220,6 +220,10 @@ permit multiple valid solutions.
 
 ## Gate `QP-I` (Achieved)
 
+- [x] Plan follow-up [consumer handoff manifest](04-qp-consumer-handoff.md).
+- [ ] Implement/review the structured manifest and README without changing
+  frozen QP fixture bytes. QP-I itself remains achieved.
+
 Stage A capability implementation is complete:
 
 - domain and application layers are domain-neutral and strictly decoupled from solver/OSQP packages;
