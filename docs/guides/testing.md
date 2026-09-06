@@ -108,9 +108,8 @@ metadata-only MCP retrieval.
   values, binding ties, declared order and no-candidate states. Mathematical
   expectations come from the frozen contract's reference examples and are
   produced by the registered capability rather than recomputed in the tests.
-- `tests/data/scenario/test_scenario_reference_cases.py` and
-  `tests/data/scenario/test_scenario_manifest.py`: frozen linear scenario
-  reference cases and manifest verifying exact analytical optima across both
+- `tests/data/scenario/test_scenario_reference_cases.py`: frozen linear scenario
+  reference cases and manifest integrity checks verifying exact analytical optima across both
   orientations, continuous LP and discrete MILP routes, and independent
   validation reporting. Future external scientific benchmark integration
   (`OPT-DS-ROBUST-BENCH` / `ROBUST-BENCH`) is documented as planned in

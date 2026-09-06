@@ -165,17 +165,17 @@ academic optimization and operations research literature:
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Authors & Publication** | Marc Goerigk and Mohammad Khosravi, *Computers & Operations Research* 166 (2024), 106608 | I. Barrodale and C. Phillips, *ACM TOMS* 1(3) (1975), Algorithm 495 | J. von Neumann (1928), D. Gale, H. W. Kuhn, A. W. Tucker (1950), V. Chvátal (1983) | J. R. Birge, C. R. Holmes et al. (POSTS / Netlib SMPS) | P. Kouvelis & G. Yu (1997), I. Averbakh (2001) |
 | **Primary URL / Host** | `https://robust-optimization.com` | `http://www.netlib.org/toms/495` | Textbook / theoretical literature; Gambit (`gambit-project.org`) | `http://www.netlib.org/lp/data/` (SMPS) | Monograph literature (Kluwer / Springer) |
-| **Data Format** | CSV ($n, p, N$ header + cost rows) | Fortran text / driver arrays | Payoff matrices $A \in \mathbb{R}^{m \times n}$, Gambit `.nfg` | SMPS format (`.cor`, `.tim`, `.sto`) | Mathematical formulation in text |
-| **Problem Dimensions** | $n \in [50, 100]$, $N \in [5, 50]$, $p \in [10, 75]$ | $m \in [10, 100]$, $n \in [2, 10]$ | $m, n \in [2, 50]$ | Rows $\sim 100 - 5000$, scenarios $5 - 100$ | Small illustrative networks |
-| **Available Reference Results** | **None.** Only solver CPU runtimes and MIP gap boxplots are published. | Selected polynomial fitting errors in driver sample outputs. | Exact closed-form / rational game values $v^* \in \mathbb{Q}$ published in literature. | Expected value $\mathbb{E}[c^T x]$, **not** minimax. | Average solve times across random seeds. |
+| **Data Format** | The reviewed paper describes generators and Selection instances; the broader website also catalogues Knapsack, Shortest Path, and TSP data. Exact downloadable formats require a per-artifact audit. | Fortran source and driver arrays | Payoff matrices $A \in \mathbb{R}^{m \times n}$; some tool ecosystems use formats such as Gambit `.nfg` | SMPS format (`.cor`, `.tim`, `.sto`) | Mathematical formulation in text |
+| **Problem Dimensions** | Vary by generator and website entry; no single range is frozen by this audit | Vary by driver data | Vary by published example or collection | Vary by collection | Small illustrative networks |
+| **Available Reference Results** | The reviewed paper primarily reports generator and computational-performance evidence; this audit did not identify a stable per-instance table suitable as the frozen oracle. | Driver outputs may provide candidate residual references, but their exact provenance and precision remain to be audited. | Some individual literature examples have exact closed-form or rational game values; no corpus was selected in this audit. | Published outcomes generally follow stochastic-programming semantics and cannot be reused as minimax values. | Vary by source; no suitable frozen corpus was selected. |
 | **Result Status Type** | Runtime benchmark only (no solution lookup table) | Driver printout candidate | Proven theoretical optimum | Expected-value optimum (incompatible objective) | Average performance statistics |
-| **License / Terms** | Unspecified / unclear on website | ACM Software License (Netlib public research) | Academic / textbook public domain | Netlib open research data | Copyrighted book chapters |
-| **In-Repo Committability** | Permissible only if small and public; license is ambiguous | Permissible (small driver test matrices) | Permissible (matrices can be embedded in tests) | Permissible for Netlib smoke files | Not distributable as bulk files |
-| **External Checksummed Archive** | No static ZIP archive with published SHA-256; dynamic CMS | Yes (`495.gz` on Netlib) | No centralized checksummed matrix game repository | Yes (Netlib gzip files) | No online repository |
+| **License / Terms** | No dataset licence was established by this audit | Must be checked against the terms attached to the exact Netlib/ACM artifact | Must be checked for each selected source; publication does not imply public domain | Must be checked for each exact artifact | Copyright applies; quotation or redistribution rights require a source-specific audit |
+| **In-Repo Committability** | Not established | Not established | Not established | Not established | Not established |
+| **Stable external artifact** | The website is live and evolving; exact candidate files still require immutable-byte capture and provenance review | Netlib exposes an Algorithm 495 artifact; byte stability, terms, test data, and expected outputs still require verification | No standard corpus was identified in this bounded review | Netlib hosts SMPS artifacts, but their published objectives use different semantics | No corpus selected |
 | **Mathematical Fit: Min-Max Loss** | Exact fit for binary Selection MILP ($\sum x_i = p$) | Lossless mapping via scenario doubling ($s_{i,+}, s_{i,-}$) | Exact fit (Player 1 LP: $x \in \Delta_m$, $n$ scenarios) | **Incompatible:** optimizes expected value $\mathbb{E}$, not $\max_k$ | Min-max regret (incompatible with pure min-max loss) |
-| **Mathematical Fit: Max-Min Reward** | **Zero fit.** Only minimization criteria are modeled. | **Zero fit.** $L_\infty$ norm is strictly minimization. | Exact fit (Player 2 LP: $y \in \Delta_n$, $m$ scenarios) | **Incompatible:** optimizes expected value $\mathbb{E}$, not $\min_k$ | **Zero fit.** |
-| **Semantic Loss / Transformation** | None on loss side; binary selection only | Severe: doubles rows into $+r_i, -r_i$; destroys scenario semantics | Severe domain conflation: game theory mixed strategies $\ne$ scenario uncertainty | Fatal: confuses stochastic expectation with robust worst-case | Fatal: confuses regret baseline with robust guarantee |
-| **Expected CI Runtime** | High (50–600s per instance in CPLEX) | Low ($< 0.1$s) | Low ($< 0.1$s) | High ($> 10$s) | Variable |
+| **Mathematical Fit: Max-Min Reward** | No native reward corpus was established; exact sign dualization could exercise the separate max-min capability if a min-max reference value is independently trusted | No native reward semantics, but $\max_x\min_k R_k(x)=-\min_x\max_k[-R_k(x)]$ gives an exact sign-dual construction | Exact fit (Player 2 LP: $y \in \Delta_n$, $m$ scenarios) | **Incompatible with the published oracle:** expectation values are not minimum-scenario rewards | Requires source-specific analysis |
+| **Transformation assessment** | Exact for compatible one-stage finite min-max instances; feature coverage varies | Residual-sign doubling is an exact epigraph formulation, not mathematical distortion; it covers only a specialised subfamily | Simplex matrix games map exactly to both orientations but cover a specialised subfamily and should not be presented as operational-uncertainty evidence | Replacing expectation by worst case would change the published problem | Regret instances need scenario-optimum baselines absent from the current pure-guarantee contract |
+| **Expected CI runtime** | Must be measured on a selected bounded subset | Must be measured | Must be measured | Must be measured if ever considered under a matching future capability | Must be measured |
 | **Additional Dependencies** | None (CSV reader) | None (fixed matrix parser) | None (matrix parser) | SMPS parser required | None |
 
 ---
@@ -187,16 +187,16 @@ academic optimization and operations research literature:
 - **Why It Must Be Rejected for Current Verification:**
   1. **Absence of Certified Reference Solutions:** Neither the paper nor the website publishes a table of certified optimal objective values (analogous to `00README.QP` or `miplib2017.solu`). The published results consist exclusively of CPU runtime distributions, solve success rates, and MIP solver gap plots across batches of 50 randomly sampled instances. If Optees were to solve these instances and use its own output as the golden reference, it would commit **circular validation** (Stop Condition 10).
   2. **Unclear Licensing Terms:** The website `robust-optimization.com` lacks an explicit open-source license grant (e.g. Apache-2.0, MIT, CC-BY) for the instance data files (Stop Condition 1).
-  3. **Unstable Primary Source:** The site is a dynamic WordPress installation without immutable, versioned release archives with published SHA-256 digests (Stop Condition 2).
-  4. **Single-Orientation & Discrete Only:** The library contains only minimization instances (Min-Max and Min-Max Regret) and only binary combinatorial structures ($\sum x_i = p$, $x_i \in \{0, 1\}$). It offers zero continuous LP problems and zero instances for `maximize_minimum_reward` (Stop Condition 4).
-  5. **CI Budget Incompatibility:** The instances are deliberately engineered to be computationally pathological, requiring hundreds of seconds on commercial MIP solvers (CPLEX/Gurobi) for modest sizes ($n=100$), which is incompatible with deterministic automated testing (Stop Condition 8).
+  3. **Mutable Discovery Surface:** The website describes itself as under construction and evolving. That does not make its data invalid, but an implementation would need to freeze the exact source URL, bytes, retrieval date, and locally computed digest (Stop Condition 2).
+  4. **Coverage Limitation:** The reviewed benchmark paper focuses on robust discrete optimization and does not provide a native max-min-reward oracle. A sign-dual test is mathematically exact but would be derived coverage rather than an independent reward corpus.
+  5. **Unmeasured CI Budget:** The paper deliberately studies hard generators. Runtime must be measured on the exact selected instances and Optees backends before any CI subset can be approved (Stop Condition 8); this audit does not assign unsupported universal runtime ranges.
 
 ### 4.2 Candidate 2: Chebyshev $L_\infty$ Approximation (Netlib TOMS 495 / Barrodale & Phillips 1975)
 - **Scientific Foundation:** Algorithm 495 (CHEB) solves overdetermined linear systems $\min_{x} \|Ax - b\|_\infty = \min_{x} \max_{i=1,\dots,m} |a_i^T x - b_i|$.
-- **Why It Must Be Rejected for Scenario Validation:**
-  1. **Semantic Distortion via Scenario Doubling:** An overdetermined equation $a_i^T x \approx b_i$ has no intrinsic scenario meaning. Representing it in Optees requires generating $2m$ artificial scenarios: $s_{i,+} = a_i^T x - b_i$ and $s_{i,-} = -a_i^T x + b_i$. This artificial transformation introduces mathematical artifacts (e.g. mutually exclusive binding pairs) that do not reflect genuine operational scenarios (Stop Condition 6).
-  2. **Zero Coverage for Max-Min Reward:** Chebyshev approximation is fundamentally a norm minimization problem ($L_\infty$). It cannot model `maximize_minimum_reward` without destroying its mathematical formulation (Stop Condition 4).
-  3. **Inadequate Structural Verification:** Chebyshev regression problems have unconstrained variables $x \in \mathbb{R}^n$, zero box bounds, no shared constraints ($A_{eq} x = b_{eq}$), and no discrete domains. Testing Optees against them would exercise only the unconstrained epigraph reduction, failing to validate shared constraints, bound checking, or MILP orchestration (Stop Condition 7).
+- **Why It Is Not Yet Authorized:**
+  1. **Exact but Narrow Mapping:** Representing each residual by $s_{i,+}=a_i^Tx-b_i$ and $s_{i,-}=-a_i^Tx+b_i$ is an exact finite-scenario epigraph formulation. It is valid mathematical evidence for a specialised min-max subfamily, but it does not alone validate general shared constraints, integrality, or operational scenario provenance.
+  2. **Derived Max-Min Coverage:** Negating those scenario evaluations produces an exact max-min dual case under the identity already frozen in the public contract. This can test orientation and sign handling, but is not a separately sourced reward benchmark.
+  3. **Evidence Gap:** Before implementation, the exact Algorithm 495 artifact, its terms, embedded datasets, published/driver expected residuals, precision, and byte stability must be audited. This planning pass did not complete that artifact-level verification.
 
 ### 4.3 Candidate 3: Two-Person Zero-Sum Matrix Games
 - **Scientific Foundation:** Under von Neumann’s Minimax Theorem, any matrix $A \in \mathbb{R}^{m \times n}$ has an exact game value $v^*$ such that:
@@ -207,10 +207,10 @@ academic optimization and operations research literature:
   - Player 1 solves `scenario.linear.min_max_loss` over $x \in \Delta_m$ against $n$ scenarios (columns of $A$);
   - Player 2 solves `scenario.linear.max_min_reward` over $y \in \Delta_n$ against $m$ scenarios (rows of $A$);
   - Both orientations achieve identical objective $v^*$, and binding scenarios identify the support of the opponent’s optimal mixed strategy.
-- **Why It Must Not Be Used as a Benchmark Corpus for Scenarios:**
-  1. **Absence of a Centralized Benchmark Archive:** There is no standard, checksummed, institutional archive of zero-sum matrix games comparable to Netlib or Maros–Mészáros. Games are either published individually in textbooks (e.g. Chvátal 1983, Gale 1960) or procedurally generated by tools like GAMUT (Stop Condition 2 & 9).
-  2. **Domain Conflation and Architectural Boundary:** Optees explicitly maintains Game Theory (`game_theory.two_player_zero_sum`) as a planned future capability on its product roadmap (`docs/roadmaps/project.md` line 9 and 180–184). Using zero-sum matrix games as an ad-hoc proxy for scenario optimization conflates two distinct domain models: strategic adversarial equilibrium versus robust decision-making under states of nature (Stop Condition 4 & 5).
-  3. **Lack of Generalized Scenario Features:** Matrix games exclusively use simplex constraints ($\sum x_i = 1, x \ge 0$), zero scenario offsets ($\delta_k = 0$), zero base objective ($c^{(0)} = 0$), and strictly continuous variables. They do not validate general shared constraints, box bounds, offsets, or discrete MILP routing (Stop Condition 7).
+- **Why It Is Not Yet Authorized:**
+  1. **Corpus Gap:** This bounded review did not identify a standard corpus with stable artifacts, source-specific redistribution terms, and frozen expected values comparable to the QP collection.
+  2. **Valid Cross-Domain Mathematical Evidence:** Matrix games are an exact special case of the two public scenario formulations. They may test the reductions without changing either contract. They must, however, be labelled as cross-domain mathematical evidence rather than evidence about operational uncertainty, and they do not replace the future game-theory capability.
+  3. **Coverage Limitation:** Simplex matrix games do not by themselves validate offsets, arbitrary shared constraints, or discrete routing. A scientific suite may combine complementary sources and analytic cases; no single corpus is required to cover every feature.
 
 ### 4.4 Candidate 4: Stochastic Programming Collections (Netlib SMPS / POSTS)
 - **Fatal Conceptual Flaw:** Stochastic programming collections minimize the **expected value** under known probability distributions: $\min \mathbb{E}_{s}[c(s)^T x]$.
@@ -240,9 +240,9 @@ Among the authorized conclusions defined in the work unit mandate:
 **Conclusion E is selected.**
 
 ### Rationale:
-1. **Scientific Honesty:** As confirmed by current operations research literature (Goerigk & Khosravi 2024), there is currently **no standardized, peer-reviewed, open-licensed benchmark library with certified published optimal values** for finite-scenario linear min-max and max-min optimization.
+1. **Bounded Evidence Result:** The candidates examined in this planning pass did not establish a source that simultaneously provides stable artifacts, source-specific usable terms, and independently published per-instance values appropriate for immediate integration. This is a conclusion about the reviewed evidence, not a claim that no suitable corpus exists anywhere.
 2. **Prevention of Circular Self-Validation:** Fabricating expected objective values by solving unverified instance generators with Optees or third-party MIP solvers would violate Stop Condition 10 and destroy independent verification integrity.
-3. **Preservation of Semantic Integrity:** Forcing external problems from unrelated domains (such as Chebyshev regression or expected-value stochastic programs) would require artificial scenario doubling or semantic distortions that fail to test genuine robust scenario decision-making.
+3. **Preservation of Semantic Integrity:** Expected-value stochastic or regret oracles cannot validate a worst-case guarantee without changing the problem. By contrast, exact special-case reductions such as Chebyshev residual doubling and matrix games remain legitimate mathematical evidence when labelled with their limited coverage.
 4. **Current Verification Baseline is Rigorous and Complete:** Optees already possesses a fully verified, deterministic, hand-calculable analytical reference suite in `tests/data/scenario/reference_cases.json`, covering:
    - continuous problems with multiple binding scenarios and mixed signs;
    - continuous problems with strictly negative worst-case guarantees;
@@ -262,14 +262,14 @@ For the current work unit, the audit confirms why external integration must be d
 | # | Stop Condition | Status | Empirical Evidence |
 | :--- | :--- | :--- | :--- |
 | 1 | Undetermined or restrictive redistribution license | **TRIGGERED** | `robust-optimization.com` lacks an explicit open-source license; textbook examples are copyrighted. |
-| 2 | Unstable primary source | **TRIGGERED** | No static institutional repository (like SuiteSparse or Imperial College) exists for finite linear scenarios. |
-| 3 | Absence of verifiable published reference results | **TRIGGERED** | Literature on robust discrete optimization publishes runtime comparisons and solve rates, not certified optimal value tables. |
+| 2 | Stable primary artifact not established | **TRIGGERED FOR CURRENT CANDIDATES** | The robust-optimization website is explicitly evolving, while the exact bytes and stability of the more promising Netlib artifact were not completed in this audit. No universal claim about all possible sources is made. |
+| 3 | Verifiable published reference results not established | **TRIGGERED FOR CURRENT CANDIDATES** | No selected artifact/result pair was verified closely enough to freeze as an oracle. This does not assert that the wider literature contains no usable individual examples. |
 | 4 | Corpus incompatible with current capability contract | **TRIGGERED** | Stochastic libraries optimize expectation; Kouvelis & Yu optimizes regret; Chebyshev lacks reward orientation. |
-| 5 | Need to alter public capability semantics | **PASSED** | Optees strictly refuses to modify frozen schema v1 or add artificial probabilities. |
-| 6 | Conversion dependent on assumptions absent from data | **TRIGGERED** | Chebyshev requires arbitrary scenario doubling ($+r_i, -r_i$); matrix games require assuming adversarial zero-sum equilibrium. |
-| 7 | Benchmark tests only LP/MILP solver without scenario reconstruction | **TRIGGERED** | Flattened MPS/LP benchmarks (like MIPLIB) bypass scenario decomposition, epigraph bounds, and binding set analysis. |
-| 8 | Problem dimensions or solve times unsuitable for CI | **TRIGGERED** | Synthetic "hard" instances require 10–600 seconds per instance on CPLEX, far exceeding the CI budget. |
-| 9 | Inability to verify file integrity via checksums | **TRIGGERED** | No authoritative SHA-256 manifest exists for scenario benchmark suites. |
+| 5 | Need to alter public capability semantics | **NOT TRIGGERED** | No candidate may modify frozen schema v1. Exact special-case mappings and sign dualization fit the existing semantics; adding probabilities or regret would not. |
+| 6 | Conversion dependent on assumptions absent from data | **NOT TRIGGERED FOR EXACT MAPPINGS** | Chebyshev residual doubling and finite matrix-game mappings are algebraically exact. This condition remains triggered for conversions that invent probabilities, regret baselines, or unstated constraints. |
+| 7 | Benchmark tests only LP/MILP solver without scenario reconstruction | **IMPLEMENTATION CONDITION** | A future test must traverse the registered scenario capability and independently verify scenario values, guarantee, auxiliary value, and binding set; specialised corpora may be complemented by existing analytic cases. |
+| 8 | Problem dimensions or solve times unsuitable for CI | **UNRESOLVED** | Runtime and memory must be measured on the exact proposed subset rather than inferred from a paper's broad computational study. |
+| 9 | Inability to verify file integrity via checksums | **UNRESOLVED** | A source need not publish SHA-256 itself: Optees may freeze a locally computed digest after provenance and exact bytes are independently reviewed. Artifact stability has not yet been established. |
 | 10 | Circular use of Optees to produce expected reference values | **TRIGGERED** | Running Optees on unverified instances to generate "expected" answers would constitute circular pseudo-validation. |
 
 **Conclusion:** Multiple stop conditions are triggered. Proceeding with external corpus integration at this stage would violate repository quality standards. Deferral is scientifically mandatory.
@@ -300,13 +300,13 @@ in the scientific literature, its implementation must comply with the following 
   3. that all binding scenarios are correctly identified in declared sequence;
   4. that non-binding scenarios satisfy strict inequality against the guarantee.
 - **Public Surface Execution:** Tests must invoke `create_local_optimization_service().solve("scenario.linear.min_max_loss", payload)` or `create_local_optimization_service().solve("scenario.linear.max_min_reward", payload)`. They must never bypass public capability entrypoints by invoking underlying LP/MILP solvers directly.
-- **Mandatory Independent Validation:** The independent validation report (`ScenarioIndependentSolutionValidator`) must be asserted to return status `verified` (or `partial` only if dual information is absent), with passing sub-checks across variable vectors, bounds, shared constraints, scenario values, guarantees, and binding sets.
+- **Mandatory Independent Validation:** Scientific benchmark candidates must produce a strict `verified` report from `ScenarioIndependentSolutionValidator`, with passing sub-checks across variable vectors, bounds, shared constraints, scenario values, guarantees, auxiliary/delegated-objective consistency, and binding sets. This validator does not make a dual-evidence promise, so missing duals are not a reason to accept `partial` here.
 
 ---
 
 ## 8. Planned Files for Future Work Unit
 
-When authorized by the appearance of a verified external corpus or an approved community standard:
+When an artifact-level audit authorizes a verified external corpus or a bounded published example set:
 - `src/optees/utility/data_adapters/scenario_benchmark_adapter.py`: Data adapter at utility boundary translating source benchmark format into `ContinuousLinearScenarioProblem` (schema v1).
 - `scripts/fetch_linear_scenario_benchmark.py`: Isolated acquisition script with SHA-256 verification and path-traversal protection.
 - `tests/utility/test_scenario_benchmark_adapter.py`: Unit tests for parser, error handling, and CRLF normalization.
@@ -317,5 +317,5 @@ When authorized by the appearance of a verified external corpus or an approved c
 ## 9. Next Authorized Step
 
 - **Immediate action:** Commit this planning and evaluation document to freeze the scientific evaluation and Stop Condition findings.
-- **State:** `OPT-DS-ROBUST-BENCH` remains **planned**; integration is deferred pending authoritative external corpus availability.
+- **State:** the source survey is complete, while `OPT-DS-ROBUST-BENCH` integration remains **planned**. The next benchmark-specific action, if prioritised, is a narrow artifact audit of Netlib Algorithm 495 and independently published matrix-game examples; implementation remains blocked until that audit freezes usable terms, exact bytes, and trustworthy expected results.
 - **Next roadmap item:** Return to the primary project sequence (`OPT-DS-04` forecasting evidence protocol or scheduled baseline items).

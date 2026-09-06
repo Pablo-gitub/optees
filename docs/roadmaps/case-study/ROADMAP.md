@@ -239,14 +239,15 @@ is complete; `OPT-DS-04` remains evidence-gated by the Simulator.
 - Research and evaluate external scientific benchmark candidates for
   `scenario.linear.min_max_loss` and `scenario.linear.max_min_reward`.
 - Audit primary sources, mathematical compatibility, licenses, and stop conditions.
-- Adopts **Conclusion E**: defer external integration to prevent circular validation
-  and semantic distortion, while maintaining the frozen deterministic analytical
-  reference suite (`tests/data/scenario/reference_cases.json`).
+- Adopts **Conclusion E** for the bounded survey: no reviewed candidate is yet
+  authorized for integration. Exact Chebyshev and matrix-game special-case mappings
+  remain candidates for a narrower artifact-level audit; the frozen deterministic
+  analytical reference suite remains authoritative in the meantime.
 
 Detailed evaluation and standards: `scientific-linear-scenario-benchmark.md`.
 
-**Gate ROBUST-BENCH:** planned; rigorous external benchmark criteria established;
-corpus evaluation and future implementation requirements defined.
+**Gate ROBUST-BENCH:** integration planned and blocked; source-survey criteria are
+established, but no corpus, published-example set, parser, or benchmark test is approved.
 
 ### OPT-DS-04 — Targeted Forecasting Expansion
 
