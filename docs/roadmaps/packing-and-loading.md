@@ -222,6 +222,20 @@ as an integer quantity of indivisible units.
 - [x] Integrate the public OR-Library Bischoff/Ratcliff `thpack1` source,
   document its provenance and checksum, and run an explicitly labelled derived
   two-box CI subset with an analytic expected objective.
+- [ ] Add an independent exhaustive optimality suite for deterministic
+  micro-instances. Use small integer containers, two to six boxes, bounded
+  orientation sets, integer or formally justified edge-generated candidate
+  coordinates, symmetry reduction, and a strict per-case budget.
+- [ ] Keep the exhaustive oracle structurally different from the production
+  MILP: enumerate feasible placements and subsets directly, then compare the
+  selected boxes, loaded volume/value, bounds, orientations, and overlap
+  invariants with the public Optees result.
+- [ ] Freeze hand-derived seed cases before generated cases, record the search
+  space and states explored, and distinguish exhaustive correctness evidence
+  from external scientific benchmarking and performance measurements.
+- [ ] Extend this oracle to support-area, stability, or unloading semantics only
+  after each corresponding mathematical contract is implemented and frozen;
+  do not let a future test silently validate assumptions absent from Phase 1.
 
 ## Phase 2 - Support-Aware Single-Container Refinement
 

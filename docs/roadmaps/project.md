@@ -515,6 +515,29 @@ benchmark evidence before broadening the families further.
 - Keep toy and analytic cases in normal CI; mark heavier scientific regression
   and performance cases explicitly.
 
+#### Deferred cross-family evidence backlog
+
+These are general Optees hardening items, independent of the Decision
+Simulator roadmap, and are not current implementation priorities.
+
+- [ ] Audit and integrate one small, redistributable tabular-regression dataset
+  with a frozen split and preprocessing protocol, independently reproduced
+  metrics, provenance, licence, checksum, and bounded CI budget.
+- [ ] Audit and integrate one small, redistributable binary-classification
+  dataset, preferably more informative than a toy separable case, under the
+  same evidence requirements. Do not turn a result on one dataset into a
+  production-readiness or fairness claim.
+- [ ] Audit a small external shortest-path corpus, with DIMACS-style instances
+  as a candidate rather than a predetermined choice. Require published or
+  independently certified distances, a dedicated adapter, provenance,
+  checksums, licence review, and a bounded deterministic CI subset.
+- [ ] Add the independent exhaustive optimality suite for single-container 3D
+  packing micro-instances specified in `packing-and-loading.md`. Label it as
+  internal correctness evidence, not an external scientific benchmark.
+
+The packing oracle must be structurally independent from the production MILP,
+so that a modelling defect is not reproduced by both implementations.
+
 ### Phase 5 - Coordinated Family Expansion
 
 Once the current vertical slices have one complete workflow, deepen them in an
