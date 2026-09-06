@@ -244,10 +244,10 @@ is complete; `OPT-DS-04` remains evidence-gated by the Simulator.
 - **Artifact audit completed (`OPT-DS-ROBUST-BENCH-A`):** Netlib TOMS Algorithm 495
   was audited at byte and legal levels (`netlib-495-artifact-audit.md`), adopting
   Conclusion **`C — REFERENCE-ONLY`**. The archive contains exclusively the Fortran
-  subroutine `CHEB` under non-commercial ACM license, with no test datasets or solution
-  tables. Mathematical reductions are exact and verified, authorizing published literature
-  problems (e.g. `BP1975-LINE`) as reference cases in fixture suites, but not as an
-  automated downloadable benchmark suite.
+  subroutine `CHEB` under CALGO terms containing non-commercial conditions, with no test
+  datasets or solution tables. The mathematical reductions are exact and experimentally
+  verified, but external example coefficients remain unauthorized for fixture inclusion
+  until their exact source/version and applicable terms receive a separate audit.
 
 **Gate ROBUST-BENCH:** integration planned and blocked; source-survey criteria and
 Netlib 495 artifact audit are established, but no downloadable corpus or benchmark test is approved.

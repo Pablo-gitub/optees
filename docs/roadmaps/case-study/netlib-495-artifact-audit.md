@@ -11,7 +11,7 @@
   - The Netlib Algorithm 495 distribution provides the Fortran subroutine `CHEB`, but contains **no standalone test datasets, input instances, or reference solution tables**.
   - ACM software policy imposes non-commercial restrictions that preclude vendoring the Fortran source code into the repository.
   - The mathematical reduction of discrete Chebyshev linear approximation via residual doubling is an exact algebraic isomorphism to `scenario.linear.min_max_loss`, and the sign-dual mapping is exact for `scenario.linear.max_min_reward`.
-  - Individual problems published in the accompanying literature (Barrodale & Phillips 1975, NAG `e02gcc`) have closed-form analytical optima and are authorized exclusively as **reference cases** for fixture suites, not as a downloadable bulk benchmark corpus.
+  - A five-point example found in NAG `e02gcc` documentation has a closed-form analytical optimum and was useful for a temporary compatibility experiment. Fixture inclusion is **not yet authorized**: its exact page/version, applicable terms, and relationship to the ACM article must first be frozen.
 
 ---
 
@@ -49,7 +49,7 @@ Inspection of the downloaded stream and decompressed file established the follow
 1. **Single-File Distribution:** Unlike multi-problem benchmark repositories (e.g. Maros–Mészáros or MIPLIB), Netlib distributes Algorithm 495 as a single raw file (`toms/495`), served with gzip compression (`Content-Encoding: gzip` or `495.gz`).
 2. **Absence of Separate Data Files:** There are no accompanying data files (`495-data`, `495-test`, or `.dat` archives). Requests to adjacent paths on Netlib return HTTP 404.
 3. **Internal File Contents:**
-   - The file consists of exactly 298 lines of Fortran source code (plus 1 trailing newline, total 299 lines, LF line endings, 8,872 bytes).
+   - The decompressed file contains 298 text lines, uses LF line endings, ends with a trailing newline, and is 8,872 bytes.
    - Lines 1–46 contain a comment block describing `SUBROUTINE CHEB` and its 13 arguments (`M, N, MDIM, NDIM, A, B, TOL, RELERR, X, RANK, RESMAX, ITER, OCODE`).
    - Lines 47–60 contain an optional column-operation optimization helper `SUBROUTINE COL`.
    - Lines 61–298 implement `SUBROUTINE CHEB` using a modified two-phase simplex algorithm operating directly on the transposed tableau.
@@ -77,16 +77,13 @@ A strict legal inspection of the artifact and the upstream distribution terms wa
 
 1. **Governing Policy:** The Netlib master index for TOMS explicitly declares:
    > *"Use of ACM Algorithms is subject to the ACM Software Copyright and License Agreement."*
-2. **Historical ACM Software Policy (Pre-2013):**
-   - Software published in ACM TOMS prior to 2013 is copyrighted by the Association for Computing Machinery.
-   - The applicable ACM Software Copyright and License Notice grants royalty-free, non-exclusive rights to execute, copy, and modify the software **strictly for non-commercial research and education**.
-   - Commercial use, sublicensing, or redistribution in proprietary or commercial packages requires explicit written authorization or commercial licensing from the ACM.
-3. **Open-Source Compatibility Assessment:**
-   - The non-commercial restriction in the ACM license violates Criterion 6 ("No Discrimination Against Fields of Endeavor") of the Open Source Definition (OSD).
-   - Consequently, the Fortran source code in `toms/495` **cannot be vendored or redistributed directly inside an open-source repository** under permissive terms (such as MIT, Apache 2.0, or BSD).
-4. **Status of Factual Problem Definitions:**
-   - Under international copyright law and US copyright principles, mathematical problem formulations, numerical coefficients $(A, b)$, and objective values are factual mathematical truths that cannot be copyrighted.
-   - Therefore, while the Fortran code cannot be vendored, the mathematical test cases described in the accompanying paper are fully usable for independent regression and validation.
+2. **Policy Evidence Located:**
+   - The CALGO policy grants copying and distribution without fee only when copies are not made or distributed for direct commercial advantage and when its attribution and notice conditions are preserved.
+   - Those restrictions do not provide the unrestricted downstream use expected for content vendored in this Apache-2.0 project.
+3. **Repository Decision (not legal advice):**
+   - Optees will not vendor or derive code from `toms/495` without separate compatible permission. This audit does not claim a definitive legal interpretation beyond that conservative repository rule.
+4. **Problem-Data Boundary:**
+   - The Netlib artifact contains no problem coefficients. Whether coefficients transcribed from an ACM article or NAG manual may be redistributed is source- and jurisdiction-dependent; this audit does not authorize that action merely by characterizing numbers as facts. Independently created analytic examples remain possible, but must not be represented as published benchmark cases.
 
 ---
 
@@ -105,15 +102,15 @@ Because the Netlib artifact contains exclusively subroutine source code, test ca
 
 | Problem ID | Origin / Publication | Dimensions ($M \times N$) | Problem Description | Reference Source |
 | :--- | :--- | :--- | :--- | :--- |
-| `BP1975-LINE` | Barrodale & Phillips (1975) / NAG `e02gcc` | $5 \times 2$ | Straight line fit $y(t) = x_1 + x_2 t$ to 5 data points: $t \in \{0.0, 0.2, 0.4, 0.6, 0.8\}$, $y \in \{4.501, 4.360, 4.333, 4.418, 4.625\}$. | Paper Section 4 / NAG Manual |
-| `BP1975-QUAD` | Barrodale & Phillips (1975) Section 4 | $5 \times 3$ | Quadratic fit $y(t) = x_1 + x_2 t + x_3 t^2$ to the same 5 data points. | Paper Section 4 |
-| `BP1975-EXP` | Barrodale & Phillips (1975) Table 1 | $21 \times 4$ | Discrete approximation of $e^t$ over $[0, 1]$ on an equidistant grid of 21 points using a cubic polynomial. | Paper Section 5 |
+| `NAG-E02GCC-LINE-CANDIDATE` | NAG `e02gcc` documentation located during the audit | $5 \times 2$ | Straight-line fit $y(t)=x_1+x_2t$ to five displayed points. | Candidate only: exact manual version, canonical URL, terms, and relationship to the 1975 article still require audit. |
+
+The earlier draft attributed additional quadratic and exponential examples to specific sections or tables of the 1975 article without recording inspected primary evidence. Those claims are withdrawn. The ACM paper itself was not acquired as part of this byte-level Netlib audit.
 
 ---
 
 ## 8. Available Reference Outputs
 
-For `BP1975-LINE`, the exact mathematical optimum is analytically solvable in closed rational form:
+For the temporary `NAG-E02GCC-LINE-CANDIDATE`, the displayed decimal data define a problem whose optimum is analytically solvable in rational arithmetic:
 - **System of Equations:**
   $x_1 + 0.0 x_2 \approx 4.501$
   $x_1 + 0.2 x_2 \approx 4.360$
@@ -136,7 +133,7 @@ For `BP1975-LINE`, the exact mathematical optimum is analytically solvable in cl
   - $r_2 = 4.386 + 0.155(0.4) - 4.333 = 4.448 - 4.333 = +0.115$ (magnitude $0.115$)
   - $r_3 = 4.386 + 0.155(0.6) - 4.418 = 4.479 - 4.418 = +0.061 < 0.115$
   - $r_4 = 4.386 + 0.155(0.8) - 4.625 = 4.510 - 4.625 = -0.115$ (magnitude $0.115$)
-- **Nature of Output:** Certified global mathematical optimum, verified by independent rational algebra and dual equioscillation certificates.
+- **Nature of Output:** Independently derived global optimum for the displayed decimal data, cross-checked with SciPy HiGHS. It is not output bundled with Netlib 495 and is not yet frozen as a published external oracle.
 
 ---
 
@@ -193,9 +190,9 @@ Properties:
 
 ## 11. Field-by-Field Mapping to Optees Contract
 
-The mapping into Optees public problem schema v1 (`ContinuousLinearScenarioProblem`) is deterministic and complete:
+The mapping into the Optees public linear-scenario problem schema v1 and domain `ScenarioModel` is deterministic and complete:
 
-| Optees Problem Field | Source / Transformation | BP1975-LINE Example Value |
+| Optees Problem Field | Source / Transformation | NAG candidate example value |
 | :--- | :--- | :--- |
 | `version` | Contract schema version | `"1"` |
 | `problem_type` | Capability category | `"linear_scenario"` |
@@ -275,9 +272,8 @@ An experimental validation script was executed in `/tmp/toms495_audit/` outside 
    - Binding scenarios: `['s0_neg', 's2_pos', 's4_neg']`.
    - Independent validation: `SolutionValidationStatus.VERIFIED` across all 10 checks.
 5. **Runtime and Resources:**
-   - Solve time: $< 5$ ms per invocation.
-   - Memory allocation: $< 1$ MB.
-   - Numerical stability: exact to within $10^{-15}$ machine precision.
+   - The two isolated local solves completed quickly enough for a small reference test; no controlled runtime or memory benchmark was performed.
+   - The reported objective differed from the rational value by approximately $2.1\times10^{-16}$ in this run. This observation is not a general numerical-stability guarantee.
 
 ---
 
@@ -293,16 +289,16 @@ An experimental validation script was executed in `/tmp/toms495_audit/` outside 
 
 | # | Stop Condition | Status | Empirical Evidence |
 | :--- | :--- | :--- | :--- |
-| 1 | Undetermined or restrictive redistribution license | **TRIGGERED FOR CODE; NOT TRIGGERED FOR PROBLEM SPECIFICATION** | ACM copyright restricts code redistribution to non-commercial use. Mathematical problem definitions and coefficients are uncopyrightable facts. |
+| 1 | Undetermined or restrictive redistribution license | **TRIGGERED FOR CODE AND UNRESOLVED FOR EXTERNAL EXAMPLE DATA** | CALGO applies non-commercial conditions to algorithm distribution. The exact terms governing coefficients displayed in the NAG manual or ACM article were not frozen, so this audit does not authorize their redistribution. |
 | 2 | Stable primary artifact not established | **TRIGGERED AS A BULK DATASET** | Netlib provides a stable Fortran file, but contains **zero benchmark datasets or reference solution files**. |
-| 3 | Verifiable published reference results not established | **TRIGGERED FOR NETLIB DOWNLOAD; RESOLVED FOR PUBLISHED INSTANCES** | Netlib archive lacks output tables. The published literature (Barrodale & Phillips 1975) contains verified analytical solutions. |
+| 3 | Verifiable published reference results not established | **TRIGGERED FOR NETLIB; PARTIALLY RESOLVED ANALYTICALLY** | Netlib contains no cases or outputs. The five displayed NAG points admit an independently derived exact optimum, but their source/version must be audited before they can become a literature-backed fixture. |
 | 4 | Corpus incompatible with current capability contract | **NOT TRIGGERED** | Chebyshev residual doubling maps algebraically and identically to `scenario.linear.min_max_loss` and `scenario.linear.max_min_reward`. |
 | 5 | Need to alter public capability semantics | **NOT TRIGGERED** | Frozen schema v1 and both registered capability IDs are preserved without modification. |
 | 6 | Conversion dependent on assumptions absent from data | **NOT TRIGGERED** | Residual doubling ($+r_i, -r_i$) is an exact mathematical identity. No probabilities or unstated assumptions are introduced. |
 | 7 | Benchmark tests only LP solver without scenario reconstruction | **NOT TRIGGERED** | Full scenario reconstruction, epigraph/hypograph bounds, binding sets, and independent validation were verified. |
-| 8 | Problem dimensions or solve times unsuitable for CI | **NOT TRIGGERED** | Solve time is under 5 ms; problem sizes are compact and well within CI limits. |
+| 8 | Problem dimensions or solve times unsuitable for CI | **NOT TRIGGERED FOR THE TEMPORARY FIVE-POINT CASE** | Two local capability executions completed successfully; a permanent test still requires normal CI measurement rather than an informal timing claim. |
 | 9 | Inability to verify file integrity via checksums | **RESOLVED** | SHA-256 digests for Netlib 495 (`495.gz` and decompressed `495`) are verified and recorded. |
-| 10 | Circular use of Optees to produce expected reference values | **NOT TRIGGERED** | Reference values were derived analytically and checked against HiGHS before evaluating Optees. |
+| 10 | Circular use of Optees to produce expected reference values | **NOT TRIGGERED FOR THE TEMPORARY CASE** | The expected value was derived in rational arithmetic and cross-checked with HiGHS before an independently repeated Optees public-capability execution. |
 
 ---
 
@@ -311,7 +307,7 @@ An experimental validation script was executed in `/tmp/toms495_audit/` outside 
 Among the authorized decisions:
 - `A — AUTHORIZED`: Not applicable. Netlib 495 does not provide an automated benchmark dataset with input and solution files.
 - `B — CONDITIONALLY AUTHORIZED`: Mathematically valid, but requires external manual extraction of problem instances from journal text rather than automated retrieval from Netlib.
-- **`C — REFERENCE-ONLY` (Selected):** The Netlib artifact is a pure algorithmic subroutine without benchmark data or solution files, and its code is governed by ACM non-commercial licensing. However, the mathematical problem formulation is an exact match for Optees linear scenario capabilities, and published test problems (e.g. `BP1975-LINE`) have certified analytical optima. Therefore, these instances are authorized exclusively as **reference cases** to be included directly in reference fixture collections (e.g. `tests/data/scenario/reference_cases.json`), rather than as an external downloadable benchmark suite.
+- **`C — REFERENCE-ONLY` (Selected):** Netlib 495 is useful as a primary algorithm and formulation reference, not as a benchmark corpus. The NAG five-point example is a promising literature-backed fixture candidate, but this audit does not authorize copying it into the repository until its exact primary page/version and terms are reviewed. Any eventual fixture must distinguish external input provenance from Optees' independent rational derivation.
 - `D — REJECTED`: Inaccurate. The mathematical formulation is sound, exact, and experimentally verified.
 - `E — INCONCLUSIVE`: Inaccurate. The artifact and its legal/technical properties were thoroughly and conclusively audited.
 
@@ -319,8 +315,8 @@ Among the authorized decisions:
 
 ## 18. Planned Files for Future Work Unit
 
-When incorporating literature-backed Chebyshev cases into reference suites:
-- `tests/data/scenario/reference_cases.json`: Add `BP1975-LINE` (and optionally `BP1975-QUAD`) with source citation, analytical rational optimum, and binding set.
+If a later source-specific audit authorizes a literature-backed Chebyshev case:
+- `tests/data/scenario/reference_cases.json`: Add only the audited case with its exact source citation, source terms, independently derived rational optimum, and binding set.
 - `tests/data/scenario/test_scenario_reference_cases.py`: The existing parameterized test suite automatically covers added reference cases without new test machinery.
 
 ---
@@ -330,11 +326,11 @@ When incorporating literature-backed Chebyshev cases into reference suites:
 - **Gate Status:** `ROBUST-BENCH-AUDIT-495` achieved.
 - **Audit Findings:**
   - Netlib 495 audited at the byte level with verified SHA-256 digests.
-  - License terms audited: ACM non-commercial software policy prevents Fortran code redistribution.
+  - CALGO policy reviewed; conservative repository policy prevents vendoring the Fortran code under Optees' Apache-2.0 distribution.
   - Structure audited: No input data or solution files in the Netlib archive.
   - Mathematical mapping formalised and proven exact for both min-max loss and derived max-min reward.
   - Experimental verification confirmed 100% pass rate on independent validation.
-  - Conclusion `C — REFERENCE-ONLY` frozen.
+  - Conclusion `C — REFERENCE-ONLY` frozen for the Netlib artifact; external example data remain unauthorized pending a separate source-specific audit.
 
 ---
 

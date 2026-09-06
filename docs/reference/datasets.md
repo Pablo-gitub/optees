@@ -166,10 +166,10 @@ the Decision Simulator.
   **Conclusion E** (deferred pending artifact-level audits). The subsequent artifact-level
   audit of Netlib TOMS Algorithm 495 (`OPT-DS-ROBUST-BENCH-A`, documented in
   `docs/roadmaps/case-study/netlib-495-artifact-audit.md`) established Conclusion **`C — REFERENCE-ONLY`**:
-  the Netlib archive contains only the Fortran subroutine `CHEB` under non-commercial ACM licensing,
-  with no benchmark datasets or solution tables. While the mathematical mapping via residual doubling
-  is exact and verified, published instances are authorized only as reference cases for fixture suites,
-  not as a downloadable bulk benchmark suite.
+  the Netlib archive contains only the Fortran subroutine `CHEB` under CALGO terms containing
+  non-commercial conditions, with no benchmark datasets or solution tables. The mathematical
+  mapping via residual doubling is exact and was experimentally verified, but no external example
+  data are yet authorized for inclusion; a separate source-specific audit is required.
 - **Integration standard:** Downloadable benchmark integration remains deferred until an external
   corpus provides stable downloadable datasets, compatible redistribution terms, and independently
   certified solution tables. Until then, the deterministic analytical reference cases remain the
