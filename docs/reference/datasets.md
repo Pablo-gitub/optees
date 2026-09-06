@@ -142,6 +142,35 @@ Decision Simulator.
   verify the external cache before running this group; ordinary pytest and imports never
   perform network access.
 
+## Linear Scenario Min-Max and Max-Min Analytic Reference Cases
+
+- **Included file:** `tests/data/scenario/reference_cases.json`.
+- **Cases:** continuous loss minimization with multiple binding scenarios and mixed signs,
+  continuous reward maximization with strictly negative worst-case values,
+  discrete binary selection MILP, contradictory infeasible scenario constraints,
+  and unbounded descent directions.
+- **Contract:** canonical linear scenario optimization under `scenario.linear.min_max_loss`
+  and `scenario.linear.max_min_reward` (problem/result schema v1).
+- **Tests:** `tests/data/scenario/test_scenario_reference_cases.py`, plus domain, codec,
+  use-case, validator, service, transport, and bilingual desktop UI tests.
+
+These deterministic cases are verified against exact analytical optima and serve
+as frozen handoff fixtures (`OPT-DS-03E` / `ROBUST-C`) for downstream consumers such as
+the Decision Simulator.
+
+## Linear Scenario Optimization: External Scientific Benchmark (Planned)
+
+- **Work Unit:** `OPT-DS-ROBUST-BENCH` (documented in `docs/roadmaps/case-study/scientific-linear-scenario-benchmark.md`).
+- **Status:** **Planned only; not currently available or distributed.**
+- **Evaluation summary:** A comprehensive survey of candidate benchmark sources (including
+  `robust-optimization.com`, Chebyshev $L_\infty$ approximation, two-person zero-sum matrix games,
+  stochastic programming SMPS collections, and monograph literature) concluded with **Conclusion E**:
+  no external repository currently meets the Optees standard for primary authoritative hosting,
+  verifiable published optimal solution tables, dual-orientation coverage, and non-circular validation.
+- **Integration standard:** External integration is deferred until an authoritative, open-licensed
+  corpus with certified published solutions is established in the literature. Until then, the
+  deterministic analytical reference cases remain the authoritative validation baseline.
+
 ## Continuous NLP Analytic Reference Cases
 
 - **Included file:** `tests/data/nlp/reference_cases.json`.
@@ -276,6 +305,8 @@ tests/data/
     reference_cases.json            # Analytic continuous NLP regressions
   qp/
     reference_cases.json            # Analytic convex QP regressions and edge cases
+  scenario/
+    reference_cases.json            # Analytic linear scenario min-max/max-min regressions
   regression/
     reference_cases.json            # Analytic OLS regression cases
   classification/

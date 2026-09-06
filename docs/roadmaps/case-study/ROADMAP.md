@@ -94,6 +94,7 @@ terminology, brokerage behavior, or claims of financial performance.
 | [x] | `OPT-DS-02` — Convex QP Vertical Slice | `QP-I` and `QP-UI` achieved |
 | [x] | `OPT-DS-QP-BENCH` — Maros–Mészáros Scientific Benchmark | Achieved |
 | [x] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `ROBUST-C` and `ROBUST-UI` achieved |
+| [ ] | `OPT-DS-ROBUST-BENCH` — Scientific Linear Scenario Benchmark | Planned (deferred by Conclusion E) |
 | [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Candidate only; `FC-C` reopened, engine blocked |
 | [ ] | `OPT-DS-05` — Convex MIQP | Not started |
 | [ ] | `OPT-DS-06` — Workflow Registry MVP | Not started |
@@ -232,6 +233,20 @@ changed by this gate.
 The review correction prevents malformed numerical/binding data from being
 drawn as fabricated zeroes and escapes payload-derived rich text. `OPT-DS-03`
 is complete; `OPT-DS-04` remains evidence-gated by the Simulator.
+
+### OPT-DS-ROBUST-BENCH — Scientific Benchmark Validation for Linear Min-max and Max-min
+
+- Research and evaluate external scientific benchmark candidates for
+  `scenario.linear.min_max_loss` and `scenario.linear.max_min_reward`.
+- Audit primary sources, mathematical compatibility, licenses, and stop conditions.
+- Adopts **Conclusion E**: defer external integration to prevent circular validation
+  and semantic distortion, while maintaining the frozen deterministic analytical
+  reference suite (`tests/data/scenario/reference_cases.json`).
+
+Detailed evaluation and standards: `scientific-linear-scenario-benchmark.md`.
+
+**Gate ROBUST-BENCH:** planned; rigorous external benchmark criteria established;
+corpus evaluation and future implementation requirements defined.
 
 ### OPT-DS-04 — Targeted Forecasting Expansion
 
