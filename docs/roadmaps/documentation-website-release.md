@@ -137,10 +137,12 @@ now use a dedicated result capture with grounded, non-overlapping placements.
 - [x] Synchronize SEO metadata, structured data, and `llms.txt` with the new
   public capability descriptions.
 - [x] Verify the production website build and static SEO rendering locally.
-- [ ] Publish the refresh only after the application release is verified; the
-  canonical-domain deployment metadata remains a separate commit and flow.
+- [x] Align build fallbacks, deployment metadata, public links, and deployment
+  guidance with the canonical `https://optees.it` domain.
+- [ ] Publish the refresh only after the application release is verified.
 
-The capability refresh is complete locally but is not yet published.
+The capability and canonical-domain refreshes are complete locally but are not
+yet published.
 
 **Exit criterion:** the single-page site accurately represents the desktop
 workflows and local solver platform available at the intended release commit.

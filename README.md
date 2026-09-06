@@ -120,7 +120,7 @@ acceptance remains required before each stable release.
 | Inspect objective behaviour, alternative-optimum ranges, and the feasible region. | Inspect held-out metrics, class errors, probabilities, and a two-dimensional decision boundary. |
 
 More real application screens and platform downloads are available on the
-[Optees website](https://optees-1acac.web.app).
+[Optees website](https://optees.it).
 
 ## Available Workflows
 

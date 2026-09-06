@@ -32,11 +32,11 @@ project.
    Select the new project and use the alias `production`. This writes the
    ignored `.firebaserc` file locally.
 
-4. Copy `apps/website/.env.example` to `apps/website/.env.local` and set the
-   exact canonical URL that Firebase assigned, for example:
+4. Copy `apps/website/.env.example` to `apps/website/.env.local` and keep the
+   verified public custom domain configured:
 
    ```bash
-   VITE_SITE_URL=https://optees-app.web.app
+   VITE_SITE_URL=https://optees.it
    ```
 
    The build replaces `%SITE_URL%` in canonical, Open Graph, Twitter, robots,
@@ -86,7 +86,7 @@ The workflow:
 
 1. checks out the exact tagged commit and validates the tag format;
 2. installs dependencies from `apps/website/package-lock.json` with `npm ci`;
-3. builds with `VITE_SITE_URL=https://optees-1acac.web.app`;
+3. builds with `VITE_SITE_URL=https://optees.it`;
 4. deploys `apps/website/dist/` to Firebase Hosting's `live` channel.
 
 ### Required GitHub Secret
@@ -121,5 +121,5 @@ git push origin landing-v0.0.1
 
 No Python application version bump is needed for a `landing-v*` tag. GitHub
 Actions deploys the website source present at that exact tag; check the
-**Deploy Website** workflow run and open `https://optees-1acac.web.app` when
+**Deploy Website** workflow run and open `https://optees.it` when
 it succeeds.

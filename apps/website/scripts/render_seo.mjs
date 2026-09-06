@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const websiteDirectory = resolve(scriptDirectory, "..");
 const distDirectory = resolve(websiteDirectory, "dist");
-const fallbackSiteUrl = "https://pablo-gitub.github.io/optees";
+const fallbackSiteUrl = "https://optees.it";
 
 async function localSiteUrl() {
   try {

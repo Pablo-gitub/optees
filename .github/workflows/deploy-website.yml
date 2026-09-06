@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: firebase-hosting
-      url: https://optees-1acac.web.app
+      url: https://optees.it
 
     steps:
       - name: Checkout tagged source
@@ -48,7 +48,7 @@ jobs:
       - name: Build production website
         working-directory: apps/website
         env:
-          VITE_SITE_URL: https://optees-1acac.web.app
+          VITE_SITE_URL: https://optees.it
         run: npm run build
 
       - name: Deploy Firebase Hosting live channel
