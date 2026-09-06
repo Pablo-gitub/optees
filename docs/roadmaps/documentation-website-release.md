@@ -139,6 +139,8 @@ now use a dedicated result capture with grounded, non-overlapping placements.
 - [x] Verify the production website build and static SEO rendering locally.
 - [x] Align build fallbacks, deployment metadata, public links, and deployment
   guidance with the canonical `https://optees.it` domain.
+- [x] Correct the responsive five-step agent flow so every step has a complete,
+  independent border; intermediate widths use a balanced three-plus-two grid.
 - [ ] Publish the refresh only after the application release is verified.
 
 The capability and canonical-domain refreshes are complete locally but are not
