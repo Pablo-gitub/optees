@@ -197,7 +197,12 @@ academic optimization and operations research literature:
   1. **Artifact Inventory & Format:** The Netlib archive (`https://www.netlib.org/toms/495`, SHA-256 `8dbff5f53f9d4b76a39885d4b676be6e8529d6b01a679f27fe14b847cc4a8681`) contains exclusively the 298-line Fortran subroutine `CHEB`. It contains **no standalone test datasets, input instances, or solution tables**.
   2. **Licensing Restriction:** CALGO distribution terms include non-commercial conditions. Optees therefore conservatively prohibits vendoring this Fortran code under its Apache-2.0 distribution without separate compatible permission.
   3. **Exact Mathematical Mapping:** Representing each residual by $s_{i,+}=a_i^Tx-b_i$ and $s_{i,-}=-a_i^Tx+b_i$ is an exact algebraic isomorphism to `scenario.linear.min_max_loss`. Similarly, sign duality $R_k(x) = -v_k(x)$ gives an exact algebraic derivation for `scenario.linear.max_min_reward`. Experimental verification proved 100% passing independent validation (`verified` status across all 10 checks).
-  4. **Integration Boundary:** Netlib 495 cannot support a benchmark-data downloader because it contains no instances. A five-point example located in NAG documentation maps exactly and has independently derived optimum $x_1^*=4.386$, $x_2^*=0.155$, $z^*=0.115$, but its exact page/version and terms require a separate audit before fixture inclusion is authorized.
+  4. **Integration Boundary:** Netlib 495 cannot support a benchmark-data
+     downloader because it contains no instances. The follow-up NAG audit
+     (`nag-e02gcc-example-audit.md`) found that the earlier two-variable
+     interpretation was wrong: the actual example fits three basis functions.
+     Its correct mapping works in both Optees capabilities, but fixture inclusion
+     is rejected because suitable redistribution permission was not established.
 
 
 ### 4.3 Candidate 3: Two-Person Zero-Sum Matrix Games
@@ -318,6 +323,9 @@ When an artifact-level audit authorizes a verified external corpus or a bounded 
 
 ## 9. Next Authorized Step
 
-- **Immediate action:** Freeze the Netlib 495 artifact audit findings in `netlib-495-artifact-audit.md`.
-- **State:** The source survey and the Netlib Algorithm 495 artifact audit (`OPT-DS-ROBUST-BENCH-A`) are complete, concluding with **`C — REFERENCE-ONLY`** (individual published problems authorized as reference cases; downloadable bulk benchmark corpus deferred due to lack of dataset files in Netlib 495). `OPT-DS-ROBUST-BENCH` downloadable benchmark integration remains **planned/deferred**.
+- **Immediate action:** Either audit a bounded set of published matrix games
+  with exact values or return to the forecasting evidence protocol.
+- **State:** The source survey, Netlib artifact audit, and NAG example audit are
+  complete. Netlib remains reference-only; the NAG example is rejected as a
+  fixture source. `OPT-DS-ROBUST-BENCH` integration remains planned/deferred.
 - **Next roadmap item:** Return to the primary project sequence (`OPT-DS-04` forecasting evidence protocol or scheduled baseline items).

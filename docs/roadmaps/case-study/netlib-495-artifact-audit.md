@@ -11,7 +11,10 @@
   - The Netlib Algorithm 495 distribution provides the Fortran subroutine `CHEB`, but contains **no standalone test datasets, input instances, or reference solution tables**.
   - ACM software policy imposes non-commercial restrictions that preclude vendoring the Fortran source code into the repository.
   - The mathematical reduction of discrete Chebyshev linear approximation via residual doubling is an exact algebraic isomorphism to `scenario.linear.min_max_loss`, and the sign-dual mapping is exact for `scenario.linear.max_min_reward`.
-  - A five-point example found in NAG `e02gcc` documentation has a closed-form analytical optimum and was useful for a temporary compatibility experiment. Fixture inclusion is **not yet authorized**: its exact page/version, applicable terms, and relationship to the ACM article must first be frozen.
+  - The follow-up NAG audit is complete in `nag-e02gcc-example-audit.md`. It
+    corrected the example to its actual three-basis-function model and rejected
+    it as a repository fixture source because suitable redistribution permission
+    was not established.
 
 ---
 
@@ -102,7 +105,7 @@ Because the Netlib artifact contains exclusively subroutine source code, test ca
 
 | Problem ID | Origin / Publication | Dimensions ($M \times N$) | Problem Description | Reference Source |
 | :--- | :--- | :--- | :--- | :--- |
-| `NAG-E02GCC-LINE-CANDIDATE` | NAG `e02gcc` documentation located during the audit | $5 \times 2$ | Straight-line fit $y(t)=x_1+x_2t$ to five displayed points. | Candidate only: exact manual version, canonical URL, terms, and relationship to the 1975 article still require audit. |
+| `NAG-E02GCC-CANDIDATE` | NAG `e02gcc` documentation | $5 \times 3$ | Fit $y(t)=K e^t+L e^{-t}+M$ to five displayed points. | Audited and rejected for fixture inclusion; see `nag-e02gcc-example-audit.md`. |
 
 The earlier draft attributed additional quadratic and exponential examples to specific sections or tables of the 1975 article without recording inspected primary evidence. Those claims are withdrawn. The ACM paper itself was not acquired as part of this byte-level Netlib audit.
 
@@ -110,30 +113,11 @@ The earlier draft attributed additional quadratic and exponential examples to sp
 
 ## 8. Available Reference Outputs
 
-For the temporary `NAG-E02GCC-LINE-CANDIDATE`, the displayed decimal data define a problem whose optimum is analytically solvable in rational arithmetic:
-- **System of Equations:**
-  $x_1 + 0.0 x_2 \approx 4.501$
-  $x_1 + 0.2 x_2 \approx 4.360$
-  $x_1 + 0.4 x_2 \approx 4.333$
-  $x_1 + 0.6 x_2 \approx 4.418$
-  $x_1 + 0.8 x_2 \approx 4.625$
-- **Equioscillating Active Set:**
-  By Chebyshev equioscillation theory, with $N=2$ unknowns, there exist $N+1=3$ points where the residual achieves the maximum magnitude with alternating signs.
-  For this problem, the active equioscillating points are $t_0 = 0.0$, $t_2 = 0.4$, and $t_4 = 0.8$:
-  - At $t=0.0$: $r_0(x) = x_1 - 4.501 = -z^*$
-  - At $t=0.4$: $r_2(x) = x_1 + 0.4 x_2 - 4.333 = +z^*$
-  - At $t=0.8$: $r_4(x) = x_1 + 0.8 x_2 - 4.625 = -z^*$
-- **Closed-Form Rational Solution:**
-  - $x_2^* = \frac{4.625 - 4.501}{0.8} = \frac{0.124}{0.8} = 0.155 = \frac{31}{200}$
-  - $x_1^* = 4.386 = \frac{2193}{500}$
-  - $z^* = \text{RESMAX}^* = 0.115 = \frac{23}{200}$
-- **Residual Evaluations:**
-  - $r_0 = 4.386 - 4.501 = -0.115$ (magnitude $0.115$)
-  - $r_1 = 4.386 + 0.155(0.2) - 4.360 = 4.417 - 4.360 = +0.057 < 0.115$
-  - $r_2 = 4.386 + 0.155(0.4) - 4.333 = 4.448 - 4.333 = +0.115$ (magnitude $0.115$)
-  - $r_3 = 4.386 + 0.155(0.6) - 4.418 = 4.479 - 4.418 = +0.061 < 0.115$
-  - $r_4 = 4.386 + 0.155(0.8) - 4.625 = 4.510 - 4.625 = -0.115$ (magnitude $0.115$)
-- **Nature of Output:** Independently derived global optimum for the displayed decimal data, cross-checked with SciPy HiGHS. It is not output bundled with Netlib 495 and is not yet frozen as a published external oracle.
+Netlib 495 bundles no numerical reference outputs. The earlier audit draft
+mistakenly treated NAG observations as a two-variable straight-line example;
+that derived problem is removed because it is neither a Netlib nor a NAG case.
+The correct three-variable NAG example and its rounded published output are
+recorded only in the separate source-specific audit.
 
 ---
 
@@ -192,7 +176,7 @@ Properties:
 
 The mapping into the Optees public linear-scenario problem schema v1 and domain `ScenarioModel` is deterministic and complete:
 
-| Optees Problem Field | Source / Transformation | NAG candidate example value |
+| Optees Problem Field | Source / Transformation | Generic Chebyshev value |
 | :--- | :--- | :--- |
 | `version` | Contract schema version | `"1"` |
 | `problem_type` | Capability category | `"linear_scenario"` |
@@ -235,52 +219,28 @@ The mapping into the Optees public linear-scenario problem schema v1 and domain 
 
 ## 13. Numerical Protocol
 
-- **Tolerances:**
-  - Optimality and feasibility tolerance: $\varepsilon_{tol} = 10^{-7}$.
-  - Absolute objective difference: $|z_{reported} - z_{analytic}| \le 10^{-6}$.
-  - Binding scenario tolerance: $\varepsilon_{bind} = 10^{-6}$.
-- **Verification Assertions:**
-  1. Status must be strictly `optimal`.
-  2. Candidate variables $x^*$ must match analytical values within $10^{-6}$.
-  3. Reported `guaranteed_value` must match $0.115$ (min-max) and $-0.115$ (max-min) within $10^{-6}$.
-  4. Binding set must deterministically equal `['s0_neg', 's2_pos', 's4_neg']`.
-  5. `ScenarioIndependentSolutionValidator` must report `verified` with all 10 sub-checks passing.
+A future authorized Chebyshev case must freeze its source precision and derive
+appropriate tolerances from that evidence. It must require `optimal`, compare
+the decision vector and guarantee with an independent oracle, check every
+scenario evaluation and ordered binding set, and require a strict `verified`
+report from `ScenarioIndependentSolutionValidator`.
 
 ---
 
 ## 14. Temporary Experimental Verification
 
-An experimental validation script was executed in `/tmp/toms495_audit/` outside the repository using Python 3.12 and the Optees environment.
-
-### Experimental Results:
-1. **Analytical Reference Derivation:**
-   - $x_1^* = 4.386$, $x_2^* = 0.155$, $\text{RESMAX}^* = 0.115$.
-   - Equioscillation verified at $t \in \{0.0, 0.4, 0.8\}$.
-2. **SciPy HiGHS Direct Solve:**
-   - Converged to $z^* = 0.115$, $x^* = [4.386, 0.155]$ in 4 simplex iterations.
-3. **Optees `scenario.linear.min_max_loss`:**
-   - Status: `optimal`.
-   - Guaranteed value: `0.11500000000000021`.
-   - Variables: $x_1 = 4.386$, $x_2 = 0.155$.
-   - Binding scenarios: `['s0_neg', 's2_pos', 's4_neg']`.
-   - Independent validation: `SolutionValidationStatus.VERIFIED`.
-   - All 10 validator checks passed (`orientation`, `status_coherence`, `variable_vector`, `scenario_values`, `bounds`, `constraints`, `evaluations`, `guarantee`, `binding_set`, `consistency`).
-4. **Optees `scenario.linear.max_min_reward` (Derived):**
-   - Status: `optimal`.
-   - Guaranteed value: `-0.11500000000000021`.
-   - Variables: $x_1 = 4.386$, $x_2 = 0.155$.
-   - Binding scenarios: `['s0_neg', 's2_pos', 's4_neg']`.
-   - Independent validation: `SolutionValidationStatus.VERIFIED` across all 10 checks.
-5. **Runtime and Resources:**
-   - The two isolated local solves completed quickly enough for a small reference test; no controlled runtime or memory benchmark was performed.
-   - The reported objective differed from the rational value by approximately $2.1\times10^{-16}$ in this run. This observation is not a general numerical-stability guarantee.
+The original Netlib audit contained an experiment for an incorrectly inferred
+straight-line problem. That evidence is withdrawn. The subsequent NAG audit
+reconstructed the actual three-function example and independently exercised
+both registered Optees capabilities; its results are recorded in
+`nag-e02gcc-example-audit.md` and did not create a permanent fixture.
 
 ---
 
 ## 15. Risks and Limitations
 
 1. **Absence of Downloadable Data in Netlib:** The Netlib repository cannot be used as an automated download source for scenario benchmark instances because the archive contains only Fortran code.
-2. **Licensing Restriction:** The Fortran source code of Algorithm 495 cannot be redistributed inside the repository due to ACM non-commercial copyright terms.
+2. **Licensing Restriction:** Optees conservatively excludes the Fortran source from its Apache-2.0 distribution because CALGO terms contain non-commercial conditions.
 3. **Scope of Special-Case Mappings:** Chebyshev regression provides valuable cross-domain evidence for LP epigraph/hypograph reductions, but does not represent operational business scenarios with asymmetric payoffs or discrete constraints.
 
 ---
@@ -291,14 +251,14 @@ An experimental validation script was executed in `/tmp/toms495_audit/` outside 
 | :--- | :--- | :--- | :--- |
 | 1 | Undetermined or restrictive redistribution license | **TRIGGERED FOR CODE AND UNRESOLVED FOR EXTERNAL EXAMPLE DATA** | CALGO applies non-commercial conditions to algorithm distribution. The exact terms governing coefficients displayed in the NAG manual or ACM article were not frozen, so this audit does not authorize their redistribution. |
 | 2 | Stable primary artifact not established | **TRIGGERED AS A BULK DATASET** | Netlib provides a stable Fortran file, but contains **zero benchmark datasets or reference solution files**. |
-| 3 | Verifiable published reference results not established | **TRIGGERED FOR NETLIB; PARTIALLY RESOLVED ANALYTICALLY** | Netlib contains no cases or outputs. The five displayed NAG points admit an independently derived exact optimum, but their source/version must be audited before they can become a literature-backed fixture. |
+| 3 | Verifiable published reference results not established | **TRIGGERED FOR NETLIB** | Netlib contains no cases or outputs. The separate NAG candidate was audited and rejected for fixture inclusion. |
 | 4 | Corpus incompatible with current capability contract | **NOT TRIGGERED** | Chebyshev residual doubling maps algebraically and identically to `scenario.linear.min_max_loss` and `scenario.linear.max_min_reward`. |
 | 5 | Need to alter public capability semantics | **NOT TRIGGERED** | Frozen schema v1 and both registered capability IDs are preserved without modification. |
 | 6 | Conversion dependent on assumptions absent from data | **NOT TRIGGERED** | Residual doubling ($+r_i, -r_i$) is an exact mathematical identity. No probabilities or unstated assumptions are introduced. |
-| 7 | Benchmark tests only LP solver without scenario reconstruction | **NOT TRIGGERED** | Full scenario reconstruction, epigraph/hypograph bounds, binding sets, and independent validation were verified. |
-| 8 | Problem dimensions or solve times unsuitable for CI | **NOT TRIGGERED FOR THE TEMPORARY FIVE-POINT CASE** | Two local capability executions completed successfully; a permanent test still requires normal CI measurement rather than an informal timing claim. |
+| 7 | Benchmark tests only LP solver without scenario reconstruction | **IMPLEMENTATION CONDITION** | Any later authorized case must traverse the public scenario capability and verify reconstruction; Netlib supplies no executable benchmark case. |
+| 8 | Problem dimensions or solve times unsuitable for CI | **UNRESOLVED FOR A FUTURE CORPUS** | Netlib supplies no instance set to measure. The separately audited NAG example is small but rejected as a fixture source. |
 | 9 | Inability to verify file integrity via checksums | **RESOLVED** | SHA-256 digests for Netlib 495 (`495.gz` and decompressed `495`) are verified and recorded. |
-| 10 | Circular use of Optees to produce expected reference values | **NOT TRIGGERED FOR THE TEMPORARY CASE** | The expected value was derived in rational arithmetic and cross-checked with HiGHS before an independently repeated Optees public-capability execution. |
+| 10 | Circular use of Optees to produce expected reference values | **IMPLEMENTATION CONDITION** | A future oracle must be published or independently derived before Optees execution. The corrected NAG audit followed that order but did not authorize persistence. |
 
 ---
 
@@ -307,7 +267,10 @@ An experimental validation script was executed in `/tmp/toms495_audit/` outside 
 Among the authorized decisions:
 - `A — AUTHORIZED`: Not applicable. Netlib 495 does not provide an automated benchmark dataset with input and solution files.
 - `B — CONDITIONALLY AUTHORIZED`: Mathematically valid, but requires external manual extraction of problem instances from journal text rather than automated retrieval from Netlib.
-- **`C — REFERENCE-ONLY` (Selected):** Netlib 495 is useful as a primary algorithm and formulation reference, not as a benchmark corpus. The NAG five-point example is a promising literature-backed fixture candidate, but this audit does not authorize copying it into the repository until its exact primary page/version and terms are reviewed. Any eventual fixture must distinguish external input provenance from Optees' independent rational derivation.
+- **`C — REFERENCE-ONLY` (Selected):** Netlib 495 is useful as a primary
+  algorithm and formulation reference, not as a benchmark corpus. The subsequent
+  NAG audit rejected its five-point example as a fixture source and corrected
+  the earlier two-variable misinterpretation.
 - `D — REJECTED`: Inaccurate. The mathematical formulation is sound, exact, and experimentally verified.
 - `E — INCONCLUSIVE`: Inaccurate. The artifact and its legal/technical properties were thoroughly and conclusively audited.
 
@@ -315,8 +278,8 @@ Among the authorized decisions:
 
 ## 18. Planned Files for Future Work Unit
 
-If a later source-specific audit authorizes a literature-backed Chebyshev case:
-- `tests/data/scenario/reference_cases.json`: Add only the audited case with its exact source citation, source terms, independently derived rational optimum, and binding set.
+If a different source-specific audit authorizes a literature-backed Chebyshev case:
+- `tests/data/scenario/reference_cases.json`: Add only the audited case with its exact source citation, source terms, independently verified optimum, and binding set.
 - `tests/data/scenario/test_scenario_reference_cases.py`: The existing parameterized test suite automatically covers added reference cases without new test machinery.
 
 ---
@@ -330,7 +293,8 @@ If a later source-specific audit authorizes a literature-backed Chebyshev case:
   - Structure audited: No input data or solution files in the Netlib archive.
   - Mathematical mapping formalised and proven exact for both min-max loss and derived max-min reward.
   - Experimental verification confirmed 100% pass rate on independent validation.
-  - Conclusion `C — REFERENCE-ONLY` frozen for the Netlib artifact; external example data remain unauthorized pending a separate source-specific audit.
+  - Conclusion `C — REFERENCE-ONLY` frozen for the Netlib artifact; the NAG
+    candidate was subsequently rejected for fixture inclusion.
 
 ---
 

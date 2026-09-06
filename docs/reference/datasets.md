@@ -169,7 +169,9 @@ the Decision Simulator.
   the Netlib archive contains only the Fortran subroutine `CHEB` under CALGO terms containing
   non-commercial conditions, with no benchmark datasets or solution tables. The mathematical
   mapping via residual doubling is exact and was experimentally verified, but no external example
-  data are yet authorized for inclusion; a separate source-specific audit is required.
+  data are authorized for inclusion. The follow-up NAG `e02gcc` audit corrected
+  the candidate's mathematical model and rejected it as a fixture source because
+  suitable redistribution permission was not established.
 - **Integration standard:** Downloadable benchmark integration remains deferred until an external
   corpus provides stable downloadable datasets, compatible redistribution terms, and independently
   certified solution tables. Until then, the deterministic analytical reference cases remain the

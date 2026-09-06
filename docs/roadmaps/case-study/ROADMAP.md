@@ -248,6 +248,13 @@ is complete; `OPT-DS-04` remains evidence-gated by the Simulator.
   datasets or solution tables. The mathematical reductions are exact and experimentally
   verified, but external example coefficients remain unauthorized for fixture inclusion
   until their exact source/version and applicable terms receive a separate audit.
+- **NAG example audit completed (`OPT-DS-ROBUST-BENCH-B`):** corrected the
+  candidate from an incorrectly inferred straight-line model to the actual
+  three-function fit $K e^t+L e^{-t}+M$. Both Optees orientations were verified
+  experimentally, but the example was rejected as a fixture source because
+  suitable redistribution permission was not established.
+
+Detailed NAG audit: `nag-e02gcc-example-audit.md`.
 
 **Gate ROBUST-BENCH:** integration planned and blocked; source-survey criteria and
 Netlib 495 artifact audit are established, but no downloadable corpus or benchmark test is approved.
