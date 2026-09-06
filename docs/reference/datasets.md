@@ -94,6 +94,49 @@ benchmarks. When a suitable redistributable corpus with published optima is
 identified, it should be added beside this file with its source, checksum, and
 dedicated adapter if necessary.
 
+## Continuous Convex QP Analytic Reference Cases
+
+- **Included file:** `tests/data/qp/reference_cases.json`.
+- **Cases:** unconstrained interior optimum, boundary optimum with active linear
+  inequality, concave maximization with box bounds, combined equality and
+  inequality constraints, contradictory infeasible constraints, and unbounded
+  descent directions.
+- **Contract:** canonical continuous quadratic minimization $\frac{1}{2} x^T Q x + c^T x + \alpha$
+  with positive semidefinite $Q$.
+- **Tests:** `tests/data/qp/test_qp_reference_cases.py`, plus domain, codec,
+  adapter, use-case, validator, service, transport, and bilingual desktop UI tests.
+
+These deterministic cases are verified against exact analytical optima and serve
+as frozen handoff fixtures (`OPT-DS-QP-H`) for downstream consumers such as the
+Decision Simulator.
+
+## Continuous Convex QP: Maros–Mészáros Benchmark Collection
+
+- **Source:** István Maros and Csaba Mészáros, *A repository of convex quadratic programming problems*,
+  Optimization Methods and Software 11–12 (1999), pp. 671–681.
+  Authoritative distribution: `http://www.doc.ic.ac.uk/~im/`.
+- **Archives and Checksums:**
+  - `00README.QP`: SHA-256 `cde81a616bbcb6379190ce845295be034c6676ca247e4484d5d8b7ead0daf4ce`
+  - `QPDATA1.ZIP`: SHA-256 `1a851ba04d002c1e623367dd78a4c7d71730fc58f1296e7f83afa41e412b2323`
+  - `QPDATA2.ZIP`: SHA-256 `8e96a76e3fcdac1999626926f3fa629fa7476b01a51b8d6cd312cc539e79994f`
+  - `QPDATA3.ZIP`: SHA-256 `bc60bb823783ba10301ad48e4e8cca4d4af2a743ea739551ecb1c0ce40e21ed5`
+- **Acquisition:** isolated script `scripts/fetch_maros_meszaros_benchmark.py` downloads
+  and verifies files into `~/.cache/optees/benchmarks/maros_meszaros/` outside Git.
+  Normal test runs and module imports make zero network calls.
+- **Reader:** `load_qps_file(path)` in `optees.utility.data_adapters.qps_adapter`. Translates
+  fixed/free QPS into `ContinuousConvexQPProblem` (v1 schema) preserving bounds,
+  ranges, objective offsets ($c_0 = -\text{RHS}[\text{obj\_row}]$), and symmetric PSD Hessians.
+- **Evaluated subset:** 14 representative convex instances (`HS21`, `QPTEST`, `TAME`,
+  `ZECEVIC2`, `HS35`, `HS76`, `HS51`, `HS52`, `GENHS28`, `LOTSCHD`, `HS118`, `QAFIRO`,
+  `CVXQP2_S`, `CVXQP3_S`) with $n \le 100$ and $m \le 75$.
+- **Verification protocol:** solves through `create_local_optimization_service().solve("qp.continuous", payload)`.
+  Asserts `optimal` status, finite solution, objective match within `rel=1e-4, abs=1e-4` against
+  published BPMPD literature values, and passing independent validation report
+  (`QPIndependentSolutionValidator`).
+- **Tests:** unit adapter coverage in `tests/utility/test_qps_adapter.py` (fast gate);
+  scientific benchmark execution in `tests/utility/test_qp_maros_meszaros_benchmark.py`
+  (marked `@pytest.mark.benchmark`).
+
 ## Continuous NLP Analytic Reference Cases
 
 - **Included file:** `tests/data/nlp/reference_cases.json`.
@@ -226,6 +269,8 @@ tests/data/
     reference_cases.json            # Bounded/Unbounded regression cases
   nlp/
     reference_cases.json            # Analytic continuous NLP regressions
+  qp/
+    reference_cases.json            # Analytic convex QP regressions and edge cases
   regression/
     reference_cases.json            # Analytic OLS regression cases
   classification/

@@ -82,6 +82,16 @@ metadata-only MCP retrieval.
   independent-validation report, the two-variable contour view and its
   higher-dimensional alternative, accessible names, backend availability, the
   large-model compact editor, and bilingual retranslation.
+- `tests/utility/test_qps_adapter.py`: standard QPS/MPS format parsing, bounds,
+  ranges, objective offset from RHS ($c_0 = -\text{RHS}[\text{obj\_row}]$),
+  symmetric Hessian extraction, and fail-closed discrete variable rejection
+  in the fast test suite.
+- `tests/utility/test_qp_maros_meszaros_benchmark.py`: scientific Maros–Mészáros
+  convex QP benchmark suite (14 instances across CUTE, Brunel, and miscellaneous
+  subsets) under the `@pytest.mark.benchmark` gate, validating OSQP solver execution,
+  published BPMPD objective agreement, and independent KKT/residual validation reports.
+- `scripts/fetch_maros_meszaros_benchmark.py`: offline acquisition script downloading
+  and verifying checksummed ZIP archives into user cache with path-traversal protection.
 - `tests/presentation/test_scenario_view_model.py`,
   `tests/presentation/test_scenario_flow.py` and
   `tests/presentation/test_scenario_comparison_widget.py`: linear scenario
@@ -172,6 +182,9 @@ PYTHONPATH=src:. python -m pytest -q -m gui
 
 # scientific/external benchmark integrations
 PYTHONPATH=src:. python -m pytest -q -m benchmark
+
+# Maros–Mészáros convex QP scientific benchmark suite
+PYTHONPATH=src:. python -m pytest -q tests/utility/test_qp_maros_meszaros_benchmark.py -m benchmark
 
 # forecasting engine, deterministic references, and public benchmark
 PYTHONPATH=src:. python -m pytest -q \

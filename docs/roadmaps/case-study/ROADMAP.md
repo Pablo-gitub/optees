@@ -92,6 +92,7 @@ terminology, brokerage behavior, or claims of financial performance.
 | --- | --- | --- |
 | [x] | `OPT-DS-01` — Convex QP Contract Decision | `QP-C` achieved |
 | [x] | `OPT-DS-02` — Convex QP Vertical Slice | `QP-I` and `QP-UI` achieved |
+| [x] | `OPT-DS-QP-BENCH` — Maros–Mészáros Scientific Benchmark | Achieved |
 | [x] | `OPT-DS-03` — Linear Scenario Min-max And Max-min | `ROBUST-C` and `ROBUST-UI` achieved |
 | [ ] | `OPT-DS-04` — Targeted Forecasting Expansion | Candidate only; `FC-C` reopened, engine blocked |
 | [ ] | `OPT-DS-05` — Convex MIQP | Not started |
@@ -132,6 +133,23 @@ Detailed plan: `02-qp-vertical-slice.md`.
 
 **Gate QP-UI:** achieved; the separately committed PySide6 QP workflow is
 bilingual, accessible, reviewed, and still passes `QP-I`.
+
+### OPT-DS-QP-BENCH — Maros–Mészáros Scientific Benchmark
+
+- Validate `qp.continuous` independently using the historical academic benchmark
+  collection of István Maros and Csaba Mészáros (1999).
+- Implement an internal QPS data adapter at the utility boundary (`optees.utility.data_adapters.qps_adapter`)
+  preserving standard conventions (senses, bounds, ranges, objective offset from RHS).
+- Maintain an offline, deterministic acquisition script (`scripts/fetch_maros_meszaros_benchmark.py`)
+  with strict hash verification and isolated cache storage.
+- Execute automated end-to-end benchmark tests across 14 representative convex QP instances,
+  verifying optimal status, objective values against published literature, and independent
+  KKT/residual mathematical validation reports (`QPIndependentSolutionValidator`).
+
+Detailed plan and audit: `scientific-benchmark-validation.md`.
+
+**Gate QP-BENCH:** achieved; reproducible scientific benchmark suite verified
+with zero network dependencies during test execution and full validation passing.
 
 ### OPT-DS-03 — Linear Scenario Min-max And Max-min
 
