@@ -162,15 +162,19 @@ the Decision Simulator.
 
 - **Work Unit:** `OPT-DS-ROBUST-BENCH` (documented in `docs/roadmaps/case-study/scientific-linear-scenario-benchmark.md`).
 - **Status:** **Planned only; not currently available or distributed.**
-- **Evaluation summary:** A bounded survey of candidate benchmark sources (including
-  `robust-optimization.com`, Chebyshev $L_\infty$ approximation, two-person zero-sum matrix games,
-  stochastic programming SMPS collections, and monograph literature) concluded with **Conclusion E**:
-  none of the reviewed candidates is yet documented well enough for immediate integration.
-  This is not a universal claim that no suitable corpus or published example exists.
-- **Integration standard:** External integration is deferred until an artifact-level audit
-  establishes usable source-specific terms, stable bytes, independently trustworthy results,
-  exact contract mapping, and a bounded CI subset. Until then, the
-  deterministic analytical reference cases remain the authoritative validation baseline.
+- **Evaluation summary:** A bounded survey of candidate benchmark sources concluded with
+  **Conclusion E** (deferred pending artifact-level audits). The subsequent artifact-level
+  audit of Netlib TOMS Algorithm 495 (`OPT-DS-ROBUST-BENCH-A`, documented in
+  `docs/roadmaps/case-study/netlib-495-artifact-audit.md`) established Conclusion **`C — REFERENCE-ONLY`**:
+  the Netlib archive contains only the Fortran subroutine `CHEB` under non-commercial ACM licensing,
+  with no benchmark datasets or solution tables. While the mathematical mapping via residual doubling
+  is exact and verified, published instances are authorized only as reference cases for fixture suites,
+  not as a downloadable bulk benchmark suite.
+- **Integration standard:** Downloadable benchmark integration remains deferred until an external
+  corpus provides stable downloadable datasets, compatible redistribution terms, and independently
+  certified solution tables. Until then, the deterministic analytical reference cases remain the
+  authoritative validation baseline.
+
 
 ## Continuous NLP Analytic Reference Cases
 

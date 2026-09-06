@@ -193,10 +193,12 @@ academic optimization and operations research literature:
 
 ### 4.2 Candidate 2: Chebyshev $L_\infty$ Approximation (Netlib TOMS 495 / Barrodale & Phillips 1975)
 - **Scientific Foundation:** Algorithm 495 (CHEB) solves overdetermined linear systems $\min_{x} \|Ax - b\|_\infty = \min_{x} \max_{i=1,\dots,m} |a_i^T x - b_i|$.
-- **Why It Is Not Yet Authorized:**
-  1. **Exact but Narrow Mapping:** Representing each residual by $s_{i,+}=a_i^Tx-b_i$ and $s_{i,-}=-a_i^Tx+b_i$ is an exact finite-scenario epigraph formulation. It is valid mathematical evidence for a specialised min-max subfamily, but it does not alone validate general shared constraints, integrality, or operational scenario provenance.
-  2. **Derived Max-Min Coverage:** Negating those scenario evaluations produces an exact max-min dual case under the identity already frozen in the public contract. This can test orientation and sign handling, but is not a separately sourced reward benchmark.
-  3. **Evidence Gap:** Before implementation, the exact Algorithm 495 artifact, its terms, embedded datasets, published/driver expected residuals, precision, and byte stability must be audited. This planning pass did not complete that artifact-level verification.
+- **Artifact Audit Completed (`OPT-DS-ROBUST-BENCH-A`):** The artifact-level audit has been completed in [Netlib Algorithm 495 Artifact Audit](netlib-495-artifact-audit.md), adopting Conclusion **`C — REFERENCE-ONLY`**:
+  1. **Artifact Inventory & Format:** The Netlib archive (`https://www.netlib.org/toms/495`, SHA-256 `8dbff5f53f9d4b76a39885d4b676be6e8529d6b01a679f27fe14b847cc4a8681`) contains exclusively the 298-line Fortran subroutine `CHEB`. It contains **no standalone test datasets, input instances, or solution tables**.
+  2. **Licensing Restriction:** The Fortran code is governed by ACM's historical software license, which restricts use to non-commercial purposes and prohibits vendoring into an open-source repository.
+  3. **Exact Mathematical Mapping:** Representing each residual by $s_{i,+}=a_i^Tx-b_i$ and $s_{i,-}=-a_i^Tx+b_i$ is an exact algebraic isomorphism to `scenario.linear.min_max_loss`. Similarly, sign duality $R_k(x) = -v_k(x)$ gives an exact algebraic derivation for `scenario.linear.max_min_reward`. Experimental verification proved 100% passing independent validation (`verified` status across all 10 checks).
+  4. **Integration Boundary:** Because Netlib lacks a downloadable corpus of problem instances, Netlib 495 cannot support an automated downloader script. Instead, individual published problems from the literature (such as `BP1975-LINE` with rational optimum $x_1^* = 4.386, x_2^* = 0.155, z^* = 0.115$) are authorized exclusively as **reference cases** for inclusion in reference fixture collections (`tests/data/scenario/reference_cases.json`).
+
 
 ### 4.3 Candidate 3: Two-Person Zero-Sum Matrix Games
 - **Scientific Foundation:** Under von Neumann’s Minimax Theorem, any matrix $A \in \mathbb{R}^{m \times n}$ has an exact game value $v^*$ such that:
@@ -316,6 +318,6 @@ When an artifact-level audit authorizes a verified external corpus or a bounded 
 
 ## 9. Next Authorized Step
 
-- **Immediate action:** Commit this planning and evaluation document to freeze the scientific evaluation and Stop Condition findings.
-- **State:** the source survey is complete, while `OPT-DS-ROBUST-BENCH` integration remains **planned**. The next benchmark-specific action, if prioritised, is a narrow artifact audit of Netlib Algorithm 495 and independently published matrix-game examples; implementation remains blocked until that audit freezes usable terms, exact bytes, and trustworthy expected results.
+- **Immediate action:** Freeze the Netlib 495 artifact audit findings in `netlib-495-artifact-audit.md`.
+- **State:** The source survey and the Netlib Algorithm 495 artifact audit (`OPT-DS-ROBUST-BENCH-A`) are complete, concluding with **`C — REFERENCE-ONLY`** (individual published problems authorized as reference cases; downloadable bulk benchmark corpus deferred due to lack of dataset files in Netlib 495). `OPT-DS-ROBUST-BENCH` downloadable benchmark integration remains **planned/deferred**.
 - **Next roadmap item:** Return to the primary project sequence (`OPT-DS-04` forecasting evidence protocol or scheduled baseline items).

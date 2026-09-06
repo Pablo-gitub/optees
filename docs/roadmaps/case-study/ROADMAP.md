@@ -239,15 +239,19 @@ is complete; `OPT-DS-04` remains evidence-gated by the Simulator.
 - Research and evaluate external scientific benchmark candidates for
   `scenario.linear.min_max_loss` and `scenario.linear.max_min_reward`.
 - Audit primary sources, mathematical compatibility, licenses, and stop conditions.
-- Adopts **Conclusion E** for the bounded survey: no reviewed candidate is yet
-  authorized for integration. Exact Chebyshev and matrix-game special-case mappings
-  remain candidates for a narrower artifact-level audit; the frozen deterministic
-  analytical reference suite remains authoritative in the meantime.
+- Initial survey adopted **Conclusion E** (deferred pending artifact-level audits).
+- Detailed evaluation and standards: `scientific-linear-scenario-benchmark.md`.
+- **Artifact audit completed (`OPT-DS-ROBUST-BENCH-A`):** Netlib TOMS Algorithm 495
+  was audited at byte and legal levels (`netlib-495-artifact-audit.md`), adopting
+  Conclusion **`C — REFERENCE-ONLY`**. The archive contains exclusively the Fortran
+  subroutine `CHEB` under non-commercial ACM license, with no test datasets or solution
+  tables. Mathematical reductions are exact and verified, authorizing published literature
+  problems (e.g. `BP1975-LINE`) as reference cases in fixture suites, but not as an
+  automated downloadable benchmark suite.
 
-Detailed evaluation and standards: `scientific-linear-scenario-benchmark.md`.
+**Gate ROBUST-BENCH:** integration planned and blocked; source-survey criteria and
+Netlib 495 artifact audit are established, but no downloadable corpus or benchmark test is approved.
 
-**Gate ROBUST-BENCH:** integration planned and blocked; source-survey criteria are
-established, but no corpus, published-example set, parser, or benchmark test is approved.
 
 ### OPT-DS-04 — Targeted Forecasting Expansion
 
