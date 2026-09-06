@@ -91,7 +91,10 @@ metadata-only MCP retrieval.
   subsets) under the `@pytest.mark.benchmark` gate, validating OSQP solver execution,
   published BPMPD objective agreement, and independent KKT/residual validation reports.
 - `scripts/fetch_maros_meszaros_benchmark.py`: offline acquisition script downloading
-  and verifying checksummed ZIP archives into user cache with path-traversal protection.
+  and verifying checksummed ZIP archives and selected instances into user cache with
+  bounded extraction, atomic repair, and path-traversal protection.
+- `tests/utility/test_maros_meszaros_acquisition.py`: network-free acquisition security
+  tests covering selected hashes, repair, duplicate entries, and traversal rejection.
 - `tests/presentation/test_scenario_view_model.py`,
   `tests/presentation/test_scenario_flow.py` and
   `tests/presentation/test_scenario_comparison_widget.py`: linear scenario
@@ -184,6 +187,8 @@ PYTHONPATH=src:. python -m pytest -q -m gui
 PYTHONPATH=src:. python -m pytest -q -m benchmark
 
 # Maros–Mészáros convex QP scientific benchmark suite
+python scripts/fetch_maros_meszaros_benchmark.py
+python scripts/fetch_maros_meszaros_benchmark.py --check-only
 PYTHONPATH=src:. python -m pytest -q tests/utility/test_qp_maros_meszaros_benchmark.py -m benchmark
 
 # forecasting engine, deterministic references, and public benchmark
@@ -272,10 +277,13 @@ PYTHONPATH=src:. python -m pytest -q -m "not gui and not benchmark" -n 4 --dist 
 - GUI tests run under Xvfb on every pull request and push to `main`;
 - real loopback and subprocess tests run in their own job;
 - scientific benchmark tests run on the weekly schedule and through manual
-  workflow dispatch.
+  workflow dispatch. Those gates acquire and verify the external Maros–Mészáros
+  corpus before pytest, preventing an absent cache from turning the QP benchmark
+  into a false-green all-skipped run.
 
 The tagged release workflow has a separate authoritative gate. It checks out
-the exact tagged commit, installs all test extras, runs the complete suite
+the exact tagged commit, installs all test extras, acquires and verifies the
+external QP corpus, and runs the complete suite
 under Xvfb, and only then permits the platform build matrix to start.
 Each platform build must also complete a small continuous LP through its
 packaged MCP companion and verify both the optimal result and independent

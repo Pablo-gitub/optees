@@ -126,5 +126,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install ".[plot,local-service,test]"
 
+      - name: Prepare verified Maros-Meszaros QP corpus
+        run: |
+          python scripts/fetch_maros_meszaros_benchmark.py
+          python scripts/fetch_maros_meszaros_benchmark.py --check-only
+
       - name: Run benchmark test group
         run: python -m pytest -q -m benchmark

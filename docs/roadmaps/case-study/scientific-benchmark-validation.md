@@ -100,7 +100,7 @@ evidence:
 
 | # | Stop Condition | Status | Empirical Evidence |
 | --- | --- | --- | --- |
-| 1 | Incompatible / unclear redistribution terms under Apache-2.0 | **PASS** | Published open academic benchmark collection distributed without restrictive licenses. Raw ZIP archives are downloaded to user cache outside Git, preserving repository licensing integrity. |
+| 1 | Incompatible / unclear redistribution terms under Apache-2.0 | **PASS FOR EXTERNAL ACQUISITION** | The collection is publicly distributed by its author, but this work does not infer or claim an Apache-compatible redistribution licence. No corpus bytes are committed or packaged: users and CI acquire the checksummed files from the author's host into an external cache. Redistribution remains explicitly unapproved. |
 | 2 | Inability to obtain stable, verifiable SHA-256 checksums from an authoritative source | **PASS** | Checksums verified against primary Imperial College London host and recorded in this specification. |
 | 3 | QPS format requires semantics not representable without loss in `qp.continuous` v1 | **PASS** | Continuous variables, lower/upper bounds, linear equalities/inequalities, range constraints, symmetric PSD Hessians, linear costs, and constant offsets map 100% losslessly into public schema v1. |
 | 4 | Need to modify public schema v1, solver adapter, UI, REST, MCP, or mathematical semantics | **PASS** | Solver, schemas, capability registration, and delivery surfaces remain completely unmodified. |
@@ -147,7 +147,7 @@ The QPS adapter is placed strictly inside the utility data-adapters boundary:
 ### 4.2 Adapter Capabilities and Robustness
 
 1. **Format Compliance**:
-   - Parses fixed-field or tokenized MPS/QPS structures (`NAME`, `ROWS`, `COLUMNS`, `RHS`, `RANGES`, `BOUNDS`, `QUADOBJ`, `QSECTION`, `ENDATA`).
+   - Parses the legacy indented QPS records used by the selected corpus (`NAME`, `ROWS`, `COLUMNS`, `RHS`, `RANGES`, `BOUNDS`, `QUADOBJ`, `QSECTION`, `ENDATA`). It does not claim general free-format MPS/QPS compatibility.
    - Accepts both CRLF (`\r\n`) and LF (`\n`) line terminators.
    - Ignores comment lines (`*`) and empty whitespace lines.
 2. **Mathematical Faithful Mapping**:
@@ -173,8 +173,8 @@ in a dedicated script:
 - Target directory: `~/.cache/optees/benchmarks/maros_meszaros/` (outside the Git repository).
 - Security controls:
   - 30-second socket timeout;
-  - Size cap (25 MB per archive);
-  - SHA-256 verification against the authoritative table before extraction;
+  - Per-download compressed-size limits, a 175 MB uncompressed-archive limit, and a 5 MB selected-instance limit;
+  - SHA-256 verification of every archive and every selected instance before atomic extraction;
   - Path traversal protection: rejects archive members with leading slashes, `..`, or symlinks;
   - `--check-only` mode to audit cache integrity without downloading.
 
@@ -193,7 +193,7 @@ When comparing Optees OSQP solutions against the published BPMPD reference value
    - Status check: `mathematical_status == "optimal"`;
    - Objective match: `pytest.approx(expected, rel=1e-4, abs=1e-4)`;
    - Feasibility checks: Primal candidate satisfies declared bounds and linear constraints within $10^{-7}$;
-   - Validation report: `QPIndependentSolutionValidator` must return `verified` (or `partial` if duals are absent), verifying variable vector, bounds, linear constraints, and recomputed objective.
+   - Validation report: `QPIndependentSolutionValidator` must return `verified`; every case must pass the independent KKT-stationarity check in addition to variable, bound, constraint, and objective checks.
 
 ---
 
@@ -201,15 +201,17 @@ When comparing Optees OSQP solutions against the published BPMPD reference value
 
 1. **Unit tests (`tests/utility/test_qps_adapter.py`)**:
    - Tested in default fast test suite (`not benchmark and not gui and not tcp`).
-   - Covers synthetic QPS strings with CRLF, ranges, bounds, offsets, symmetry, and fail-closed rejections.
+   - Covers synthetic QPS strings with CRLF, ranges, bounds, offsets, symmetry, repeated-record summation, zero-coefficient constraints, resource limits, and fail-closed structural rejections.
+   - `tests/utility/test_maros_meszaros_acquisition.py` verifies selected-file hashes, atomic repair, duplicate-name rejection, and archive traversal protection without network access.
 2. **Benchmark integration tests (`tests/utility/test_qp_maros_meszaros_benchmark.py`)**:
    - Marked with `@pytest.mark.benchmark`.
    - Resolves files from `~/.cache/optees/benchmarks/maros_meszaros/`.
-   - Skips cleanly if the cache is unpopulated, outputting instructions to run `fetch_maros_meszaros_benchmark.py`.
+   - A direct local invocation skips cleanly if the cache is unpopulated and prints the acquisition command. Scheduled CI and tagged-release gates run acquisition plus `--check-only` before pytest, so those authoritative gates cannot pass merely by skipping an absent corpus.
    - Solves all 14 instances through `create_local_optimization_service().solve("qp.continuous", payload)`.
+   - Rechecks each selected instance SHA-256, parsed dimensions, published objective, strict `verified` validation status, and passing KKT stationarity.
 3. **Packaging & Regressions**:
    - No modifications to existing reference cases in `tests/data/qp/reference_cases.json`.
-   - All existing 94 QP tests pass.
+   - Existing QP regression suites remain unchanged; the repository gates recorded for this work unit are the source of current pass counts.
 
 ---
 

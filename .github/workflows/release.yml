@@ -47,6 +47,11 @@ jobs:
         shell: bash
         run: PYTHONPATH=src python -m optees.core.release_version "${GITHUB_REF_NAME}"
 
+      - name: Prepare verified Maros-Meszaros QP corpus
+        run: |
+          python scripts/fetch_maros_meszaros_benchmark.py
+          python scripts/fetch_maros_meszaros_benchmark.py --check-only
+
       - name: Run authoritative test suite
         run: xvfb-run -a python -m pytest -q
 

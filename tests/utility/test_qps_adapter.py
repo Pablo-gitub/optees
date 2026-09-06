@@ -253,3 +253,80 @@ ENDATA
     assert envelope.result["objective"] == pytest.approx(-28.0 / 3.0, rel=1e-5, abs=1e-5)
     assert envelope.validation is not None
     assert envelope.validation.status.value in {"verified", "partial"}
+
+
+def test_qps_adapter_sums_repeated_linear_and_quadratic_entries() -> None:
+    text = """NAME SUMS
+ROWS
+ N OBJ
+ E C1
+COLUMNS
+ X OBJ 1 C1 2
+ X OBJ 3 C1 -0.5
+RHS
+ R C1 1
+ R C1 2
+QUADOBJ
+ X X 2
+ X X 3
+ENDATA
+"""
+    problem = parse_qps_text(text)
+    assert problem["objective"]["linear_coefficients"] == [4.0]
+    assert problem["objective"]["quadratic_matrix"] == [[5.0]]
+    assert problem["constraints"][0]["coefficients"] == [1.5]
+    assert problem["constraints"][0]["rhs"] == 3.0
+
+
+def test_qps_adapter_preserves_zero_coefficient_infeasible_row() -> None:
+    text = """NAME ZERO_ROW
+ROWS
+ N OBJ
+ L IMPOSSIBLE
+COLUMNS
+ X OBJ 1
+RHS
+ R IMPOSSIBLE -1
+ENDATA
+"""
+    problem = parse_qps_text(text)
+    assert problem["constraints"] == [
+        {"name": "IMPOSSIBLE", "coefficients": [0.0], "relation": "<=", "rhs": -1.0}
+    ]
+
+
+@pytest.mark.parametrize(
+    ("body", "message"),
+    [
+        ("COLUMNS\n X UNKNOWN 1\nENDATA", "undeclared rows"),
+        ("COLUMNS\n X OBJ 1\nBOUNDS\n UP B Y 1\nENDATA", "undeclared variables"),
+        ("COLUMNS\n X OBJ 1", "missing ENDATA"),
+        (
+            "COLUMNS\n X OBJ 1\nRHS\n R1 OBJ 1\n R2 OBJ 2\nENDATA",
+            "Multiple RHS vectors",
+        ),
+    ],
+)
+def test_qps_adapter_rejects_ambiguous_or_incomplete_records(body: str, message: str) -> None:
+    text = f"NAME BAD\nROWS\n N OBJ\n{body}\n"
+    with pytest.raises(ValueError, match=message):
+        parse_qps_text(text)
+
+
+def test_qps_adapter_rejects_reverse_quadratic_duplicates_and_dense_overflow() -> None:
+    reverse_pair = """NAME BAD_Q
+ROWS
+ N OBJ
+COLUMNS
+ X OBJ 1
+ Y OBJ 1
+QUADOBJ
+ X Y 1
+ Y X 1
+ENDATA
+"""
+    with pytest.raises(ValueError, match="both orientations"):
+        parse_qps_text(reverse_pair)
+
+    with pytest.raises(ValueError, match="dense-matrix limit"):
+        parse_qps_text(SAMPLE_QPS_LF, max_dense_entries=3)

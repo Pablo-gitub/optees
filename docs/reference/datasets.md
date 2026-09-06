@@ -124,18 +124,23 @@ Decision Simulator.
   and verifies files into `~/.cache/optees/benchmarks/maros_meszaros/` outside Git.
   Normal test runs and module imports make zero network calls.
 - **Reader:** `load_qps_file(path)` in `optees.utility.data_adapters.qps_adapter`. Translates
-  fixed/free QPS into `ContinuousConvexQPProblem` (v1 schema) preserving bounds,
+  the legacy indented QPS records used by this corpus into `ContinuousConvexQPProblem`
+  (v1 schema), preserving bounds,
   ranges, objective offsets ($c_0 = -\text{RHS}[\text{obj\_row}]$), and symmetric PSD Hessians.
 - **Evaluated subset:** 14 representative convex instances (`HS21`, `QPTEST`, `TAME`,
   `ZECEVIC2`, `HS35`, `HS76`, `HS51`, `HS52`, `GENHS28`, `LOTSCHD`, `HS118`, `QAFIRO`,
   `CVXQP2_S`, `CVXQP3_S`) with $n \le 100$ and $m \le 75$.
 - **Verification protocol:** solves through `create_local_optimization_service().solve("qp.continuous", payload)`.
-  Asserts `optimal` status, finite solution, objective match within `rel=1e-4, abs=1e-4` against
-  published BPMPD literature values, and passing independent validation report
-  (`QPIndependentSolutionValidator`).
+  The acquisition manifest freezes hashes for both archives and all 14 selected files. Tests assert
+  `optimal` status, finite solution, objective match within `rel=1e-4, abs=1e-4` against
+  published BPMPD literature values, a strict `verified` independent validation report,
+  and passing KKT stationarity (`QPIndependentSolutionValidator`).
 - **Tests:** unit adapter coverage in `tests/utility/test_qps_adapter.py` (fast gate);
+  archive-safety coverage in `tests/utility/test_maros_meszaros_acquisition.py`;
   scientific benchmark execution in `tests/utility/test_qp_maros_meszaros_benchmark.py`
-  (marked `@pytest.mark.benchmark`).
+  (marked `@pytest.mark.benchmark`). Scheduled CI and tagged-release gates acquire and
+  verify the external cache before running this group; ordinary pytest and imports never
+  perform network access.
 
 ## Continuous NLP Analytic Reference Cases
 

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 
 SUPPORTED_SECTIONS = {
@@ -35,15 +35,22 @@ SUPPORTED_SECTIONS = {
 
 SUPPORTED_ROW_SENSES = {"N", "E", "L", "G"}
 SUPPORTED_BOUND_TYPES = {"UP", "LO", "FX", "FR", "MI", "PL"}
+DEFAULT_MAX_TEXT_BYTES = 25_000_000
+DEFAULT_MAX_VARIABLES = 2_000
+DEFAULT_MAX_ROWS = 5_000
+DEFAULT_MAX_DENSE_ENTRIES = 4_000_000
 
 
 def parse_qps_text(
     text: str,
     *,
-    default_tolerance: Optional[float] = None,
-    default_max_iterations: Optional[int] = None,
-    default_time_limit: Optional[float] = None,
-) -> Dict[str, Any]:
+    default_tolerance: float | None = None,
+    default_max_iterations: int | None = None,
+    default_time_limit: float | None = None,
+    max_variables: int = DEFAULT_MAX_VARIABLES,
+    max_rows: int = DEFAULT_MAX_ROWS,
+    max_dense_entries: int = DEFAULT_MAX_DENSE_ENTRIES,
+) -> dict[str, Any]:
     """Parse a QPS-formatted string into an Optees QP problem dictionary (schema v1).
 
     Parameters
@@ -62,26 +69,46 @@ def parse_qps_text(
     dict
         Dictionary conforming to Optees ContinuousConvexQPProblem schema version 1.
     """
+    if not isinstance(text, str):
+        raise TypeError("QPS input must be text")
+    if len(text.encode("utf-8")) > DEFAULT_MAX_TEXT_BYTES:
+        raise ValueError("QPS input exceeds the configured text-size limit")
+    for name, value in (
+        ("max_variables", max_variables),
+        ("max_rows", max_rows),
+        ("max_dense_entries", max_dense_entries),
+    ):
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            raise ValueError(f"{name} must be a positive integer")
+
     lines = text.splitlines()
 
-    current_section: Optional[str] = None
+    current_section: str | None = None
+    seen_sections: set[str] = set()
+    endata_seen = False
 
-    row_senses: Dict[str, str] = {}
-    obj_row_name: Optional[str] = None
+    row_senses: dict[str, str] = {}
+    obj_row_name: str | None = None
 
     # Column ordering preserves declared sequence
-    col_order: List[str] = []
-    col_entries: Dict[str, Dict[str, float]] = {}
+    col_order: list[str] = []
+    col_entries: dict[str, dict[str, float]] = {}
 
-    rhs_values: Dict[str, float] = {}
-    range_values: Dict[str, float] = {}
-    var_bounds: Dict[str, List[Optional[float]]] = {}
-    quad_entries: List[Tuple[str, str, float]] = []
+    rhs_values: dict[str, float] = {}
+    range_values: dict[str, float] = {}
+    var_bounds: dict[str, list[float | None]] = {}
+    quad_entries: dict[tuple[str, str], float] = {}
+    quad_orientations: dict[frozenset[str], tuple[str, str]] = {}
+    rhs_vector_name: str | None = None
+    range_vector_name: str | None = None
+    bounds_vector_name: str | None = None
 
     for line_idx, raw_line in enumerate(lines, start=1):
         line = raw_line.strip()
         if not line or line.startswith("*"):
             continue
+        if endata_seen:
+            raise ValueError(f"Unexpected content after ENDATA at line {line_idx}")
 
         # Header lines start at column 0 (no leading whitespace)
         is_header = not raw_line[0].isspace()
@@ -93,9 +120,12 @@ def parse_qps_text(
                     f"Unsupported section '{header_keyword}' at line {line_idx}. "
                     f"Supported sections: {sorted(SUPPORTED_SECTIONS)}"
                 )
+            if header_keyword in seen_sections:
+                raise ValueError(f"Duplicate section '{header_keyword}' at line {line_idx}")
+            seen_sections.add(header_keyword)
             current_section = header_keyword
             if current_section == "ENDATA":
-                break
+                endata_seen = True
             continue
 
         if current_section is None:
@@ -115,11 +145,16 @@ def parse_qps_text(
             if len(tokens) < 2:
                 raise ValueError(f"Missing row name in ROWS section at line {line_idx}")
             rname = tokens[1]
+            if rname in row_senses or rname == obj_row_name:
+                raise ValueError(f"Duplicate row name '{rname}' at line {line_idx}")
             if stype == "N":
-                if obj_row_name is None:
-                    obj_row_name = rname
+                if obj_row_name is not None:
+                    raise ValueError("QPS adapter requires exactly one N objective row")
+                obj_row_name = rname
             else:
                 row_senses[rname] = stype
+                if len(row_senses) > max_rows:
+                    raise ValueError("QPS problem exceeds the configured row limit")
 
         elif current_section == "COLUMNS":
             # Check for integer marker cards
@@ -144,11 +179,17 @@ def parse_qps_text(
                     )
                 val_str = tokens[idx + 1]
                 val = _parse_float(val_str, line_idx)
-                col_entries[cname][rname] = val
+                col_entries[cname][rname] = col_entries[cname].get(rname, 0.0) + val
                 idx += 2
+            if len(col_order) > max_variables:
+                raise ValueError("QPS problem exceeds the configured variable limit")
 
         elif current_section == "RHS":
             # tokens[0] is rhs vector name; following tokens are (row_name, value) pairs
+            if rhs_vector_name is None:
+                rhs_vector_name = tokens[0]
+            elif tokens[0] != rhs_vector_name:
+                raise ValueError("Multiple RHS vectors are not supported")
             idx = 1
             while idx < len(tokens):
                 rname = tokens[idx]
@@ -157,11 +198,15 @@ def parse_qps_text(
                         f"Missing numeric value for row '{rname}' in RHS at line {line_idx}"
                     )
                 val = _parse_float(tokens[idx + 1], line_idx)
-                rhs_values[rname] = val
+                rhs_values[rname] = rhs_values.get(rname, 0.0) + val
                 idx += 2
 
         elif current_section == "RANGES":
             # tokens[0] is range vector name; following tokens are (row_name, value) pairs
+            if range_vector_name is None:
+                range_vector_name = tokens[0]
+            elif tokens[0] != range_vector_name:
+                raise ValueError("Multiple RANGES vectors are not supported")
             idx = 1
             while idx < len(tokens):
                 rname = tokens[idx]
@@ -170,6 +215,8 @@ def parse_qps_text(
                         f"Missing numeric value for row '{rname}' in RANGES at line {line_idx}"
                     )
                 val = _parse_float(tokens[idx + 1], line_idx)
+                if rname in range_values:
+                    raise ValueError(f"Duplicate range for row '{rname}'")
                 range_values[rname] = val
                 idx += 2
 
@@ -183,6 +230,10 @@ def parse_qps_text(
             if len(tokens) < 3:
                 raise ValueError(f"Malformed BOUNDS record at line {line_idx}: {line}")
             # tokens[1] is bounds vector name; tokens[2] is column name
+            if bounds_vector_name is None:
+                bounds_vector_name = tokens[1]
+            elif tokens[1] != bounds_vector_name:
+                raise ValueError("Multiple BOUNDS vectors are not supported")
             cname = tokens[2]
             if cname not in var_bounds:
                 # Default MPS bound: [0.0, None] -> 0 <= x < +inf
@@ -214,13 +265,44 @@ def parse_qps_text(
                 raise ValueError(f"Malformed QUADOBJ record at line {line_idx}: {line}")
             c1, c2 = tokens[0], tokens[1]
             qval = _parse_float(tokens[2], line_idx)
-            quad_entries.append((c1, c2, qval))
+            pair = (c1, c2)
+            unordered_pair = frozenset(pair)
+            prior_orientation = quad_orientations.get(unordered_pair)
+            if c1 != c2 and prior_orientation is not None and prior_orientation != pair:
+                raise ValueError(f"Quadratic pair '{c1}', '{c2}' is declared in both orientations")
+            quad_orientations[unordered_pair] = pair
+            quad_entries[pair] = quad_entries.get(pair, 0.0) + qval
+
+    if not endata_seen:
+        raise ValueError("QPS input is missing ENDATA")
+    if obj_row_name is None:
+        raise ValueError("QPS input must declare exactly one N objective row")
 
     # Validate variables and index mapping
     n = len(col_order)
     if n == 0:
         raise ValueError("QPS problem has no variables defined in COLUMNS section")
+    if n * n > max_dense_entries:
+        raise ValueError("QPS problem exceeds the configured dense-matrix limit")
     col_idx = {name: i for i, name in enumerate(col_order)}
+
+    declared_rows = set(row_senses) | {obj_row_name}
+    referenced_rows = (
+        {row_name for entries in col_entries.values() for row_name in entries}
+        | set(rhs_values)
+        | set(range_values)
+    )
+    unknown_rows = sorted(referenced_rows - declared_rows)
+    if unknown_rows:
+        raise ValueError(f"QPS records reference undeclared rows: {unknown_rows}")
+    unknown_bound_variables = sorted(set(var_bounds) - set(col_order))
+    if unknown_bound_variables:
+        raise ValueError(
+            f"BOUNDS records reference undeclared variables: {unknown_bound_variables}"
+        )
+    invalid_range_rows = sorted(set(range_values) - set(row_senses))
+    if invalid_range_rows:
+        raise ValueError(f"RANGES records reference non-constraint rows: {invalid_range_rows}")
 
     # Build variables array
     variables_payload = []
@@ -242,7 +324,7 @@ def parse_qps_text(
 
     # Build quadratic matrix Q (symmetric n x n)
     q_matrix = [[0.0] * n for _ in range(n)]
-    for c1, c2, qval in quad_entries:
+    for (c1, c2), qval in quad_entries.items():
         if c1 not in col_idx:
             raise ValueError(f"QUADOBJ references undeclared variable '{c1}'")
         if c2 not in col_idx:
@@ -256,15 +338,9 @@ def parse_qps_text(
     for rname, stype in row_senses.items():
         b = rhs_values.get(rname, 0.0)
         coeffs = [0.0] * n
-        has_nonzero = False
         for cname, entries in col_entries.items():
             if rname in entries:
                 coeffs[col_idx[cname]] = entries[rname]
-                has_nonzero = True
-
-        if not has_nonzero:
-            # Row has no column coefficients; can be skipped if satisfied
-            continue
 
         r_val = range_values.get(rname)
         if r_val is not None:
@@ -324,7 +400,7 @@ def parse_qps_text(
                 {"name": rname, "coefficients": coeffs, "relation": rel, "rhs": b}
             )
 
-    problem: Dict[str, Any] = {
+    problem: dict[str, Any] = {
         "version": "1",
         "problem_type": "quadratic_programming",
         "variables": variables_payload,
@@ -338,7 +414,7 @@ def parse_qps_text(
     }
 
     # Optional solver options
-    solver_options: Dict[str, Any] = {"method": "osqp"}
+    solver_options: dict[str, Any] = {"method": "osqp"}
     if default_tolerance is not None:
         solver_options["tolerance"] = float(default_tolerance)
     if default_max_iterations is not None:
@@ -355,11 +431,11 @@ def parse_qps_text(
 def load_qps_file(
     path: str | Path,
     *,
-    default_tolerance: Optional[float] = None,
-    default_max_iterations: Optional[int] = None,
-    default_time_limit: Optional[float] = None,
+    default_tolerance: float | None = None,
+    default_max_iterations: int | None = None,
+    default_time_limit: float | None = None,
     encoding: str = "latin1",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Load and parse a QPS file from disk.
 
     Parameters

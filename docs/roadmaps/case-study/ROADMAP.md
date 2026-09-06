@@ -151,6 +151,10 @@ Detailed plan and audit: `scientific-benchmark-validation.md`.
 **Gate QP-BENCH:** achieved; reproducible scientific benchmark suite verified
 with zero network dependencies during test execution and full validation passing.
 
+- [x] Independent correction review: strict QPS structural validation and resource
+  limits, frozen per-instance hashes, safe atomic cache repair, mandatory verified/KKT
+  evidence, and non-skippable corpus preparation in scheduled CI and release gates.
+
 ### OPT-DS-03 — Linear Scenario Min-max And Max-min
 
 - Define a finite, explicit scenario package with stable identifiers and

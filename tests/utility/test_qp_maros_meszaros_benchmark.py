@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 from typing import NamedTuple
 import pytest
@@ -9,7 +10,10 @@ from optees.application.contracts.execution import ExecutionEnvelope
 from optees.application.contracts.solution_validation import ValidationCheckStatus
 from optees.composition.local_agent import create_local_optimization_service
 from optees.utility.data_adapters.qps_adapter import load_qps_file
-from scripts.fetch_maros_meszaros_benchmark import DEFAULT_CACHE_DIR
+from scripts.fetch_maros_meszaros_benchmark import (
+    DEFAULT_CACHE_DIR,
+    SELECTED_INSTANCE_MANIFEST,
+)
 
 
 class BenchmarkCase(NamedTuple):
@@ -66,6 +70,10 @@ def test_maros_meszaros_benchmark_instance(case: BenchmarkCase) -> None:
             f"Run 'python scripts/fetch_maros_meszaros_benchmark.py' to acquire the benchmark."
         )
 
+    expected_archive, expected_digest = SELECTED_INSTANCE_MANIFEST[case.filename]
+    assert expected_archive.startswith("QPDATA")
+    assert hashlib.sha256(instance_path.read_bytes()).hexdigest() == expected_digest
+
     # Load problem through the QPS adapter
     problem = load_qps_file(
         instance_path,
@@ -76,6 +84,9 @@ def test_maros_meszaros_benchmark_instance(case: BenchmarkCase) -> None:
     assert problem["version"] == "1"
     assert problem["problem_type"] == "quadratic_programming"
     assert len(problem["variables"]) == case.n_vars
+    # Each ranged source row becomes a lower/upper pair in the public model.
+    expected_constraints = 29 if case.name == "HS118" else case.m_rows
+    assert len(problem["constraints"]) == expected_constraints
 
     # Execute through the registered production capability
     service = create_local_optimization_service()
@@ -99,7 +110,7 @@ def test_maros_meszaros_benchmark_instance(case: BenchmarkCase) -> None:
 
     # Independent solution validation checks
     assert envelope.validation is not None
-    assert envelope.validation.status.value in {"verified", "partial"}
+    assert envelope.validation.status.value == "verified"
 
     # Inspect each reported validation check
     checks_by_code = {chk.code: chk for chk in envelope.validation.checks}
@@ -115,6 +126,9 @@ def test_maros_meszaros_benchmark_instance(case: BenchmarkCase) -> None:
 
     assert "qp.objective" in checks_by_code
     assert checks_by_code["qp.objective"].status == ValidationCheckStatus.PASSED
+
+    assert "qp.kkt_stationarity" in checks_by_code
+    assert checks_by_code["qp.kkt_stationarity"].status == ValidationCheckStatus.PASSED
 
 
 @pytest.mark.benchmark
