@@ -31,7 +31,7 @@ for (const filename of ["index.html", "robots.txt", "sitemap.xml", "llms.txt"]) 
 const rootIndexPath = resolve(distDirectory, "index.html");
 const rootIndex = await readFile(rootIndexPath, "utf8");
 const agentDescription =
-  "Connect Claude Desktop and other local AI agents to Optees through private MCP stdio, then discover, validate, orchestrate, and run 13 versioned solver capabilities.";
+  "Connect Claude Desktop and other local AI agents to Optees through private MCP stdio, then discover, validate, orchestrate, and run 16 versioned solver capabilities.";
 const agentIndex = rootIndex
   .replace(
     "<title>Optees — Local Optimization Workbench and Solver Platform</title>",

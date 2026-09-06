@@ -29,13 +29,13 @@
 Optees gives the same tested optimization core two interfaces. People can
 formulate problems in a guided bilingual desktop application, visualize the
 solution, and study the mathematics. Scripts and compatible AI agents can
-discover 13 versioned capabilities, inspect their exact schemas, validate a
+discover 16 versioned capabilities, inspect their exact schemas, validate a
 formulation, execute a job, and retrieve a structured result without driving
 the GUI.
 
 | Desktop workbench | Local solver platform |
 | --- | --- |
-| Guided LP, MILP, Knapsack, NLP, graph, Forecasting, ML, and 3D Packing workflows | Capability discovery through CLI, authenticated loopback REST, and private MCP stdio |
+| Guided LP, MILP, QP, Min-Max / Max-Min, Knapsack, NLP, graph, Forecasting, ML, and 3D Packing workflows | Capability discovery through CLI, authenticated loopback REST, and private MCP stdio |
 | Examples, mathematical descriptions, JSON import, diagnostics, and solution visualizations | Versioned contracts, asynchronous jobs, optional result artifacts and composed Markdown/PDF reports |
 | Deterministic bilingual Modeling Assistant with no LLM or cloud dependency | Local agents can compose atomic solvers while Optees remains responsible for validation and calculation |
 
@@ -48,7 +48,7 @@ validate the exact formulation, and only then submit a solver job.
 ```mermaid
 flowchart LR
     User["Business problem and local data"] --> Agent["Local software or AI agent"]
-    Agent --> Discover["Discover 13 capabilities"]
+    Agent --> Discover["Discover 16 capabilities"]
     Discover --> Inspect["Inspect versioned schema"]
     Inspect --> Validate["Validate exact payload"]
     Validate --> Solve["Run Optees solver job"]
@@ -128,6 +128,8 @@ More real application screens and platform downloads are available on the
 | --- | --- |
 | **Linear Programming (LP)** | Continuous LP through SciPy/HiGHS, feasibility and status reporting, optimal-solution ranges when multiple optima exist, JSON import, and 2D/3D educational views where applicable. |
 | **Mixed-Integer Linear Programming (MILP)** | Continuous, integer, and binary variables through OR-Tools, solver controls, and educational formulation/result views. |
+| **Convex Quadratic Programming (QP)** | Continuous convex QP through OSQP, versioned JSON contracts, solver diagnostics, and independent feasibility, objective, and KKT validation. |
+| **Min-Max / Max-Min Optimization** | Linear finite-scenario robust optimization in both loss-minimizing and reward-maximizing orientations, with continuous or discrete decisions, binding-scenario diagnostics, and independent reconstruction. |
 | **Knapsack** | 0/1, Bounded, Unbounded, Fractional, and Multi-dimensional variants with capacity and item visualizations. |
 | **Single-container 3D Packing** | Orthogonal box placement with per-item rotation policies, optional scalar capacities, selectable loading and gravity policies, maximum-feasible recovery, and an inspectable 3D result. |
 | **Continuous Nonlinear Programming (NLP)** | Safe scalar expressions, optional box bounds, BFGS/Nelder-Mead/L-BFGS-B, objective plots, and a clear local-candidate contract. |

@@ -5,6 +5,8 @@ export type AlgorithmId =
   | "knapsack"
   | "packing"
   | "nlp"
+  | "qp"
+  | "scenario"
   | "regression"
   | "classification"
   | "forecasting"
@@ -13,6 +15,8 @@ export type PreviewId =
   | "home"
   | "assistant"
   | "lpSolution"
+  | "qp"
+  | "scenario"
   | "knapsack"
   | "knapsackSolution"
   | "packingSolution"
@@ -246,9 +250,9 @@ export const copy: Record<Language, SiteCopy> = {
     meta: {
       title: "Optees — Local Optimization Workbench and Solver Platform",
       description:
-        "Open-source desktop optimization workbench and local solver platform for people, scripts, and AI agents, with 13 versioned capabilities through GUI, CLI, REST, and MCP.",
+        "Open-source desktop optimization workbench and local solver platform for people, scripts, and AI agents, with 16 versioned capabilities through GUI, CLI, REST, and MCP.",
       ogDescription:
-        "Model visually or expose 13 versioned local solver capabilities to scripts and AI agents through authenticated REST and private MCP stdio.",
+        "Model visually or expose 16 versioned local solver capabilities to scripts and AI agents through authenticated REST and private MCP stdio.",
     },
     nav: {
       aria: "Primary navigation",
@@ -278,13 +282,13 @@ export const copy: Record<Language, SiteCopy> = {
       title: "Optees:",
       titleAccent: "optimization for people and agents.",
       copy:
-        "Model and understand optimization problems in the desktop workbench, or expose the same 13 versioned solver capabilities to local scripts and AI agents through CLI, authenticated REST, and private MCP stdio.",
+        "Model and understand optimization problems in the desktop workbench, or expose the same 16 versioned solver capabilities to local scripts and AI agents through CLI, authenticated REST, and private MCP stdio.",
       source: "Star on GitHub",
       stackLabel: "Powered by",
-      stack: ["SciPy", "HiGHS", "OR-Tools", "FastAPI", "MCP"],
+      stack: ["SciPy", "HiGHS", "OSQP", "OR-Tools", "FastAPI", "MCP"],
       metricsAria: "Project highlights",
       metrics: [
-        { value: "13", label: "Versioned solver capabilities" },
+        { value: "16", label: "Versioned solver capabilities" },
         { value: "5", label: "Knapsack variants in one flow" },
         { value: "100%", label: "Local & private, no cloud" },
       { value: "Apache 2.0", label: "Free and open source" },
@@ -304,8 +308,8 @@ export const copy: Record<Language, SiteCopy> = {
           kicker: "Business automation",
           title: "A local solver platform for AI agents",
           body:
-            "Use Optees as a private optimization backend for operational workflows. Local agents and applications can discover 13 versioned capabilities, validate exact JSON contracts, run solver jobs, and inspect mathematical and independent-validation statuses.",
-          highlights: ["13 versioned capabilities", "Authenticated REST", "Private MCP stdio"],
+            "Use Optees as a private optimization backend for operational workflows. Local agents and applications can discover 16 versioned capabilities, validate exact JSON contracts, run solver jobs, and inspect mathematical and independent-validation statuses.",
+          highlights: ["16 versioned capabilities", "Authenticated REST", "Private MCP stdio"],
           cta: "Explore agent integration",
         },
         {
@@ -330,7 +334,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "benchmarks",
           title: "Benchmark-backed",
           body:
-            "LP and MILP regressions use Netlib and MIPLIB. Knapsack includes Burkardt and OR-Library cases; NLP, regression, classification, and graph workflows use documented analytic or deterministic reference cases.",
+            "QP is checked against 14 Maros–Mészáros instances with published objectives and independent KKT validation. LP, MILP and Knapsack use documented external collections; scenario optimization keeps exact analytic references while an external corpus remains deferred.",
         },
         {
           id: "local",
@@ -445,6 +449,28 @@ export const copy: Record<Language, SiteCopy> = {
           preview: "nlpSolution",
         },
         {
+          id: "qp",
+          label: "Convex Quadratic Programming",
+          short: "QP",
+          status: "Available",
+          formula: "min ½xᵀQx + cᵀx  s.t.  Ax ≤ b",
+          description:
+            "Optimize a convex quadratic objective under linear constraints and bounds, with explicit curvature checks and independent KKT validation.",
+          details: ["OSQP backend", "Independent KKT checks", "Maros–Mészáros benchmark"],
+          preview: "qp",
+        },
+        {
+          id: "scenario",
+          label: "Min-Max / Max-Min Optimization",
+          short: "MM",
+          status: "Available",
+          formula: "minₓ maxₖ Lₖ(x)  or  maxₓ minₖ Rₖ(x)",
+          description:
+            "Choose one linear decision across explicitly listed scenarios: cap the worst loss or raise the minimum guaranteed reward.",
+          details: ["Continuous and discrete decisions", "Binding scenarios", "Independent reconstruction"],
+          preview: "scenario",
+        },
+        {
           id: "regression",
           label: "Linear Regression",
           short: "REG",
@@ -526,7 +552,7 @@ export const copy: Record<Language, SiteCopy> = {
       eyebrow: "Agent setup",
       title: "Connect a local AI agent to Optees",
       body:
-        "A compatible desktop agent can launch the private Optees MCP companion and discover all 13 capabilities without opening a network port. The agent reasons about the workflow; Optees validates versioned payloads, executes the mathematics, and can render requested artifacts and reports.",
+        "A compatible desktop agent can launch the private Optees MCP companion and discover all 16 capabilities without opening a network port. The agent reasons about the workflow; Optees validates versioned payloads, executes the mathematics, and can render requested artifacts and reports.",
       back: "Back to the landing page",
       boundaryTitle: "What this connection does",
       boundaryBody:
@@ -552,7 +578,7 @@ export const copy: Record<Language, SiteCopy> = {
       prompt: "Use the Optees tools to list all available solver capabilities. Do not answer from your own knowledge: call optees_list_capabilities.",
       expectedTitle: "Expected result",
       expectedBody:
-        "The response should list 13 versioned capabilities, including ml.forecasting.univariate, LP, MILP, five Knapsack variants, NLP, Dijkstra, regression, classification, and single-container 3D Packing.",
+        "The response should list 16 versioned capabilities, including continuous QP, both linear-scenario Min-Max / Max-Min orientations, Forecasting, LP, MILP, five Knapsack variants, NLP, Dijkstra, regression, classification, and single-container 3D Packing.",
       workflowTitle: "A reliable agent workflow",
       workflowBody:
         "For each mathematical step, the agent should use the same explicit lifecycle:",
@@ -582,8 +608,8 @@ export const copy: Record<Language, SiteCopy> = {
           id: "home",
           window: "Optees — Algorithm catalogue",
           title: "Choose the mathematical workflow",
-          body: "The desktop catalogue now includes 3D Packing alongside LP, MILP, Knapsack, NLP, graph, and educational machine-learning workflows.",
-          alt: "Optees algorithm catalogue with Linear Programming, MILP, Knapsack, 3D Packing, NLP, graph, regression, and classification",
+          body: "The desktop catalogue includes QP and Min-Max / Max-Min Optimization alongside LP, MILP, Knapsack, 3D Packing, NLP, graph, and educational machine-learning workflows.",
+          alt: "Optees algorithm catalogue with QP, Min-Max and Max-Min Optimization, Linear Programming, MILP, Knapsack, 3D Packing, NLP, graph, regression, and classification",
         },
         {
           id: "assistant",
@@ -598,6 +624,20 @@ export const copy: Record<Language, SiteCopy> = {
           title: "Inspect solution behaviour",
           body: "LP solutions include objective checks, optimal ranges and a feasible-region plot with the optimal point.",
           alt: "Optees linear programming solution view with charts and feasible region",
+        },
+        {
+          id: "qp",
+          window: "Optees — Convex QP setup",
+          title: "Model quadratic trade-offs",
+          body: "Build a convex quadratic objective, linear constraints and bounds, or import the same versioned JSON accepted by local agents.",
+          alt: "Optees convex quadratic programming setup with variables, quadratic objective matrix, constraints and JSON controls",
+        },
+        {
+          id: "scenario",
+          window: "Optees — Min-Max / Max-Min setup",
+          title: "Make one decision for many scenarios",
+          body: "Choose loss or reward semantics, define ordered scenarios and inspect the exact capability that will provide the worst-case guarantee.",
+          alt: "Optees Min-Max and Max-Min optimization setup with orientation, variables, scenarios and JSON controls",
         },
         {
           id: "knapsack",
@@ -762,9 +802,9 @@ export const copy: Record<Language, SiteCopy> = {
     meta: {
       title: "Optees — Ambiente di Ottimizzazione e Piattaforma Solver Locale",
       description:
-        "Ambiente desktop open source e piattaforma solver locale per persone, script e agenti AI, con 13 capability versionate tramite GUI, CLI, REST e MCP.",
+        "Ambiente desktop open source e piattaforma solver locale per persone, script e agenti AI, con 16 capability versionate tramite GUI, CLI, REST e MCP.",
       ogDescription:
-        "Modella visivamente o esponi 13 capability solver locali e versionate a script e agenti AI tramite REST autenticata e MCP stdio privato.",
+        "Modella visivamente o esponi 16 capability solver locali e versionate a script e agenti AI tramite REST autenticata e MCP stdio privato.",
     },
     nav: {
       aria: "Navigazione principale",
@@ -794,13 +834,13 @@ export const copy: Record<Language, SiteCopy> = {
       title: "Optees:",
       titleAccent: "ottimizzazione per persone e agenti.",
       copy:
-        "Modella e comprendi problemi di ottimizzazione nell'ambiente desktop, oppure esponi le stesse 13 capability versionate a script e agenti AI locali tramite CLI, REST autenticata e MCP stdio privato.",
+        "Modella e comprendi problemi di ottimizzazione nell'ambiente desktop, oppure esponi le stesse 16 capability versionate a script e agenti AI locali tramite CLI, REST autenticata e MCP stdio privato.",
       source: "Metti una stella su GitHub",
       stackLabel: "Basato su",
-      stack: ["SciPy", "HiGHS", "OR-Tools", "FastAPI", "MCP"],
+      stack: ["SciPy", "HiGHS", "OSQP", "OR-Tools", "FastAPI", "MCP"],
       metricsAria: "Punti chiave del progetto",
       metrics: [
-        { value: "13", label: "Capability solver versionate" },
+        { value: "16", label: "Capability solver versionate" },
         { value: "5", label: "Varianti Knapsack in un solo flusso" },
         { value: "100%", label: "Locale e privato, nessun cloud" },
       { value: "Apache 2.0", label: "Gratuito e open source" },
@@ -820,8 +860,8 @@ export const copy: Record<Language, SiteCopy> = {
           kicker: "Automazione aziendale",
           title: "Una piattaforma solver locale per agenti AI",
           body:
-            "Usa Optees come backend di ottimizzazione privato per workflow operativi. Agenti e applicazioni locali possono scoprire 13 capability versionate, validare contratti JSON esatti, eseguire job e leggere stato matematico e validazione indipendente.",
-          highlights: ["13 capability versionate", "REST autenticata", "MCP stdio privato"],
+            "Usa Optees come backend di ottimizzazione privato per workflow operativi. Agenti e applicazioni locali possono scoprire 16 capability versionate, validare contratti JSON esatti, eseguire job e leggere stato matematico e validazione indipendente.",
+          highlights: ["16 capability versionate", "REST autenticata", "MCP stdio privato"],
           cta: "Esplora l'integrazione agentica",
         },
         {
@@ -846,7 +886,7 @@ export const copy: Record<Language, SiteCopy> = {
           id: "benchmarks",
           title: "Validato su benchmark",
           body:
-            "LP e MILP usano regressioni Netlib e MIPLIB. Knapsack include casi Burkardt e OR-Library; NLP, regressione, classificazione e grafi usano casi analitici o deterministici documentati.",
+            "QP e' verificata su 14 istanze Maros–Mészáros con obiettivi pubblicati e validazione KKT indipendente. LP, MILP e Knapsack usano raccolte esterne documentate; l'ottimizzazione per scenari mantiene riferimenti analitici esatti mentre il corpus esterno resta rinviato.",
         },
         {
           id: "local",
@@ -961,6 +1001,28 @@ export const copy: Record<Language, SiteCopy> = {
           preview: "nlpSolution",
         },
         {
+          id: "qp",
+          label: "Programmazione Quadratica Convessa",
+          short: "QP",
+          status: "Disponibile",
+          formula: "min ½xᵀQx + cᵀx  s.t.  Ax ≤ b",
+          description:
+            "Ottimizza un obiettivo quadratico convesso con vincoli lineari e limiti, controlli espliciti della curvatura e validazione KKT indipendente.",
+          details: ["Backend OSQP", "Controlli KKT indipendenti", "Benchmark Maros–Mészáros"],
+          preview: "qp",
+        },
+        {
+          id: "scenario",
+          label: "Ottimizzazione Min-Max / Max-Min",
+          short: "MM",
+          status: "Disponibile",
+          formula: "minₓ maxₖ Lₖ(x)  oppure  maxₓ minₖ Rₖ(x)",
+          description:
+            "Scegli una decisione lineare per piu' scenari espliciti: limita la perdita peggiore oppure aumenta il rendimento minimo garantito.",
+          details: ["Decisioni continue e discrete", "Scenari attivi", "Ricostruzione indipendente"],
+          preview: "scenario",
+        },
+        {
           id: "regression",
           label: "Regressione Lineare",
           short: "REG",
@@ -1042,7 +1104,7 @@ export const copy: Record<Language, SiteCopy> = {
       eyebrow: "Configurazione agenti",
       title: "Collega un agente AI locale a Optees",
       body:
-        "Un agente desktop compatibile può avviare il companion MCP privato di Optees e scoprire tutte le 13 capability senza aprire porte di rete. L'agente ragiona sul workflow; Optees valida payload versionati, esegue la matematica e può renderizzare artifact e report richiesti.",
+        "Un agente desktop compatibile può avviare il companion MCP privato di Optees e scoprire tutte le 16 capability senza aprire porte di rete. L'agente ragiona sul workflow; Optees valida payload versionati, esegue la matematica e può renderizzare artifact e report richiesti.",
       back: "Torna alla landing page",
       boundaryTitle: "Cosa fa questa connessione",
       boundaryBody:
@@ -1068,7 +1130,7 @@ export const copy: Record<Language, SiteCopy> = {
       prompt: "Use the Optees tools to list all available solver capabilities. Do not answer from your own knowledge: call optees_list_capabilities.",
       expectedTitle: "Risultato atteso",
       expectedBody:
-        "La risposta deve elencare 13 capability versionate, tra cui ml.forecasting.univariate, LP, MILP, cinque varianti Knapsack, NLP, Dijkstra, regressione, classificazione e Packing 3D in singolo container.",
+        "La risposta deve elencare 16 capability versionate, tra cui QP continua, entrambi gli orientamenti Min-Max / Max-Min lineari per scenari, Forecasting, LP, MILP, cinque varianti Knapsack, NLP, Dijkstra, regressione, classificazione e Packing 3D in singolo container.",
       workflowTitle: "Un workflow agentico affidabile",
       workflowBody:
         "Per ogni passaggio matematico l'agente dovrebbe usare lo stesso ciclo esplicito:",
@@ -1098,8 +1160,8 @@ export const copy: Record<Language, SiteCopy> = {
           id: "home",
           window: "Optees — Catalogo algoritmi",
           title: "Scegli il flusso matematico",
-          body: "Il catalogo desktop include ora Packing 3D insieme a LP, MILP, Knapsack, NLP, grafi e flussi didattici di machine learning.",
-          alt: "Catalogo algoritmi di Optees con Programmazione Lineare, MILP, Knapsack, Packing 3D, NLP, grafi, regressione e classificazione",
+          body: "Il catalogo desktop include QP e Ottimizzazione Min-Max / Max-Min insieme a LP, MILP, Knapsack, Packing 3D, NLP, grafi e flussi didattici di machine learning.",
+          alt: "Catalogo algoritmi di Optees con QP, Ottimizzazione Min-Max e Max-Min, Programmazione Lineare, MILP, Knapsack, Packing 3D, NLP, grafi, regressione e classificazione",
         },
         {
           id: "assistant",
@@ -1114,6 +1176,20 @@ export const copy: Record<Language, SiteCopy> = {
           title: "Analizza il comportamento della soluzione",
           body: "Le soluzioni LP includono controlli sull'obiettivo, range ottimi e il grafico della regione ammissibile con il punto ottimo.",
           alt: "Vista soluzione di programmazione lineare in Optees con grafici e regione ammissibile",
+        },
+        {
+          id: "qp",
+          window: "Optees — Formulazione QP convessa",
+          title: "Modella compromessi quadratici",
+          body: "Costruisci un obiettivo quadratico convesso, vincoli lineari e limiti, oppure importa lo stesso JSON versionato accettato dagli agenti locali.",
+          alt: "Formulazione di programmazione quadratica convessa in Optees con variabili, matrice obiettivo, vincoli e controlli JSON",
+        },
+        {
+          id: "scenario",
+          window: "Optees — Formulazione Min-Max / Max-Min",
+          title: "Prendi una decisione per molti scenari",
+          body: "Scegli la semantica di perdita o rendimento, definisci scenari ordinati e controlla la capability che produrra' la garanzia sul caso peggiore.",
+          alt: "Formulazione Min-Max e Max-Min in Optees con orientamento, variabili, scenari e controlli JSON",
         },
         {
           id: "knapsack",

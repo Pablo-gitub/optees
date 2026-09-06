@@ -7,11 +7,11 @@
     <title>Optees — Local Optimization Workbench and Solver Platform</title>
     <meta
       name="description"
-      content="Optees is an open-source desktop optimization workbench and local solver platform for people, scripts, and AI agents. Use Forecasting, LP, MILP, Knapsack, 3D Packing, NLP, graph, and educational ML through GUI, CLI, REST, or MCP, with optional result assets and reports."
+      content="Optees is an open-source desktop optimization workbench and local solver platform for people, scripts, and AI agents. Use QP, Min-Max / Max-Min, Forecasting, LP, MILP, Knapsack, 3D Packing, NLP, graph, and educational ML through GUI, CLI, REST, or MCP."
     />
     <meta
       name="keywords"
-      content="optimization software, operations research, forecasting, time series forecasting, result artifacts, PDF reports, local solver API, AI agent tools, MCP solver, REST optimization API, linear programming, mixed integer programming, MILP, knapsack solver, 3D packing, nonlinear programming, linear regression, binary classification, Dijkstra shortest path, HiGHS, OR-Tools, SciPy, open source optimization"
+      content="optimization software, operations research, quadratic programming, QP solver, min-max optimization, max-min optimization, robust scenario optimization, forecasting, time series forecasting, local solver API, AI agent tools, MCP solver, REST optimization API, linear programming, MILP, knapsack solver, 3D packing, nonlinear programming, linear regression, binary classification, Dijkstra shortest path, OSQP, HiGHS, OR-Tools, SciPy, open source optimization"
     />
     <meta name="author" content="Optees" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
@@ -32,7 +32,7 @@
     <meta property="og:title" content="Optees — Optimization for People and Agents" />
     <meta
       property="og:description"
-      content="Model visually or let scripts and AI agents orchestrate 13 versioned local capabilities through authenticated REST and private MCP, with optional tables, charts, 3D assets, and reports."
+      content="Model visually or let scripts and AI agents orchestrate 16 versioned local capabilities through authenticated REST and private MCP, with optional tables, charts, 3D assets, and reports."
     />
     <meta property="og:image" content="%SITE_URL%/logo/optees-appicon.png" />
     <meta property="og:image:alt" content="Optees app icon" />
@@ -43,7 +43,7 @@
     <meta name="twitter:title" content="Optees — Optimization for People and Agents" />
     <meta
       name="twitter:description"
-      content="A desktop optimization workbench and local solver platform with 13 versioned capabilities, Forecasting, optional result assets, REST, MCP, and strict validation."
+      content="A desktop optimization workbench and local solver platform with 16 versioned capabilities, Forecasting, optional result assets, REST, MCP, and strict validation."
     />
     <meta name="twitter:image" content="%SITE_URL%/logo/optees-appicon.png" />
 
@@ -70,6 +70,8 @@
         "featureList": [
           "Linear Programming (LP)",
           "Mixed-Integer Linear Programming (MILP)",
+          "Continuous Convex Quadratic Programming (QP) with independent KKT validation",
+          "Linear scenario Min-Max loss and Max-Min reward optimization",
           "Knapsack: 0/1, bounded, unbounded, fractional, multi-dimensional",
           "Orthogonal single-container 3D Packing",
           "Continuous Nonlinear Programming: BFGS, Nelder-Mead and L-BFGS-B",
@@ -110,7 +112,7 @@
             "name": "What is Optees?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Optees is a free, open-source desktop optimization workbench and local solver platform. People can model problems visually, while scripts and local AI agents can discover, validate, orchestrate, and run 13 versioned capabilities through CLI, authenticated REST, or private MCP stdio."
+              "text": "Optees is a free, open-source desktop optimization workbench and local solver platform. People can model problems visually, while scripts and local AI agents can discover, validate, orchestrate, and run 16 versioned capabilities through CLI, authenticated REST, or private MCP stdio."
             }
           },
           {

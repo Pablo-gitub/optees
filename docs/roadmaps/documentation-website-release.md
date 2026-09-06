@@ -9,7 +9,7 @@
 - **Remaining scope:** installed-artifact evidence, Local Agent desktop work,
   controlled demonstrations, and publication of benchmark evidence
 - **Historical evidence:** the original `0.9.0` documentation audit is archived
-  and is not a statement of the current 13-capability baseline
+  and is not a statement of the current 16-capability baseline
 
 This roadmap originated after the local solver platform refactoring and now
 coordinates the remaining documentation, product, release, and demonstration
@@ -127,6 +127,20 @@ The production build and SEO renderer pass. Browser verification covered
 English and Italian at 1440 x 1000 and 390 x 844, with no console errors or
 visible horizontal overflow. The Packing 3D catalogue entry and product tour
 now use a dedicated result capture with grounded, non-overlapping placements.
+
+### Pre-release capability refresh - 2026-09-06
+
+- [x] Align the landing page and README with the 16 registered capabilities.
+- [x] Add QP and Min-Max / Max-Min catalogue entries in English and Italian.
+- [x] Add reproducible desktop captures for the QP and scenario workflows and
+  refresh the catalogue capture.
+- [x] Synchronize SEO metadata, structured data, and `llms.txt` with the new
+  public capability descriptions.
+- [x] Verify the production website build and static SEO rendering locally.
+- [ ] Publish the refresh only after the application release is verified; the
+  canonical-domain deployment metadata remains a separate commit and flow.
+
+The capability refresh is complete locally but is not yet published.
 
 **Exit criterion:** the single-page site accurately represents the desktop
 workflows and local solver platform available at the intended release commit.

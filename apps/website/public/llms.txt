@@ -11,6 +11,10 @@ through CLI, authenticated loopback REST, or private MCP stdio.
   feasible-region views for low-dimensional problems.
 - MILP with continuous, integer, and binary variables, time limits, and MIP
   gap controls.
+- Continuous convex QP with linear constraints, OSQP execution, independent
+  KKT validation, and Maros–Mészáros benchmark evidence.
+- Linear-scenario Min-Max loss and Max-Min reward optimization with continuous
+  or discrete decisions, binding scenarios, and independent reconstruction.
 - Knapsack 0/1, Bounded, Unbounded, Fractional, and Multi-dimensional.
 - Orthogonal single-container 3D Packing with allowed rotations, optional
   capacities, selection policies, and simple gravity.
@@ -28,7 +32,7 @@ through CLI, authenticated loopback REST, or private MCP stdio.
 
 ## Local Agent Service
 
-- 13 versioned capability descriptors with input and result JSON schemas.
+- 16 versioned capability descriptors with input and result JSON schemas.
 - Exact payload validation before solver execution.
 - Asynchronous local jobs with separate lifecycle, mathematical, termination,
   and solution-validation statuses.

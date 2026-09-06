@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+# Qt and Optees must be imported after the headless runtime variables below.
+# ruff: noqa: E402
+
 import argparse
 import os
 import sys
@@ -13,8 +16,6 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 os.environ.setdefault("OPTEES_DISABLE_UPDATE_CHECK", "1")
 os.environ.setdefault("MPLCONFIGDIR", str(MPL_CONFIG_DIR))
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QPalette
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
@@ -223,7 +224,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Capture Optees landing-page screenshots.")
     parser.add_argument(
         "--only",
-        choices=("packing",),
+        choices=("home", "packing", "qp", "scenario"),
         help="Capture only one slower or manually maintained screen.",
     )
     args = parser.parse_args()
@@ -244,8 +245,22 @@ def main() -> None:
         _capture_packing(window)
         window.close()
         return
+    if args.only == "home":
+        _capture(window, "optees-home.png", "home")
+        window.close()
+        return
+    if args.only == "qp":
+        _capture(window, "optees-qp.png", "qp")
+        window.close()
+        return
+    if args.only == "scenario":
+        _capture(window, "optees-scenario.png", "scenario")
+        window.close()
+        return
 
     _capture(window, "optees-home.png", "home")
+    _capture(window, "optees-qp.png", "qp")
+    _capture(window, "optees-scenario.png", "scenario")
 
     lp_model = _multiple_optima_lp_model()
     lp_solution = window.solve_lp_uc.execute(lp_model)
