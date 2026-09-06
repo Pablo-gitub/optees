@@ -9,6 +9,8 @@ application capability.
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import Optional
 
 from PySide6.QtCore import Qt, Signal
@@ -18,6 +20,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QHBoxLayout,
     QHeaderView,
     QLabel,
@@ -37,6 +40,7 @@ from optees.application.contracts.capability_ids import (
     SCENARIO_MAX_MIN_REWARD_CAPABILITY_ID,
     SCENARIO_MIN_MAX_LOSS_CAPABILITY_ID,
 )
+from optees.application.codecs.scenario_problem_codec import scenario_model_from_public_dict
 from optees.core.design import tokens
 from optees.core.string_manager import strings as S
 from optees.core.theme import theme
@@ -48,6 +52,8 @@ from optees.presentation.viewmodels.scenario_view_model import (
     ScenarioOptionsInput,
     ScenarioVariableInput,
     ScenarioViewModel,
+    build_problem_payload,
+    MIN_MAX_LOSS_ORIENTATION,
 )
 from optees.presentation.views.lp_view.section import Section
 
@@ -148,6 +154,8 @@ class ScenarioView(QWidget):
 
     solve_completed = Signal(object)
     solve_rejected = Signal(object)
+    example_requested = Signal()
+    problem_description_requested = Signal()
 
     def __init__(
         self,
@@ -218,10 +226,29 @@ class ScenarioView(QWidget):
         self.intro_text = QLabel()
         self.intro_text.setWordWrap(True)
         header.addWidget(self.intro_text, 1)
-        self.btn_intro_info = _make_info_button("scenarioIntroInfoButton")
-        self.btn_intro_info.clicked.connect(lambda: self._show_info("intro"))
-        header.addWidget(self.btn_intro_info)
+        self.btn_import_json = QPushButton()
+        self.btn_import_json.setObjectName("scenarioImportJsonButton")
+        self.btn_import_json.clicked.connect(self._on_import_json)
+        self.btn_export_json = QPushButton()
+        self.btn_export_json.setObjectName("scenarioExportJsonButton")
+        self.btn_export_json.clicked.connect(self._on_export_json)
+        self.btn_json_info = _make_info_button("scenarioJsonInfoButton")
+        self.btn_json_info.clicked.connect(lambda: self._show_info("import"))
+        header.addWidget(self.btn_import_json)
+        header.addWidget(self.btn_export_json)
+        header.addWidget(self.btn_json_info)
         section.body.addLayout(header)
+        actions = QHBoxLayout()
+        actions.addStretch(1)
+        self.btn_example = QPushButton()
+        self.btn_example.setObjectName("scenarioExampleButton")
+        self.btn_example.clicked.connect(self.example_requested.emit)
+        self.btn_problem = QPushButton()
+        self.btn_problem.setObjectName("scenarioProblemButton")
+        self.btn_problem.clicked.connect(self.problem_description_requested.emit)
+        actions.addWidget(self.btn_example)
+        actions.addWidget(self.btn_problem)
+        section.body.addLayout(actions)
         self.intro_section = section
         return section
 
@@ -909,7 +936,126 @@ class ScenarioView(QWidget):
             options=options,
         )
 
+    def set_form(self, form: ScenarioFormInput) -> None:
+        """Replace the editable form with an already validated public problem."""
+        self._set_variables(form.variables)
+        self._set_constraints(form.constraints)
+        self._set_scenarios(form.scenarios)
+        has_shared = form.shared_objective_coefficients is not None
+        self.chk_shared_objective.setChecked(has_shared)
+        if has_shared:
+            coefficients = form.shared_objective_coefficients or ()
+            for column, value in enumerate(coefficients):
+                self.shared_table.setItem(0, column, _cell(_format_number(value)))
+            self.edit_shared_offset.setText(_format_number(form.shared_objective_offset or 0.0))
+        self.edit_tolerance.setText(_format_optional(form.options.tolerance))
+        self.edit_binding_tolerance.setText(_format_optional(form.options.binding_tolerance))
+        self.edit_time_limit.setText(_format_optional(form.options.time_limit_seconds))
+
+    @staticmethod
+    def _form_from_model(model) -> ScenarioFormInput:
+        shared = model.shared_objective
+        return ScenarioFormInput(
+            variables=tuple(
+                ScenarioVariableInput(
+                    variable.name,
+                    variable.label,
+                    variable.bounds.lb,
+                    variable.bounds.ub,
+                    variable.integrality.value,
+                )
+                for variable in model.variables
+            ),
+            scenarios=tuple(
+                ScenarioInput(item.id, item.label, item.coefficients, item.offset)
+                for item in model.scenarios
+            ),
+            constraints=tuple(
+                ScenarioConstraintInput(
+                    item.name, item.coefficients, item.relation.symbol(), item.rhs
+                )
+                for item in model.shared_constraints
+            ),
+            shared_objective_coefficients=(shared.coefficients if shared is not None else None),
+            shared_objective_offset=(shared.offset if shared is not None else None),
+            options=ScenarioOptionsInput(
+                tolerance=model.options.tolerance,
+                binding_tolerance=model.options.binding_tolerance,
+                time_limit_seconds=model.options.time_limit_seconds,
+            ),
+        )
+
     # -- actions ---------------------------------------------------------
+    def _on_import_json(self) -> None:
+        path, _ = QFileDialog.getOpenFileName(
+            self, S.t("scenario.import.dialog_title"), "", "JSON (*.json);;All files (*)"
+        )
+        if not path:
+            return
+        try:
+            payload = json.loads(Path(path).read_text(encoding="utf-8"))
+            if not isinstance(payload, dict):
+                raise ValueError("problem document must be a JSON object")
+            orientation = payload.get("orientation")
+            model = scenario_model_from_public_dict(
+                payload,
+                expected_orientation=str(orientation),
+            )
+            capability_id = (
+                SCENARIO_MIN_MAX_LOSS_CAPABILITY_ID
+                if orientation == MIN_MAX_LOSS_ORIENTATION
+                else SCENARIO_MAX_MIN_REWARD_CAPABILITY_ID
+            )
+            self.set_capability_id(capability_id)
+            self.set_form(self._form_from_model(model))
+        except (OSError, ValueError, TypeError) as exc:
+            QMessageBox.warning(
+                self,
+                S.t("scenario.import.error_title"),
+                S.t(
+                    "scenario.import.error_body",
+                    detail=localized_error_detail("scenario_import", exc),
+                ),
+            )
+
+    def _on_export_json(self) -> None:
+        try:
+            payload = build_problem_payload(
+                self.current_form(), orientation=self._view_model.orientation
+            )
+        except ValueError as exc:
+            QMessageBox.warning(
+                self,
+                S.t("scenario.validation.title"),
+                S.t(
+                    "scenario.validation.body",
+                    detail=localized_error_detail("scenario_validation", exc),
+                ),
+            )
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self,
+            S.t("scenario.export.dialog_title"),
+            S.t("scenario.export.default_name"),
+            "JSON (*.json);;All files (*)",
+        )
+        if not path:
+            return
+        try:
+            Path(path).write_text(
+                json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
+                encoding="utf-8",
+            )
+        except OSError as exc:
+            QMessageBox.warning(
+                self,
+                S.t("scenario.export.error_title"),
+                S.t(
+                    "scenario.export.error_body",
+                    detail=localized_error_detail("scenario_export", exc),
+                ),
+            )
+
     def _on_solve(self) -> None:
         try:
             form = self.current_form()
@@ -986,7 +1132,11 @@ class ScenarioView(QWidget):
         )
         self.intro_section.set_title(S.t("scenario.header.section"))
         self.intro_text.setText(S.t("scenario.header.description"))
-        self.btn_intro_info.setToolTip(S.t("scenario.intro.info_tooltip"))
+        self.btn_import_json.setText(S.t("scenario.import.button"))
+        self.btn_export_json.setText(S.t("scenario.export.button"))
+        self.btn_json_info.setToolTip(S.t("scenario.import.info_tooltip"))
+        self.btn_example.setText(S.t("scenario.header.buttons.example"))
+        self.btn_problem.setText(S.t("scenario.header.buttons.problem"))
 
         self.orientation_section.set_title(S.t("scenario.orientation.section"))
         self.orientation_hint.setText(S.t("scenario.orientation.hint"))

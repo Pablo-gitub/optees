@@ -52,8 +52,8 @@
       "subtitle": "Use this method when the objective is quadratic and convex, such as minimizing risk, squared error, or deviation from a target, under linear constraints."
     },
 "scenario": {
-      "title": "Linear Scenario Optimization",
-      "subtitle": "Use this method when one decision must hold up across several explicitly listed scenarios, either capping the worst loss or guaranteeing the worst reward."
+      "title": "Min-Max / Max-Min Optimization",
+      "subtitle": "Choose one decision for several possible scenarios: minimize the worst loss or maximize the worst guaranteed reward."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -1410,9 +1410,27 @@
   },
   "scenario": {
     "header": {
-      "title": "Linear Scenario Optimization",
+      "title": "Min-Max / Max-Min Optimization",
       "section": "Problem setup",
-      "description": "Decide once, then be judged by the worst of several explicitly listed scenarios. Each scenario evaluates the same decision variables with its own linear coefficients and constant. Choose below whether the worst case is a loss you want to cap or a reward you want to floor — the two are different questions, not two spellings of one."
+      "description": "Choose one decision that remains effective across every scenario you list. Min-max limits the largest loss or cost; max-min raises the smallest guaranteed reward or benefit. Each scenario evaluates the same variables with its own linear coefficients.",
+      "buttons": { "example": "Example", "problem": "Problem description" }
+    },
+    "import": {
+      "button": "Import JSON",
+      "dialog_title": "Open min-max / max-min problem",
+      "error_title": "Import error",
+      "error_body": "Could not load the file:\n{detail}",
+      "info_tooltip": "Scenario JSON format",
+      "info_title": "Min-max / max-min JSON format",
+      "info_body": "The desktop workflow uses the same versioned document as the command line and local APIs. The orientation selects min-max loss or max-min reward; ordered coefficient arrays bind to the declared variables.",
+      "info_html": "<h3>Core fields</h3><p>Declare <code>version</code>, <code>problem_type</code>, <code>orientation</code>, ordered <code>variables</code> and one or more <code>scenarios</code>. Shared terms, constraints and solver options are optional.</p><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"linear_scenario\",\n  \"orientation\": \"minimize_maximum_loss\",\n  \"variables\": [{\"name\": \"x\", \"label\": \"Allocation\", \"lower_bound\": 0, \"upper_bound\": 10, \"integrality\": \"C\"}],\n  \"scenarios\": [{\"id\": \"high_cost\", \"label\": \"High cost\", \"coefficients\": [2], \"offset\": 1}]\n}</pre><h3>Orientation</h3><p>Use <code>minimize_maximum_loss</code> for losses and costs, or <code>maximize_minimum_reward</code> for rewards and benefits. Optees validates the complete document before replacing the form.</p>"
+    },
+    "export": {
+      "button": "Export JSON",
+      "dialog_title": "Save min-max / max-min problem",
+      "default_name": "scenario_problem.json",
+      "error_title": "Export error",
+      "error_body": "Could not save the file:\n{detail}"
     },
     "dependency": {
       "unavailable": "This capability is unavailable in this installation, so nothing can be solved here. Reported reason: {reason}"

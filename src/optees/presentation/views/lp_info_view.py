@@ -294,6 +294,16 @@ class QPProblemDescriptionView(LPInfoView):
         super().__init__("qp_problem", parent=parent)
 
 
+class ScenarioExampleView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("scenario_example", parent=parent)
+
+
+class ScenarioProblemDescriptionView(LPInfoView):
+    def __init__(self, parent: Optional[QWidget] = None):
+        super().__init__("scenario_problem", parent=parent)
+
+
 class GraphExampleView(LPInfoView):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__("graph_example", parent=parent)

@@ -144,6 +144,14 @@ class MainController(QObject):
         scenario: ScenarioView = self.window.page("scenario")  # type: ignore[assignment]
         scenario.solve_completed.connect(self._on_scenario_solved)
         scenario.solve_rejected.connect(self._on_scenario_rejected)
+        scenario.example_requested.connect(lambda: self.window.goto("scenario_example"))
+        scenario.problem_description_requested.connect(
+            lambda: self.window.goto("scenario_problem")
+        )
+        for name in ("scenario_example", "scenario_problem"):
+            info_view = self.window.page(name)
+            if hasattr(info_view, "back_requested"):
+                info_view.back_requested.connect(lambda _=False: self.window.goto("scenario"))
         scenario_solution = self.window.page("scenario_solution")
         if hasattr(scenario_solution, "back_requested"):
             scenario_solution.back_requested.connect(lambda: self.window.goto("scenario"))

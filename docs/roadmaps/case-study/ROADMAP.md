@@ -232,7 +232,10 @@ changed by this gate.
 
 The review correction prevents malformed numerical/binding data from being
 drawn as fabricated zeroes and escapes payload-derived rich text. `OPT-DS-03`
-is complete; `OPT-DS-04` remains evidence-gated by the Simulator.
+is complete. Pre-merge UI parity also provides clearer Min-Max / Max-Min naming,
+bilingual educational pages, and validated JSON import/export without changing
+the public capability contracts. `OPT-DS-04` remains evidence-gated by the
+Simulator.
 
 ### OPT-DS-ROBUST-BENCH — Scientific Benchmark Validation for Linear Min-max and Max-min
 

@@ -52,8 +52,8 @@
       "subtitle": "Usa questo metodo quando l'obiettivo e' quadratico e convesso, come minimizzare rischio, errore quadratico o scostamento da un target, con vincoli lineari."
     },
 "scenario": {
-      "title": "Ottimizzazione lineare per scenari",
-      "subtitle": "Usa questo metodo quando una sola decisione deve reggere in piu' scenari elencati esplicitamente, limitando la perdita peggiore oppure garantendo il rendimento peggiore."
+      "title": "Ottimizzazione Min-Max / Max-Min",
+      "subtitle": "Scegli una sola decisione per piu' scenari possibili: minimizza la perdita peggiore oppure massimizza il rendimento minimo garantito."
     }
   },
   "badge": { "intbool": "int/bool" },
@@ -1408,9 +1408,27 @@
   },
   "scenario": {
     "header": {
-      "title": "Ottimizzazione lineare per scenari",
+      "title": "Ottimizzazione Min-Max / Max-Min",
       "section": "Formulazione del problema",
-      "description": "Decidi una volta sola e poi lasciati giudicare dal peggiore di piu' scenari elencati esplicitamente. Ogni scenario valuta le stesse variabili decisionali con propri coefficienti lineari e propria costante. Scegli qui sotto se il caso peggiore e' una perdita da limitare o un rendimento da garantire: sono due domande diverse, non due modi di scrivere la stessa."
+      "description": "Scegli una decisione che resti efficace in tutti gli scenari elencati. Il min-max limita la perdita o il costo maggiore; il max-min aumenta il rendimento o beneficio minimo garantito. Ogni scenario valuta le stesse variabili con propri coefficienti lineari.",
+      "buttons": { "example": "Esempio", "problem": "Descrizione del problema" }
+    },
+    "import": {
+      "button": "Importa JSON",
+      "dialog_title": "Apri problema min-max / max-min",
+      "error_title": "Errore di importazione",
+      "error_body": "Impossibile caricare il file:\n{detail}",
+      "info_tooltip": "Formato JSON per scenari",
+      "info_title": "Formato JSON min-max / max-min",
+      "info_body": "La schermata desktop usa lo stesso documento versionato della riga di comando e delle API locali. L'orientamento seleziona perdita min-max o rendimento max-min; i vettori ordinati dei coefficienti corrispondono alle variabili dichiarate.",
+      "info_html": "<h3>Campi principali</h3><p>Dichiara <code>version</code>, <code>problem_type</code>, <code>orientation</code>, le <code>variables</code> ordinate e uno o piu' <code>scenarios</code>. Termini condivisi, vincoli e opzioni del solver sono facoltativi.</p><pre>{\n  \"version\": \"1\",\n  \"problem_type\": \"linear_scenario\",\n  \"orientation\": \"minimize_maximum_loss\",\n  \"variables\": [{\"name\": \"x\", \"label\": \"Allocazione\", \"lower_bound\": 0, \"upper_bound\": 10, \"integrality\": \"C\"}],\n  \"scenarios\": [{\"id\": \"costo_alto\", \"label\": \"Costo alto\", \"coefficients\": [2], \"offset\": 1}]\n}</pre><h3>Orientamento</h3><p>Usa <code>minimize_maximum_loss</code> per perdite e costi, oppure <code>maximize_minimum_reward</code> per rendimenti e benefici. Optees valida l'intero documento prima di sostituire il modulo.</p>"
+    },
+    "export": {
+      "button": "Esporta JSON",
+      "dialog_title": "Salva problema min-max / max-min",
+      "default_name": "problema_scenari.json",
+      "error_title": "Errore di esportazione",
+      "error_body": "Impossibile salvare il file:\n{detail}"
     },
     "dependency": {
       "unavailable": "Questa capability non e' disponibile in questa installazione, quindi qui non e' possibile risolvere nulla. Motivo riportato: {reason}"

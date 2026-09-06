@@ -54,6 +54,8 @@ from optees.presentation.views.lp_info_view import (
     NLPProblemDescriptionView,
     QPExampleView,
     QPProblemDescriptionView,
+    ScenarioExampleView,
+    ScenarioProblemDescriptionView,
     GraphExampleView,
     GraphProblemDescriptionView,
     RegressionExampleView,
@@ -275,6 +277,8 @@ class MainWindow(QMainWindow):
         self.nlp_problem_page = NLPProblemDescriptionView()
         self.qp_example_page = QPExampleView()
         self.qp_problem_page = QPProblemDescriptionView()
+        self.scenario_example_page = ScenarioExampleView()
+        self.scenario_problem_page = ScenarioProblemDescriptionView()
         self.graph_example_page = GraphExampleView()
         self.graph_problem_page = GraphProblemDescriptionView()
         self.packing_example_page = PackingExampleView()
@@ -318,6 +322,8 @@ class MainWindow(QMainWindow):
         self.register_page("qp_problem", self.qp_problem_page)
         self.register_page("qp_solution", self.qp_solution_page)
         self.register_page("scenario", self.scenario_page)
+        self.register_page("scenario_example", self.scenario_example_page)
+        self.register_page("scenario_problem", self.scenario_problem_page)
         self.register_page("scenario_solution", self.scenario_solution_page)
         self.register_page("graph", self.graph_page)
         self.register_page("graph_example", self.graph_example_page)
@@ -560,7 +566,8 @@ class MainWindow(QMainWindow):
                     self.nlp_problem_page, self.nlp_solution_page,
                     self.qp_page, self.qp_example_page, self.qp_problem_page,
                     self.qp_solution_page,
-                    self.scenario_page, self.scenario_solution_page,
+                    self.scenario_page, self.scenario_example_page,
+                    self.scenario_problem_page, self.scenario_solution_page,
                     self.graph_page,
                     self.graph_example_page, self.graph_problem_page, self.graph_solution_page,
                     self.packing_page, self.packing_example_page, self.packing_problem_page,
@@ -610,7 +617,8 @@ class MainWindow(QMainWindow):
                  self.nlp_problem_page, self.nlp_solution_page,
                  self.qp_page, self.qp_example_page, self.qp_problem_page,
                  self.qp_solution_page,
-                 self.scenario_page, self.scenario_solution_page,
+                 self.scenario_page, self.scenario_example_page,
+                 self.scenario_problem_page, self.scenario_solution_page,
                  self.graph_page,
                  self.graph_example_page, self.graph_problem_page, self.graph_solution_page,
                  self.packing_page, self.packing_example_page, self.packing_problem_page,

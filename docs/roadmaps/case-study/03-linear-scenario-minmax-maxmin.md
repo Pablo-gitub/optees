@@ -663,9 +663,15 @@ pass. Delivered in this gate:
 - Both capability IDs are named individually in the toolbar and by two labelled
   radio options; the orientation submitted always matches the selected
   capability, so the two semantics are never aliased.
-- Presentation imports only `application.contracts.capability_ids` and `core`
-  helpers: no solver adapter, reduction service, reconstruction service,
-  validator or scenario domain model is reachable from the UI.
+- The formulation page and home card use the user-facing Min-Max / Max-Min
+  name while retaining the technical linear-scenario identity in contracts.
+  Bilingual example and problem-description pages, plus validated public JSON
+  import and export, give the workflow the same entry points as established
+  desktop capabilities.
+- Presentation reaches the application layer only through the registered
+  optimization service, public capability IDs, and the reviewed problem codec
+  used for JSON import. No solver adapter, reduction/reconstruction service, or
+  validator is owned or invoked by the UI.
 
 Evidence: `tests/presentation/test_scenario_view_model.py` (20),
 `tests/presentation/test_scenario_comparison_widget.py` (17) and
@@ -684,6 +690,9 @@ offscreen Qt; Ruff and diff whitespace checks passed for the changed files.
   from the shared objective, constraints and scenarios before rebinding headers.
   First, middle and last removal and subsequent addition are tested, preventing
   silent reassignment of the mathematical model's coefficients.
+- [x] Pre-merge desktop parity: improve the card and page naming, add bilingual
+  example/problem-description pages, and round-trip both scenario orientations
+  through the frozen public JSON contract without changing capability IDs.
 
 `OPT-DS-03A` through `OPT-DS-03F` are complete and `ROBUST-UI` is achieved.
 `OPT-DS-03` is closed. `OPT-DS-04` remains blocked until Simulator evidence

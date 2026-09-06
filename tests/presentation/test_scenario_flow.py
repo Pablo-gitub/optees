@@ -7,6 +7,8 @@ by the registered capability, never recomputed here.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 pytest.importorskip("PySide6")
@@ -109,6 +111,23 @@ def test_solution_page_returns_to_the_formulation(window, qtbot) -> None:
     assert window.stack.currentWidget() is window.scenario_page
 
 
+@pytest.mark.parametrize(
+    ("button_name", "page_name"),
+    (("btn_example", "scenario_example_page"), ("btn_problem", "scenario_problem_page")),
+)
+def test_scenario_educational_pages_are_reachable_and_return(
+    window, qtbot, button_name, page_name
+) -> None:
+    page = window.scenario_page
+    qtbot.mouseClick(getattr(page, button_name), Qt.LeftButton)
+    info_page = getattr(window, page_name)
+    assert window.stack.currentWidget() is info_page
+    assert info_page.browser.toPlainText().strip()
+
+    qtbot.mouseClick(info_page.btn_back, Qt.LeftButton)
+    assert window.stack.currentWidget() is page
+
+
 # ---------------------------------------------------------------------------
 # Orientation semantics
 # ---------------------------------------------------------------------------
@@ -149,6 +168,56 @@ def test_the_default_problem_is_the_contract_reference(window) -> None:
     assert [scenario.scenario_id for scenario in form.scenarios] == ["s1", "s2", "s3"]
     assert form.scenarios[0].coefficients == (2.0, -1.0)
     assert form.constraints[0].relation == "="
+
+
+def test_scenario_json_export_and_import_round_trip(window, monkeypatch, tmp_path) -> None:
+    page = window.scenario_page
+    page.radio_max_min.setChecked(True)
+    output = tmp_path / "scenario.json"
+    monkeypatch.setattr(
+        "optees.presentation.views.scenario_view.QFileDialog.getSaveFileName",
+        lambda *args, **kwargs: (str(output), "JSON (*.json)"),
+    )
+
+    page._on_export_json()
+    exported = json.loads(output.read_text(encoding="utf-8"))
+    assert exported["orientation"] == MAX_MIN_REWARD_ORIENTATION
+    assert [item["name"] for item in exported["variables"]] == ["x1", "x2"]
+
+    exported["variables"][0]["label"] = "Imported allocation"
+    output.write_text(json.dumps(exported), encoding="utf-8")
+    page.radio_min_max.setChecked(True)
+    monkeypatch.setattr(
+        "optees.presentation.views.scenario_view.QFileDialog.getOpenFileName",
+        lambda *args, **kwargs: (str(output), "JSON (*.json)"),
+    )
+
+    page._on_import_json()
+    form = page.current_form()
+    assert page.view_model.orientation == MAX_MIN_REWARD_ORIENTATION
+    assert form.variables[0].label == "Imported allocation"
+    assert form.scenarios[0].coefficients == (2.0, -1.0)
+
+
+def test_invalid_scenario_json_does_not_replace_the_form(window, monkeypatch, tmp_path) -> None:
+    page = window.scenario_page
+    before = page.current_form()
+    source = tmp_path / "invalid.json"
+    source.write_text('{"version": "1"}', encoding="utf-8")
+    monkeypatch.setattr(
+        "optees.presentation.views.scenario_view.QFileDialog.getOpenFileName",
+        lambda *args, **kwargs: (str(source), "JSON (*.json)"),
+    )
+    warnings = []
+    monkeypatch.setattr(
+        "optees.presentation.views.scenario_view.QMessageBox.warning",
+        lambda *args: warnings.append(args),
+    )
+
+    page._on_import_json()
+
+    assert warnings
+    assert page.current_form() == before
 
 
 def test_adding_a_variable_rebinds_every_coefficient_grid(window, qtbot) -> None:
@@ -307,6 +376,10 @@ def test_scenario_pages_retranslate_in_each_supported_language(window, language:
         page = window.scenario_page
 
         assert page.btn_solve.text() == S.t("scenario.solve.button")
+        assert page.btn_import_json.text() == S.t("scenario.import.button")
+        assert page.btn_export_json.text() == S.t("scenario.export.button")
+        assert page.btn_example.text() == S.t("scenario.header.buttons.example")
+        assert page.btn_problem.text() == S.t("scenario.header.buttons.problem")
         assert page.radio_min_max.text() == S.t("scenario.orientation.min_max_loss")
         assert "scenario." not in page.title.text()
         assert "scenario." not in page.intro_text.text()
