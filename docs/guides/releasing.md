@@ -109,6 +109,11 @@ point, initializes an MCP client session, lists its tools, and calls
 `optees_list_capabilities`. Linux repeats this check against the final AppImage
 through `--mcp-server`.
 
+The packaged local-service smoke allows up to 60 seconds for cold startup on
+each platform because the first frozen Matplotlib import may build its font
+cache. It still fails immediately when the process exits before becoming
+healthy, so a crash is not mistaken for a slow initialization.
+
 Expected installed entry points are:
 
 - Windows: `optees-mcp.exe` beside `optees.exe`;

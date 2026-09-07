@@ -29,6 +29,9 @@ Evidence-gated candidate: [Targeted forecasting expansion](05-targeted-forecasti
 - [x] Cross-platform GUI release-gate correction: card growth coverage uses
   content that exceeds the minimum height independently of platform font
   metrics; content that fits may correctly retain the standard card height.
+- [x] Native smoke correction: packaged local-service startup permits bounded
+  cold font-cache initialization and reports premature process exit separately
+  from a readiness timeout on Linux, macOS and Windows.
 - [x] Targeted forecasting expansion scope and micro-gates planned in `05-targeted-forecasting-expansion.md`.
 - [x] Independent review of the forecasting draft; unsafe freeze withdrawn.
 - [x] Define and independently review the Simulator forecasting evidence

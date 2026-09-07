@@ -26,6 +26,15 @@ def test_release_build_installs_and_smoke_tests_local_service_extra():
     assert "/api/v1/capabilities" in workflow
 
 
+def test_packaged_service_smokes_allow_bounded_cold_start_and_detect_exit():
+    workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
+
+    assert workflow.count("for _ in {1..240}") == 2
+    assert "$attempt -lt 240" in workflow
+    assert workflow.count('kill -0 "${SERVER_PID}"') == 2
+    assert workflow.count("did not become healthy within 60 seconds") == 3
+
+
 def test_pyinstaller_dispatches_the_headless_server_entrypoint():
     spec = (ROOT / "optees.spec").read_text(encoding="utf-8")
     main = (ROOT / "src/optees/main.py").read_text(encoding="utf-8")
