@@ -211,6 +211,9 @@ When comparing Optees OSQP solutions against the published BPMPD reference value
    - Rechecks each selected instance SHA-256, parsed dimensions, published objective, strict `verified` validation status, and passing KKT stationarity.
 3. **Packaging & Regressions**:
    - No modifications to existing reference cases in `tests/data/qp/reference_cases.json`.
+   - The handoff manifest's `optees_version` is immutable producer provenance
+     (`0.10.2`), independently of the runtime or release version executing its
+     integrity test.
    - Existing QP regression suites remain unchanged; the repository gates recorded for this work unit are the source of current pass counts.
 
 ---

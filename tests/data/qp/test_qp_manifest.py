@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from optees import __version__
 from optees.application.codecs.qp_problem_codec import qp_model_from_public_dict
 from optees.application.contracts.capability_ids import QP_CAPABILITY_ID
 from optees.application.contracts.execution import ExecutionEnvelope
@@ -21,6 +20,7 @@ from optees.composition.local_agent import (
 REPO_ROOT = Path(__file__).resolve().parents[3]
 QP_DATA_DIR = Path(__file__).resolve().parent
 MANIFEST_FILE = QP_DATA_DIR / "manifest.json"
+QP_FIXTURE_PRODUCER_VERSION = "0.10.2"
 
 
 def load_manifest() -> dict:
@@ -33,7 +33,9 @@ def test_qp_manifest_integrity_and_determinism() -> None:
 
     assert manifest["manifest_version"] == "1"
     assert manifest["path_base"] == "repository_root"
-    assert manifest["optees_version"] == __version__
+    # Evidence provenance is immutable: it identifies the Optees version that
+    # produced this fixture bundle, not the version currently running the test.
+    assert manifest["optees_version"] == QP_FIXTURE_PRODUCER_VERSION
     assert manifest["capability_id"] == QP_CAPABILITY_ID
     assert manifest["capability_ids"] == [QP_CAPABILITY_ID]
 

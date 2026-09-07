@@ -11,8 +11,9 @@
 - **Candidate detailed work unit (not ready):** `05-targeted-forecasting-expansion.md`
 - **Consumer roadmap:** the Decision Simulator `docs/ROADMAP.md`
 - **Release integration:** the completed QP and linear-scenario capabilities are
-  included in the local Optees `0.11.0` release candidate; publication remains
-  pending
+  included in the Optees `0.11.0` release candidate; the first tagged gate
+  exposed a fixture-provenance regression, now corrected and verified locally;
+  republication remains pending
 
 ## Goal
 
@@ -22,6 +23,9 @@ Evidence-gated candidate: [Targeted forecasting expansion](05-targeted-forecasti
 - [x] QP handoff manifest scope and provenance rules planned.
 - [x] QP handoff manifest implemented and independently reviewed; partial-validation
   wording corrected and checksums refreshed (11 focused tests pass).
+- [x] Release-gate correction: QP fixture producer version remains frozen at
+  `0.10.2` and its integrity test no longer couples historical provenance to
+  the current Optees runtime version.
 - [x] Targeted forecasting expansion scope and micro-gates planned in `05-targeted-forecasting-expansion.md`.
 - [x] Independent review of the forecasting draft; unsafe freeze withdrawn.
 - [x] Define and independently review the Simulator forecasting evidence
