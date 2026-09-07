@@ -130,6 +130,8 @@ now use a dedicated result capture with grounded, non-overlapping placements.
 
 ### Pre-release capability refresh - 2026-09-06
 
+- [x] Prepare landing release `0.5.0` locally for the 16-capability catalogue
+  and canonical-domain refresh; `landing-v0.5.0` publication remains pending.
 - [x] Align the landing page and README with the 16 registered capabilities.
 - [x] Add QP and Min-Max / Max-Min catalogue entries in English and Italian.
 - [x] Add reproducible desktop captures for the QP and scenario workflows and
