@@ -18,6 +18,14 @@ implementation priority.
 - [Native distribution audit before installers](audits/native-distribution-pre-installers.md):
   portable-package baseline preceding the Windows installer and Debian package.
 
+## Superseded Plans
+
+- [Optimization workflows before the case-study boundary](superseded-plans/optimization-workflows-pre-case-study.md):
+  earlier design that also assigned experiment-ledger and adaptive-loop concerns
+  to Optees.
+- [Sequential decision benchmark before Decision Simulator](superseded-plans/sequential-decision-benchmark-pre-simulator.md):
+  domain-neutral benchmark concept superseded by the dedicated simulator plan.
+
 ## Local Agent History
 
 - [Pre-service capability inventory](local-agent/pre-service-capability-inventory.md):

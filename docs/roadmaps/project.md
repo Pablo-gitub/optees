@@ -114,6 +114,13 @@ are stable. Each stage is delivered as a complete vertical slice and exposed
 consistently through desktop, versioned JSON, the local REST service, MCP,
 independent validation, optional result artifacts, and reports.
 
+The cross-capability workflow registry is a separate strategic track documented
+in `docs/roadmaps/optimization-workflows.md`. It will make validated
+compositions repeatable and auditable without moving simulator state into the
+solvers. Its presence here does not silently replace the capability order above;
+implementation sequencing must be chosen explicitly after its Phase 0 contracts
+and threat model are reviewed.
+
 ### Priority 1 - Time-series Forecasting
 
 The detailed two-part implementation and handoff checklist is maintained in
@@ -545,10 +552,10 @@ order that reuses the new foundations.
 
 | Family | Next capabilities |
 | --- | --- |
-| LP / MILP | Dedicated `MILPSolutionView`, MPS import adapter, threshold-model wizard, linear minimax/maximin, Chebyshev goal programming, and min-max regret where the model is linear. |
+| LP / MILP | Dedicated `MILPSolutionView`, MPS import adapter, threshold-model wizard, convex Quadratic Programming (QP), convex Mixed-Integer Quadratic Programming (MIQP), linear minimax/maximin, Chebyshev goal programming, and min-max regret where the model is linear. QP should precede MIQP so convexity checks, quadratic contracts, validation, and educational diagnostics are established before integer decisions are added. |
 | Knapsack | Multiple-choice Knapsack, additional benchmark suites, and heuristic-versus-exact comparison for instances where DP or MILP becomes expensive. |
 | Packing & Loading | Orthogonal single- and multi-container 3D packing, interactive refinement, industrial constraints, heuristic comparison, and capacity-only allocation. |
-| NLP | Nonlinear constraints, least squares, quadratic programming, nonlinear minimax, and global methods such as differential evolution. |
+| NLP | Nonlinear constraints, nonlinear least squares, genuinely non-convex quadratic models, nonlinear minimax, and global methods such as differential evolution. Convex QP and MIQP belong to the structured LP/MILP expansion above rather than the generic local-NLP workflow. |
 | Graph Theory | Bellman-Ford, minimum spanning tree, max flow/min cut, matching, and exact/heuristic TSP comparison. |
 | AI & Machine Learning | Time-series forecasting first; regularization, classification hardening, and clustering diagnostics follow after the current business-decision sequence. |
 | Heuristics | Simulated Annealing, then problem-specific Genetic Algorithm or Tabu Search; every result keeps seed, budget, incumbent trace, and feasibility diagnostics. |

@@ -195,8 +195,10 @@ Its adapter verifies the retained SHA-256 digest, accepts only a safe basename,
 and writes atomically inside the configured export root. The desktop GUI and
 packaged MCP companion are separate processes, but share that root through a
 small platform-specific JSON settings file. The installer initializes it to
-the user's `Downloads/Optees` directory on first installation, while subsequent
-GUI changes are read by the MCP adapter on every explicit download request.
+the conventional `%USERPROFILE%/Downloads/Optees` directory on first
+installation, while allowing a different destination for redirected or
+organization-managed folders. Subsequent GUI changes are read by the MCP
+adapter on every explicit download request.
 
 `ReportCompositionService` is a second application-owned asynchronous
 orchestrator. It resolves execution envelopes through `LocalJobService`, pins
@@ -611,6 +613,12 @@ flowchart LR
 
 Each capability validates only its own contract and result. Optees does not
 currently certify the semantic correctness of the complete composed workflow.
+The planned workflow registry, restricted transformation engine, workflow-run
+audit, and validated template integration are specified in
+`docs/roadmaps/optimization-workflows.md`. They are not shipped runtime
+architecture yet and will remain outside the stateless capability core when
+implemented. Decision Simulator retains ownership of experiment state,
+evaluation, adaptive policy comparison, and scoring.
 
 The continuous convex QP desktop workflow follows the direct-invocation
 boundary. `QPView` builds a `QPModel` and calls `SolveQPUseCase`; the

@@ -235,7 +235,7 @@ def _verify_reporting(client: _Client) -> None:
                 },
                 {
                     "artifact_type": "feasible_region",
-                    "formats": ["png"],
+                    "formats": ["png", "svg"],
                     "options": {
                         "locale": "en",
                         "theme": "light",
@@ -247,15 +247,21 @@ def _verify_reporting(client: _Client) -> None:
         },
     )
     artifacts = _poll_artifacts(client, job_id)
-    by_type = {item["artifact_type"]: item for item in artifacts}
-    table = by_type["solution_table"]
-    chart = by_type["feasible_region"]
+    by_type_and_format = {
+        (item["artifact_type"], item["format"]): item for item in artifacts
+    }
+    table = by_type_and_format[("solution_table", "markdown")]
+    chart = by_type_and_format[("feasible_region", "png")]
+    svg_chart = by_type_and_format[("feasible_region", "svg")]
     table_content = _verify_download(client, table)
     chart_content = _verify_download(client, chart)
+    svg_content = _verify_download(client, svg_chart)
     if b"| Variable |" not in table_content:
         raise RuntimeError("packaged Markdown table content is invalid")
     if not chart_content.startswith(b"\x89PNG\r\n\x1a\n"):
         raise RuntimeError("packaged chart content is not a PNG")
+    if b"<svg" not in svg_content or b"Optees" not in svg_content:
+        raise RuntimeError("packaged chart content is not a valid Optees SVG")
 
     backends, _ = client.request("GET", "/api/v1/reports/backends")
     diagnostics = backends.get("backends")

@@ -236,6 +236,8 @@ NVIDIA/Qt/OpenGL startup path and software-rendering fallback.
 
 ## Phase 6 - Packaged Runtime Self-Test
 
+- [x] Bundle Matplotlib's dynamically selected SVG backend and require the
+  packaged reporting smoke to download and validate both PNG and SVG charts.
 - [ ] Add a bounded `--selftest` mode that exercises packaged assets, i18n,
   SciPy LP, OR-Tools MILP, and local-service startup without user data.
 - [ ] Run it against the final Windows installer result, mounted macOS bundle,
