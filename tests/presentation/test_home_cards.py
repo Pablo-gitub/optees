@@ -38,9 +38,12 @@ def test_card_button_height_grows_with_longer_content(qtbot) -> None:
 
     long_card = CardButton(
         "A Much Longer Title That Might Wrap Over Multiple Lines",
-        "This is an extensive subtitle description that contains multiple sentences to ensure "
-        "that the text column wraps across many lines and proves that the card's height grows "
-        "appropriately to accommodate all the text without clipping.",
+        "This deliberately oversized subtitle spans enough words to exceed the minimum card "
+        "height under every font configuration supported by the desktop release. It verifies "
+        "that the text column wraps across many lines and that the card grows appropriately "
+        "without clipping. The additional sentences avoid coupling the test to a particular "
+        "platform font, font-rendering backend, or line-height metric. Content that still fits "
+        "within the minimum height is correctly allowed to retain that minimum height.",
     )
     qtbot.addWidget(long_card)
 

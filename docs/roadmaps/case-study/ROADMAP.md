@@ -26,6 +26,9 @@ Evidence-gated candidate: [Targeted forecasting expansion](05-targeted-forecasti
 - [x] Release-gate correction: QP fixture producer version remains frozen at
   `0.10.2` and its integrity test no longer couples historical provenance to
   the current Optees runtime version.
+- [x] Cross-platform GUI release-gate correction: card growth coverage uses
+  content that exceeds the minimum height independently of platform font
+  metrics; content that fits may correctly retain the standard card height.
 - [x] Targeted forecasting expansion scope and micro-gates planned in `05-targeted-forecasting-expansion.md`.
 - [x] Independent review of the forecasting draft; unsafe freeze withdrawn.
 - [x] Define and independently review the Simulator forecasting evidence
