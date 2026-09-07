@@ -10,6 +10,9 @@
 - **Latest completed detailed work unit:** `04-qp-consumer-handoff.md`
 - **Candidate detailed work unit (not ready):** `05-targeted-forecasting-expansion.md`
 - **Consumer roadmap:** the Decision Simulator `docs/ROADMAP.md`
+- **Release integration:** the completed QP and linear-scenario capabilities are
+  included in the local Optees `0.11.0` release candidate; publication remains
+  pending
 
 ## Goal
 

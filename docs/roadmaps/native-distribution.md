@@ -252,6 +252,9 @@ verified together in the same artifacts users download.
 
 ## Phase 7 - Release Candidate And Documentation
 
+- [x] Prepare the local `0.11.0` version metadata and release summary for QP,
+  linear-scenario optimization, and packaged SVG reporting; tag publication and
+  native artifact acceptance remain pending.
 - [x] Update `README.md`, `docs/architecture/overview.md`, `docs/guides/releasing.md`, and the
   landing page with the local solver platform and truthful platform-specific
   installation/update instructions.

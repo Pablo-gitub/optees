@@ -633,6 +633,19 @@ jobs:
           body: |
             ## Optees ${{ github.ref_name }}
 
+            ### What's new in 0.11.0
+
+            - Continuous convex Quadratic Programming through OSQP, with
+              versioned contracts, desktop formulation and result views,
+              independent KKT validation, and Maros–Mészáros benchmark evidence.
+            - Linear Min-Max loss and Max-Min reward optimization over finite
+              scenarios, with continuous or discrete decisions, independent
+              reconstruction, and complete GUI, CLI, REST, and MCP delivery.
+            - Refined bilingual educational pages, JSON import/export, solver
+              diagnostics, and public website documentation for both families.
+            - Packaged SVG reporting support and expanded native reporting smoke
+              verification.
+
             ### Downloads
 
             | Platform | File | Notes |

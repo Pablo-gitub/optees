@@ -5,6 +5,9 @@
 - **State:** in progress
 - **Shipped baseline:** `0.10.2`, with 14 registered capabilities and desktop,
   CLI, REST, and MCP delivery surfaces
+- **Prepared release:** `0.11.0`, adding continuous convex QP and both linear
+  scenario orientations for a total of 16 registered capabilities; publication
+  remains pending
 - **Current product sequence:** finish the Forecasting handoff, then implement
   Unrelated Parallel Machines Scheduling and Two-player Zero-sum Game Theory
 - **Authority:** this document owns cross-family sequencing; specialized
