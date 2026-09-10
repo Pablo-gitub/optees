@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/Pablo-gitub/optees/releases"><img src="https://img.shields.io/github/v/release/Pablo-gitub/optees?display_name=tag&sort=semver" alt="Latest release" /></a>
+  <a href="https://github.com/Pablo-gitub/optees/releases"><img src="https://img.shields.io/github/downloads/Pablo-gitub/optees/total?label=downloads" alt="GitHub release downloads" /></a>
   <a href="https://github.com/Pablo-gitub/optees/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="Apache 2.0 license" /></a>
   <img src="https://img.shields.io/badge/Python-3.12%2B-3776AB.svg" alt="Python 3.12 or later" />
   <img src="https://img.shields.io/badge/runs-100%25%20locally-0E8A5A.svg" alt="Runs locally" />
