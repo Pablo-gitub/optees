@@ -83,7 +83,7 @@ are recorded in `docs/contracts/python-distribution-profiles.md` and
 - [ ] Exercise capability discovery, CLI JSON discipline, one validated solve,
   optional imports, and explicit missing-extra diagnostics in each profile.
 - [x] Add a test that the core wheel does not depend on or import PySide6.
-- [ ] Verify that the source distribution can reproduce the wheel without a
+- [x] Verify that the source distribution can reproduce the wheel without a
   repository checkout.
 
 **Gate `DIST-PY-W`:** inspected wheel and source distribution install and pass
@@ -93,8 +93,10 @@ their bounded acceptance matrix in clean environments.
 local wheel/source builds contain the expected entry points and package data.
 The broad asset glob was replaced after artifact inspection found that a stale
 local build cache could otherwise package `.pyc` files. Clean isolated profile
-installs, sdist-to-wheel reproduction, and the three-platform CI matrix remain
-open; therefore `DIST-PY-W` is not complete.
+installation and sdist-to-wheel payload checks are now encoded in the
+three-platform CI matrix. The local artifact and reconstruction checks pass;
+the remote Linux, Windows, and macOS jobs remain unobserved, so `DIST-PY-W` is
+not complete.
 
 ## Phase 2 — Native CLI Companion (`DIST-CLI`)
 

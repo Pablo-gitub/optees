@@ -44,6 +44,24 @@ metadata-only MCP retrieval.
 - **Performance (later)**: quick sanity on large problems with time/iter thresholds.
 - **Property-based (optional)**: random feasible instances to check invariants.
 
+## Python Distribution Gate
+
+The `python-distribution` CI job runs on Ubuntu x86-64, Windows x64, and macOS
+arm64 with Python 3.12. It builds the wheel and source distribution, rejects
+unsafe or generated archive members, checks dependency profiles, entry points,
+licenses, and runtime assets, then rebuilds the wheel from the source archive
+and compares their payloads. Each job installs and exercises the core,
+`local-service`, `mcp`, `desktop`, and combined `all` profiles in order.
+
+For a local artifact inspection after installing the standard `build` package:
+
+```bash
+python -m build --wheel --sdist --outdir dist-python
+python packaging/validate_python_distribution.py dist-python --rebuild-sdist
+```
+
+Local success does not replace the three-platform CI result.
+
 ## Current coverage
 - `tests/utility/test_lp_utils.py`: toy LPs + LPnetlib MAT smoke via `load_lpnetlib_mat`.
 - `tests/utility/test_knapsack_utils.py`: baseline DP cases.

@@ -59,9 +59,16 @@ Run this from the project root in the `optees` environment:
 
 ```bash
 PYTHONPATH=src python -m pytest -q
+python -m pip install "build>=1.2,<2"
+python -m build --wheel --sdist --outdir dist-python
+python packaging/validate_python_distribution.py dist-python --rebuild-sdist
 python -m pip install --requirement packaging/requirements-build.txt
 python -m PyInstaller optees.spec --noconfirm --clean
 ```
+
+The Python artifacts are release candidates only at this stage. Do not upload
+them to GitHub Releases or PyPI until the publication gate in
+`docs/roadmaps/python-package-and-headless-distribution.md` is complete.
 
 On macOS, verify the bundle version and the required runtime assets:
 
