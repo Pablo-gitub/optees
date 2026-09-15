@@ -25,7 +25,7 @@ stable when delivery state changes.
 | [Local agent platform](local-agent-platform.md) | In progress | MVP shipped; validator breadth, semantic guidance, desktop agent work, and evidence remain |
 | [Result artifacts and reporting](result-artifacts-and-reporting.md) | In progress | Headless workflow shipped; remaining product and scalability work continues |
 | [Native distribution](native-distribution.md) | In progress | Native packaging exists; acceptance, signing, self-test, and updater hardening remain |
-| [Python package and headless distribution](python-package-and-headless-distribution.md) | Planned | Dependency and import contract before wheel, native CLI, or publication work |
+| [Python package and headless distribution](python-package-and-headless-distribution.md) | In progress | `DIST-PY-C` complete; buildable wheel/source-distribution gate next |
 | [Binary Classification hardening](classification-hardening.md) | Planned | Statistical and versioned contract before validator or optimizer work |
 | [Large local inputs](large-local-inputs.md) | Planned | Threat and immutable-reference contract before REST or MCP transport work |
 | [Packing and loading](packing-and-loading.md) | In progress | Existing vertical slice with later expansion tracked |

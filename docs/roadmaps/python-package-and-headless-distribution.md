@@ -2,15 +2,16 @@
 
 ## Document Status
 
-- **State:** planned
+- **State:** in progress
 - **Workstream:** `DIST-PY`
 - **Evidence source:** operational use of the Classification capability from
   Python, the CLI, and a native Optees installation
 - **Current limitation:** PySide6 is a mandatory base dependency, Python
   distributions are not published as release assets or on PyPI, and native
   packages omit `optees-cli`
-- **Implementation authorization:** none; this document freezes sequence and
-  gates, not package publication
+- **Current gate:** `DIST-PY-C` completed; `DIST-PY-W` is the next authorized
+  implementation boundary
+- **Contract:** `docs/contracts/python-distribution-profiles.md`
 - **Related roadmap:** `native-distribution.md`
 
 ## Goal
@@ -49,21 +50,25 @@ release builds.
 
 ## Phase 0 — Dependency And Import Audit (`DIST-PY-C`)
 
-- [ ] Inventory imports reachable from `import optees`, `optees-cli`,
+- [x] Inventory imports reachable from `import optees`, `optees-cli`,
   `optees-server`, `optees-mcp`, and the desktop entry point.
-- [ ] Prove that headless capability discovery and one small solve do not
+- [x] Prove that headless capability discovery and one small solve do not
   import PySide6.
-- [ ] Freeze base dependencies and the `desktop`, `local-service`, `mcp`,
+- [x] Freeze base dependencies and the `desktop`, `local-service`, `mcp`,
   `plot`, `test`, and `dev` extras.
-- [ ] Decide whether convenience extras such as `all` are justified without
+- [x] Decide whether convenience extras such as `all` are justified without
   becoming the documented default.
-- [ ] Record platform wheel availability and Python constraints for every
+- [x] Record platform wheel availability and Python constraints for every
   compiled numerical dependency.
-- [ ] Reject a split that changes capability IDs, schemas, defaults, result
+- [x] Reject a split that changes capability IDs, schemas, defaults, result
   codecs, or validation behavior between installation profiles.
 
 **Gate `DIST-PY-C`:** the dependency graph and installation-profile contract
 are reviewed before `pyproject.toml` changes.
+
+**Gate state:** completed. The reviewed decisions and executable import probe
+are recorded in `docs/contracts/python-distribution-profiles.md` and
+`tests/packaging/test_python_distribution_profiles.py`.
 
 ## Phase 1 — Buildable Python Distributions (`DIST-PY-W`)
 

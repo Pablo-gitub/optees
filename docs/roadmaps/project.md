@@ -132,18 +132,21 @@ and threat model are reviewed.
 
 ### Comparative Expansion Portfolio
 
-The following order compares remaining implementation size, not mandatory
-execution priority. Value reflects reusable product impact and current
-case-study evidence; it is not a promise of revenue or runtime improvement.
+The following order is the recommended execution sequence. The first four
+tracks grow broadly with implementation size; Scheduling is intentionally
+placed before the smaller Packing-hardening track because it adds a new
+operational family instead of deepening an existing one. Value reflects
+reusable product impact and current case-study evidence; it is not a promise of
+revenue or runtime improvement.
 
-| Size order | Track | Relative effort | Product value | Immediate evidence value | Sequencing note |
+| Execution order | Track | Relative effort | Product value | Immediate evidence value | Sequencing note |
 | ---: | --- | --- | --- | --- | --- |
 | 1 | Python package, headless dependency split, and native CLI | Medium | Very high | Removes current installation friction and gives native users file-backed execution | Best first operational hardening increment |
 | 2 | Binary Classification hardening | Medium–large | High | Adds independent validation, robust convergence, imbalance support, and probability metrics to a used capability | Contract and validator before optimizer/UI |
 | 3 | Large local inputs for REST and MCP | Large | Very high | Removes the principal agent bottleneck for large tabular problems across capabilities | Native CLI is the interim path; threat model first |
 | 4 | Evidence-driven Forecasting expansion for Decision Simulator | Large | High | Unlocks uncertainty-aware market experiments if baseline evidence selects a method | Remains blocked until `OPT-DS-04` evidence satisfies `FC-C` |
-| 5 | Packing industrial hardening and placement controls | Very large | High | Directly improves geometric evidence, support observability, and the manufacturing/logistics consumer | Oracle, runtime validator, support reporting, then placement bounds |
-| 6 | Resource-constrained Scheduling expansion | Extra large | Very high | Creates a new operational family for people, machines, precedences, calendars, and multi-objective choices | Formal taxonomy and atomic objectives before a Pareto runner |
+| 5 | Resource-constrained Scheduling expansion | Extra large | Very high | Creates a new operational family for people, machines, precedences, calendars, and multi-objective choices | Prioritized before further Packing depth because it expands the product into a new operational family |
+| 6 | Packing industrial hardening and placement controls | Very large | High | Directly improves geometric evidence, support observability, and the manufacturing/logistics consumer | Continue after Scheduling; oracle, runtime validator, support reporting, then placement bounds |
 
 This table must not be read as permission to start all six tracks. Prefer the
 smallest evidence-backed gate that removes a current blocker. Parallel work is
