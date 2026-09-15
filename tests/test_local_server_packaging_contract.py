@@ -21,7 +21,7 @@ def test_linux_release_jobs_install_qt_xcb_cursor_runtime():
 def test_release_build_installs_and_smoke_tests_local_service_extra():
     workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
 
-    assert 'pip install ".[plot,local-service,mcp]"' in workflow
+    assert 'pip install ".[desktop,plot,local-service,mcp]"' in workflow
     assert workflow.count("Smoke test packaged local service") == 3
     assert "/api/v1/capabilities" in workflow
 
@@ -113,9 +113,7 @@ def test_native_bundles_smoke_test_artifact_and_report_workflow():
 
 def test_native_bundles_include_and_smoke_test_forecasting_backend():
     spec = (ROOT / "optees.spec").read_text(encoding="utf-8")
-    smoke = (
-        ROOT / "packaging" / "smoke_packaged_reporting.py"
-    ).read_text(encoding="utf-8")
+    smoke = (ROOT / "packaging" / "smoke_packaged_reporting.py").read_text(encoding="utf-8")
 
     assert '"statsmodels.tsa.holtwinters"' in spec
     assert '"ml.forecasting.univariate"' in smoke

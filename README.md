@@ -188,11 +188,16 @@ environment on macOS, Windows, and Linux. Platform prerequisites, a standard
 `venv` alternative, and Linux graphics diagnostics are documented in the
 [development setup guide](docs/guides/development.md).
 
-To develop or use the optional local solver API, install the dedicated extra:
+For a pip-based desktop development environment with the optional local solver
+API, install the dedicated profiles explicitly:
 
 ```bash
-python -m pip install -e ".[plot,local-service]"
+python -m pip install -e ".[desktop,local-service]"
 ```
+
+For headless library or CLI use, the base package is sufficient and does not
+install PySide6. The `plot`, `local-service`, and `mcp` extras enable their
+respective optional surfaces.
 
 To connect a local MCP client such as Claude Desktop or Cowork, install the
 `mcp` extra and follow the [agent service configuration guide](docs/guides/agent-service-configuration.md).

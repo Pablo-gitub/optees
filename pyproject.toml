@@ -7,27 +7,48 @@ name = "optees"
 dynamic = ["version"]
 requires-python = ">=3.12"
 dependencies = [
-    "certifi>=2025.1.31",
-    "PySide6",
     "numpy",
     "scipy>=1.16,<1.18",
     "statsmodels>=0.14.6,<0.15",
     "ortools",
     "osqp>=0.6.3,<1",
-    "markdown",
 ]
 
 [project.optional-dependencies]
 plot = ["matplotlib"]
+desktop = [
+    "certifi>=2025.1.31",
+    "markdown",
+    "matplotlib",
+    "PySide6",
+]
 local-service = [
     "fastapi>=0.115,<1",
+    "matplotlib",
     "pydantic>=2.9,<3",
     "uvicorn>=0.34,<1",
 ]
-mcp = ["mcp>=1.27,<2"]
-test = [
-    "httpx>=0.28,<1",
+mcp = [
+    "matplotlib",
     "mcp>=1.27,<2",
+    "pydantic>=2.9,<3",
+]
+all = [
+    "certifi>=2025.1.31",
+    "fastapi>=0.115,<1",
+    "markdown",
+    "matplotlib",
+    "mcp>=1.27,<2",
+    "pydantic>=2.9,<3",
+    "PySide6",
+    "uvicorn>=0.34,<1",
+]
+test = [
+    "certifi>=2025.1.31",
+    "httpx>=0.28,<1",
+    "markdown",
+    "mcp>=1.27,<2",
+    "PySide6",
     "pytest>=8,<9",
     "pytest-qt>=4.5,<5",
     "pytest-timeout>=2.4,<3",
@@ -48,6 +69,7 @@ optees-mcp = "optees.mcp_server:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
+include-package-data = false
 
 [tool.setuptools.dynamic]
 version = {attr = "optees.__version__"}
@@ -56,7 +78,18 @@ version = {attr = "optees.__version__"}
 where = ["src"]
 
 [tool.setuptools.package-data]
-"optees.assets" = ["**/*"]
+"optees.assets" = [
+    "**/*.icns",
+    "**/*.ico",
+    "**/*.json",
+    "**/*.md",
+    "**/*.png",
+    "**/*.svg",
+    "**/*.typst",
+]
+
+[tool.setuptools.exclude-package-data]
+"optees.assets" = ["__pycache__/*", "*/__pycache__/*", "*.pyc", "*/*.pyc"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

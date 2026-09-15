@@ -4,10 +4,67 @@ import json
 import os
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def _project_metadata() -> dict[str, object]:
+    with (ROOT / "pyproject.toml").open("rb") as stream:
+        return tomllib.load(stream)["project"]
+
+
+def _dependency_names(requirements: list[str]) -> set[str]:
+    return {
+        requirement.split("[", 1)[0]
+        .split("<", 1)[0]
+        .split(">", 1)[0]
+        .split("=", 1)[0]
+        .strip()
+        .lower()
+        for requirement in requirements
+    }
+
+
+def test_core_metadata_excludes_optional_delivery_dependencies():
+    project = _project_metadata()
+
+    assert _dependency_names(project["dependencies"]) == {
+        "numpy",
+        "scipy",
+        "statsmodels",
+        "ortools",
+        "osqp",
+    }
+
+
+def test_runtime_extras_are_independently_complete():
+    extras = _project_metadata()["optional-dependencies"]
+
+    assert {"pyside6", "certifi", "matplotlib", "markdown"} <= _dependency_names(extras["desktop"])
+    assert {"fastapi", "pydantic", "uvicorn", "matplotlib"} <= _dependency_names(
+        extras["local-service"]
+    )
+    assert {"mcp", "pydantic", "matplotlib"} <= _dependency_names(extras["mcp"])
+    assert _dependency_names(extras["plot"]) == {"matplotlib"}
+    assert (
+        _dependency_names(extras["desktop"])
+        | _dependency_names(extras["local-service"])
+        | _dependency_names(extras["mcp"])
+    ) <= _dependency_names(extras["all"])
+
+
+def test_package_data_excludes_python_cache_artifacts():
+    with (ROOT / "pyproject.toml").open("rb") as stream:
+        setuptools = tomllib.load(stream)["tool"]["setuptools"]
+
+    package_data = set(setuptools["package-data"]["optees.assets"])
+    exclusions = set(setuptools["exclude-package-data"]["optees.assets"])
+    assert setuptools["include-package-data"] is False
+    assert "**/*" not in package_data
+    assert {"__pycache__/*", "*/__pycache__/*", "*.pyc", "*/*.pyc"} <= exclusions
 
 
 def test_core_service_and_solve_do_not_import_optional_delivery_stacks():
