@@ -74,7 +74,7 @@ are recorded in `docs/contracts/python-distribution-profiles.md` and
 
 - [x] Move PySide6 out of mandatory base dependencies and into the reviewed
   desktop extra.
-- [ ] Build wheel and source distribution from a clean checkout using the
+- [x] Build wheel and source distribution from a clean checkout using the
   canonical version from `optees.__version__`.
 - [x] Inspect wheel contents for assets, schemas, licenses, accidental caches,
   credentials, absolute paths, and generated development files.
@@ -99,8 +99,10 @@ desktop, local-service, MCP, and combined profiles; confirmed the 16-capability
 inventory; completed an independently validated Forecasting solve; and
 exercised bounded diagnostics for missing optional stacks. That run exposed
 and corrected an isolated sdist-build dependency and two optional-entry-point
-import-boundary defects before publication. The remote Linux, Windows, and
-macOS jobs remain unobserved, so `DIST-PY-W` is not complete.
+import-boundary defects before publication. Wheel and source distribution were
+then rebuilt and compared from an archive of the committed Git tree rather
+than from the working checkout. The remote Linux, Windows, and macOS jobs
+remain unobserved, so `DIST-PY-W` is not complete.
 
 ## Phase 2 — Native CLI Companion (`DIST-CLI`)
 
