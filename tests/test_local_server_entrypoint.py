@@ -26,3 +26,14 @@ def test_server_entrypoint_passes_validated_session_to_http_runner(monkeypatch):
 
     assert exit_code == 0
     assert captured == {"token": token, "port": 9020, "log_level": "error"}
+
+
+def test_server_entrypoint_reports_missing_optional_extra(monkeypatch, capsys):
+    token = "entrypoint-token-" + "x" * 32
+    monkeypatch.setenv(LOCAL_SERVER_TOKEN_ENV, token)
+    monkeypatch.setattr(local_server.importlib.util, "find_spec", lambda name: None)
+
+    assert local_server.main([]) == 2
+    assert capsys.readouterr().err == (
+        "The optional local-service dependency is missing. Install optees[local-service].\n"
+    )

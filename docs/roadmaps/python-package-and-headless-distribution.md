@@ -78,9 +78,9 @@ are recorded in `docs/contracts/python-distribution-profiles.md` and
   canonical version from `optees.__version__`.
 - [x] Inspect wheel contents for assets, schemas, licenses, accidental caches,
   credentials, absolute paths, and generated development files.
-- [ ] Install the wheel into isolated core, desktop, local-service, MCP, and
+- [x] Install the wheel into isolated core, desktop, local-service, MCP, and
   combined environments.
-- [ ] Exercise capability discovery, CLI JSON discipline, one validated solve,
+- [x] Exercise capability discovery, CLI JSON discipline, one validated solve,
   optional imports, and explicit missing-extra diagnostics in each profile.
 - [x] Add a test that the core wheel does not depend on or import PySide6.
 - [x] Verify that the source distribution can reproduce the wheel without a
@@ -94,9 +94,13 @@ local wheel/source builds contain the expected entry points and package data.
 The broad asset glob was replaced after artifact inspection found that a stale
 local build cache could otherwise package `.pyc` files. Clean isolated profile
 installation and sdist-to-wheel payload checks are now encoded in the
-three-platform CI matrix. The local artifact and reconstruction checks pass;
-the remote Linux, Windows, and macOS jobs remain unobserved, so `DIST-PY-W` is
-not complete.
+three-platform CI matrix. A clean Linux acceptance run installed the core,
+desktop, local-service, MCP, and combined profiles; confirmed the 16-capability
+inventory; completed an independently validated Forecasting solve; and
+exercised bounded diagnostics for missing optional stacks. That run exposed
+and corrected an isolated sdist-build dependency and two optional-entry-point
+import-boundary defects before publication. The remote Linux, Windows, and
+macOS jobs remain unobserved, so `DIST-PY-W` is not complete.
 
 ## Phase 2 — Native CLI Companion (`DIST-CLI`)
 

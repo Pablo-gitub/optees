@@ -56,6 +56,12 @@ def test_runtime_extras_are_independently_complete():
     ) <= _dependency_names(extras["all"])
 
 
+def test_mcp_script_uses_optional_dependency_boundary():
+    project = _project_metadata()
+
+    assert project["scripts"]["optees-mcp"] == "optees.mcp_entrypoint:main"
+
+
 def test_package_data_excludes_python_cache_artifacts():
     with (ROOT / "pyproject.toml").open("rb") as stream:
         setuptools = tomllib.load(stream)["tool"]["setuptools"]

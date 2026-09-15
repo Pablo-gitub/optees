@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import os
 import sys
 from collections.abc import Sequence
@@ -28,11 +29,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 2
 
-    try:
-        from optees.interfaces.http import run_local_api
+    if any(
+        importlib.util.find_spec(module_name) is None
+        for module_name in ("fastapi", "pydantic", "uvicorn")
+    ):
+        print(
+            "The optional local-service dependency is missing. Install optees[local-service].",
+            file=sys.stderr,
+        )
+        return 2
+    from optees.interfaces.http import run_local_api
 
+    try:
         run_local_api(token=token, port=args.port, log_level=args.log_level)
-    except (ImportError, ValueError) as exc:
+    except ValueError as exc:
         print(f"optees-server: {exc}", file=sys.stderr)
         return 2
     return 0

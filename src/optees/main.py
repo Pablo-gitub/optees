@@ -1,7 +1,8 @@
 # src/optees/main.py
-import sys
+import importlib.util
 import logging
 import os
+import sys
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -28,12 +29,18 @@ def main(argv: list[str] | None = None) -> int:
 
         return server_main(arguments[1:])
     if arguments and arguments[0] == "--mcp-server":
-        from optees.mcp_server import main as mcp_main
+        from optees.mcp_entrypoint import main as mcp_main
 
         mcp_main()
         return 0
 
     logging.basicConfig(level=os.getenv("OPTEES_LOG", "WARNING").upper())
+    if importlib.util.find_spec("PySide6") is None:
+        print(
+            "The optional desktop dependency is missing. Install optees[desktop].",
+            file=sys.stderr,
+        )
+        return 2
     from PySide6.QtGui import QIcon
     from PySide6.QtWidgets import QApplication
 
@@ -48,6 +55,7 @@ def main(argv: list[str] | None = None) -> int:
     win = MainWindow()
     win.show()
     return app.exec()
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

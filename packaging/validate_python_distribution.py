@@ -29,6 +29,9 @@ REQUIRED_ENTRY_POINTS = {
     "optees-ollama-chat",
     "optees-server",
 }
+REQUIRED_ENTRY_POINT_TARGETS = {
+    "optees-mcp = optees.mcp_entrypoint:main",
+}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -85,6 +88,11 @@ def _validate_wheel(path: Path) -> str:
         }
         if missing_entries:
             raise ValueError(f"Wheel is missing entry points: {sorted(missing_entries)}")
+        missing_targets = {
+            target for target in REQUIRED_ENTRY_POINT_TARGETS if target not in entry_points
+        }
+        if missing_targets:
+            raise ValueError(f"Wheel has unexpected entry-point targets: {sorted(missing_targets)}")
         required_files = {
             "optees/assets/i18n/en.json",
             "optees/assets/i18n/it.json",
@@ -123,15 +131,7 @@ def _rebuild_and_compare(source: Path, original_wheel: Path) -> None:
         source_root = next(path for path in root.iterdir() if path.is_dir())
         output = root / "wheel"
         subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "build",
-                "--no-isolation",
-                "--wheel",
-                "--outdir",
-                str(output),
-            ],
+            [sys.executable, "-m", "build", "--wheel", "--outdir", str(output)],
             cwd=source_root,
             check=True,
         )
@@ -143,7 +143,7 @@ def _rebuild_and_compare(source: Path, original_wheel: Path) -> None:
 def _wheel_payload(path: Path) -> dict[str, bytes]:
     with zipfile.ZipFile(path) as archive:
         return {
-            _normalized_wheel_member(name): archive.read(name)
+            _normalized_wheel_member(name): _normalized_wheel_content(name, archive.read(name))
             for name in archive.namelist()
             if not name.endswith("/RECORD")
         }
@@ -153,6 +153,12 @@ def _normalized_wheel_member(name: str) -> str:
     if ".dist-info/" not in name:
         return name
     return ".dist-info/" + name.split(".dist-info/", 1)[1]
+
+
+def _normalized_wheel_content(name: str, content: bytes) -> bytes:
+    if not name.endswith(".dist-info/WHEEL"):
+        return content
+    return b"\n".join(line for line in content.splitlines() if not line.startswith(b"Generator:"))
 
 
 def _reject_unsafe_or_generated(names: list[str], *, archive_name: str) -> None:

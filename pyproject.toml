@@ -65,7 +65,7 @@ optees = "optees.main:main"
 optees-cli = "optees.cli:main"
 optees-server = "optees.local_server:main"
 optees-ollama-chat = "optees.ollama_chat:main"
-optees-mcp = "optees.mcp_server:main"
+optees-mcp = "optees.mcp_entrypoint:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
