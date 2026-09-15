@@ -34,6 +34,12 @@ Related documents:
   lifecycle, limits, errors, and report schema that implementation follows;
 - `docs/roadmaps/native-distribution.md` for native installers, release CI,
   platform update handoff, and packaged acceptance testing;
+- `docs/roadmaps/python-package-and-headless-distribution.md` for wheels,
+  dependency profiles, native CLI delivery, and optional PyPI publication;
+- `docs/roadmaps/classification-hardening.md` for the versioned logistic-
+  classification validator, optimizer, imbalance, metrics, and calibration;
+- `docs/roadmaps/large-local-inputs.md` for bounded immutable problem imports
+  and safe REST/MCP references;
 - `docs/evidence/agent-benchmarks.md` for paired experiments measuring whether agents
   formulate and solve synthetic business problems better with Optees;
 - `docs/roadmaps/documentation-website-release.md` for the post-refactoring
@@ -123,6 +129,26 @@ compositions repeatable and auditable without moving simulator state into the
 solvers. Its presence here does not silently replace the capability order above;
 implementation sequencing must be chosen explicitly after its Phase 0 contracts
 and threat model are reviewed.
+
+### Comparative Expansion Portfolio
+
+The following order compares remaining implementation size, not mandatory
+execution priority. Value reflects reusable product impact and current
+case-study evidence; it is not a promise of revenue or runtime improvement.
+
+| Size order | Track | Relative effort | Product value | Immediate evidence value | Sequencing note |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | Python package, headless dependency split, and native CLI | Medium | Very high | Removes current installation friction and gives native users file-backed execution | Best first operational hardening increment |
+| 2 | Binary Classification hardening | Medium–large | High | Adds independent validation, robust convergence, imbalance support, and probability metrics to a used capability | Contract and validator before optimizer/UI |
+| 3 | Large local inputs for REST and MCP | Large | Very high | Removes the principal agent bottleneck for large tabular problems across capabilities | Native CLI is the interim path; threat model first |
+| 4 | Evidence-driven Forecasting expansion for Decision Simulator | Large | High | Unlocks uncertainty-aware market experiments if baseline evidence selects a method | Remains blocked until `OPT-DS-04` evidence satisfies `FC-C` |
+| 5 | Packing industrial hardening and placement controls | Very large | High | Directly improves geometric evidence, support observability, and the manufacturing/logistics consumer | Oracle, runtime validator, support reporting, then placement bounds |
+| 6 | Resource-constrained Scheduling expansion | Extra large | Very high | Creates a new operational family for people, machines, precedences, calendars, and multi-objective choices | Formal taxonomy and atomic objectives before a Pareto runner |
+
+This table must not be read as permission to start all six tracks. Prefer the
+smallest evidence-backed gate that removes a current blocker. Parallel work is
+acceptable only when branches, contracts, ownership, and release gates remain
+independent.
 
 ### Priority 1 - Time-series Forecasting
 
@@ -389,10 +415,11 @@ The remaining work is ordered by the current product priority above:
    user-selected `k`, reproducible seed, feature scaling made visible, inertia
    and silhouette diagnostics, and 2D/3D plots only for the selected displayed
    dimensions.
-4. **Classification hardening:** add a suitable redistributable external
-   benchmark only after its source, evaluation protocol, expected properties,
-   license, and CI budget are reviewed. Keep this distinct from claims about
-   fairness or production readiness.
+4. **Classification hardening:** follow `classification-hardening.md` for the
+   versioned validator, optimizer, evaluation, imbalance, and metric sequence.
+   Add a suitable redistributable external benchmark only after its source,
+   protocol, expected properties, license, and CI budget are reviewed. Keep
+   this distinct from claims about fairness or production readiness.
 
 Every workflow must keep the same product standard as an optimizer: a domain
 model, a stable port and adapter, versioned structured import when appropriate,

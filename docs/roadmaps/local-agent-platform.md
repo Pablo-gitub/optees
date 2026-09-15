@@ -22,6 +22,11 @@ local job API. Independent solution validation and MCP are now part of the
 shipped baseline. Semantic modeling assistance, broader validator coverage,
 agent-oriented product work, and composite workflows remain post-MVP tracks.
 
+Large immutable problem imports and safe input references are intentionally
+split into `large-local-inputs.md`. That track may extend REST and MCP delivery,
+but it must preserve the security and application-service boundaries defined
+here.
+
 ## Product Boundary
 
 Optees remains open source, local-first, offline-capable, and desktop-first.

@@ -17,6 +17,11 @@ It covers release CI, artifact reproducibility, native installation, update
 handoff, and acceptance testing. It does not change solver behavior or the
 local-service API.
 
+Python wheel/source publication, dependency-profile separation, and the native
+CLI companion are sequenced in
+`python-package-and-headless-distribution.md`; this roadmap continues to own
+platform installers and final native-artifact acceptance.
+
 ## Current Baseline
 
 | Platform | Current artifact | Current behavior | Main limitation |
