@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   copy,
-  detectLanguage,
   formatMessage,
   supportedLanguages,
   type FeatureId,
@@ -35,8 +34,6 @@ type ReleaseInfo = {
   html_url: string;
   assets: ReleaseAsset[];
 };
-
-const languageStorageKey = "optees.website.language";
 
 const previewAssets: Record<PreviewId, string> = {
   home: "screenshots/optees-home.png",
@@ -86,12 +83,17 @@ function assetHrefFor(release: ReleaseInfo | null, os: OSKey): string {
   return asset?.browser_download_url ?? releasesUrl;
 }
 
-function getInitialLanguage(): Language {
-  const stored = window.localStorage.getItem(languageStorageKey);
-  if (stored === "en" || stored === "it") {
-    return stored;
-  }
-  return detectLanguage(window.navigator.language);
+function languageFromPath(pathname = window.location.pathname): Language {
+  return pathname.split("/").filter(Boolean)[0] === "en" ? "en" : "it";
+}
+
+function localizedPath(language: Language, page: "landing" | "agents"): string {
+  const prefix = language === "en" ? "/en" : "";
+  return page === "agents" ? `${prefix}/agents/` : `${prefix}/`;
+}
+
+function localizedHref(language: Language, page: "landing" | "agents"): string {
+  return `${localizedPath(language, page)}${window.location.hash}`;
 }
 
 function setMetaContent(selector: string, value: string): void {
@@ -419,7 +421,7 @@ function DownloadButton({
 /* -------------------------------------------------------------------------- */
 
 function LandingPage() {
-  const [language, setLanguage] = useState<Language>(getInitialLanguage);
+  const language = languageFromPath();
   const t = copy[language];
   const [activeAlgorithm, setActiveAlgorithm] = useState(t.algorithms.items[0].id);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -429,7 +431,6 @@ function LandingPage() {
   const revealRoot = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    window.localStorage.setItem(languageStorageKey, language);
     document.documentElement.lang = language;
     document.title = t.meta.title;
     setMetaContent('meta[name="description"]', t.meta.description);
@@ -536,21 +537,21 @@ function LandingPage() {
             <a href="#agent-platform">{t.nav.agents}</a>
             <a href="#algorithms">{t.nav.algorithms}</a>
             <a href="#machine-learning">{t.nav.machineLearning}</a>
-            <a href={`${import.meta.env.BASE_URL}agents/`}>{t.nav.setup}</a>
+            <a href={localizedPath(language, "agents")}>{t.nav.setup}</a>
             <a href="#faq">{t.nav.faq}</a>
           </nav>
           <div className="topbar-actions">
             <div className="language-switch" role="group" aria-label={t.language.aria}>
               {supportedLanguages.map((option) => (
-                <button
+                <a
                   key={option}
-                  type="button"
-                  aria-pressed={language === option}
+                  href={localizedHref(option, "landing")}
+                  hrefLang={option}
+                  aria-current={language === option ? "page" : undefined}
                   className={language === option ? "active" : ""}
-                  onClick={() => setLanguage(option)}
                 >
                   {t.language.options[option]}
-                </button>
+                </a>
               ))}
             </div>
             <a className="ghost-link" href={repositoryUrl} aria-label="GitHub">
@@ -727,7 +728,7 @@ function LandingPage() {
                 </p>
               </div>
             </div>
-            <a className="button primary agent-platform-cta" href={`${import.meta.env.BASE_URL}agents/`}>
+            <a className="button primary agent-platform-cta" href={localizedPath(language, "agents")}>
               {t.agentPlatform.setupCta}
               <Icon name="arrow" />
             </a>
@@ -1030,7 +1031,7 @@ function LandingPage() {
 }
 
 function AgentSetupPage() {
-  const [language, setLanguage] = useState<Language>(getInitialLanguage);
+  const language = languageFromPath();
   const t = copy[language];
   const setup = t.agentSetup;
   const configExample = `{
@@ -1043,7 +1044,6 @@ function AgentSetupPage() {
 }`;
 
   useEffect(() => {
-    window.localStorage.setItem(languageStorageKey, language);
     document.documentElement.lang = language;
     document.title = `${setup.title} — Optees`;
     setMetaContent('meta[name="description"]', setup.body);
@@ -1057,22 +1057,22 @@ function AgentSetupPage() {
       <div className="bg-grid" aria-hidden="true" />
       <header className="topbar scrolled" aria-label={t.nav.aria}>
         <div className="topbar-inner">
-          <a className="brand" href={import.meta.env.BASE_URL} aria-label={t.nav.brandAria}>
+          <a className="brand" href={localizedPath(language, "landing")} aria-label={t.nav.brandAria}>
             <img className="brand-mark" src={assetUrl("logo/optees-appicon.png")} alt="" />
             <span>{t.footer.product}</span>
           </a>
           <div className="topbar-actions">
             <div className="language-switch" role="group" aria-label={t.language.aria}>
               {supportedLanguages.map((option) => (
-                <button
+                <a
                   key={option}
-                  type="button"
-                  aria-pressed={language === option}
+                  href={localizedHref(option, "agents")}
+                  hrefLang={option}
+                  aria-current={language === option ? "page" : undefined}
                   className={language === option ? "active" : ""}
-                  onClick={() => setLanguage(option)}
                 >
                   {t.language.options[option]}
-                </button>
+                </a>
               ))}
             </div>
             <a className="ghost-link" href={repositoryUrl} aria-label="GitHub">
@@ -1087,7 +1087,7 @@ function AgentSetupPage() {
           <p className="eyebrow">{setup.eyebrow}</p>
           <h1>{setup.title}</h1>
           <p>{setup.body}</p>
-          <a className="button secondary" href={import.meta.env.BASE_URL}>
+          <a className="button secondary" href={localizedPath(language, "landing")}>
             <Icon name="arrow" />
             {setup.back}
           </a>
@@ -1168,7 +1168,7 @@ function AgentSetupPage() {
 
 function App() {
   const path = window.location.pathname.replace(/\/+$/, "");
-  return path.endsWith("/agents") ? <AgentSetupPage /> : <LandingPage />;
+  return path === "/agents" || path === "/en/agents" ? <AgentSetupPage /> : <LandingPage />;
 }
 
 export default App;

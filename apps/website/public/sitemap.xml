@@ -1,12 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>%SITE_URL%/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="%SITE_URL%/" />
+    <xhtml:link rel="alternate" hreflang="en" href="%SITE_URL%/en/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="%SITE_URL%/" />
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>%SITE_URL%/en/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="%SITE_URL%/" />
+    <xhtml:link rel="alternate" hreflang="en" href="%SITE_URL%/en/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="%SITE_URL%/" />
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>%SITE_URL%/agents/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="%SITE_URL%/agents/" />
+    <xhtml:link rel="alternate" hreflang="en" href="%SITE_URL%/en/agents/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="%SITE_URL%/agents/" />
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>%SITE_URL%/en/agents/</loc>
+    <xhtml:link rel="alternate" hreflang="it" href="%SITE_URL%/agents/" />
+    <xhtml:link rel="alternate" hreflang="en" href="%SITE_URL%/en/agents/" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="%SITE_URL%/agents/" />
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

@@ -148,6 +148,27 @@ now use a dedicated result capture with grounded, non-overlapping placements.
 The capability and canonical-domain refreshes are complete locally but are not
 yet published.
 
+### Language-specific indexing - 2026-09-30
+
+- [x] Make the Italian landing canonical at `/` and the English landing
+  canonical at `/en/` instead of selecting both languages on one URL.
+- [x] Give the agent-configuration page reciprocal Italian `/agents/` and
+  English `/en/agents/` routes.
+- [x] Keep the language selector, internal navigation, canonical URL, Open
+  Graph URL and document language synchronized with the selected route.
+- [x] Generate reciprocal `hreflang` clusters in HTML and the XML sitemap,
+  using the Italian route as `x-default` for the `.it` domain.
+- [x] Generate localized titles, descriptions, social metadata and landing
+  structured data for every indexable language route.
+- [x] Verify the production build emits all four static entry documents with
+  the expected language, canonical and alternate URLs.
+
+The landing remains intentionally concise. Additional public pages should be
+created only for a distinct user need and search intent, not to inflate the
+indexed page count; algorithm references, installation guidance and evidence
+are the strongest future candidates when their content can be maintained in
+both languages.
+
 **Exit criterion:** the single-page site accurately represents the desktop
 workflows and local solver platform available at the intended release commit.
 
