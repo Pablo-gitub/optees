@@ -245,6 +245,10 @@ correct solver use from merely attractive presentation.
 
 ## Phase 7 - Agent Integration Page And Public Evidence
 
+- [x] Document the maintainer-reported local Codex MCP setup in the shared
+  guide and both website languages, including registration, restart and actual
+  capability discovery; controlled acceptance evidence remains pending.
+
 - [x] Add a second landing route for factual setup instructions independently
   from benchmark publication.
 - [x] Explain supported clients, local security boundaries, Claude Desktop

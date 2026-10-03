@@ -8,7 +8,7 @@ share the same transport or authentication requirements.
 | --- | --- | --- | --- |
 | Claude Desktop / Cowork | MCP stdio | No | Tested locally on macOS |
 | Ollama D0 harness | Authenticated loopback REST | Yes | Experimental source/Python-package workflow |
-| OpenAI GPT client | To be selected and verified | To be determined | Planned compatibility test |
+| OpenAI Codex app / CLI | MCP stdio | No | Local setup reported working by the maintainer on Linux; controlled acceptance remains separate |
 
 General rules:
 
@@ -318,23 +318,48 @@ The full request example, REST equivalents, runtime diagnostics, and security
 limits are documented in
 [Local Result Artifacts And Reports](local-reporting.md).
 
-## OpenAI GPT Clients
+## OpenAI Codex App And CLI
 
-OpenAI GPT integration is planned but not yet certified. Before publishing a
-configuration, Optees must select a supported local client or MCP surface and
-record the exact client, model, transport, authentication boundary, and
-localhost limitations.
+With the Codex CLI installed, register Optees from the terminal:
 
-The first acceptance check will use this prompt:
+```bash
+codex mcp add optees -- /absolute/path/to/optees-mcp
+codex mcp list
+```
+
+Replace the example path with the installed MCP executable, using the same
+platform paths listed in the Claude section. Quote paths containing spaces.
+For example, a Linux Conda installation can use:
+
+```bash
+codex mcp add optees -- /home/example/anaconda3/envs/optees/bin/optees-mcp
+```
+
+For an AppImage, pass its launcher argument after the executable:
+
+```bash
+codex mcp add optees -- /absolute/path/to/Optees.AppImage --mcp-server
+```
+
+Check that `optees` appears in the list, then fully quit and reopen the Codex
+app to load the server. No REST token or listening port is required. This is
+a local Codex integration, not a configuration for hosted ChatGPT chats.
+The maintainer reported this setup working on Linux; this report does not
+replace a controlled acceptance run recording client/model versions and tool
+results. The CLI command syntax is described in the
+[official Codex MCP documentation](https://developers.openai.com/codex/mcp).
+
+After restarting, verify actual tool discovery with this prompt:
 
 ```text
 Use the Optees tools to list all available solver capabilities.
 Do not answer from your own knowledge: call optees_list_capabilities.
 ```
 
-A successful response must be based on the returned 13 capability descriptors,
-not on model memory. No speculative JSON configuration should be copied into
-this guide before that workflow succeeds from a clean setup.
+A successful response must be based on the returned 16 capability descriptors,
+not on model memory. `codex mcp list` confirms registration, not successful
+server startup or tool execution. Use `optees-mcp`, not `optees-server`, and
+check the absolute executable path if discovery fails.
 
 ## Shared Technical References
 

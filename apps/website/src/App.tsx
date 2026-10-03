@@ -1102,6 +1102,13 @@ function AgentSetupPage() {
         </section>
 
         <section className="agent-setup-section">
+          <h2>{setup.codexTitle}</h2>
+          <p>{setup.codexBody}</p>
+          <pre><code>{"codex mcp add optees -- /absolute/path/to/optees-mcp\ncodex mcp list"}</code></pre>
+          <p>{setup.codexRestart}</p>
+        </section>
+
+        <section className="agent-setup-section">
           <h2>{setup.stepsTitle}</h2>
           <ol className="agent-setup-steps">
             {setup.steps.map((step, index) => (

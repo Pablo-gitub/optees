@@ -175,6 +175,9 @@ type SiteCopy = {
     items: PreviewCopy[];
   };
   agentSetup: {
+    codexTitle: string;
+    codexBody: string;
+    codexRestart: string;
     eyebrow: string;
     title: string;
     body: string;
@@ -549,6 +552,9 @@ export const copy: Record<Language, SiteCopy> = {
       ],
     },
     agentSetup: {
+      codexTitle: "Codex setup (OpenAI)",
+      codexBody: "With the Codex CLI installed, register Optees from your terminal using the absolute path to optees-mcp. Replace the example path with your installed executable; paths containing spaces must be quoted. This connects the local Codex client, not a hosted ChatGPT conversation.",
+      codexRestart: "Check that optees appears in codex mcp list, then fully quit and reopen the Codex app. Run the discovery prompt below to verify the connection: listing the configuration alone does not prove that the server works.",
       eyebrow: "Agent setup",
       title: "Connect a local AI agent to Optees",
       body:
@@ -1101,6 +1107,9 @@ export const copy: Record<Language, SiteCopy> = {
       ],
     },
     agentSetup: {
+      codexTitle: "Configurazione Codex (OpenAI)",
+      codexBody: "Con la CLI di Codex installata, registra Optees dal terminale usando il percorso assoluto di optees-mcp. Sostituisci il percorso di esempio con il tuo eseguibile; racchiudi tra virgolette i percorsi contenenti spazi. Questo collega il client Codex locale, non una conversazione ChatGPT ospitata sul web.",
+      codexRestart: "Verifica che optees compaia in codex mcp list, poi chiudi completamente e riapri l'app Codex. Esegui il prompt di scoperta riportato sotto per verificare la connessione: la presenza nella configurazione da sola non dimostra che il server funzioni.",
       eyebrow: "Configurazione agenti",
       title: "Collega un agente AI locale a Optees",
       body:
