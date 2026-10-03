@@ -150,6 +150,10 @@ yet published.
 
 ### Language-specific indexing - 2026-09-30
 
+- [x] Prepare website version `0.5.2` for language-specific routes and local
+  Codex MCP setup documentation; remote publication via `landing-v0.5.2`
+  remains pending and does not publish a desktop application release.
+
 - [x] Make the Italian landing canonical at `/` and the English landing
   canonical at `/en/` instead of selecting both languages on one URL.
 - [x] Give the agent-configuration page reciprocal Italian `/agents/` and
